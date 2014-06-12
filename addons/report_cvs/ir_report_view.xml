@@ -1,0 +1,21 @@
+<openerp>
+    <data>
+        <record id="omnia_cvs_view" model="ir.ui.view">
+            <field name="name">omnia.cvs.view</field>
+            <field name="model">ir.actions.report.xml</field>
+            <field name="inherit_id" ref="base.act_report_xml_view"/>
+            <field name="arch" type="xml">
+                <xpath expr="//page[@string='Security']" position="before" >
+                    <page string="CVS" attrs="{'invisible':[('report_type','!=','cvs')]}">
+                        <label for="columns_ids"/>
+                        <field name="columns_ids"/>
+                        <label for="separator"/>
+                        <field name="separator"/>
+                        <label for="loop_custom_function"/>
+                        <field name="loop_custom_function"/>
+                    </page>
+                </xpath>
+            </field>
+        </record>
+    </data>
+</openerp>
