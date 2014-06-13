@@ -6,6 +6,10 @@
 #
 # Author : Nicolas Bessi (Camptocamp)
 #
+# Author : Smerghetto Daniel & Boscolo Matteo (Omniasolutions)
+# Copyright (c) 2014 Omniasolutiosn (http://www.omniasolutions.eu) 
+# All Right Reserved
+#
 # WARNING: This program as such is intended to be used by professional
 # programmers who take the whole responsability of assessing all potential
 # consequences resulting from its eventual inadequacies and bugs

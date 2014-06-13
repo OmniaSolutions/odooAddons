@@ -1,11 +1,14 @@
 # -*- coding: utf-8 -*-
 ##############################################################################
 #
-# Copyright (c) 2010 Camptocamp SA (http://www.camptocamp.com)
+# Copyright (c) 2010 Camptocamp SA (http://www.camptocamp.com) 
 # All Right Reserved
 #
 # Author : Nicolas Bessi (Camptocamp)
-# Contributor(s) : Florent Xicluna (Wingo SA)
+#
+# Author : Smerghetto Daniel & Boscolo Matteo (Omniasolutions)
+# Copyright (c) 2014 Omniasolutiosn (http://www.omniasolutions.eu) 
+# All Right Reserved
 #
 # WARNING: This program as such is intended to be used by professional
 # programmers who take the whole responsability of assessing all potential
@@ -30,22 +33,12 @@
 #
 ##############################################################################
 
-import subprocess
-import os
-import sys
 from openerp import report
 import tempfile
-import time
 import logging
 import csv
-
-from mako.template import Template
-from mako.lookup import TemplateLookup
-from mako import exceptions
-
 from openerp import netsvc
 from openerp import pooler
-from csv_helper import CVSHelper
 from openerp.report.report_sxw import *
 from openerp import addons
 from openerp import tools
@@ -111,7 +104,7 @@ class CvsParser(report_sxw):
                                   quotechar='|', 
                                   quoting=csv.QUOTE_MINIMAL)
             if len(objs)==0:
-                customFunction="organize_cvs(objects)"
+                #customFunction="organize_cvs(objects)"
                 objs=eval(customFunction,self.parser_instance.localcontext)
             for o in objs:
                 outRow=[]

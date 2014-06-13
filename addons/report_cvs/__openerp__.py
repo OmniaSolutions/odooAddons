@@ -1,10 +1,14 @@
 # -*- coding: utf-8 -*-
 ##############################################################################
 # this module is derived from the WebKitReport module made from camp2camp
-# Copyright (c) 2010 OmniaSolutions (http://www.omniasolutions.eu)
+# Copyright (c) 2010 Camptocamp SA (http://www.camptocamp.com) 
 # All Right Reserved
 #
-# Author : Daniel Smerghetto (OmniaSolutions)
+# Author : Nicolas Bessi (Camptocamp)
+#
+# Author : Smerghetto Daniel & Boscolo Matteo (Omniasolutions)
+# Copyright (c) 2014 Omniasolutiosn (http://www.omniasolutions.eu) 
+# All Right Reserved
 #
 # WARNING: This program as such is intended to be used by professional
 # programmers who take the whole responsability of assessing all potential
