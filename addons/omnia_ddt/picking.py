@@ -4,6 +4,11 @@
 #    Copyright (C) 2010-2012 Associazione OpenERP Italia
 #    (<http://www.openerp-italia.org>).
 #
+#    Author : Smerghetto Daniel  (Omniasolutions)
+#    mail:daniel.smerghetto@omniasolutions.eu
+#    Copyright (c) 2014 Omniasolutions (http://www.omniasolutions.eu) 
+#    All Right Reserved
+#
 #    This program is free software: you can redistribute it and/or modify
 #    it under the terms of the GNU Affero General Public License as published
 #    by the Free Software Foundation, either version 3 of the License, or

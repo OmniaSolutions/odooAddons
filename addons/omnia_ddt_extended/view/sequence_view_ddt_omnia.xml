@@ -1,0 +1,28 @@
+<openerp>
+	<data>
+	
+		<record id="sequence_inherit_form_omnia" model="ir.ui.view">
+            <field name="name">ir.sequence.form.omnia</field>
+            <field name="model">ir.sequence</field>
+            <field name="inherit_id" ref="base.sequence_view"/>
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='active']" position="after">
+                    <field name="use_for_ddt"/>
+                </xpath>
+            </field>
+        </record>
+        
+
+        <record id="order_inherit_form_omnia" model="ir.ui.view">
+			<field name="name">order.form.omnia</field>
+			<field name="model">stock.picking.out</field>
+			<field name="inherit_id" ref="stock.view_picking_out_form"/>
+			<field name="arch" type="xml">
+               <xpath expr="//field[@name='origin']" position="after">
+                	<field name="ddt_sequence" domain="[('use_for_ddt','=',True)]"/>  
+               </xpath>
+			</field>
+		</record>
+    </data>
+</openerp>
+	

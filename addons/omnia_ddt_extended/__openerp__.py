@@ -1,10 +1,6 @@
 # -*- coding: utf-8 -*-
 ##############################################################################
 #
-#    OpenERP, Open Source Management Solution
-#    Copyright (C) 2004-2009 Tiny SPRL (<http://tiny.be>).
-#    Copyright (C) 2010-2012 OpenERP s.a. (<http://openerp.com>).
-#
 #
 #    Author : Smerghetto Daniel  (Omniasolutions)
 #    mail:daniel.smerghetto@omniasolutions.eu
@@ -28,8 +24,8 @@
 
 
 {
-    'name': 'omnia_DDT',
-    'version': '0.0',
+    'name': 'omnia_ddt_extended',
+    'version': '0.1',
     'category': 'Custom',
     'description': """
 Manage DDT documents
@@ -38,28 +34,10 @@ Manage DDT documents
     'author': 'OmniaSolutions.eu',
     'maintainer': 'OmniaSolutions.eu',
     'website': 'http://www.OmniaSolutions.eu',
-    'depends': ['stock','delivery'],
+    'depends': ['omnia_ddt'],
     'data': [
              #view
-             'view/carriage_condition_data.xml',
-             'view/carriage_condition_view.xml',
-             'view/goods_description_data.xml',
-             'view/goods_description_view.xml',
-             
-             
-             'view/picking_view.xml',
-             'view/sequence.xml',
-             'view/transportation_reason_data.xml',
-             'view/transportation_reason_view.xml',
-             'view/acc_invoice_view_ddt.xml',
-             #report
-             'report/report_omnia_account_invoice.xml',
-             #menu
-             'menu_configuration.xml',
-             #security
-             'security/ddt_groups.xml',
-             'security/ir.model.access.csv',
-             
+             'view/sequence_view_ddt_omnia.xml',
     ],
     'installable': True,
     'auto_install': False,
