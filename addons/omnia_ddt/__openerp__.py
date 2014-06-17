@@ -38,7 +38,7 @@ Manage DDT documents
     'author': 'OmniaSolutions.eu',
     'maintainer': 'OmniaSolutions.eu',
     'website': 'http://www.OmniaSolutions.eu',
-    'depends': ['stock','delivery'],
+    'depends': ['stock','delivery','report_webkit'],
     'data': [
              #view
              'view/carriage_condition_data.xml',
