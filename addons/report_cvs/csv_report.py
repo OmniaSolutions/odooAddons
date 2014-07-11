@@ -115,6 +115,8 @@ class CvsParser(report_sxw):
                     value=eval(toEval,newContext)
                     if type(value)==float:
                         value=round(value,2)
+                    if type(value)==str:
+                        value=unicode(value)
                     outRow.append(value)
                 spamwriter.writerow(outRow)
         csv_file = open(csfile[1], 'rb')
