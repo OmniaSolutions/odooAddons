@@ -113,6 +113,8 @@ class CvsParser(report_sxw):
                     newContext.update(context)
                     newContext.update(self.parser_instance.localcontext)
                     value=eval(toEval,newContext)
+                    if type(value)==float:
+                        value=round(value,2)
                     outRow.append(value)
                 spamwriter.writerow(outRow)
         csv_file = open(csfile[1], 'rb')
