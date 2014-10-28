@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<openerp>
+    <data>
+        <record id="product_template_form_view_acq" model="ir.ui.view">
+            <field name="name">acq.product.template.form.inherit</field>
+            <field name="model">product.template</field>
+            <field name="priority">5</field>
+            <field name="inherit_id" ref="product.product_template_form_view"/>
+            <field name="arch" type="xml">
+                <page string="Sales" position="after">
+                    <page string="Acquacontrol">
+                    	<group>
+                    		<field name="manuale"/>
+                    		<field name="colorante"/>
+                    		<field name="correzione"/>
+                    		<field name="dosanat_row"/>
+                    		<field name="is_visible"/>
+                    	</group>
+                    </page>
+                </page>
+            </field>
+        </record>
+        
+        <record id="omnia_acq_filter_product" model="ir.ui.view">
+            <field name="name">omnia.acq.filter.product</field>
+            <field name="model">product.template</field>
+            <field name="arch" type="xml">
+                <search string="Search enabled products">
+                    <field name="is_visible" string="Product enableddd"/>
+                    <filter name="is_visible" string="Product enabled" domain="[('is_visible','=',True)]"/>
+                    <separator/>
+                    <filter string="My Entries" domain="[('user_id','=',uid)]"/>
+                    <group string="Group By" expand="0">
+                        <filter string="Product group" context="{'group_by':'is_visible'}"/>
+                    </group>
+                </search>
+            </field>
+        </record>
+        
+		<record id="omnia_acq_product_act" model="ir.actions.act_window">
+		    <field name="name">Product action</field>
+		    <field name="type">ir.actions.act_window</field>
+		    <field name="res_model">product.template</field>
+		    <field name="view_type">form</field>
+		    <field name="view_mode">tree,form</field>
+		    <field name="view_id" ref="omnia_acq_workcenter.product_template_form_view_acq"/>
+		</record>
+		
+        <menuitem name="Prodotti"
+        	action="product.product_template_action"
+            id="acq_products_submenu"
+            parent="omnia_acq_workcenter.acq_products_menu"/>
+    </data>
+</openerp>

@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<openerp>
+    <data>
+        <record id="acq_miscele_tree_view" model="ir.ui.view">
+            <field name="name">acq.miscele.tree</field>
+            <field name="model">acq.miscele</field>
+            <field name="priority">2</field>
+            <field name="type">tree</field>
+            <field name="arch" type="xml">
+                <tree string="Product">
+                    <field name="name"/>
+                </tree>
+            </field>
+        </record>
+        
+        <record id="acq_miscele_form_view" model="ir.ui.view">
+            <field name="name">acq.miscele.form</field>
+            <field name="model">acq.miscele</field>
+            <field name="type">form</field>
+            <field name="arch" type="xml">
+                <form string="Miscele">
+                <sheet>
+                	<group>
+                	<field name="name"/>
+                	<field name="line_ids"/>
+                	</group>
+                </sheet>
+                </form>
+            </field>
+        </record>
+        
+        <record id="acq_miscele_action" model="ir.actions.act_window">
+            <field name="name">Miscele</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="res_model">acq.miscele</field>
+            <field name="view_type">form</field>
+            <field name="view_mode">tree,form</field>
+            <field name="view_id" ref="acq_miscele_tree_view"/>
+        </record>
+        
+        <menuitem name="Miscele"
+        	action="acq_miscele_action"
+            id="acq_miscele_submenu"
+            parent="omnia_acq_workcenter.acq_miscele_menu"/>
+    </data>
+</openerp>

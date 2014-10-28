@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="utf-8"?>
+<openerp>
+    <data>
+        <record id="acq_recipes_tree_view" model="ir.ui.view">
+            <field name="name">acq.recipes.tree</field>
+            <field name="priority">2</field>
+            <field name="model">acq.recipes</field>
+            <field name="arch" type="xml">
+                <tree string="Product">
+                    <field name="name"/>
+                </tree>
+            </field>
+        </record>
+        
+        <record id="acq_recipes_form_view" model="ir.ui.view">
+            <field name="name">acq.recipes.form</field>
+            <field name="model">acq.recipes</field>
+            <field name="arch" type="xml">
+                <form string="Ricette">
+                	<sheet>
+                		<group>
+	                		<field name="name"/>
+	                		<field name="category" widget="many2many_tags"/>
+	                	</group>
+	                	<group>
+	                		<field name="line_ids"/>
+	                	</group>
+	                </sheet>
+                </form>
+            </field>
+        </record>
+        
+        <record id="acq_recipes_action" model="ir.actions.act_window">
+            <field name="name">Ricette</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="res_model">acq.recipes</field>
+            <field name="view_type">form</field>
+            <field name="view_mode">tree,form</field>
+            <field name="view_id" ref="acq_recipes_tree_view"/>
+        </record>
+        
+        <menuitem name="Ricette"
+        	action="acq_recipes_action"
+            id="acq_recipes_submenu"
+            parent="omnia_acq_workcenter.acq_recipes_menu"/>
+            
+        <record id="acq_recipes_form_view_row" model="ir.ui.view">
+            <field name="name">acq.recipes.row.form</field>
+            <field name="model">acq.recipes.row</field>
+            <field name="arch" type="xml">
+                <form string="Ricette">
+                	<sheet>
+                	<group>
+                	<field name="dura"/>
+                	<field name="h2o"/>
+                	<field name="col"/>
+                	<field name="pau"/>
+                	<field name="ava"/>
+                	<field name="ind"/>
+                	<field name="dur"/>
+                	</group>
+                	<group>
+                	<field name="scarico"/>
+                	<field name="velocita"/>
+                	<field name="percentual"/>
+                	<field name="tAgitazione"/>
+                	</group>
+                	<group string="Vaschette">
+                	<field name="vaschetta1"/>
+                	<field name="vaschetta2"/>
+                	<field name="vaschetta3"/>
+                	<field name="vaschetta4"/>
+                	<field name="vaschetta5"/>
+                	</group>
+                	<group string="Manuali">
+                	<field name="manuali"/>
+                	</group>
+                	</sheet>
+                </form>
+            </field>
+        </record>
+        
+        <record id="acq_vaschette_form_view" model="ir.ui.view">
+            <field name="name">acq.vaschette.form</field>
+            <field name="model">acq.vaschette</field>
+            <field name="arch" type="xml">
+                <form string="Ricette">
+                	<sheet>
+                	<group>
+                	<field name="name"/>
+                	<field name="comp1"/>
+                	<field name="comp2"/>
+                	<field name="comp3"/>
+                	<field name="comp4"/>
+                	</group>
+                	</sheet>
+                </form>
+            </field>
+        </record>
+        
+        <record id="acq_manuali_form__row_view" model="ir.ui.view">
+            <field name="name">acq.manuali.form</field>
+            <field name="model">acq.manuali.row</field>
+            <field name="arch" type="xml">
+                <form string="Ricette">
+                	<sheet>
+                	<group>
+                	<field name="description"/>
+                	<field name="percentuale"/>
+                	<field name="destinazione"/>
+                	<field name="introduzione"/>
+                	</group>
+                	</sheet>
+                </form>
+            </field>
+        </record>
+        
+        <record id="acq_category_form_view" model="ir.ui.view">
+            <field name="name">acq.category.form</field>
+            <field name="model">acq.category</field>
+            <field name="arch" type="xml">
+                <form string="Categoria">
+                	<sheet>
+                	<group>
+                	<field name="nome"/>
+                	<field name="field1"/>
+                	</group>
+                	</sheet>
+                </form>
+            </field>
+        </record>
+    </data>
+</openerp>
