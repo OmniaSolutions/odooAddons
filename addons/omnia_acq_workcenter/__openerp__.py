@@ -34,7 +34,7 @@
     'sequence': 2,
     'description': """
 Manage Workcenter Acquacontrol
-====================
+==============================
 """,
     'author': 'OmniaSolutions.eu',
     'maintainer': 'OmniaSolutions.eu',
@@ -42,11 +42,13 @@ Manage Workcenter Acquacontrol
     'depends': ['mrp'],
     'data': [
              #view
-             'views/mainMenu.xml',
-             'views/workCenterTab.xml',
-             'views/productTab.xml',
-             'views/acq_miscele_view.xml',
-             'views/acq_recipes_view.xml',
+            'views/mainMenu.xml',
+            'views/workCenterTab.xml',
+            'views/productTab.xml',
+            'views/acq_miscele_view.xml',
+            'views/acq_recipes_view.xml',
+            'views/acq_routing_view.xml',
+            'views/acq_mrp_production.xml',
     ],
     'installable': True,
     'application': True,

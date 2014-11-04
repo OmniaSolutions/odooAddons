@@ -9,9 +9,6 @@ class omnia_acq_workcenter(models.Model):
                                   ('deadline','Deadline'),
                                   ('acquamat','Acquamat')
                                   ], 'Tipo Workcenter')
-    dosanat_row = fields.Many2many('acq.dosanat.row', 'dosanat_row_rel', 'pos', 'row_id', 'Dosanat row')
- 
-#     @api.onchange('workcenter_type')
-#     def onchange_workcenter(self):
-#         if self.workcenter_type:
-#             pass
+    dosanat_row = fields.Many2many('acq.dosanat.row', 'acq_dosanat_row_rel', 'pos', 'row_id', 'Dosanat row', copy=True)
+    
+    locationRel = fields.Many2one('mrp.routing', string = 'Location')

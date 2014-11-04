@@ -13,9 +13,20 @@
                     		<field name="manuale"/>
                     		<field name="colorante"/>
                     		<field name="correzione"/>
-                    		<field name="dosanat_row"/>
-                    		<field name="is_visible"/>
                     	</group>
+                    	<separator string="Righe Dosanat"/>
+                		<field name="dosanat_row" widget="one2many_list">
+                		<tree string="Righe dosanat" editable="bottom">
+                			<field name="acq_dosanat_row"/>
+                			<field name="name" invisible = "1"/>
+		                	<field name="pos"/>
+		                	<field name="prod"/>
+		                	<field name="field1"/>
+		                	<field name="field2"/>
+		                	<field name="fieldn"/>
+						</tree>
+						</field>
+                    	<!--<field name="is_visible"/>-->
                     </page>
                 </page>
             </field>
@@ -26,8 +37,7 @@
             <field name="model">product.template</field>
             <field name="arch" type="xml">
                 <search string="Search enabled products">
-                    <field name="is_visible" string="Product enableddd"/>
-                    <filter name="is_visible" string="Product enabled" domain="[('is_visible','=',True)]"/>
+                    <filter name="visibl_acq_omnia" string="ProductEnabled" domain="['|','|',('manuale','=',True),('colorante','=',True),('correzione','=',True)]"/>
                     <separator/>
                     <filter string="My Entries" domain="[('user_id','=',uid)]"/>
                     <group string="Group By" expand="0">
@@ -38,11 +48,12 @@
         </record>
         
 		<record id="omnia_acq_product_act" model="ir.actions.act_window">
-		    <field name="name">Product action</field>
+		    <field name="name">Product action acq</field>
 		    <field name="type">ir.actions.act_window</field>
 		    <field name="res_model">product.template</field>
 		    <field name="view_type">form</field>
-		    <field name="view_mode">tree,form</field>
+		    <field name="view_mode">tree,form,kanban</field>
+		    <field name="context">{"search_default_visibl_acq_omnia":1}</field>
 		    <field name="view_id" ref="omnia_acq_workcenter.product_template_form_view_acq"/>
 		</record>
 		
@@ -50,5 +61,24 @@
         	action="product.product_template_action"
             id="acq_products_submenu"
             parent="omnia_acq_workcenter.acq_products_menu"/>
-    </data>
+        
+        <record id="acq_dosanat_row_form_view" model="ir.ui.view">
+            <field name="name">acq.dosanat.form</field>
+            <field name="model">acq.dosanat.row</field>
+            <field name="arch" type="xml">
+                <form string="Rows">
+                	<sheet>
+                	<group>
+                	<field name="name"/>
+                	<field name="pos"/>
+                	<field name="prod"/>
+                	<field name="field1"/>
+                	<field name="field2"/>
+                	<field name="fieldn"/>
+                	</group>
+                	</sheet>
+                </form>
+            </field>
+        </record>
+     </data>
 </openerp>

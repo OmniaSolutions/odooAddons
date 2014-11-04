@@ -1,80 +1,31 @@
 <?xml version="1.0" encoding="utf-8"?>
 <openerp>
     <data>
-        <record id="acq_recipes_tree_view" model="ir.ui.view">
-            <field name="name">acq.recipes.tree</field>
-            <field name="priority">2</field>
-            <field name="model">acq.recipes</field>
-            <field name="arch" type="xml">
-                <tree string="Product">
-                    <field name="name"/>
-                </tree>
-            </field>
+        <record id="sequence_acq_recipes" model="ir.sequence.type">
+            <field name="name">Acq Recipes Type</field>
+            <field name="code">acq.recipes</field>
+        </record>
+        <record id="seq_acq_recipes" model="ir.sequence">
+            <field name="name">Acq Recipes</field>
+            <field name="code">acq.recipes</field>
         </record>
         
-        <record id="acq_recipes_form_view" model="ir.ui.view">
-            <field name="name">acq.recipes.form</field>
-            <field name="model">acq.recipes</field>
-            <field name="arch" type="xml">
-                <form string="Ricette">
-                	<sheet>
-                		<group>
-	                		<field name="name"/>
-	                		<field name="category" widget="many2many_tags"/>
-	                	</group>
-	                	<group>
-	                		<field name="line_ids"/>
-	                	</group>
-	                </sheet>
-                </form>
-            </field>
-        </record>
-        
-        <record id="acq_recipes_action" model="ir.actions.act_window">
-            <field name="name">Ricette</field>
-            <field name="type">ir.actions.act_window</field>
-            <field name="res_model">acq.recipes</field>
-            <field name="view_type">form</field>
-            <field name="view_mode">tree,form</field>
-            <field name="view_id" ref="acq_recipes_tree_view"/>
-        </record>
-        
-        <menuitem name="Ricette"
-        	action="acq_recipes_action"
-            id="acq_recipes_submenu"
-            parent="omnia_acq_workcenter.acq_recipes_menu"/>
-            
-        <record id="acq_recipes_form_view_row" model="ir.ui.view">
-            <field name="name">acq.recipes.row.form</field>
-            <field name="model">acq.recipes.row</field>
+        <record id="acq_manuali_form_view" model="ir.ui.view">
+            <field name="name">acq.manuali.form</field>
+            <field name="model">acq.manuali.row</field>
             <field name="arch" type="xml">
                 <form string="Ricette">
                 	<sheet>
                 	<group>
-                	<field name="dura"/>
-                	<field name="h2o"/>
-                	<field name="col"/>
-                	<field name="pau"/>
-                	<field name="ava"/>
-                	<field name="ind"/>
-                	<field name="dur"/>
+	                	<!--<field name="description"/>-->
+	                	<field name="percentuale"/>
+	                	<field name="destinazione"/>
+	                	<field name="introduzione"/>
                 	</group>
-                	<group>
-                	<field name="scarico"/>
-                	<field name="velocita"/>
-                	<field name="percentual"/>
-                	<field name="tAgitazione"/>
-                	</group>
-                	<group string="Vaschette">
-                	<field name="vaschetta1"/>
-                	<field name="vaschetta2"/>
-                	<field name="vaschetta3"/>
-                	<field name="vaschetta4"/>
-                	<field name="vaschetta5"/>
-                	</group>
-                	<group string="Manuali">
-                	<field name="manuali"/>
-                	</group>
+                	<footer>
+					<button string="Save" type='object' name='saveOkButton' class="oe_highlight"/>
+					<button string="Delete" type='object' name='deleteButton'/>
+					</footer>
                 	</sheet>
                 </form>
             </field>
@@ -92,23 +43,139 @@
                 	<field name="comp2"/>
                 	<field name="comp3"/>
                 	<field name="comp4"/>
+                	<field name="workcenterType"/>
+                	<field name="misceleRel"/>
                 	</group>
+                	<footer>
+					<button string="Save" type='object' name='saveOkButton' class="oe_highlight"/>
+					<button string="Delete" type='object' name='deleteButton'/>
+					</footer>
                 	</sheet>
                 </form>
             </field>
         </record>
         
-        <record id="acq_manuali_form__row_view" model="ir.ui.view">
-            <field name="name">acq.manuali.form</field>
-            <field name="model">acq.manuali.row</field>
+        <record id="acq_recipes_tree_view" model="ir.ui.view">
+            <field name="name">acq.recipes.tree</field>
+            <field name="priority">2</field>
+            <field name="model">acq.recipes</field>
+            <field name="arch" type="xml">
+                <tree string="Product">
+                    <field name="name"/>
+                </tree>
+            </field>
+        </record>
+        
+        <record id="acq_recipes_form_view" model="ir.ui.view">
+            <field name="name">acq.recipes.form</field>
+            <field name="model">acq.recipes</field>
+            <field name="arch" type="xml">
+                <form string="Ricette">
+                	 <!--<sheet>-->
+                	<button string="Create Manufacturing Order" type='object' name='populateMrp'/>
+                	<group>
+                		<field name="name"/>
+                		<field name="category" widget="many2many_tags"/>
+                	</group>
+                	<group>
+                	<field name="line_ids">
+            		<tree string="Righe Ricetta" editable="bottom">
+	                	<field name="dur"/>
+	                	<field name="velocita"/>
+	                	<field name="ava"/>
+						<field name="pau"/>
+						<field name="ind"/>
+						<field name="scarico"/>
+						<field name="h2o"/>
+						<field name="temp"/>
+						<field name="s"/>
+						<field name="col"/>
+						<!--<field name="locationRel"/>-->
+						<field name="vaschetta1" invisible = '1'/>
+						<field name="vaschetta2" invisible = '1'/>
+						<field name="vaschetta3" invisible = '1'/>
+						<field name="vaschetta4" invisible = '1'/>
+						<field name="vaschetta5" invisible = '1'/>	
+						
+						<button string="Vaschetta 1" type='object' attrs="{'invisible':[('vaschetta1','!=',False)]}" 
+						name='compute_vaschette_action1' icon="STOCK_NO" context="{'buttonNamee':'1'}"/>
+						<button string="Vaschetta 1" type='object' attrs="{'invisible':[('vaschetta1','=',False)]}" 
+						name='compute_vaschette_action1' icon="STOCK_YES" context="{'buttonNamee':'1'}"/>
+							
+						<button string="Vaschetta 2" type='object' attrs="{'invisible':[('vaschetta2','!=',False)]}" 
+						name='compute_vaschette_action2' icon="STOCK_NO" context="{'buttonNamee':'2'}"/>
+						<button string="Vaschetta 2" type='object' attrs="{'invisible':[('vaschetta2','=',False)]}" 
+						name='compute_vaschette_action2' icon="STOCK_YES" context="{'buttonNamee':'2'}"/>						
+											
+						<button string="Vaschetta 3" type='object' attrs="{'invisible':[('vaschetta3','!=',False)]}" 
+						name='compute_vaschette_action3' icon="STOCK_NO" context="{'buttonNamee':'3'}"/>
+						<button string="Vaschetta 3" type='object' attrs="{'invisible':[('vaschetta3','=',False)]}" 
+						name='compute_vaschette_action3' icon="STOCK_YES" context="{'buttonNamee':'3'}"/>
+							
+						<button string="Vaschetta 4" type='object' attrs="{'invisible':[('vaschetta4','!=',False)]}" 
+						name='compute_vaschette_action4' icon="STOCK_NO" context="{'buttonNamee':'4'}"/>
+						<button string="Vaschetta 4" type='object' attrs="{'invisible':[('vaschetta4','=',False)]}" 
+						name='compute_vaschette_action4' icon="STOCK_YES" context="{'buttonNamee':'4'}"/>
+							
+						<button string="Vaschetta 5" type='object' attrs="{'invisible':[('vaschetta5','!=',False)]}" 
+						name='compute_vaschette_action5' icon="STOCK_NO" context="{'buttonNamee':'5'}"/>
+						<button string="Vaschetta 5" type='object' attrs="{'invisible':[('vaschetta5','=',False)]}" 
+						name='compute_vaschette_action5' icon="STOCK_YES" context="{'buttonNamee':'5'}"/>
+							
+						<!--<field name="manuali" invisible = '0'/>
+						<button string="Manuali" type='object' attrs="{'invisible':[('manuali','!=',False)]}" 
+						name='compute_manuali_action' icon="gtk-paste"/>
+						<button string="Manuali" type='object' attrs="{'invisible':[('manuali','=',False)]}" 
+						name='compute_manuali_action' icon="gtk-paste-v"/>-->
+					</tree>
+                	</field>
+                	</group>
+                	<!--</sheet>-->
+                </form>
+            </field>
+        </record>
+        
+        <record id="acq_recipes_action" model="ir.actions.act_window">
+            <field name="name">Ricette</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="res_model">acq.recipes</field>
+            <field name="view_type">form</field>
+            <field name="view_mode">tree,form</field>
+            <field name="view_id" ref="acq_recipes_tree_view"/>
+        </record>
+
+        <menuitem name="Ricette"
+        	action="acq_recipes_action"
+            id="acq_recipes_submenu"
+            parent="omnia_acq_workcenter.acq_recipes_menu"/>
+            
+        <record id="acq_recipes_form_view_row" model="ir.ui.view">
+            <field name="name">acq.recipes.row.form</field>
+            <field name="model">acq.recipes.row</field>
             <field name="arch" type="xml">
                 <form string="Ricette">
                 	<sheet>
-                	<group>
-                	<field name="description"/>
-                	<field name="percentuale"/>
-                	<field name="destinazione"/>
-                	<field name="introduzione"/>
+                		<group>
+	                	<field name="dur"/>
+	                	<field name="velocita"/>
+	                	<field name="ava"/>
+						<field name="pau"/>
+						<field name="ind"/>
+						<field name="scarico"/>
+						<field name="h2o"/>
+						<field name="temp"/>
+						<field name="s"/>
+						<field name="col"/>
+						</group>
+                	<group string="Manuali">
+            		<field name="manuali" widget="one2many_list" nolabel="1">
+	            		<tree string="Manuali" editable="bottom">
+		                	<field name="description"/>
+		                	<field name="percentuale"/>
+		                	<field name="destinazione"/>
+		                	<field name="introduzione"/>
+						</tree>
+            		</field>
                 	</group>
                 	</sheet>
                 </form>
@@ -122,12 +189,71 @@
                 <form string="Categoria">
                 	<sheet>
                 	<group>
-                	<field name="nome"/>
+                	<field name="name"/>
                 	<field name="field1"/>
                 	</group>
                 	</sheet>
                 </form>
             </field>
         </record>
+        
+		<act_window name="Manda in produzione"
+            res_model="mrp.production"
+            src_model="acq.recipes"
+            view_mode="form"
+            key2="client_action_multi"
+			context="{'nome': name}"
+            id="acq_create_man_order_action"/>
+		
+
+    	<record id="omnia_acq_routing_workcenter" model="ir.ui.view">
+            <field name="name">acq.mrp.routing.workcenter</field>
+            <field name="model">mrp.routing.workcenter</field>
+            <field name="inherit_id" ref="mrp.mrp_routing_workcenter_form_view"/>
+            <field name="arch" type="xml">
+            	<xpath expr="//field[@name='hour_nbr']" position="after">
+            		<group>
+            			<field name="name" invisible = '1'/>
+	                	<field name="dur"/>
+	                	<field name="ava"/>
+						<field name="pau"/>
+						<field name="ind"/>
+						<field name="h2o"/>
+						<field name="temp"/>
+						<field name="s"/>
+						<field name="col"/>
+					</group>
+					<group>
+						<field name="velocita"/>
+						<field name="scarico"/>
+					</group>
+					<group>
+						<!--<field name="namee"/>-->
+						<field name="comp1"/>
+						<field name="comp2"/>
+						<field name="comp3"/>
+						<field name="comp4"/>
+					</group>
+            	</xpath>
+            </field>
+        </record>	
+        
+        <!--<record id="acq_location_form_view" model="ir.ui.view">
+            <field name="name">acq.location.form</field>
+            <field name="model">acq.recipes</field>
+            <field name="arch" type="xml">
+                <form string="Reparto">
+                	<sheet>
+                	<group>
+                		<field name="locationRel"/>
+                	</group>
+                	<footer>
+					<button string="Create" type='object' name='populateMrp' class="oe_highlight"/>
+					</footer>
+					</sheet>
+                </form>
+            </field>
+        </record>-->
+        
     </data>
 </openerp>
