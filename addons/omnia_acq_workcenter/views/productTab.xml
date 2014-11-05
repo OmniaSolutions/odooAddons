@@ -13,6 +13,8 @@
                     		<field name="manuale"/>
                     		<field name="colorante"/>
                     		<field name="correzione"/>
+                			<field name="percentual"/>
+                			<field name="tAgitazione"/>
                     	</group>
                     	<separator string="Righe Dosanat"/>
                 		<field name="dosanat_row" widget="one2many_list">

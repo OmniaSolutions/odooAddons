@@ -6,6 +6,8 @@ class omnia_acq_product(models.Model):
     manuale=fields.Boolean('Manuale')
     colorante=fields.Boolean('Colorante')
     correzione=fields.Boolean('Correzione')
+    percentual=fields.Char('Percentuale',size=128)
+    tAgitazione=fields.Char('T. Agit.',size=128)
     dosanat_row = fields.Many2many('acq.dosanat.row', 'acq_dosanat_row_rel_prod', 'pos', 'row_id', 'Dosanat row', copy=True)
 #    is_visible = fields.Boolean('Is Visible') 
      
@@ -81,23 +83,19 @@ class omnia_acq_recipes(models.Model):
                                                     'note': False, 
                                                     'workcenter_id': 1, 
                                                     'hour_nbr': 0}])
-            appendLine(line.dur, i)
-            i = i+1 
+                return i+1
+            
+            i = appendLine(line.dur, i)
             if line.vaschetta1.id:
-                appendLine(line.vaschetta1.name, i)
-                i = i+1
+                i = appendLine(line.vaschetta1.name, i)
             if line.vaschetta2.id:
-                appendLine(line.vaschetta2.name, i)
-                i = i+1
+                i = appendLine(line.vaschetta2.name, i)
             if line.vaschetta3.id:
-                appendLine(line.vaschetta3.name, i)
-                i = i+1
+                i = appendLine(line.vaschetta3.name, i)
             if line.vaschetta4.id:
-                appendLine(line.vaschetta4.name, i)
-                i = i+1
+                i = appendLine(line.vaschetta4.name, i)
             if line.vaschetta5.id:
-                appendLine(line.vaschetta5.name, i)    
-                i = i+1
+                i = appendLine(line.vaschetta5.name, i)    
                
         routingVals = {'workcenter_lines': workcenter_lines, 
                      'code': False, 
