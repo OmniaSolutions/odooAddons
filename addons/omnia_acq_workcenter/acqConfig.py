@@ -316,7 +316,9 @@ class omnia_acq_vaschette(models.Model):
                                   ('acquamat','Acquamat')
                                   ], 'Tipo Workcenter')
     
-    misceleRel = fields.One2many('acq.miscele', 'acq_vaschette_miscela', string = 'Relazione Miscela', copy=True)
+    #misceleRel = fields.One2many('acq.miscele', 'acq_vaschette_miscela', string = 'Relazione Miscela', copy=True)
+    
+    misceleRel = fields.Many2one('acq.miscele', string='Relazione Miscela')
     
     def deleteButton(self, cr, uid, ids, context):
         button = context.get('buttonNamee',False)

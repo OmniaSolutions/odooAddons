@@ -17,7 +17,7 @@
                 <form string="Ricette">
                 	<sheet>
                 	<group>
-	                	<!--<field name="description"/>-->
+	                	<field name="description"/>
 	                	<field name="percentuale"/>
 	                	<field name="destinazione"/>
 	                	<field name="introduzione"/>
@@ -228,7 +228,6 @@
 						<field name="scarico"/>
 					</group>
 					<group>
-						<!--<field name="namee"/>-->
 						<field name="comp1"/>
 						<field name="comp2"/>
 						<field name="comp3"/>
