@@ -150,7 +150,7 @@
 	<xpath expr="//label[@for='shipping_zip']" position="replace">
     	<label class="control-label" for="shipping_zip">Zip / Postal Code</label>
     </xpath>
-    
+    <!--
 	<xpath expr="//select[@class='form-control']" position="replace">
           <select name="shipping_country_id" class="form-control" t-att-readonly="  'readonly' if shipping_id &gt;= 0 else ''">
               <option value="">Country...</option>
@@ -159,6 +159,7 @@
               </t>
           </select>
     </xpath>
+    -->
 	<xpath expr="//a[@class='btn btn-default mb32']" position="replace">
                 <a href="/shop/register" class="btn btn-default mb32"><span class="fa fa-long-arrow-left"/> Return to Registering</a>
     </xpath>
