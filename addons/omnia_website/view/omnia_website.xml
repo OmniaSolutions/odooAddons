@@ -9,7 +9,6 @@
     </xpath>
 </template>
 
-
 <!--
 <template id="cart" name="Shopping Cart">
 	<xpath expr="//ul[@class='wizard pull-right']" position="inside">
@@ -128,7 +127,6 @@
   </t>
 </template>
 
-
 <template id="checkout_extend" inherit_id="website_sale.checkout">
 	<xpath expr="//ul[@class='wizard pull-right']" position="replace">
           <ul class="wizard pull-right">
@@ -188,7 +186,6 @@
           </ul>
     </xpath>
 </template>
-
 	
 </data>
 </openerp>
