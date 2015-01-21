@@ -28,9 +28,7 @@ class omnia_ddt_account_invoice(models.Model):
     
     _name = "account.invoice"
     _inherit = ['account.invoice']
-    _columns = {
-        'ddt_number_invoice':fields.one2many('stock.picking.out','invoice_id','DDT_number'),
-    }
+    ddt_number_invoice = fields.One2many('stock.picking','invoice_id','DDT_number')
 
         
     def recupera_fattura(self,cr,uid,ids,context=None):   

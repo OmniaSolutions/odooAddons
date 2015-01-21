@@ -29,7 +29,7 @@
 
 {
     'name': 'omnia_DDT',
-    'version': '0.0',
+    'version': '1.1',
     'sequence': 1,
     'category': 'Custom',
     'description': """
@@ -42,25 +42,25 @@ Manage DDT documents
     #'depends': ['stock','delivery','report_webkit'],
     'depends': ['stock','delivery'],
     'data': [
-             #view
-#              'view/carriage_condition_data.xml',
-#              'view/carriage_condition_view.xml',
-#              'view/goods_description_data.xml',
-#              'view/goods_description_view.xml',
+                #view
+                'view/carriage_condition_data.xml',
+                'view/carriage_condition_view.xml',
+                'view/goods_description_data.xml',
+                'view/goods_description_view.xml',
 #              
 #              
-              'view/picking_view.xml',
-#              'view/sequence.xml',
-#              'view/transportation_reason_data.xml',
-#              'view/transportation_reason_view.xml',
-#              'view/acc_invoice_view_ddt.xml',
+                'view/picking_view.xml',
+                'view/sequence.xml',
+                'view/transportation_reason_data.xml',
+                'view/transportation_reason_view.xml',
+                'view/acc_invoice_view_ddt.xml',
 #              #report
 #              'report/report_omnia_account_invoice.xml',
 #              #menu
-#              'menu_configuration.xml',
+                'menu_configuration.xml',
 #              #security
-#              'security/ddt_groups.xml',
-#              'security/ir.model.access.csv',
+                'security/ddt_groups.xml',
+                'security/ir.model.access.csv',
              
     ],
     'installable': True,
