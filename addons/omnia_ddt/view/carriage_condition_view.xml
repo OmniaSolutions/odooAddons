@@ -35,8 +35,6 @@
             <field name="view_type">form</field>
             <field name="view_mode">tree,form</field>
         </record>
-        
-        <menuitem action="action_carriage_condition_tree" id="menu_action_carriage_condition_tree" parent="stock.menu_stock_configuration"/>
-    
+
     </data>
 </openerp>

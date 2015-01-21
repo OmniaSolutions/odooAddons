@@ -36,7 +36,5 @@
             <field name="view_mode">tree,form</field>
         </record>
         
-        <menuitem action="action_transportation_reason_tree" id="menu_action_transportation_reason_tree" parent="stock.menu_stock_configuration"/>
-    
     </data>
 </openerp>
