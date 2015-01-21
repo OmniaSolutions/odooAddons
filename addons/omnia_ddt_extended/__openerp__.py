@@ -37,7 +37,7 @@ Manage DDT documents
     'depends': ['omnia_ddt'],
     'data': [
              #view
-             'view/sequence_view_ddt_omnia.xml',
+             #'view/sequence_view_ddt_omnia.xml',
     ],
     'installable': True,
     'auto_install': False,

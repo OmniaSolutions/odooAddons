@@ -109,9 +109,9 @@ class omnia_ddt_parser(report_sxw.rml_parse):
         })
 
 
-mResurcePath=os.path.join(addons.get_module_resource('omnia_ddt'),'report','stock_ddt_html.mako')  
-report_sxw.report_sxw('report.omnia_ddt_parser',
-                       'stock.picking.out', 
-                       mResurcePath,
-                       parser=omnia_ddt_parser,
-                       header=False)
+#mResurcePath=os.path.join(addons.get_module_resource('omnia_ddt'),'report','stock_ddt_html.mako')  
+#report_sxw.report_sxw('report.omnia_ddt_parser',
+#                       'stock.picking.out', 
+#                       mResurcePath,
+#                       parser=omnia_ddt_parser,
+#                       header=False)

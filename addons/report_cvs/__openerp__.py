@@ -48,12 +48,8 @@ The module structure and some code is inspired by the report_openoffice module.
     'author': 'OmniaSolutions',
     'category': 'Reporting', # i.e a technical module, not shown in Application install menu
     'url': 'http://http://www.omniasolutions.eu/',
-    'data': [ #'security/ir.model.access.csv',
-              #'data.xml',
-              #'wizard/report_webkit_actions_view.xml',
-              #'company_view.xml',
-              #'header_view.xml',
-              'ir_report_view.xml',
+    'data': [ 
+              #'ir_report_view.xml',
     ],
     'installable': True,
     'auto_install': False,

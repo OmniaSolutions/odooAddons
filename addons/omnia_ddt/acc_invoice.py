@@ -21,10 +21,10 @@
 Created on 10/lug/2013
 @author: mboscolo
 '''
-from osv import osv, fields
+from openerp import models, fields, api
 import logging
 
-class omnia_ddt_account_invoice(osv.osv):
+class omnia_ddt_account_invoice(models.Model):
     
     _name = "account.invoice"
     _inherit = ['account.invoice']
