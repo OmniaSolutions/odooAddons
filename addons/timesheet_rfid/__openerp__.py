@@ -21,15 +21,15 @@
 ##############################################################################
 
 {
-    'name': 'Timesheet RFeed',
+    'name': 'Timesheet RFid',
     'version': '1.1',
     'author': 'OmniaSolutions',
     'website': 'http://www.omniasolutions.eu',
     'category': 'Timesheet',
     'sequence': 1,
-    'summary': 'Timesheet integration with RFeed',
+    'summary': 'Timesheet integration with RFid',
     'images': [],
-    'depends': ['base','hr','project','sale'],
+    'depends': ['project','hr_timesheet_sheet','hr_attendance'],
     'description': """
 
     """,

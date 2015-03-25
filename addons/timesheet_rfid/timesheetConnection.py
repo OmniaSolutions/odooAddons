@@ -17,7 +17,6 @@ def correctDate(fromTimeStr, context):
     return serverUtcTime.replace(tzinfo=pytz.utc).astimezone(pytz.timezone(context.get('tz','Europe/Rome')))
 
 class TimesheetConnection(osv.osv):
-    _name='hr.employee'
     _inherit='hr.employee'
     
     def getUidAndName(self, cr, uid, vals, context={}):
@@ -326,7 +325,6 @@ class TimesheetConnection(osv.osv):
 TimesheetConnection()
 
 class timesheetSheetConnection(osv.osv):
-    _name='hr_timesheet_sheet.sheet'
     _inherit='hr_timesheet_sheet.sheet'
     
     def _getEmployeeCost(self, cr, uid, emp_id, context=None):
