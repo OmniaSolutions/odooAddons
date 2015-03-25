@@ -88,7 +88,9 @@ class TimesheetConnection(osv.osv):
                     objBrwse = sheetDaysObj.browse(cr, uid, idd)
                     if objBrwse:
                         total_difference = objBrwse.total_difference
-                        outdict[str(compDatetime.day)] = total_difference
+                        total_attendance = objBrwse.total_attendance
+                        total_timesheet  = objBrwse.total_timesheet
+                        outdict[str(compDatetime.day)] = [total_difference, total_attendance, total_timesheet]
         return outdict
 #         attendanceObj = self.pool.get('hr.attendance')
 #         attendanceIds = attendanceObj.search(cr, uid, [('sheet_id','=',sheet_id),('employee_id','=', employee_id)])
