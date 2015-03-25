@@ -33,6 +33,7 @@ class TimesheetConnection(osv.osv):
         '''
         uid = self.getUserIdFromEmployeeId(cr, uid, vals[0])
         daysList, sheet_id, sheetState = self.getDaysAndSheet(cr, uid, vals[0], vals[1], context = {})
+        attendances = self.getAttendancesBySheetAndDays(cr, uid, sheet_id, daysList, context)
         sheetReadonly = False
         if sheetState == 'confirm':
             sheetReadonly = True
@@ -70,8 +71,31 @@ class TimesheetConnection(osv.osv):
                     'timesheetDict' : timesheetDict,
                     'sheet_id'      : sheet_id,
                     'sheetReadonly' : sheetReadonly,
+                    'timeAttDiff'   : attendances,
                     }
         return outDict
+        
+    def getAttendancesBySheetAndDays(self, cr, uid, sheet_id, daysList, context={}):
+        outdict = {}
+        sheetDaysObj = self.pool.get('hr_timesheet_sheet.sheet.day')
+        for elem in daysList:
+            stringDate = elem.get('date')
+            compDatetime = datetime.strptime(stringDate+' 1:1:1', DEFAULT_SERVER_DATETIME_FORMAT)
+            if compDatetime:
+                compDate = compDatetime.date()
+                sheetdaysIds = sheetDaysObj.search(cr, uid, [('sheet_id.user_id','=',uid),('name','=',compDate)])
+                for idd in sheetdaysIds:
+                    objBrwse = sheetDaysObj.browse(cr, uid, idd)
+                    if objBrwse:
+                        total_difference = objBrwse.total_difference
+                        outdict[str(compDatetime.day)] = total_difference
+        return outdict
+#         attendanceObj = self.pool.get('hr.attendance')
+#         attendanceIds = attendanceObj.search(cr, uid, [('sheet_id','=',sheet_id),('employee_id','=', employee_id)])
+#         for attId in attendanceIds:
+#             attBrws = attendanceObj.browse(cr, uid, attId)
+#             day = attBrws.day
+            
         
     def getTimesheetActivities(self, cr, uid, userID, sheet_id, context):
         '''
@@ -324,6 +348,8 @@ class timesheetSheetConnection(osv.osv):
         for timesheet in vals:
             employeeBrwse = hrEmployeeObj.browse(cr, uid, timesheet.get('employee_id'))
             hours = timesheet.get('hours')
+            if not hours:
+                hours = 0
             name = timesheet.get('account_name').split('/')[-1]
             acc_id = self.pool.get('account.analytic.account').search(cr, uid, [('type','in',['normal', 'contract']), ('state', '<>', 'close'),('use_timesheets','=',1),('name','=',name.strip())])
             computedDate = timesheet.get('date')
