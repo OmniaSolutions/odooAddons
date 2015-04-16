@@ -151,7 +151,7 @@ class TimesheetConnection(osv.osv):
             daysList = []
             for i in range(delta.days + 1):
                 date = computed_date_from + timedelta(days=i)
-                monthName = calendar.month_abbr[date.month]
+                monthName = calendar.month_name[date.month]
                 dayNumber = date.day
                 weekDayId = calendar.weekday(date.year, date.month, date.day)
                 dayName   = calendar.day_abbr[weekDayId]
