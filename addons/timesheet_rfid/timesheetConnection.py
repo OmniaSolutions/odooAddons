@@ -55,16 +55,19 @@ class TimesheetConnection(osv.osv):
         brwsList = accAccObj.browse(cr, uid, accIds, context)
         accountList = []
         for oggBrse in brwsList:
-            accountList.append({
+            grandparent = ''
+            parent = ''
+            if oggBrse.parent_id:
+                parent=oggBrse.parent_id.complete_name
+            if oggBrse.parent_id.parent_id:
+                grandparent = oggBrse.parent_id.parent_id.complete_name
+            accountList.append({#oggBrse.parent_id.complete_name
                             'complete_name' : unicode(oggBrse.complete_name),
                             'id'            : oggBrse.id,
+                            'parent'        : parent,
+                            'grandparent'   : grandparent,
                             })
-#         for i in range(0,10):
-#             accountList.append({
-#                             'complete_name' : 'test'+str(i),
-#                             'id'            : 'idd',
-#                             })
-        outDict = {
+        outDict = { 
                     'accountList'   : accountList,
                     'daysList'      : daysList,
                     'timesheetDict' : timesheetDict,
