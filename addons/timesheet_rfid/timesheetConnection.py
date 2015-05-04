@@ -61,7 +61,7 @@ class TimesheetConnection(osv.osv):
                 parent=oggBrse.parent_id.complete_name
             if oggBrse.parent_id.parent_id:
                 grandparent = oggBrse.parent_id.parent_id.complete_name
-            accountList.append({#oggBrse.parent_id.complete_name
+            accountList.append({
                             'complete_name' : unicode(oggBrse.complete_name),
                             'id'            : oggBrse.id,
                             'parent'        : parent,
@@ -94,12 +94,6 @@ class TimesheetConnection(osv.osv):
                         total_timesheet  = objBrwse.total_timesheet
                         outdict[str(compDatetime.day)] = [total_difference, total_attendance, total_timesheet]
         return outdict
-#         attendanceObj = self.pool.get('hr.attendance')
-#         attendanceIds = attendanceObj.search(cr, uid, [('sheet_id','=',sheet_id),('employee_id','=', employee_id)])
-#         for attId in attendanceIds:
-#             attBrws = attendanceObj.browse(cr, uid, attId)
-#             day = attBrws.day
-            
         
     def getTimesheetActivities(self, cr, uid, userID, sheet_id, context):
         '''
@@ -191,23 +185,22 @@ class TimesheetConnection(osv.osv):
                     logging.log('invalid action')
         else:
             sheetObj = self.pool.get('hr_timesheet_sheet.sheet')
-            sheetsForCurrentUser = sheetObj.search(cr, uid, [('employee_id','=',employee_id)])
+            sheet_ids = sheetObj.search(cr, uid, [('date_from','<=',date),('date_to','>=',date),('employee_id','=',employee_id)])
             dateTime = datetime.now()
             date = dateTime.date()
-            if not sheetsForCurrentUser:
-                sheet_id = self.createSheet(cr, uid, sheetObj, employee_id, date, context)
-            else:
-                res = sheetObj.search(cr, uid, [('date_from','<=',date),('date_to','>=',date),('employee_id','=',employee_id)])
-                if res:
-                    sheet_id = res[0]
-            vals = {
-                    'action'        : 'sign_in',
-                    'name'          : str(date)+' '+str(dateTime.time()).split('.')[0],
-                    'day'           : str(date),
-                    'employee_id'   : employee_id,
-            }
-            context['sheet_id']=sheet_id
-            self.writeAction(cr, uid, employee_id, hrAttendanceObj, vals, context)
+            if not sheet_ids:
+                sheet_ids = [self.createSheet(cr, uid, sheetObj, employee_id, date, context)]
+
+            for sheet_id in sheet_ids:
+                vals = {
+                        'action'        : 'sign_in',
+                        'name'          : str(date)+' '+str(dateTime.time()).split('.')[0],
+                        'day'           : str(date),
+                        'employee_id'   : employee_id,
+                }
+                context['sheet_id']=sheet_id
+                self.writeAction(cr, uid, employee_id, hrAttendanceObj, vals, context)
+                break
         attendance = hrAttendanceObj.search(cr, uid, [('employee_id','=',employee_id)], limit=1, order='name DESC')
         if attendance:
             lastAction = hrAttendanceObj.browse(cr, uid, attendance[-1], context).action
@@ -217,6 +210,22 @@ class TimesheetConnection(osv.osv):
                 return 'Entrata segnata'
         return False
         
+    def getNextUserAction(self, cr, uid, vals, context):
+        employee_name = vals.get('employee_name',False)
+        if employee_name:
+            hrAttendanceObj = self.pool.get('hr.attendance')
+            employee_ids = self.search(cr, uid, [('name','=',employee_name)])
+            for employee_id in employee_ids:
+                attendance = hrAttendanceObj.search(cr, uid, [('employee_id','=',employee_id)], limit=1, order='name DESC')
+                if attendance:
+                    lastAction = hrAttendanceObj.browse(cr, uid, attendance[-1], context).action
+                    if lastAction == 'sign_out':
+                        return 'Entrata'
+                    elif lastAction == 'sign_in':
+                        return 'Uscita'
+                break
+        return False
+            
     def createSheet(self, cr, uid, sheetObj, employee_id, date, context):
         date_from, date_to = self._getWeekFromTo(date)
         vals = {
@@ -240,10 +249,7 @@ class TimesheetConnection(osv.osv):
         '''
             compute and set sign-in and sign-out
         '''
-        currentDatetime = datetime.now()     #'%Y-%m-%d %H:%M:%S'
-        #commented for date test
-        #currentDatetime = datetime(year=currentDatetime.year,month=currentDatetime.month,day=currentDatetime.day,hour=7,minute=0,second=1)
-
+        currentDatetime = datetime.now()     
         date = currentDatetime.date()
         midnightTarget = datetime(year=date.year,month=date.month,day=date.day,hour=0,minute=0,second=0)
         morningTarget = datetime(year=date.year,month=date.month,day=date.day,hour=8,minute=0,second=0)
@@ -256,20 +262,9 @@ class TimesheetConnection(osv.osv):
                 'employee_id'   : employeeID,
         }
         if currentDatetime>=midnightTarget and currentDatetime<=morningTarget:            #00:00 --> 8:00
-#             if action == 'sign_out':
-#                 self.setOldAttendances(cr, uid, hrAttendanceObj, employeeID, context)
-#                 self.writeAction(cr, uid, employeeID, hrAttendanceObj, context)
-#             elif action == 'sign_in':
-#                 self.setOldAttendances(cr, uid, hrAttendanceObj, employeeID, context)
-#                 self.writeAction(cr, uid, employeeID, hrAttendanceObj, context)
             self.setOldAttendances(cr, uid, hrAttendanceObj, employeeID, context)
             self.writeAction(cr, uid, employeeID, hrAttendanceObj, context)
         elif currentDatetime>=morningTarget and currentDatetime<=eveningTarget:           #08:00 --> 19:00
-#             if action == 'sign_out':
-#                 self.writeAction(cr, uid, employeeID, hrAttendanceObj, context)
-#             elif action == 'sign_in':
-#                 self.setOldAttendances(cr, uid, hrAttendanceObj, employeeID, context)
-#                 self.writeAction(cr, uid, employeeID, hrAttendanceObj, context)
             self.setOldAttendances(cr, uid, hrAttendanceObj, employeeID, context)
             self.writeAction(cr, uid, employeeID, hrAttendanceObj, context)
         elif currentDatetime>=eveningTarget and currentDatetime<=midnightOldTarget:       #19:00 --> 23:59:59
@@ -302,7 +297,6 @@ class TimesheetConnection(osv.osv):
         date = datetime.strptime(brwse.day+' 1:1:1', DEFAULT_SERVER_DATETIME_FORMAT)
         if action == 'sign_in' and date.date()!=datetime.now().date():
             tar = datetime(year=date.year,month=date.month,day=date.day,hour=19,minute=0,second=0)
-            #tar = correctDate(tar.strftime("%Y-%m-%d %H:%M:%S"), context).replace(tzinfo=None)
             vals={}
             vals['action']      = 'sign_out'
             vals['name']        = str(tar)
@@ -357,7 +351,6 @@ class timesheetSheetConnection(osv.osv):
             acc_id = self.pool.get('account.analytic.account').search(cr, uid, [('type','in',['normal', 'contract']), ('state', '<>', 'close'),('use_timesheets','=',1),('name','=',name.strip())])
             computedDate = timesheet.get('date')
             computedDate = correctDate(computedDate, context).replace(tzinfo=None)
-            #sheet_id = self.search(cr, uid, [('date_from','<=',computedDate),('date_to','>=',computedDate),('employee_id','=',employeeBrwse.id)])
             hrsheet_defaults = {
                                     'product_uom_id':       hrsheet_obj._getEmployeeUnit(cr, uid),
                                     'product_id':           hrsheet_obj._getEmployeeProduct(cr, uid),
