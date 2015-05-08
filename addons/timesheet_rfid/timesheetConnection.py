@@ -211,6 +211,13 @@ class TimesheetConnection(osv.osv):
         return False
         
     def getNextUserAction(self, cr, uid, vals, context):
+        outAction = 'Not computed'
+        currentDatetime = datetime.now()
+        date = currentDatetime.date()
+        midnightTarget = datetime(year=date.year,month=date.month,day=date.day,hour=0,minute=0,second=0)
+        morningTarget = datetime(year=date.year,month=date.month,day=date.day,hour=8,minute=0,second=0)
+        eveningTarget = datetime(year=date.year,month=date.month,day=date.day,hour=19,minute=0,second=0)
+        midnightOldTarget = datetime(year=date.year,month=date.month,day=date.day,hour=23,minute=59,second=59)
         employee_name = vals.get('employee_name',False)
         if employee_name:
             hrAttendanceObj = self.pool.get('hr.attendance')
@@ -218,13 +225,25 @@ class TimesheetConnection(osv.osv):
             for employee_id in employee_ids:
                 attendance = hrAttendanceObj.search(cr, uid, [('employee_id','=',employee_id)], limit=1, order='name DESC')
                 if attendance:
-                    lastAction = hrAttendanceObj.browse(cr, uid, attendance[-1], context).action
-                    if lastAction == 'sign_out':
-                        return 'Entrata'
-                    elif lastAction == 'sign_in':
-                        return 'Uscita'
+                    attendanceBrws = hrAttendanceObj.browse(cr, uid, attendance[-1], context)
+                    lastAction = attendanceBrws.action
+                    datetimeActStr = attendanceBrws.name
+                    datetimeAct = datetime.strptime(datetimeActStr, DEFAULT_SERVER_DATETIME_FORMAT)
+                    if currentDatetime>=midnightTarget and currentDatetime<=morningTarget:            #00:00 --> 8:00
+                        if datetimeAct.date() == date and lastAction == 'sign_in':
+                            outAction = 'Uscita'
+                        else:
+                            outAction = 'Entrata'
+                    elif currentDatetime>=morningTarget and currentDatetime<=eveningTarget:           #08:00 --> 19:00
+                        if lastAction == 'sign_in':    
+                            outAction = 'Uscita'
+                        else:
+                            outAction = 'Entrata'
+                    elif currentDatetime>=eveningTarget and currentDatetime<=midnightOldTarget:       #19:00 --> 23:59:59
+                        outAction = 'Uscita'
+                    return outAction
                 break
-        return False
+        return outAction
             
     def createSheet(self, cr, uid, sheetObj, employee_id, date, context):
         date_from, date_to = self._getWeekFromTo(date)
