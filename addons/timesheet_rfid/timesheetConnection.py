@@ -185,9 +185,9 @@ class TimesheetConnection(osv.osv):
                     logging.log('invalid action')
         else:
             sheetObj = self.pool.get('hr_timesheet_sheet.sheet')
-            sheet_ids = sheetObj.search(cr, uid, [('date_from','<=',date),('date_to','>=',date),('employee_id','=',employee_id)])
             dateTime = datetime.now()
             date = dateTime.date()
+            sheet_ids = sheetObj.search(cr, uid, [('date_from','<=',date),('date_to','>=',date),('employee_id','=',employee_id)])
             if not sheet_ids:
                 sheet_ids = [self.createSheet(cr, uid, sheetObj, employee_id, date, context)]
 
@@ -211,7 +211,7 @@ class TimesheetConnection(osv.osv):
         return False
         
     def getNextUserAction(self, cr, uid, vals, context):
-        outAction = 'Not computed'
+        outAction = 'Not computed by server'
         currentDatetime = datetime.now()
         date = currentDatetime.date()
         midnightTarget = datetime(year=date.year,month=date.month,day=date.day,hour=0,minute=0,second=0)
@@ -242,7 +242,8 @@ class TimesheetConnection(osv.osv):
                     elif currentDatetime>=eveningTarget and currentDatetime<=midnightOldTarget:       #19:00 --> 23:59:59
                         outAction = 'Uscita'
                     return outAction
-                break
+                else:
+                    outAction = 'Entrata'
         return outAction
             
     def createSheet(self, cr, uid, sheetObj, employee_id, date, context):
