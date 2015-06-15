@@ -13,6 +13,7 @@ from dateutil import parser
 import calendar
 from mako.template import Template
 
+CURRENT_DATETIME = datetime.now().replace(tzinfo=None, minute=01, second=0, hour=12, microsecond=0) #UNCOMMENT FOR DATETIME TEST
 def correctDate(fromTimeStr, context):
     serverUtcTime=parser.parse(fromTimeStr)
     return serverUtcTime.replace(tzinfo=pytz.utc).astimezone(pytz.timezone(context.get('tz','Europe/Rome')))
@@ -64,7 +65,7 @@ class TimesheetConnection(osv.osv):
                 grandparent = oggBrse.parent_id.parent_id.complete_name
             accountList.append({
                             'complete_name' : unicode(oggBrse.complete_name),
-                            'id'            : oggBrse.id,
+                            'acc_id'        : oggBrse.id,
                             'parent'        : parent,
                             'grandparent'   : grandparent,
                             })
@@ -116,11 +117,13 @@ class TimesheetConnection(osv.osv):
                     if found ==0:
                         outDict[accBrwse.date].append({'unit_amount':accBrwse.unit_amount,
                                                        'account_name':accBrwse.account_id.complete_name,
+                                                       'account_id':accBrwse.account_id.id,
                                                        'description':accBrwse.name,
                                                        })
                 else:
                     outDict[accBrwse.date] = [{'unit_amount':accBrwse.unit_amount,
                                                'account_name':accBrwse.account_id.complete_name,
+                                               'account_id':accBrwse.account_id.id,
                                                'description':accBrwse.name, 
                                                }]
         return outDict
@@ -152,12 +155,16 @@ class TimesheetConnection(osv.osv):
                 monthName = calendar.month_name[date.month]
                 dayNumber = date.day
                 weekDayId = calendar.weekday(date.year, date.month, date.day)
-                dayName   = calendar.day_abbr[weekDayId]
+                dayName   = calendar.day_name[weekDayId]
+                today = False
+                if date.date() == datetime.now().date():
+                    today = True
                 dayDict ={
                           'dayName'    : dayName,
                           'dayNumber'  : dayNumber,
                           'monthName'  : monthName,
                           'date'       : str(date.date()),
+                          'today'      : today,
                           }
                 print date
                 daysList.append(dayDict)
@@ -186,8 +193,7 @@ class TimesheetConnection(osv.osv):
                     logging.log('invalid action')
         else:
             sheetObj = self.pool.get('hr_timesheet_sheet.sheet')
-            dateTime = datetime.now()
-            #dateTime = dateTime.replace(hour=18)     #UNCOMMENT FOR DATE TEST
+            dateTime = CURRENT_DATETIME
             date = dateTime.date()
             sheet_ids = sheetObj.search(cr, uid, [('date_from','<=',date),('date_to','>=',date),('employee_id','=',employee_id)])
             if not sheet_ids:
@@ -296,8 +302,7 @@ class TimesheetConnection(osv.osv):
             else: 
                 commonOperations(cr, uid, hrAttendanceObj, employeeID, currentDatetime, vals, context)
                 
-        currentDatetime = datetime.now()   
-        #currentDatetime = currentDatetime.replace(hour=18)                                #UNCOMMENT FOR DATE TEST
+        currentDatetime = CURRENT_DATETIME   
         date = currentDatetime.date()
         midnightTarget = datetime(year=date.year,month=date.month,day=date.day,hour=0,minute=0,second=0)
         morningTarget = datetime(year=date.year,month=date.month,day=date.day,hour=8,minute=0,second=0)
@@ -332,13 +337,24 @@ class TimesheetConnection(osv.osv):
             else:
                 return 'afternoon'
             return False
+        
+        def computeAndWrite(cr, uid, brwsDatetime, employee_id, action, hrAttendanceObj, hour, context):
+            localDatetime = brwsDatetime.replace(hour=hour, minute=0)
+            vals = self.computeVals(localDatetime, employee_id, action)
+            return self.writeAction(cr, uid, employee_id, hrAttendanceObj, vals)
+            
+        def bodyAndSendEmail(cr, uid, attIds, employee_id, context):
+            body_html = self.computeBodyForMail(cr, uid, employee_id, attIds,context)
+            self.send_mail(cr, uid, body_html=body_html, context=context) 
+            return True
+        
         attendances = hrAttendanceObj.search(cr, uid, [('employee_id','=',employee_id)],limit=1, order='name DESC')
         brwse = hrAttendanceObj.browse(cr, uid, attendances)[0]
         action = brwse.action
         date = datetime.strptime(brwse.day+' 1:1:1', DEFAULT_SERVER_DATETIME_FORMAT)
         brwsDatetime = datetime.strptime(brwse.name, DEFAULT_SERVER_DATETIME_FORMAT)
+        res = verifySign(brwsDatetime)
         if action == 'sign_in' and date.date() != datetime.now().date():
-            res = verifySign(brwsDatetime)
             if res == 'afternoon':
                 tarDatetime = brwsDatetime.replace(hour=17, minute=0)
                 if brwsDatetime > tarDatetime:
@@ -347,33 +363,20 @@ class TimesheetConnection(osv.osv):
                 self.writeAction(cr, uid, employee_id, hrAttendanceObj, vals)
                 return 'sign_out'
             elif res == 'morning':
-                preLaunch = brwsDatetime.replace(hour=12, minute=0)
-                vals = self.computeVals(preLaunch, employee_id, 'sign_out')
-                attMidId = self.writeAction(cr, uid, employee_id, hrAttendanceObj, vals)
-                afterLaunch = brwsDatetime.replace(hour=13, minute=0)
-                vals = self.computeVals(afterLaunch, employee_id, 'sign_in')
-                attLaunId = self.writeAction(cr, uid, employee_id, hrAttendanceObj, vals)
-                tarDatetime = brwsDatetime.replace(hour=17, minute=0)
-                vals = self.computeVals(tarDatetime, employee_id, 'sign_out')
-                self.writeAction(cr, uid, employee_id, hrAttendanceObj, vals)
-                body_html = self.computeBodyForMail(cr, uid, [attMidId,attLaunId], employee_id,context)
-                self.send_mail(cr, uid, body_html=body_html, context=context) 
+                attMidId = computeAndWrite(cr, uid, brwsDatetime, employee_id, 'sign_out', hrAttendanceObj, 12, context)
+                attLaunId = computeAndWrite(cr, uid, brwsDatetime, employee_id, 'sign_in', hrAttendanceObj, 13, context)
+                computeAndWrite(cr, uid, brwsDatetime, employee_id, 'sign_out', hrAttendanceObj, 17, context)
+                bodyAndSendEmail(cr, uid, [attMidId,attLaunId], employee_id, context)
                 return 'sign_out'
         elif action == 'sign_out' and date.date()!=datetime.now().date():
-            res = verifySign(brwsDatetime)
             if res == 'morning':
-                afterLaunch = brwsDatetime.replace(hour=13, minute=0)
-                vals = self.computeVals(afterLaunch, employee_id, 'sign_in')
-                afterLaunchID = self.writeAction(cr, uid, employee_id, hrAttendanceObj, vals)
-                tarDatetime = brwsDatetime.replace(hour=17, minute=0)
-                vals = self.computeVals(tarDatetime, employee_id, 'sign_out')
-                self.writeAction(cr, uid, employee_id, hrAttendanceObj, vals)
-                body_html = self.computeBodyForMail(cr, uid, [afterLaunchID], employee_id ,context)
-                self.send_mail(cr, uid, body_html=body_html, context=context) 
+                afterLaunchID = computeAndWrite(cr, uid, brwsDatetime, employee_id, 'sign_in', hrAttendanceObj, 13, context)
+                computeAndWrite(cr, uid, brwsDatetime, employee_id, 'sign_out', hrAttendanceObj, 17, context)
+                bodyAndSendEmail(cr, uid, [afterLaunchID], employee_id, context)
                 return 'sign_out'
         return action
         
-    def computeBodyForMail(self, cr, uid, attendanceList, employeeId, context={}):
+    def computeBodyForMail(self, cr, uid, employeeId, attendanceList=[], context={}):
         outBody = 'Salve,<br>'
         attendanceObj = self.pool.get('hr.attendance')
         employeeBrws = self.pool.get('hr.employee').browse(cr, uid, employeeId, context)
@@ -405,9 +408,13 @@ class TimesheetConnection(osv.osv):
         mail_mail_obj = self.pool.get('mail.mail')
         for mailAddress in email_to:
             values['email_to'] = mailAddress
-            msg_id = mail_mail_obj.create(cr, uid, values, context=context)
-            if msg_id:
-                mail_mail_obj.send(cr, uid, [msg_id], context=context) 
+            try:
+                msg_id = mail_mail_obj.create(cr, uid, values, context=context)
+                if msg_id:
+                    mail_mail_obj.send(cr, uid, [msg_id], context=context) 
+            except Exception,ex:
+                print ex
+                print 'Mail not delivered to %s'%mailAddress
         return True
 
     def writeAction(self, cr, uid, employeeID, hrAttendanceObj, vals={}, context = {}):
@@ -450,8 +457,7 @@ class timesheetSheetConnection(osv.osv):
             hours = timesheet.get('hours')
             if not hours:
                 hours = 0
-            name = timesheet.get('account_name').split('/')[-1]
-            acc_id = self.pool.get('account.analytic.account').search(cr, uid, [('type','in',['normal', 'contract']), ('state', '<>', 'close'),('use_timesheets','=',1),('name','=',name.strip())])
+            acc_id = timesheet.get('acc_id')
             computedDate = timesheet.get('date')
             computedDate = correctDate(computedDate, context).replace(tzinfo=None)
             hrsheet_defaults = {
@@ -462,14 +468,14 @@ class timesheetSheetConnection(osv.osv):
                                     'date':                 computedDate,
                                     'user_id':              employeeBrwse.user_id.id,
                                     'to_invoice':   1,#FIXME: Yes(100%) int(toInvoice), imposato a invoicable 100%
-                                    'account_id':   acc_id[0],
+                                    'account_id':   acc_id,
                                     'unit_amount':  hours,
                                     'company_id':   actxcod_obj._default_company(cr, uid),
                                     'amount':       self._getEmployeeCost(cr,uid, employeeBrwse.id)*float(hours)*(-1),      # Recorded negative because it's a cost
                                     'name' :        timesheet.get('desc'),
                                     'sheet_id' :    timesheet.get('sheet_id'),
                                }
-            alreadyWritten = hrsheet_obj.search(cr, uid, [('account_id','=',acc_id[0]),('date','=',computedDate)])
+            alreadyWritten = hrsheet_obj.search(cr, uid, [('account_id','=',acc_id),('date','=',computedDate)])
             if len(alreadyWritten)==1:
                 #FIXME: nel caso in cui ci fossero piu' attendances collegate al medesimo sheet del medesimo giorno al momento non applico le modifiche
                 #se ne trovo una faccio una modifica senno' la creo
