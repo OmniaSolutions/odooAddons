@@ -13,7 +13,8 @@ from dateutil import parser
 import calendar
 from mako.template import Template
 
-CURRENT_DATETIME = datetime.now().replace(tzinfo=None, minute=01, second=0, hour=12, microsecond=0) #UNCOMMENT FOR DATETIME TEST
+#CURRENT_DATETIME = datetime.now()#.replace(tzinfo=None, minute=0, second=0, hour=8, microsecond=0) #UNCOMMENT FOR DATETIME TEST
+AFTERNOON_AUTOCOMPLETE_HOUR = 18
 def correctDate(fromTimeStr, context):
     serverUtcTime=parser.parse(fromTimeStr)
     return serverUtcTime.replace(tzinfo=pytz.utc).astimezone(pytz.timezone(context.get('tz','Europe/Rome')))
@@ -133,7 +134,7 @@ class TimesheetConnection(osv.osv):
             return days and sheet id
         '''
         if not targetDate:
-            targetDate = datetime.now().date()
+            targetDate = self._currentDateTime.date()
         else:
             targetDate = datetime.strptime(targetDate+' 1:1:1', DEFAULT_SERVER_DATETIME_FORMAT).date()
         sheetSheetObj = self.pool.get('hr_timesheet_sheet.sheet')
@@ -157,7 +158,7 @@ class TimesheetConnection(osv.osv):
                 weekDayId = calendar.weekday(date.year, date.month, date.day)
                 dayName   = calendar.day_name[weekDayId]
                 today = False
-                if date.date() == datetime.now().date():
+                if date.date() == self._currentDateTime.date():
                     today = True
                 dayDict ={
                           'dayName'    : dayName,
@@ -180,6 +181,7 @@ class TimesheetConnection(osv.osv):
         '''
             set sign in
         '''
+        self._currentDateTime = datetime.now()
         uid = self.getUserIdFromEmployeeId(cr, uid, employee_id)
         hrAttendanceObj = self.pool.get('hr.attendance')
         attendanceIds = hrAttendanceObj.search(cr, uid, [('employee_id','=',employee_id)], limit=1, order='name DESC')
@@ -188,13 +190,12 @@ class TimesheetConnection(osv.osv):
             if brws:
                 action = brws.action
                 if action:
-                    self.computeDateRange(cr, uid, employee_id, action, hrAttendanceObj, context)
+                    self.computeDateRange(cr, uid, employee_id, hrAttendanceObj, context)
                 else:
                     logging.log('invalid action')
         else:
             sheetObj = self.pool.get('hr_timesheet_sheet.sheet')
-            dateTime = CURRENT_DATETIME
-            date = dateTime.date()
+            date = self._currentDateTime.date()
             sheet_ids = sheetObj.search(cr, uid, [('date_from','<=',date),('date_to','>=',date),('employee_id','=',employee_id)])
             if not sheet_ids:
                 sheet_ids = [self.createSheet(cr, uid, sheetObj, employee_id, date, context)]
@@ -202,7 +203,7 @@ class TimesheetConnection(osv.osv):
             for sheet_id in sheet_ids:
                 vals = {
                         'action'        : 'sign_in',
-                        'name'          : str(date)+' '+str(dateTime.time()).split('.')[0],
+                        'name'          : str(date)+' '+str(self._currentDateTime.time()).split('.')[0],
                         'day'           : str(date),
                         'employee_id'   : employee_id,
                 }
@@ -220,8 +221,8 @@ class TimesheetConnection(osv.osv):
         
     def getNextUserAction(self, cr, uid, vals, context):
         outAction = 'Not computed by server'
-        currentDatetime = datetime.now()
-        date = currentDatetime.date()
+        self._currentDateTime = datetime.now()
+        date = self._currentDateTime.date()
         midnightTarget = datetime(year=date.year,month=date.month,day=date.day,hour=0,minute=0,second=0)
         morningTarget = datetime(year=date.year,month=date.month,day=date.day,hour=8,minute=0,second=0)
         eveningTarget = datetime(year=date.year,month=date.month,day=date.day,hour=19,minute=0,second=0)
@@ -237,17 +238,17 @@ class TimesheetConnection(osv.osv):
                     lastAction = attendanceBrws.action
                     datetimeActStr = attendanceBrws.name
                     datetimeAct = datetime.strptime(datetimeActStr, DEFAULT_SERVER_DATETIME_FORMAT)
-                    if currentDatetime>=midnightTarget and currentDatetime<=morningTarget:            #00:00 --> 8:00
+                    if self._currentDateTime>=midnightTarget and self._currentDateTime<=morningTarget:            #00:00 --> 8:00
                         if datetimeAct.date() == date and lastAction == 'sign_in':
                             outAction = 'Uscita'
                         else:
                             outAction = 'Entrata'
-                    elif currentDatetime>=morningTarget and currentDatetime<=eveningTarget:           #08:00 --> 19:00
+                    elif self._currentDateTime>=morningTarget and self._currentDateTime<=eveningTarget:           #08:00 --> 19:00
                         if lastAction == 'sign_in':    
                             outAction = 'Uscita'
                         else:
                             outAction = 'Entrata'
-                    elif currentDatetime>=eveningTarget and currentDatetime<=midnightOldTarget:       #19:00 --> 23:59:59
+                    elif self._currentDateTime>=eveningTarget and self._currentDateTime<=midnightOldTarget:       #19:00 --> 23:59:59
                         outAction = 'Uscita'
                     return outAction
                 else:
@@ -267,13 +268,13 @@ class TimesheetConnection(osv.osv):
         
     def _getWeekFromTo(self, date = False):
         if not date:
-            date = datetime.now().date()
+            date = self._currentDateTime.date()
         weekday = date.weekday()
         mondayDate = date+timedelta(-weekday)
         sundayDate = mondayDate+timedelta(6)
         return mondayDate,sundayDate
         
-    def computeDateRange(self, cr, uid, employeeID, action, hrAttendanceObj, context = {}):
+    def computeDateRange(self, cr, uid, employeeID, hrAttendanceObj, context = {}):
         '''
             compute and set sign-in and sign-out
         '''
@@ -284,15 +285,15 @@ class TimesheetConnection(osv.osv):
             else:
                 vals['action']  ='sign_in'
             trueDateTime = currentDatetime.replace(microsecond=0)
-            vals = self.computeVals(trueDateTime, employeeID, vals['action'])
+            vals = self.computeVals(trueDateTime, employeeID, vals['action'], context)
             self.writeAction(cr, uid, employeeID, hrAttendanceObj, vals, context)
             
         def commonMorningOperation(cr, uid, hrAttendanceObj, employeeID, vals, morningTarget, currentDatetime, context):
             self.setOldAttendances(cr, uid, hrAttendanceObj, employeeID, context)
-            vals = self.computeVals(morningTarget, employeeID, 'sign_in')
+            vals = self.computeVals(morningTarget, employeeID, 'sign_in', context)
             self.writeAction(cr, uid, employeeID, hrAttendanceObj, vals, context)
             trueDateTime = currentDatetime.replace(microsecond=0)
-            vals = self.computeVals(trueDateTime, employeeID, 'sign_out')
+            vals = self.computeVals(trueDateTime, employeeID, 'sign_out', context)
             self.writeAction(cr, uid, employeeID, hrAttendanceObj, vals, context)
             
         def eveningOperations(cr, uid, employeeID, date, hrAttendanceObj, vals, morningTarget, currentDatetime, context):
@@ -301,27 +302,38 @@ class TimesheetConnection(osv.osv):
                 commonMorningOperation(cr, uid, hrAttendanceObj, employeeID, vals, morningTarget, currentDatetime, context)
             else: 
                 commonOperations(cr, uid, hrAttendanceObj, employeeID, currentDatetime, vals, context)
-                
-        currentDatetime = CURRENT_DATETIME   
-        date = currentDatetime.date()
-        midnightTarget = datetime(year=date.year,month=date.month,day=date.day,hour=0,minute=0,second=0)
-        morningTarget = datetime(year=date.year,month=date.month,day=date.day,hour=8,minute=0,second=0)
-        eveningTarget = datetime(year=date.year,month=date.month,day=date.day,hour=17,minute=0,second=0)
-        midnightOldTarget = datetime(year=date.year,month=date.month,day=date.day,hour=23,minute=59,second=59)
-        vals = {
-                'action'        : False,
-                'name'          : False,
-                'day'           : False,
-                'employee_id'   : employeeID,
-        }
-        if currentDatetime>=midnightTarget and currentDatetime<=morningTarget:            #00:00 --> 8:00
-            commonOperations(cr, uid, hrAttendanceObj, employeeID, currentDatetime, vals, context)
-        elif currentDatetime>=morningTarget and currentDatetime<=eveningTarget:           #08:00 --> 17:00
-            commonOperations(cr, uid, hrAttendanceObj, employeeID, currentDatetime, vals, context)
-        elif currentDatetime>=eveningTarget and currentDatetime<=midnightOldTarget:       #17:00 --> 23:59:59
-            eveningOperations(cr, uid, employeeID, date, hrAttendanceObj, vals, morningTarget, currentDatetime, context)
+            
+        def operations(cr, uid, employeeID, hrAttendanceObj, context = {}):
+            date = self._currentDateTime.date()
+            midnightTarget = datetime(year=date.year,month=date.month,day=date.day,hour=0,minute=0,second=0)
+            morningTarget = datetime(year=date.year,month=date.month,day=date.day,hour=8,minute=0,second=0)
+            eveningTarget = datetime(year=date.year,month=date.month,day=date.day,hour=17,minute=0,second=0)
+            midnightOldTarget = datetime(year=date.year,month=date.month,day=date.day,hour=23,minute=59,second=59)
+            vals = {
+                    'action'        : False,
+                    'name'          : False,
+                    'day'           : False,
+                    'employee_id'   : employeeID,
+            }
+            if self._currentDateTime>=midnightTarget and self._currentDateTime<=morningTarget:            #00:00 --> 8:00
+                commonOperations(cr, uid, hrAttendanceObj, employeeID, self._currentDateTime, vals, context)
+            elif self._currentDateTime>=morningTarget and self._currentDateTime<=eveningTarget:           #08:00 --> 17:00
+                commonOperations(cr, uid, hrAttendanceObj, employeeID, self._currentDateTime, vals, context)
+            elif self._currentDateTime>=eveningTarget and self._currentDateTime<=midnightOldTarget:       #17:00 --> 23:59:59
+                eveningOperations(cr, uid, employeeID, date, hrAttendanceObj, vals, morningTarget, self._currentDateTime, context)
+        try:
+            from test.test import HOURS_LIST
+        except :
+            HOURS_LIST = []
+        if len(HOURS_LIST)>0:
+            for  datetimeTest in HOURS_LIST:
+                self._currentDateTime = datetimeTest
+                operations(cr, uid, employeeID, hrAttendanceObj, context)
+        else:
+            operations(cr, uid, employeeID, hrAttendanceObj, context)
+        return True
         
-    def computeVals(self,tarDatetime, employee_id, action):
+    def computeVals(self,tarDatetime, employee_id, action, context):
         vals={}
         vals['action']      = action
         vals['name']        = str(tarDatetime)
@@ -331,7 +343,7 @@ class TimesheetConnection(osv.osv):
         
     def setOldAttendances(self, cr, uid, hrAttendanceObj, employee_id, context):
         def verifySign(lastDateTime):
-            middayTarget = brwsDatetime.replace(hour=12, minute=36)
+            middayTarget = brwsDatetime.replace(hour=12, minute=01)
             if lastDateTime<middayTarget:
                 return 'morning'
             else:
@@ -340,7 +352,7 @@ class TimesheetConnection(osv.osv):
         
         def computeAndWrite(cr, uid, brwsDatetime, employee_id, action, hrAttendanceObj, hour, context):
             localDatetime = brwsDatetime.replace(hour=hour, minute=0)
-            vals = self.computeVals(localDatetime, employee_id, action)
+            vals = self.computeVals(localDatetime, employee_id, action, context)
             return self.writeAction(cr, uid, employee_id, hrAttendanceObj, vals)
             
         def bodyAndSendEmail(cr, uid, attIds, employee_id, context):
@@ -354,25 +366,18 @@ class TimesheetConnection(osv.osv):
         date = datetime.strptime(brwse.day+' 1:1:1', DEFAULT_SERVER_DATETIME_FORMAT)
         brwsDatetime = datetime.strptime(brwse.name, DEFAULT_SERVER_DATETIME_FORMAT)
         res = verifySign(brwsDatetime)
-        if action == 'sign_in' and date.date() != datetime.now().date():
+        if action == 'sign_in' and date.date() != self._currentDateTime.date():
             if res == 'afternoon':
-                tarDatetime = brwsDatetime.replace(hour=17, minute=0)
+                tarDatetime = brwsDatetime.replace(hour=AFTERNOON_AUTOCOMPLETE_HOUR, minute=0)
                 if brwsDatetime > tarDatetime:
-                    tarDatetime = brwsDatetime + timedelta(hours=1)
-                vals = self.computeVals(tarDatetime, employee_id, 'sign_out')
-                self.writeAction(cr, uid, employee_id, hrAttendanceObj, vals)
+                    tarDatetime = brwsDatetime + timedelta(minutes=1)
+                vals = self.computeVals(tarDatetime, employee_id, 'sign_out', context)
+                attMidId = self.writeAction(cr, uid, employee_id, hrAttendanceObj, vals)
+                bodyAndSendEmail(cr, uid, [attMidId], employee_id, context)
                 return 'sign_out'
             elif res == 'morning':
                 attMidId = computeAndWrite(cr, uid, brwsDatetime, employee_id, 'sign_out', hrAttendanceObj, 12, context)
-                attLaunId = computeAndWrite(cr, uid, brwsDatetime, employee_id, 'sign_in', hrAttendanceObj, 13, context)
-                computeAndWrite(cr, uid, brwsDatetime, employee_id, 'sign_out', hrAttendanceObj, 17, context)
-                bodyAndSendEmail(cr, uid, [attMidId,attLaunId], employee_id, context)
-                return 'sign_out'
-        elif action == 'sign_out' and date.date()!=datetime.now().date():
-            if res == 'morning':
-                afterLaunchID = computeAndWrite(cr, uid, brwsDatetime, employee_id, 'sign_in', hrAttendanceObj, 13, context)
-                computeAndWrite(cr, uid, brwsDatetime, employee_id, 'sign_out', hrAttendanceObj, 17, context)
-                bodyAndSendEmail(cr, uid, [afterLaunchID], employee_id, context)
+                bodyAndSendEmail(cr, uid, [attMidId], employee_id, context)
                 return 'sign_out'
         return action
         
@@ -390,7 +395,7 @@ class TimesheetConnection(osv.osv):
     def send_mail(self, cr, uid,subject='[Timesheet Info]', body_html='', email_to=[], context=None):
         if not email_to:
             groupsObj = self.pool.get('res.groups')
-            groupsIds = groupsObj.search(cr, uid, [('name','=','Manager')],context)
+            groupsIds = groupsObj.search(cr, uid, [('name','=','Manager')])
             for groupId in groupsIds:
                 groupBrws = groupsObj.browse(cr, uid, groupId, context)
                 categBrows = groupBrws.category_id
@@ -426,6 +431,7 @@ class TimesheetConnection(osv.osv):
             context['tz']='Europe/Rome'
         else:
             context['tz']=timeZone
+#         context['tz']='UTC'
         date = correctDate(vals.get('name',''), context)
         return hrAttendanceObj.create(cr, 1, vals, context)
     
