@@ -35,6 +35,7 @@
     """,
     'data': [
         #'install/board_plm_view.xml',
+        'views/res_config_view.xml'
         ],
     'demo': [
         ],

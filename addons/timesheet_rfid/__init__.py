@@ -27,3 +27,4 @@ Created on Feb 13, 2015
 '''
 
 import timesheetConnection
+import plm_config_settings
