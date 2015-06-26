@@ -17,7 +17,8 @@ from mako.template import Template
 AFTERNOON_AUTOCOMPLETE_HOUR = 18
 def correctDate(fromTimeStr, context):
     serverUtcTime=parser.parse(fromTimeStr)
-    return serverUtcTime.replace(tzinfo=pytz.utc).astimezone(pytz.timezone(context.get('tz','Europe/Rome')))
+    hoursToCorrectTimedelta = serverUtcTime.replace(tzinfo=pytz.utc).astimezone(pytz.timezone(context.get('tz','Europe/Rome'))).utcoffset()
+    return serverUtcTime - hoursToCorrectTimedelta
 
 class TimesheetConnection(osv.osv):
     _inherit='hr.employee'
@@ -322,7 +323,7 @@ class TimesheetConnection(osv.osv):
             elif self._currentDateTime>=eveningTarget and self._currentDateTime<=midnightOldTarget:       #17:00 --> 23:59:59
                 eveningOperations(cr, uid, employeeID, date, hrAttendanceObj, vals, morningTarget, self._currentDateTime, context)
         try:
-            from test.test import HOURS_LIST
+            from timesheet_rfid.test.test import HOURS_LIST
         except :
             HOURS_LIST = []
         if len(HOURS_LIST)>0:
@@ -431,8 +432,8 @@ class TimesheetConnection(osv.osv):
             context['tz']='Europe/Rome'
         else:
             context['tz']=timeZone
-#         context['tz']='UTC'
-        date = correctDate(vals.get('name',''), context)
+        datetimee = correctDate(vals.get('name',''), context)
+        vals['name'] = str(datetimee)
         return hrAttendanceObj.create(cr, 1, vals, context)
     
 TimesheetConnection()

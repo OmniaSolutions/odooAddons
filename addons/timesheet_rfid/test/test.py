@@ -20,5 +20,26 @@ HOURS_LIST = [
 #               timeNow.replace( day=11, month=6, hour=13, minute=00),    #13:00
 #               timeNow.replace( day=11, month=6, hour=18, minute=23),    #18:30
 
-            #timeNow.replace( day=16, month=6, hour=16, minute=59),    #18:30
+
+
+
+             timeNow.replace( day=26, month=6, hour=14, minute=01),      #08:00
               ]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
