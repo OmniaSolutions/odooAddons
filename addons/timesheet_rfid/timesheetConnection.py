@@ -12,9 +12,10 @@ import logging
 from dateutil import parser
 import calendar
 from mako.template import Template
+import sys
 
 #CURRENT_DATETIME = datetime.now()#.replace(tzinfo=None, minute=0, second=0, hour=8, microsecond=0) #UNCOMMENT FOR DATETIME TEST
-AFTERNOON_AUTOCOMPLETE_HOUR = 18
+AFTERNOON_AUTOCOMPLETE_HOUR_UTC = 16
 def correctDate(fromTimeStr, context):
     serverUtcTime=parser.parse(fromTimeStr)
     hoursToCorrectTimedelta = serverUtcTime.replace(tzinfo=pytz.utc).astimezone(pytz.timezone(context.get('tz','Europe/Rome'))).utcoffset()
@@ -188,7 +189,23 @@ class TimesheetConnection(osv.osv):
         '''
         return self.singInOut(cr, uid, employee_id, datetime.now(), context)
         
+    def makeTests(self, cr, uid, context={}):
+        for empId, dateTime in self.getTestList():
+            self.singInOut(cr, uid, empId, dateTime, context)
+            
+    def getTestList(self):
+        """
+            Import a generic module from solverDir 
+        """
+        import test
+        filePath='openerp.addons.timesheet_rfid.test.test'
+        if filePath in sys.modules:
+            mod=sys.modules[filePath]
+            mod=reload(mod)
+            return mod.HOURS_LIST
+        
     def singInOut(self, cr, uid, employee_id, currentDateTime, context):
+        currentDateTime = correctDate(str(currentDateTime), context)
         uid = self.getUserIdFromEmployeeId(cr, uid, employee_id)
         hrAttendanceObj = self.pool.get('hr.attendance')
         attendanceIds = hrAttendanceObj.search(cr, uid, [('employee_id','=',employee_id)], limit=1, order='name DESC')
@@ -197,7 +214,7 @@ class TimesheetConnection(osv.osv):
             if brws:
                 action = brws.action
                 if action:
-                    if not self.computeDateRange(cr, uid, employee_id, hrAttendanceObj, currentDatetime, context):
+                    if not self.computeDateRange(cr, uid, employee_id, hrAttendanceObj, currentDateTime, context):
                         return False
                 else:
                     logging.log('invalid action')
@@ -301,7 +318,7 @@ class TimesheetConnection(osv.osv):
                 return False
             
         def commonMorningOperation(cr, uid, hrAttendanceObj, employeeID, vals, morningTarget, currentDatetime, context):
-            if not self.setOldAttendances(cr, uid, hrAttendanceObj, employeeID, context):
+            if not self.setOldAttendances(cr, uid, hrAttendanceObj, employeeID, currentDatetime, context):
                 return False
             vals = self.computeVals(morningTarget, employeeID, 'sign_in', context)
             if not self.writeAction(cr, uid, employeeID, hrAttendanceObj, vals, context):
@@ -321,9 +338,9 @@ class TimesheetConnection(osv.osv):
         def operations(cr, uid, employeeID, hrAttendanceObj, currentDateTime, context = {}):
             date = currentDatetime.date()
             midnightTarget = datetime(year=date.year,month=date.month,day=date.day,hour=0,minute=0,second=0)
-            morningTarget = datetime(year=date.year,month=date.month,day=date.day,hour=8,minute=0,second=0)
-            eveningTarget = datetime(year=date.year,month=date.month,day=date.day,hour=17,minute=0,second=0)
-            midnightOldTarget = datetime(year=date.year,month=date.month,day=date.day,hour=23,minute=59,second=59)
+            morningTarget = datetime(year=date.year,month=date.month,day=date.day,hour=6,minute=0,second=0)
+            eveningTarget = datetime(year=date.year,month=date.month,day=date.day,hour=16,minute=0,second=0)
+            midnightOldTarget = datetime(year=date.year,month=date.month,day=date.day,hour=21,minute=59,second=59)
             vals = {
                     'action'        : False,
                     'name'          : False,
@@ -336,15 +353,8 @@ class TimesheetConnection(osv.osv):
                 return commonOperations(cr, uid, hrAttendanceObj, employeeID, currentDateTime, vals, context)
             elif currentDateTime>=eveningTarget and currentDateTime<=midnightOldTarget:       #17:00 --> 23:59:59
                 return eveningOperations(cr, uid, employeeID, date, hrAttendanceObj, vals, morningTarget, currentDateTime, context)
-        try:
-            from timesheet_rfid.test.test import HOURS_LIST
-        except :
-            HOURS_LIST = []
-        if len(HOURS_LIST)>0:
-            for  datetimeTest in HOURS_LIST:
-                operations(cr, uid, employeeID, hrAttendanceObj, datetimeTest, context)
-        else:
-            operations(cr, uid, employeeID, hrAttendanceObj, currentDatetime, context)
+
+        operations(cr, uid, employeeID, hrAttendanceObj, currentDatetime, context)
         return True
         
     def computeVals(self,tarDatetime, employee_id, action, context):
@@ -385,7 +395,7 @@ class TimesheetConnection(osv.osv):
         res = verifySign(correctDateForComputation(str(brwsDatetime),context))
         if action == 'sign_in' and date.date() != currentDateTime.date():
             if res == 'afternoon':
-                tarDatetime = brwsDatetime.replace(hour=AFTERNOON_AUTOCOMPLETE_HOUR, minute=0)
+                tarDatetime = brwsDatetime.replace(hour=AFTERNOON_AUTOCOMPLETE_HOUR_UTC, minute=0)
                 if brwsDatetime > tarDatetime:
                     tarDatetime = brwsDatetime + timedelta(minutes=1)
                 vals = self.computeVals(tarDatetime, employee_id, 'sign_out', context)
@@ -395,7 +405,7 @@ class TimesheetConnection(osv.osv):
                 bodyAndSendEmail(cr, uid, [attMidId], employee_id, context)
                 return 'sign_out'
             elif res == 'morning':
-                attMidId = computeAndWrite(cr, uid, brwsDatetime, employee_id, 'sign_out', hrAttendanceObj, 12, context)
+                attMidId = computeAndWrite(cr, uid, brwsDatetime, employee_id, 'sign_out', hrAttendanceObj, 10, context)
                 if not attMidId:
                     return False
                 bodyAndSendEmail(cr, uid, [attMidId], employee_id, context)
@@ -447,13 +457,6 @@ class TimesheetConnection(osv.osv):
         '''
             write sign-in and sign-out
         '''
-        timeZone = self.pool.get('res.users').browse(cr, uid, uid).tz
-        if timeZone == False:
-            context['tz']='Europe/Rome'
-        else:
-            context['tz']=timeZone
-        datetimee = correctDate(vals.get('name',''), context)
-        vals['name'] = str(datetimee)
         return hrAttendanceObj.create(cr, 1, vals, context)
     
 TimesheetConnection()

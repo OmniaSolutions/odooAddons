@@ -23,7 +23,7 @@ HOURS_LIST = [
 
 
 
-             timeNow.replace( day=26, month=6, hour=14, minute=01),      #08:00
+             (25, timeNow.replace( day=7, month=7, hour=15, minute=01)),      #08:00
               ]
 
 
