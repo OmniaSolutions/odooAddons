@@ -465,7 +465,6 @@ class timesheetSheetConnection(osv.osv):
                 hours = 0
             acc_id = timesheet.get('acc_id')
             computedDate = timesheet.get('date')
-            computedDate = correctDate(computedDate, context).replace(tzinfo=None)
             hrsheet_defaults = {
                                     'product_uom_id':       hrsheet_obj._getEmployeeUnit(cr, uid),
                                     'product_id':           hrsheet_obj._getEmployeeProduct(cr, uid),
