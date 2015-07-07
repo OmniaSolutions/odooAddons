@@ -22,24 +22,19 @@ HOURS_LIST = [
 
 
 
-
-             (25, timeNow.replace( day=7, month=7, hour=15, minute=01)),      #08:00
+             #Manzotti
+             (24, timeNow.replace( day=7, month=7, hour=7, minute=21)),  
+             (24, timeNow.replace( day=7, month=7, hour=12, minute=3)),   
+             (24, timeNow.replace( day=7, month=7, hour=12, minute=58)),   
+             (24, timeNow.replace( day=8, month=7, hour=8, minute=5)),   
+             #Villagrossi
+             (35, timeNow.replace( day=7, month=7, hour=7, minute=31)),   
+             (35, timeNow.replace( day=7, month=7, hour=12, minute=31)),   
+             (35, timeNow.replace( day=7, month=7, hour=14, minute=1)),  
+             (35, timeNow.replace( day=8, month=7, hour=8, minute=5)),   
+             #Ortolani
+             (51, timeNow.replace( day=7, month=7, hour=7, minute=31)),   
+             (51, timeNow.replace( day=7, month=7, hour=13, minute=11)),   
+             (51, timeNow.replace( day=7, month=7, hour=14, minute=1)),  
+             (51, timeNow.replace( day=8, month=7, hour=8, minute=5)),  
               ]
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

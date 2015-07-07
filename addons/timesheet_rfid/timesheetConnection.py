@@ -367,7 +367,7 @@ class TimesheetConnection(osv.osv):
         
     def setOldAttendances(self, cr, uid, hrAttendanceObj, employee_id, currentDateTime, context):
         def verifySign(lastDateTime):
-            middayTarget = brwsDatetime.replace(hour=12, minute=01)
+            middayTarget = brwsDatetime.replace(hour=10, minute=01)
             if lastDateTime<middayTarget:
                 return 'morning'
             else:
@@ -392,7 +392,7 @@ class TimesheetConnection(osv.osv):
         action = brwse.action
         date = datetime.strptime(brwse.day+' 1:1:1', DEFAULT_SERVER_DATETIME_FORMAT)
         brwsDatetime = datetime.strptime(brwse.name, DEFAULT_SERVER_DATETIME_FORMAT)
-        res = verifySign(correctDateForComputation(str(brwsDatetime),context))
+        res = verifySign(brwsDatetime)
         if action == 'sign_in' and date.date() != currentDateTime.date():
             if res == 'afternoon':
                 tarDatetime = brwsDatetime.replace(hour=AFTERNOON_AUTOCOMPLETE_HOUR_UTC, minute=0)
