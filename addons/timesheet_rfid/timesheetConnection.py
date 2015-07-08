@@ -14,8 +14,12 @@ import calendar
 from mako.template import Template
 import sys
 
-#CURRENT_DATETIME = datetime.now()#.replace(tzinfo=None, minute=0, second=0, hour=8, microsecond=0) #UNCOMMENT FOR DATETIME TEST
+#CURRENT_DATETIME = datetime.utcnow()#.replace(tzinfo=None, minute=0, second=0, hour=8, microsecond=0) #UNCOMMENT FOR DATETIME TEST
 AFTERNOON_AUTOCOMPLETE_HOUR_UTC = 16
+MORNING_HOUR = 6
+EVENING_HOUR = 15
+MIDNIGHT_HOUR = 22
+
 def correctDate(fromTimeStr, context):
     serverUtcTime=parser.parse(fromTimeStr)
     hoursToCorrectTimedelta = serverUtcTime.replace(tzinfo=pytz.utc).astimezone(pytz.timezone(context.get('tz','Europe/Rome'))).utcoffset()
@@ -140,7 +144,7 @@ class TimesheetConnection(osv.osv):
             return days and sheet id
         '''
         if not targetDate:
-            targetDate = datetime.now().date()
+            targetDate = datetime.utcnow().date()
         else:
             targetDate = datetime.strptime(targetDate+' 1:1:1', DEFAULT_SERVER_DATETIME_FORMAT).date()
         sheetSheetObj = self.pool.get('hr_timesheet_sheet.sheet')
@@ -187,7 +191,7 @@ class TimesheetConnection(osv.osv):
         '''
             set sign in
         '''
-        return self.singInOut(cr, uid, employee_id, datetime.now(), context)
+        return self.singInOut(cr, uid, employee_id, datetime.utcnow(), context)
         
     def makeTests(self, cr, uid, context={}):
         for empId, dateTime in self.getTestList():
@@ -205,7 +209,6 @@ class TimesheetConnection(osv.osv):
             return mod.HOURS_LIST
         
     def singInOut(self, cr, uid, employee_id, currentDateTime, context):
-        currentDateTime = correctDate(str(currentDateTime), context)
         uid = self.getUserIdFromEmployeeId(cr, uid, employee_id)
         hrAttendanceObj = self.pool.get('hr.attendance')
         attendanceIds = hrAttendanceObj.search(cr, uid, [('employee_id','=',employee_id)], limit=1, order='name DESC')
@@ -247,12 +250,12 @@ class TimesheetConnection(osv.osv):
         
     def getNextUserAction(self, cr, uid, vals, context):
         outAction = 'Not computed by server'
-        currentDateTime = datetime.now()
+        currentDateTime = datetime.utcnow()
         date = currentDateTime.date()
         midnightTarget = datetime(year=date.year,month=date.month,day=date.day,hour=0,minute=0,second=0)
-        morningTarget = datetime(year=date.year,month=date.month,day=date.day,hour=8,minute=0,second=0)
-        eveningTarget = datetime(year=date.year,month=date.month,day=date.day,hour=19,minute=0,second=0)
-        midnightOldTarget = datetime(year=date.year,month=date.month,day=date.day,hour=23,minute=59,second=59)
+        morningTarget = datetime(year=date.year,month=date.month,day=date.day,hour=MORNING_HOUR,minute=0,second=0)
+        eveningTarget = datetime(year=date.year,month=date.month,day=date.day,hour=EVENING_HOUR,minute=0,second=0)
+        midnightOldTarget = datetime(year=date.year,month=date.month,day=date.day,hour=MIDNIGHT_HOUR,minute=59,second=59)
         employee_name = vals.get('employee_name',False)
         if employee_name:
             hrAttendanceObj = self.pool.get('hr.attendance')
@@ -294,7 +297,7 @@ class TimesheetConnection(osv.osv):
         
     def _getWeekFromTo(self, date = False):
         if not date:
-            date = datetime.now().date()
+            date = datetime.utcnow().date()
         weekday = date.weekday()
         mondayDate = date+timedelta(-weekday)
         sundayDate = mondayDate+timedelta(6)
@@ -338,9 +341,9 @@ class TimesheetConnection(osv.osv):
         def operations(cr, uid, employeeID, hrAttendanceObj, currentDateTime, context = {}):
             date = currentDatetime.date()
             midnightTarget = datetime(year=date.year,month=date.month,day=date.day,hour=0,minute=0,second=0)
-            morningTarget = datetime(year=date.year,month=date.month,day=date.day,hour=6,minute=0,second=0)
-            eveningTarget = datetime(year=date.year,month=date.month,day=date.day,hour=16,minute=0,second=0)
-            midnightOldTarget = datetime(year=date.year,month=date.month,day=date.day,hour=21,minute=59,second=59)
+            morningTarget = datetime(year=date.year,month=date.month,day=date.day,hour=MORNING_HOUR,minute=0,second=0)
+            eveningTarget = datetime(year=date.year,month=date.month,day=date.day,hour=EVENING_HOUR,minute=0,second=0)
+            midnightOldTarget = datetime(year=date.year,month=date.month,day=date.day,hour=MIDNIGHT_HOUR,minute=59,second=59)
             vals = {
                     'action'        : False,
                     'name'          : False,
