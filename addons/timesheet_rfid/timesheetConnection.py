@@ -195,7 +195,7 @@ class TimesheetConnection(osv.osv):
         
     def makeTests(self, cr, uid, context={}):
         for empId, dateTime in self.getTestList():
-            self.singInOut(cr, uid, empId, dateTime, context)
+            self.singInOut(cr, uid, empId, correctDate(str(dateTime),context), context)
             
     def getTestList(self):
         """
