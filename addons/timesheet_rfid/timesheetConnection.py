@@ -211,6 +211,12 @@ class TimesheetConnection(osv.osv):
     def singInOut(self, cr, uid, employee_id, currentDateTime, context):
         uid = self.getUserIdFromEmployeeId(cr, uid, employee_id)
         hrAttendanceObj = self.pool.get('hr.attendance')
+        sheetObj = self.pool.get('hr_timesheet_sheet.sheet')
+        date = currentDateTime.date()
+        sheet_ids = sheetObj.search(cr, uid, [('date_from','<=',date),('date_to','>=',date),('employee_id','=',employee_id)])
+        if not sheet_ids:
+            sheet_ids = [self.createSheet(cr, uid, sheetObj, employee_id, date, context)]
+            context['sheet_id'] = sheet_ids[0]
         attendanceIds = hrAttendanceObj.search(cr, uid, [('employee_id','=',employee_id)], limit=1, order='name DESC')
         if len(attendanceIds)>0:
             brws = hrAttendanceObj.browse(cr, uid, attendanceIds[-1], context)
@@ -222,11 +228,6 @@ class TimesheetConnection(osv.osv):
                 else:
                     logging.log('invalid action')
         else:
-            sheetObj = self.pool.get('hr_timesheet_sheet.sheet')
-            date = currentDateTime.date()
-            sheet_ids = sheetObj.search(cr, uid, [('date_from','<=',date),('date_to','>=',date),('employee_id','=',employee_id)])
-            if not sheet_ids:
-                sheet_ids = [self.createSheet(cr, uid, sheetObj, employee_id, date, context)]
 
             for sheet_id in sheet_ids:
                 vals = {
