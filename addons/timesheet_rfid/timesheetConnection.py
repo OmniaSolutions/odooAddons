@@ -420,7 +420,7 @@ class TimesheetConnection(osv.osv):
         outBody = 'Salve,<br>'
         attendanceObj = self.pool.get('hr.attendance')
         employeeBrws = self.pool.get('hr.employee').browse(cr, uid, employeeId, context)
-        outBody = outBody + "L'utente %s non ha timbrato le seguenti ore relative alla pausa pranzo:<br>"%(employeeBrws.name)
+        outBody = outBody + "L'utente %s non ha timbrato le seguenti ore:<br>"%(employeeBrws.name)
         for attId in attendanceList:
             attBrws = attendanceObj.browse(cr, uid, attId, context)
             outBody = outBody + "Azione %s in data e ora %s <br>"%(attBrws.action,correctDateForComputation(attBrws.name,context))
