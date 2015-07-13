@@ -74,7 +74,7 @@ class stock_picking_out(orm.Model):
         'ddt_date':  fields.date('DDT date'),
         'volume': fields.char('Volume',size=64),
         'note_ddt':fields.text('Note'),
-        'invoice_id':fields.many2one('account.invoice','numberDDT',readonly=1),
+        'invoice_id':fields.many2one('account.invoice','Invoice',readonly=1),
         'actual_date': fields.date('Data'),
 #         'eureka_state':fields.selection((
 #                                         ('INVIATO', 'Inviato'),

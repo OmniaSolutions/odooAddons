@@ -53,7 +53,6 @@ class omnia_ddt_account_invoice(osv.osv):
         
         for ddt in idspicking:
             if ddt:
-                #idDdtLst=objStckPkng.search(cr,uid,[('id','=',ddt[0])])
                 namesSrc=[str(objStckPkng.browse(cr,uid,ddt[0]).name)]
                 for ogg in namesSrc:
                     SrcLst=objAccInv.search(cr,uid,[('origin','=',namesSrc)])
@@ -61,8 +60,6 @@ class omnia_ddt_account_invoice(osv.osv):
                     self.write(cr,uid,ids,{'ddt_number_invoice':ddt[0]},context=context)
                 else:
                     raise osv.except_osv(('Error'),("DDT gia' in uso")) 
-                    #_logger=logging.getLogger(__name__)
-                    #_logger.error("DDT already used")
 
         return True
 omnia_ddt_account_invoice()
