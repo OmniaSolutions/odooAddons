@@ -192,7 +192,7 @@ class TimesheetConnection(osv.osv):
                 if action:
                     self.computeDateRange(cr, uid, employee_id, hrAttendanceObj, context)
                 else:
-                    logging.log('invalid action')
+                    raise Exception("No Action Defined")
         else:
             sheetObj = self.pool.get('hr_timesheet_sheet.sheet')
             date = self._currentDateTime.date()
