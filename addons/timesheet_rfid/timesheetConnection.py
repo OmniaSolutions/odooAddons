@@ -212,7 +212,7 @@ class TimesheetConnection(osv.osv):
             return mod.HOURS_LIST
         
     def singInOut(self, cr, uid, employee_id, currentDateTime, context):
-        _logger.info("Call from consuntivator singInOut")
+        _logger.info("Call from consuntivator singInOut employee_id %s"%(str(employee_id)))
         uid = self.getUserIdFromEmployeeId(cr, uid, employee_id)
         hrAttendanceObj = self.pool.get('hr.attendance')
         sheetObj = self.pool.get('hr_timesheet_sheet.sheet')
@@ -242,6 +242,7 @@ class TimesheetConnection(osv.osv):
                         'employee_id'   : employee_id,
                 }
                 context['sheet_id']=sheet_id
+                _logger.info("Call singInOut write action %s"%(str(vals)))
                 if not self.writeAction(cr, uid, employee_id, hrAttendanceObj, vals, context):
                     _logger.error("Unable to write the sign in sign out (writeAction)")
                     return False
@@ -250,10 +251,10 @@ class TimesheetConnection(osv.osv):
         if attendance:
             lastAction = hrAttendanceObj.browse(cr, uid, attendance[-1], context).action
             if lastAction == 'sign_out':
-                _logger.error("Uscita segnata for %s"%str(employee_id))
+                _logger.error("Uscita segnata for employee_id %s"%str(employee_id))
                 return 'Uscita segnata'
             elif lastAction == 'sign_in':
-                _logger.error("Entrata segnata for %s"%str(employee_id))
+                _logger.error("Entrata segnata for employee_id %s"%str(employee_id))
                 return 'Entrata segnata'
         return False
         
@@ -326,6 +327,7 @@ class TimesheetConnection(osv.osv):
                 return False
             trueDateTime = currentDatetime.replace(microsecond=0)
             vals = self.computeVals(trueDateTime, employeeID, vals['action'], context)
+            _logger.info("Call commonOperations write action %s"%(str(vals)))
             if not self.writeAction(cr, uid, employeeID, hrAttendanceObj, vals, context):
                 return False
             
@@ -333,10 +335,12 @@ class TimesheetConnection(osv.osv):
             if not self.setOldAttendances(cr, uid, hrAttendanceObj, employeeID, currentDatetime, context):
                 return False
             vals = self.computeVals(morningTarget, employeeID, 'sign_in', context)
+            _logger.info("Call commonMorningOperation write action %s"%(str(vals)))
             if not self.writeAction(cr, uid, employeeID, hrAttendanceObj, vals, context):
                 return False
             trueDateTime = currentDatetime.replace(microsecond=0)
             vals = self.computeVals(trueDateTime, employeeID, 'sign_out', context)
+            _logger.info("Call commonMorningOperation write action %s"%(str(vals)))
             if not self.writeAction(cr, uid, employeeID, hrAttendanceObj, vals, context):
                 return False
             
@@ -389,6 +393,7 @@ class TimesheetConnection(osv.osv):
         def computeAndWrite(cr, uid, brwsDatetime, employee_id, action, hrAttendanceObj, hour, context):
             localDatetime = brwsDatetime.replace(hour=hour, minute=0)
             vals = self.computeVals(localDatetime, employee_id, action, context)
+            _logger.info("Call computeAndWrite write action %s"%(str(vals)))
             res = self.writeAction(cr, uid, employee_id, hrAttendanceObj, vals)
             if not res:
                 return False
@@ -411,6 +416,7 @@ class TimesheetConnection(osv.osv):
                 if brwsDatetime > tarDatetime:
                     tarDatetime = brwsDatetime + timedelta(minutes=1)
                 vals = self.computeVals(tarDatetime, employee_id, 'sign_out', context)
+                _logger.info("Call setOldAttendances write action %s"%(str(vals)))
                 attMidId = self.writeAction(cr, uid, employee_id, hrAttendanceObj, vals)
                 if not attMidId:
                     return False

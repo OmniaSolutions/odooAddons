@@ -92,9 +92,9 @@ HOURS_LIST = [
 #               (38, timeNow.replace( day=13, month=7, hour=16, minute=24)),
 
 #                 #Caso particolare 1
-            (117, timeNow.replace( day=16, month=7, hour=12, minute=1)),
-            (117, timeNow.replace( day=16, month=7, hour=12, minute=1)), 
-            (117, timeNow.replace( day=16, month=7, hour=12, minute=44)),
+#             (117, timeNow.replace( day=16, month=7, hour=12, minute=1)),
+#             (117, timeNow.replace( day=16, month=7, hour=12, minute=1)), 
+#             (117, timeNow.replace( day=16, month=7, hour=12, minute=44)),
             
 # #                 #Caso particolare 2
 #             (117, timeNow.replace( day=16, month=7, hour=12, minute=31)),
@@ -105,5 +105,8 @@ HOURS_LIST = [
 #             (117, timeNow.replace( day=16, month=7, hour=12, minute=31)),
 #             (117, timeNow.replace( day=16, month=7, hour=12, minute=31)), 
 #             (117, timeNow.replace( day=16, month=7, hour=13, minute=10)),
-            
+
+            (117, timeNow.replace( day=16, month=7, hour=13, minute=23)),
+            (117, timeNow.replace( day=16, month=7, hour=13, minute=24)), 
+#             (117, timeNow.replace( day=16, month=7, hour=13, minute=10)),
               ]
