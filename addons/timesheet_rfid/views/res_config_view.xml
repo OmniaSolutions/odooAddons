@@ -43,6 +43,16 @@
         </record>
          <menuitem id="menu_plm_config_settings" name="PLM" parent="base.menu_config"
             sequence="10" action="action_plm_configuration"/>
+
+		<record id="action_test_feed" model="ir.actions.server">
+		    <field name="name">Test Feed</field>
+		    <field name="type">ir.actions.server</field>
+		    <field name="model_id" ref="model_hr_employee"/>
+		    <field name="state">code</field>
+		    <field name="code">self.makeTests(cr, uid, context=context)</field>
+		</record>
+        
+        <menuitem id="base.menu_test_feed" name="Test Feed" action="action_test_feed" parent="base.menu_custom" />
         
     </data>
 </openerp>
