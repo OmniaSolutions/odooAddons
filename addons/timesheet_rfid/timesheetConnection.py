@@ -9,6 +9,7 @@ import pytz
 from datetime import datetime,timedelta, date
 import time
 import logging
+_logger = logging.getLogger(__name__)
 from dateutil import parser
 import calendar
 from mako.template import Template
@@ -209,6 +210,7 @@ class TimesheetConnection(osv.osv):
             return mod.HOURS_LIST
         
     def singInOut(self, cr, uid, employee_id, currentDateTime, context):
+        _logger.info("Call from consuntivator singInOut")
         uid = self.getUserIdFromEmployeeId(cr, uid, employee_id)
         hrAttendanceObj = self.pool.get('hr.attendance')
         sheetObj = self.pool.get('hr_timesheet_sheet.sheet')
@@ -224,6 +226,7 @@ class TimesheetConnection(osv.osv):
                 action = brws.action
                 if action:
                     if not self.computeDateRange(cr, uid, employee_id, hrAttendanceObj, currentDateTime, context):
+                        _logger.error("Unable to write the sign in sign out (computeDateRange)")
                         return False
                 else:
                     raise Exception("No Action Defined")
@@ -238,14 +241,17 @@ class TimesheetConnection(osv.osv):
                 }
                 context['sheet_id']=sheet_id
                 if not self.writeAction(cr, uid, employee_id, hrAttendanceObj, vals, context):
+                    _logger.error("Unable to write the sign in sign out (writeAction)")
                     return False
                 break
         attendance = hrAttendanceObj.search(cr, uid, [('employee_id','=',employee_id)], limit=1, order='name DESC')
         if attendance:
             lastAction = hrAttendanceObj.browse(cr, uid, attendance[-1], context).action
             if lastAction == 'sign_out':
+                _logger.error("Uscita segnata for %s"%str(employee_id))
                 return 'Uscita segnata'
             elif lastAction == 'sign_in':
+                _logger.error("Entrata segnata for %s"%str(employee_id))
                 return 'Entrata segnata'
         return False
         
@@ -486,6 +492,7 @@ class timesheetSheetConnection(osv.osv):
         hrsheet_obj = self.pool.get('hr.analytic.timesheet')
         actxcod_obj = self.pool.get('account.tax.code')
         hrEmployeeObj = self.pool.get('hr.employee')
+        _logger.info("Action_compile_timesheet Start Looping")
         for timesheet in vals:
             employeeBrwse = hrEmployeeObj.browse(cr, uid, timesheet.get('employee_id'))
             hours = timesheet.get('hours')
@@ -501,7 +508,7 @@ class timesheetSheetConnection(osv.osv):
                                     'journal_id':           hrsheet_obj._getAnalyticJournal(cr, uid),
                                     'date':                 computedDate,
                                     'user_id':              employeeBrwse.user_id.id,
-                                    'to_invoice':   1,#FIXME: Yes(100%) int(toInvoice), imposato a invoicable 100%
+                                    'to_invoice':   1,# FIXME: Yes(100%) int(toInvoice), imposato a invoicable 100%
                                     'account_id':   acc_id,
                                     'unit_amount':  hours,
                                     'company_id':   actxcod_obj._default_company(cr, uid),
@@ -517,9 +524,14 @@ class timesheetSheetConnection(osv.osv):
                 res = hrsheet_obj.write(cr, uid, alreadyWritten[0],hrsheet_defaults)
                 if not res:
                     raise Exception('Write timesheet failed')
+                else:
+                    _logger.info("Update data from consuntivator [%s]"%hrsheet_defaults)
             elif len(alreadyWritten)==0:
                 if not hrsheet_obj.create(cr, uid, hrsheet_defaults, context):
                     raise Exception('Write timesheet failed')
+                else:
+                    _logger.info("Update data from consuntivator [%s]"%hrsheet_defaults)
+        _logger.info("Action_compile_timesheet DONE !!")
         return True
 
 timesheetSheetConnection()
