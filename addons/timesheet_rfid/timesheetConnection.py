@@ -185,7 +185,9 @@ class TimesheetConnection(osv.osv):
     def getUserIdFromEmployeeId(self, cr, uid, employee_id):
         brws = self.browse(cr, uid, employee_id)
         if brws:
-            return brws.user_id.id
+            if brws.user_id:
+                return brws.user_id.id
+        raise osv.orm.except_orm('Meal Error!', 'Unable to get user ID from employee ID.')
         
     def attendance_action_change_custom(self, cr, uid, employee_id, context = {}):
         '''
@@ -493,7 +495,6 @@ class timesheetSheetConnection(osv.osv):
                 hours = 0
             acc_id = timesheet.get('acc_id')
             computedDate = timesheet.get('date')
-            #computedDate = correctDate(computedDate, context).replace(tzinfo=None)
             hrsheet_defaults = {
                                     'product_uom_id':       hrsheet_obj._getEmployeeUnit(cr, uid),
                                     'product_id':           hrsheet_obj._getEmployeeProduct(cr, uid),
