@@ -500,7 +500,6 @@ class timesheetSheetConnection(osv.osv):
                 hours = 0
             acc_id = timesheet.get('acc_id')
             computedDate = timesheet.get('date')
-            #computedDate = correctDate(computedDate, context).replace(tzinfo=None)
             hrsheet_defaults = {
                                     'product_uom_id':       hrsheet_obj._getEmployeeUnit(cr, uid),
                                     'product_id':           hrsheet_obj._getEmployeeProduct(cr, uid),
@@ -508,7 +507,7 @@ class timesheetSheetConnection(osv.osv):
                                     'journal_id':           hrsheet_obj._getAnalyticJournal(cr, uid),
                                     'date':                 computedDate,
                                     'user_id':              employeeBrwse.user_id.id,
-                                    'to_invoice':   1,# FIXME: Yes(100%) int(toInvoice), imposato a invoicable 100%
+                                    'to_invoice':   0,# FIXME: Yes(100%) int(toInvoice), imposato a invoicable 100%
                                     'account_id':   acc_id,
                                     'unit_amount':  hours,
                                     'company_id':   actxcod_obj._default_company(cr, uid),
