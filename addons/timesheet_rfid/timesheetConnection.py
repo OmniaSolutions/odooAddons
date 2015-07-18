@@ -251,10 +251,10 @@ class TimesheetConnection(osv.osv):
         if attendance:
             lastAction = hrAttendanceObj.browse(cr, uid, attendance[-1], context).action
             if lastAction == 'sign_out':
-                _logger.error("Uscita segnata for employee_id %s"%str(employee_id))
+                _logger.info("Uscita segnata for employee_id %s"%str(employee_id))
                 return 'Uscita segnata'
             elif lastAction == 'sign_in':
-                _logger.error("Entrata segnata for employee_id %s"%str(employee_id))
+                _logger.info("Entrata segnata for employee_id %s"%str(employee_id))
                 return 'Entrata segnata'
         return False
         
