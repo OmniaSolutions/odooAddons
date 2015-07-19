@@ -188,7 +188,7 @@ class TimesheetConnection(osv.osv):
         if brws:
             if brws.user_id:
                 return brws.user_id.id
-        raise osv.orm.except_orm('Meal Error!', 'Unable to get user ID from employee ID.')
+        raise osv.orm.except_orm('getUserIdFromEmployeeId', 'Unable to get user ID from employee ID.')
         
     def attendance_action_change_custom(self, cr, uid, employee_id, context = {}):
         '''
@@ -508,6 +508,9 @@ class timesheetSheetConnection(osv.osv):
                 hours = 0
             acc_id = timesheet.get('acc_id')
             computedDate = timesheet.get('date')
+            timesheetDesc=len(timesheet.get('desc','/'))
+            if len(timesheet.get('desc','/'))<=0:
+                timesheetDesc='/'
             hrsheet_defaults = {
                                     'product_uom_id'        :hrsheet_obj._getEmployeeUnit(cr, uid),
                                     'product_id'            :hrsheet_obj._getEmployeeProduct(cr, uid),
@@ -520,7 +523,7 @@ class timesheetSheetConnection(osv.osv):
                                     'unit_amount'           :hours,
                                     'company_id'            :actxcod_obj._default_company(cr, uid),
                                     'amount'                :self._getEmployeeCost(cr,uid, employeeBrwse.id)*float(hours)*(-1),      # Recorded negative because it's a cost
-                                    'name'                  :timesheet.get('desc','/'),
+                                    'name'                  :timesheetDesc,
                                     'sheet_id'              :timesheet.get('sheet_id'),
                                }
             alreadyWritten = hrsheet_obj.search(cr, uid, [('account_id','=',acc_id),('date','=',computedDate)])
