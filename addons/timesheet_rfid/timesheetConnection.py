@@ -509,19 +509,19 @@ class timesheetSheetConnection(osv.osv):
             acc_id = timesheet.get('acc_id')
             computedDate = timesheet.get('date')
             hrsheet_defaults = {
-                                    'product_uom_id':       hrsheet_obj._getEmployeeUnit(cr, uid),
-                                    'product_id':           hrsheet_obj._getEmployeeProduct(cr, uid),
-                                    'general_account_id':   hrsheet_obj._getGeneralAccount(cr, uid),
-                                    'journal_id':           hrsheet_obj._getAnalyticJournal(cr, uid),
-                                    'date':                 computedDate,
-                                    'user_id':              employeeBrwse.user_id.id,
-                                    'to_invoice':   0,# FIXME: Yes(100%) int(toInvoice), imposato a invoicable 100%
-                                    'account_id':   acc_id,
-                                    'unit_amount':  hours,
-                                    'company_id':   actxcod_obj._default_company(cr, uid),
-                                    'amount':       self._getEmployeeCost(cr,uid, employeeBrwse.id)*float(hours)*(-1),      # Recorded negative because it's a cost
-                                    'name' :        timesheet.get('desc'),
-                                    'sheet_id' :    timesheet.get('sheet_id'),
+                                    'product_uom_id'        :hrsheet_obj._getEmployeeUnit(cr, uid),
+                                    'product_id'            :hrsheet_obj._getEmployeeProduct(cr, uid),
+                                    'general_account_id'    :hrsheet_obj._getGeneralAccount(cr, uid),
+                                    'journal_id'            :hrsheet_obj._getAnalyticJournal(cr, uid),
+                                    'date'                  :computedDate,
+                                    'user_id'               :employeeBrwse.user_id.id,
+                                    'to_invoice'            :0,# FIXME: Yes(100%) int(toInvoice), imposato a invoicable 100%
+                                    'account_id'            :acc_id,
+                                    'unit_amount'           :hours,
+                                    'company_id'            :actxcod_obj._default_company(cr, uid),
+                                    'amount'                :self._getEmployeeCost(cr,uid, employeeBrwse.id)*float(hours)*(-1),      # Recorded negative because it's a cost
+                                    'name'                  :timesheet.get('desc','/'),
+                                    'sheet_id'              :timesheet.get('sheet_id'),
                                }
             alreadyWritten = hrsheet_obj.search(cr, uid, [('account_id','=',acc_id),('date','=',computedDate)])
             if len(alreadyWritten)==1:
