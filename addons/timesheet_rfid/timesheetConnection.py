@@ -509,7 +509,7 @@ class timesheetSheetConnection(osv.osv):
             acc_id = timesheet.get('acc_id')
             computedDate = timesheet.get('date')
             timesheetDesc=len(timesheet.get('desc','/'))
-            if len(timesheet.get('desc','/'))<=0:
+            if len(timesheetDesc)<=0:
                 timesheetDesc='/'
             hrsheet_defaults = {
                                     'product_uom_id'        :hrsheet_obj._getEmployeeUnit(cr, uid),
