@@ -184,6 +184,9 @@ class TimesheetConnection(osv.osv):
         return [],False, False
     
     def getUserIdFromEmployeeId(self, cr, uid, employee_id):
+        '''
+            Return user ID form employee_id
+        '''
         brws = self.browse(cr, uid, employee_id)
         if brws:
             if brws.user_id:
@@ -197,6 +200,9 @@ class TimesheetConnection(osv.osv):
         return self.singInOut(cr, uid, employee_id, datetime.utcnow(), context)
         
     def makeTests(self, cr, uid, context={}):
+        '''
+            Called from "Test Feed" menu
+        '''
         for empId, dateTime in self.getTestList():
             self.singInOut(cr, uid, empId, correctDate(str(dateTime),context), context)
             
@@ -212,52 +218,59 @@ class TimesheetConnection(osv.osv):
             return mod.HOURS_LIST
         
     def singInOut(self, cr, uid, employee_id, currentDateTime, context):
+        '''
+            Set sign_in or sign_out
+        ''' 
         _logger.info("Call from consuntivator singInOut")
+        outString = 'Action not computed'
         uid = self.getUserIdFromEmployeeId(cr, uid, employee_id)
+        date = currentDateTime.date()
         hrAttendanceObj = self.pool.get('hr.attendance')
         sheetObj = self.pool.get('hr_timesheet_sheet.sheet')
-        date = currentDateTime.date()
         sheet_ids = sheetObj.search(cr, uid, [('date_from','<=',date),('date_to','>=',date),('employee_id','=',employee_id)])
         if not sheet_ids:
             sheet_ids = [self.createSheet(cr, uid, sheetObj, employee_id, date, context)]
             context['sheet_id'] = sheet_ids[0]
         attendanceIds = hrAttendanceObj.search(cr, uid, [('employee_id','=',employee_id)], limit=1, order='name DESC')
-        if len(attendanceIds)>0:
-            brws = hrAttendanceObj.browse(cr, uid, attendanceIds[-1], context)
-            if brws:
-                action = brws.action
-                if action:
-                    if not self.computeDateRange(cr, uid, employee_id, hrAttendanceObj, currentDateTime, context):
-                        _logger.error("Unable to write the sign in sign out (computeDateRange)")
-                        return False
-                else:
-                    raise Exception("No Action Defined")
+        if not attendanceIds:
+            outString = self.computeAndWrite(cr, uid, employee_id, hrAttendanceObj, 'sign_in', context)
         else:
+            lastAction = hrAttendanceObj.browse(cr, uid, attendanceIds[-1], context).action
+            if lastAction == 'sign_in':
+                outString = self.computeAndWrite(cr, uid, employee_id, hrAttendanceObj, 'sign_out', context)
+            elif lastAction == 'sign_out':
+                outString = self.computeAndWrite(cr, uid, employee_id, hrAttendanceObj, 'sign_in', context)
+            else:
+                raise Exception("No Action Defined")
+        return outString
+    
+    def computeAndWrite(self, cr, uid, employee_id, hrAttendanceObj, action, context):
+        '''
+            Compute and write vals for attendances creation
+        '''
+        vals = self.computeVals(date, employee_id, action, context)
+        if self.writeAction(cr, uid, employee_id, hrAttendanceObj, vals, context):
+            return self.returnOutStringFromAction(action, employee_id)
 
-            for sheet_id in sheet_ids:
-                vals = {
-                        'action'        : 'sign_in',
-                        'name'          : str(date)+' '+str(currentDateTime.time()).split('.')[0],
-                        'day'           : str(date),
-                        'employee_id'   : employee_id,
-                }
-                context['sheet_id']=sheet_id
-                if not self.writeAction(cr, uid, employee_id, hrAttendanceObj, vals, context):
-                    _logger.error("Unable to write the sign in sign out (writeAction)")
-                    return False
-                break
-        attendance = hrAttendanceObj.search(cr, uid, [('employee_id','=',employee_id)], limit=1, order='name DESC')
-        if attendance:
-            lastAction = hrAttendanceObj.browse(cr, uid, attendance[-1], context).action
-            if lastAction == 'sign_out':
-                _logger.error("Uscita segnata for %s"%str(employee_id))
-                return 'Uscita segnata'
-            elif lastAction == 'sign_in':
-                _logger.error("Entrata segnata for %s"%str(employee_id))
-                return 'Entrata segnata'
-        return False
+    def returnOutStringFromAction(self, action, employee_id):
+        '''
+            Return successful string for sign in/out
+        '''
+        outString = 'Action not computed'
+        if action == 'sign_in':
+            outString = 'Entrata segnata'
+            _logger.info("Signed in for employee_id = %s"%str(employee_id))
+        elif action == 'sign_out':
+            outString = 'Uscita segnata'
+            _logger.info("Signed out for employee_id = %s"%str(employee_id))
+        else:
+            _logger.error("Signed action not valid: %s"%str(action))
+        return outString
         
     def getNextUserAction(self, cr, uid, vals, context):
+        '''
+            Return next action for consuntivator
+        '''
         outAction = 'Not computed by server'
         currentDateTime = datetime.utcnow()
         date = currentDateTime.date()
@@ -294,6 +307,9 @@ class TimesheetConnection(osv.osv):
         return outAction
             
     def createSheet(self, cr, uid, sheetObj, employee_id, date, context):
+        '''
+            Create a sheet for timesheet_sheet.sheet object
+        '''
         date_from, date_to = self._getWeekFromTo(date)
         vals = {
                 'date_from'     : date_from,
@@ -305,6 +321,9 @@ class TimesheetConnection(osv.osv):
         return sheetObj.create(cr, uid, vals, context)
         
     def _getWeekFromTo(self, date = False):
+        '''
+            Get dates for create sheet
+        '''
         if not date:
             date = datetime.utcnow().date()
         weekday = date.weekday()
@@ -312,64 +331,10 @@ class TimesheetConnection(osv.osv):
         sundayDate = mondayDate+timedelta(6)
         return mondayDate,sundayDate
         
-    def computeDateRange(self, cr, uid, employeeID, hrAttendanceObj, currentDatetime, context = {}):
-        '''
-            compute and set sign-in and sign-out
-        '''
-        def commonOperations(cr, uid, hrAttendanceObj, employeeID, currentDatetime, vals, context={}):
-            action = self.setOldAttendances(cr, uid, hrAttendanceObj, employeeID, currentDatetime, context)
-            if action == 'sign_in':
-                vals['action']  ='sign_out'
-            elif action == 'sign_out':
-                vals['action']  ='sign_in'
-            else:
-                return False
-            trueDateTime = currentDatetime.replace(microsecond=0)
-            vals = self.computeVals(trueDateTime, employeeID, vals['action'], context)
-            if not self.writeAction(cr, uid, employeeID, hrAttendanceObj, vals, context):
-                return False
-            
-        def commonMorningOperation(cr, uid, hrAttendanceObj, employeeID, vals, morningTarget, currentDatetime, context):
-            if not self.setOldAttendances(cr, uid, hrAttendanceObj, employeeID, currentDatetime, context):
-                return False
-            vals = self.computeVals(morningTarget, employeeID, 'sign_in', context)
-            if not self.writeAction(cr, uid, employeeID, hrAttendanceObj, vals, context):
-                return False
-            trueDateTime = currentDatetime.replace(microsecond=0)
-            vals = self.computeVals(trueDateTime, employeeID, 'sign_out', context)
-            if not self.writeAction(cr, uid, employeeID, hrAttendanceObj, vals, context):
-                return False
-            
-        def eveningOperations(cr, uid, employeeID, date, hrAttendanceObj, vals, morningTarget, currentDatetime, context):
-            todaySignIn = hrAttendanceObj.search(cr, uid, [('employee_id','=',employeeID), ('day', '=', date)])
-            if len(todaySignIn) == 0:
-                return commonMorningOperation(cr, uid, hrAttendanceObj, employeeID, vals, morningTarget, currentDatetime, context)
-            else: 
-                return commonOperations(cr, uid, hrAttendanceObj, employeeID, currentDatetime, vals, context)
-            
-        def operations(cr, uid, employeeID, hrAttendanceObj, currentDateTime, context = {}):
-            date = currentDatetime.date()
-            midnightTarget = datetime(year=date.year,month=date.month,day=date.day,hour=0,minute=0,second=0)
-            morningTarget = datetime(year=date.year,month=date.month,day=date.day,hour=MORNING_HOUR,minute=0,second=0)
-            eveningTarget = datetime(year=date.year,month=date.month,day=date.day,hour=EVENING_HOUR,minute=0,second=0)
-            midnightOldTarget = datetime(year=date.year,month=date.month,day=date.day,hour=MIDNIGHT_HOUR,minute=59,second=59)
-            vals = {
-                    'action'        : False,
-                    'name'          : False,
-                    'day'           : False,
-                    'employee_id'   : employeeID,
-            }
-            if currentDateTime>=midnightTarget and currentDateTime<=morningTarget:            #00:00 --> 8:00
-                return commonOperations(cr, uid, hrAttendanceObj, employeeID, currentDateTime, vals, context)
-            elif currentDateTime>=morningTarget and currentDateTime<=eveningTarget:           #08:00 --> 17:00
-                return commonOperations(cr, uid, hrAttendanceObj, employeeID, currentDateTime, vals, context)
-            elif currentDateTime>=eveningTarget and currentDateTime<=midnightOldTarget:       #17:00 --> 23:59:59
-                return eveningOperations(cr, uid, employeeID, date, hrAttendanceObj, vals, morningTarget, currentDateTime, context)
-
-        operations(cr, uid, employeeID, hrAttendanceObj, currentDatetime, context)
-        return True
-        
     def computeVals(self,tarDatetime, employee_id, action, context):
+        '''
+            Compute vals for write
+        '''
         vals={}
         vals['action']      = action
         vals['name']        = str(tarDatetime)
@@ -378,6 +343,9 @@ class TimesheetConnection(osv.osv):
         return vals
         
     def setOldAttendances(self, cr, uid, hrAttendanceObj, employee_id, currentDateTime, context):
+        '''
+            Set old attendances
+        '''
         def verifySign(lastDateTime):
             middayTarget = brwsDatetime.replace(hour=10, minute=01)
             if lastDateTime<middayTarget:
@@ -425,6 +393,9 @@ class TimesheetConnection(osv.osv):
         return action
         
     def computeBodyForMail(self, cr, uid, employeeId, attendanceList=[], context={}):
+        '''
+            Create body for mail
+        '''
         outBody = 'Salve,<br>'
         attendanceObj = self.pool.get('hr.attendance')
         employeeBrws = self.pool.get('hr.employee').browse(cr, uid, employeeId, context)
@@ -436,6 +407,9 @@ class TimesheetConnection(osv.osv):
         return outBody
         
     def send_mail(self, cr, uid,subject='[Timesheet Info]', body_html='', email_to=[], context=None):
+        '''
+            Send mail
+        '''
         if not email_to:
             groupsObj = self.pool.get('res.groups')
             groupsIds = groupsObj.search(cr, uid, [('name','=','Manager')])
