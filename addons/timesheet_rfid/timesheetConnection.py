@@ -188,7 +188,7 @@ class TimesheetConnection(osv.osv):
         if brws:
             if brws.user_id:
                 return brws.user_id.id
-        raise osv.orm.except_orm('Meal Error!', 'Unable to get user ID from employee ID.')
+        raise osv.orm.except_orm('getUserIdFromEmployeeId', 'Unable to get user ID from employee ID.')
         
     def attendance_action_change_custom(self, cr, uid, employee_id, context = {}):
         '''
