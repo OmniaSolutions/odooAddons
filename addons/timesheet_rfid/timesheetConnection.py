@@ -500,7 +500,7 @@ class timesheetSheetConnection(osv.osv):
         hrsheet_obj = self.pool.get('hr.analytic.timesheet')
         actxcod_obj = self.pool.get('account.tax.code')
         hrEmployeeObj = self.pool.get('hr.employee')
-        _logger.info("Action_compile_timesheet Start Looping")
+        _logger.info("Action_compile_timesheet Start Looping on Vals - %s"%str(vals))
         for timesheet in vals:
             employeeBrwse = hrEmployeeObj.browse(cr, uid, timesheet.get('employee_id'))
             hours = timesheet.get('hours')
