@@ -266,33 +266,34 @@ class TimesheetConnection(osv.osv):
         morningTarget = datetime(year=date.year,month=date.month,day=date.day,hour=MORNING_HOUR,minute=0,second=0)
         eveningTarget = datetime(year=date.year,month=date.month,day=date.day,hour=EVENING_HOUR,minute=0,second=0)
         midnightOldTarget = datetime(year=date.year,month=date.month,day=date.day,hour=MIDNIGHT_HOUR,minute=59,second=59)
-        employee_name = vals.get('employee_name',False)
-        if employee_name:
-            hrAttendanceObj = self.pool.get('hr.attendance')
-            employee_ids = self.search(cr, uid, [('name','=',employee_name)])
-            for employee_id in employee_ids:
-                attendance = hrAttendanceObj.search(cr, uid, [('employee_id','=',employee_id)], limit=1, order='name DESC')
-                if attendance:
-                    attendanceBrws = hrAttendanceObj.browse(cr, uid, attendance[-1], context)
-                    lastAction = attendanceBrws.action
-                    datetimeActStr = attendanceBrws.name
-                    datetimeAct = datetime.strptime(datetimeActStr, DEFAULT_SERVER_DATETIME_FORMAT)
-                    if currentDateTime>=midnightTarget and currentDateTime<=morningTarget:            #00:00 --> 8:00
-                        if datetimeAct.date() == date and lastAction == 'sign_in':
+        if vals:
+            employee_name = vals[0]
+            if employee_name:
+                hrAttendanceObj = self.pool.get('hr.attendance')
+                employee_ids = self.search(cr, uid, [('name','=',employee_name)])
+                for employee_id in employee_ids:
+                    attendance = hrAttendanceObj.search(cr, uid, [('employee_id','=',employee_id)], limit=1, order='name DESC')
+                    if attendance:
+                        attendanceBrws = hrAttendanceObj.browse(cr, uid, attendance[-1], context)
+                        lastAction = attendanceBrws.action
+                        datetimeActStr = attendanceBrws.name
+                        datetimeAct = datetime.strptime(datetimeActStr, DEFAULT_SERVER_DATETIME_FORMAT)
+                        if currentDateTime>=midnightTarget and currentDateTime<=morningTarget:            #00:00 --> 8:00
+                            if datetimeAct.date() == date and lastAction == 'sign_in':
+                                outAction = 'Uscita'
+                            else:
+                                outAction = 'Entrata'
+                        elif currentDateTime>=morningTarget and currentDateTime<=eveningTarget:           #08:00 --> 19:00
+                            if lastAction == 'sign_in':    
+                                outAction = 'Uscita'
+                            else:
+                                outAction = 'Entrata'
+                        elif currentDateTime>=eveningTarget and currentDateTime<=midnightOldTarget:       #19:00 --> 23:59:59
                             outAction = 'Uscita'
-                        else:
-                            outAction = 'Entrata'
-                    elif currentDateTime>=morningTarget and currentDateTime<=eveningTarget:           #08:00 --> 19:00
-                        if lastAction == 'sign_in':    
-                            outAction = 'Uscita'
-                        else:
-                            outAction = 'Entrata'
-                    elif currentDateTime>=eveningTarget and currentDateTime<=midnightOldTarget:       #19:00 --> 23:59:59
-                        outAction = 'Uscita'
-                    return outAction
-                else:
-                    outAction = 'Entrata'
-        return outAction
+                        return outAction
+                    else:
+                        outAction = 'Entrata'
+            return outAction
             
     def createSheet(self, cr, uid, sheetObj, employee_id, date, context):
         date_from, date_to = self._getWeekFromTo(date)
