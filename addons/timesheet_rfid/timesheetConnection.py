@@ -214,7 +214,6 @@ class TimesheetConnection(osv.osv):
         filePath='openerp.addons.timesheet_rfid.test.test'
         if filePath in sys.modules:
             mod=sys.modules[filePath]
-            mod=sys.modules[filePath]
             mod=reload(mod)
             return mod.HOURS_LIST
         
