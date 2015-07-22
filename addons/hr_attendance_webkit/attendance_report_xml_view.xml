@@ -1,0 +1,454 @@
+<?xml version="1.0" encoding="utf-8"?>
+<openerp>
+	<data>
+        <record id="hr_webkit_header" model="ir.header_webkit">
+            <field name="footer_html"><![CDATA[]]></field>
+            <field name="orientation">Portrait</field>
+            <field name="format">A4</field>
+            <field name="html"><![CDATA[
+<html>
+    <head>
+        <meta content="text/html; charset=UTF-8" http-equiv="content-type"/>
+        <script>
+            function subst() {
+            var vars={};
+            var x=document.location.search.substring(1).split('&');
+            for(var i in x) {var z=x[i].split('=',2);vars[z[0]] = unescape(z[1]);}
+            var x=['frompage','topage','page','webpage','section','subsection','subsubsection'];
+            for(var i in x) {
+            var y = document.getElementsByClassName(x[i]);
+            for(var j=0; j<y.length; ++j) y[j].textContent = vars[x[i]];
+                }
+            }
+        </script>
+        <style type="text/css">
+            ${css}
+        </style>
+    </head> 
+    <body style="border:0; margin: 15;" onload="subst()">
+         <table class="header" style="border-bottom: 1px solid black; width: 100%"> 
+			           <tr >
+			               <td style="text-align:left;font-size:12;" width="20%">${time.strftime('%m/%d/%Y %I:%M')}</td>
+			               <td style="text-align:center;font-size:16;" width="83%"><b>${company.partner_id.name |entity}</b></td>
+			               <td style="text-align:left;font-size:12;" width="3%"><span class="page"/>  </td>
+			               <td style="text-align:left;font-size:12;" width="1%"> /</td>
+			               <td style="text-align:right;font-size:12;" width="3%"><span class="topage"/></td>
+			           </tr>
+			       </table> ${_debug or ''|n} </body>
+</html>]]>
+            </field>
+            <field eval="0.0" name="margin_top"/>
+            <field eval="5.0" name="margin_bottom"/>
+            <field name="css"><![CDATA[
+
+body {
+font-family:Verdana;
+font-size:12;
+
+}  
+
+
+.dest_address {
+margin-right:60%;
+font-size:12;
+}
+.header {
+margin-right:0;
+text-align:right;
+width:300px;
+font-size:12;
+}
+
+.title {
+font-size:16;
+font-weight: bold;
+
+}
+
+
+.basic_table{
+text-align:center;
+border:1px solid lightGrey;
+border-collapse: collapse;
+}
+.basic_table td {
+border:1px solid lightGrey;
+font-size:12;
+
+
+}
+
+.list_table {
+border-color:black;
+text-align:center;
+border-collapse: collapse;
+
+}
+.list_table td {
+border-color:gray;
+border-top:1px solid #ccc;
+text-align:right;
+font-size:11px;
+padding-left:3px;
+padding-right:3px;
+padding-top:3px;
+padding-bottom:3px;
+}
+
+.list_table th {
+border-bottom:1px solid black;
+text-align:right;
+font-size:11px;
+font-weight:bold;
+padding-left:3px;
+padding-right:3px;
+}
+
+.list_tabe thead {
+    display:table-header-group;
+}
+
+
+.total {
+width:100%;
+}
+.lib {
+width:10.3%;
+}
+.tot {
+text-align:left;
+width:15%;
+}
+.righttot {
+width:74%;
+}
+.tax {
+width:50%;
+} 
+table {
+              display: table;
+              width: 100%;
+            }
+            
+            table thead {
+              display: table-header-group;
+            }
+            
+            table tbody {
+              display: table-row-group;
+            }
+            
+            table tfoot {
+              display: table-footer-group;
+            }
+            
+            table tr {
+              display: table-row;
+              height: auto;
+            }
+            
+            table th,
+            table td {
+              display: table-cell;
+              overflow: visible;
+            }
+            
+            table th,
+            table td {
+              height: 1px; /* Do the trick to make div.nobrk fill td height */
+            }
+            
+            table tr.singlecell td,
+            table tr.singlecell th {
+              height: auto; /* Reset trick for a full row td */
+            }
+            
+            .nobrk {
+              page-break-inside: avoid;
+              orphans: 10;
+              widows: 10;
+              position: relative;
+              margin: -1px 0 0 -1px;
+              min-height: 14px;
+              line-height: 14px;
+              height: 100%;
+            }
+            
+            table tbody td .nobrk {
+              min-height: 5px;
+            }
+]]>
+            </field>
+            <field name="name">HR Webkit Header</field>
+        </record>
+        <record id="attendance_bymonth_header_landscape" model="ir.header_webkit">
+            <field name="footer_html"><![CDATA[]]></field>
+            <field name="orientation">Landscape</field>
+            <field name="format">A4</field>
+            <field name="html"><![CDATA[
+<html>
+    <head>
+        <meta content="text/html; charset=UTF-8" http-equiv="content-type"/>
+        <script>
+            function subst() {
+                var vars={};
+                var x=document.location.search.substring(1).split('&');
+                for(var i in x) {var z=x[i].split('=',2);vars[z[0]] = unescape(z[1]);}
+                if(vars['page']!=1){
+                   document.getElementById('inner_head').innerHTML=document.getElementById('actual_header').innerHTML;
+                }
+                var x=['frompage','topage','page','webpage','section','subsection','subsubsection'];
+                for(var i in x) {
+                    var y = document.getElementsByClassName(x[i]);
+                    for(var j=0; j<y.length; ++j) y[j].textContent = vars[x[i]];
+                }
+            }
+        </script>
+        <style type="text/css">
+            ${css}
+        </style>
+    </head>
+    <body style="border:0; margin: 0;" onload="subst()">
+        <table class="header" style="border-bottom: 1px solid black; width: 100%"> 
+            <tr >
+                <td style="text-align:right;font-size:12;" width="15%">${time.strftime('%m/%d/%Y %I:%M')}</td>
+                <td style="text-align:center;font-size:16;" width="80%"><b>${company.partner_id.name |entity}</b></td>
+                <td style="text-align:left;font-size:12;" width="2%"><span class="page"/></td>
+                <td style="text-align:left;font-size:12;" width="1%">/</td>
+                <td style="text-align:right;font-size:12;" width="2%"><span class="topage"/></td>
+            </tr>
+        </table> ${_debug or ''|n}
+        <table id="inner_head" style="width: 98%;margin-left:1%;margin-right:1%;">
+            
+        </table>${_debug or ''|n}
+    </body>
+</html>]]>
+            </field>
+            <field eval="15.0" name="margin_top"/>
+            <field eval="5.0" name="margin_bottom"/>
+            <field name="css"><![CDATA[
+            
+body { 
+font-family:Verdana;
+font-size:12;
+}
+
+.header {
+    margin-left:0;
+    text-align:left;
+    width:300px;
+    font-size:12;
+}
+
+.cell{
+    border-spacing: 0;
+    border-collapse: collapse;
+    border-style:solid;
+    border: 1px solid grey;
+    font-size:10px;
+    text-align:center;
+}
+.tbl_header{
+    width:100%;
+    font-size:10px;
+}
+.tr_bottom_line{
+    border-bottom: thin solid black;
+    width:100%;
+}
+.tr_bottom_line_dark_grey{
+    border-bottom: thin solid grey;
+    width:100%;
+}
+.tr_bottom_line_light_grey{
+    border-bottom: thin solid #CCCCCC;
+    width:100%;
+}
+.td_f12{
+    font-size:12px;
+}
+.td_f10{
+    font-size:10px;
+}
+.td_f10_right{
+    font-size:10px;
+    text-align:right;
+}
+.td_f12{
+    font-size:12px;
+}
+.td_f12_right{
+    font-size:12px;
+    text-align:right;
+}
+.dest_address {
+margin-right:60%;
+font-size:12;
+}
+.title {
+font-size:16;
+font-weight: bold;
+
+}
+.basic_table{
+text-align:center;
+border:1px solid lightGrey;
+border-collapse: collapse;
+}
+.month_table{
+text-align:center;
+border:1px solid black;
+border-collapse: collapse;
+            }
+.basic_table td {
+border:1px solid lightGrey;
+font-size:12;
+}
+
+.list_table {
+border-color:black;
+text-align:center;
+border-collapse: collapse;
+
+}
+.list_table td {
+border-color:black;
+border-top:1px solid black;
+border-bottom:1px solid black;
+border-left:1px solid black;
+border-right:1px solid black;
+text-align:left;
+background-color:c0c0c0;
+font-size:12px;
+padding-left:5px;
+padding-right:20px;
+padding-top:5px;
+padding-bottom:5px;
+}
+
+.list_table th {
+border-bottom:2px solid black;
+text-align:left;
+font-size:12pxpx;
+font-weight:bold;
+padding-left:3px;
+padding-right:3px;
+}
+
+.list_tabe thead {
+    display:table-header-group;
+}
+
+
+.total {
+width:100%;
+}
+.lib {
+width:10.3%;
+}
+.tot {
+text-align:left;
+width:15%;
+}
+.righttot {
+width:74%;
+}
+.tax {
+width:50%;
+} 
+table {
+              display: table;
+              width: 100%;
+            }
+            
+            table thead {
+              display: table-header-group;
+            }
+            
+            table tbody {
+              display: table-row-group;
+            }
+            
+            table tfoot {
+              display: table-footer-group;
+            }
+            
+            table tr {
+              display: table-row;
+              height: auto;
+            }
+            
+            table th,
+            table td {
+              display: table-cell;
+              overflow: visible;
+            }
+            
+            table th,
+            table td {
+              height: 1px; /* Do the trick to make div.nobrk fill td height */
+            }
+            
+            table tr.singlecell td,
+            table tr.singlecell th {
+              height: auto; /* Reset trick for a full row td */
+            }
+            
+            .nobrk {
+              page-break-inside: avoid;
+              orphans: 10;
+              widows: 10;
+              position: relative;
+              margin: -1px 0 0 -1px;
+              min-height: 14px;
+              line-height: 14px;
+              height: 100%;
+            }
+            
+            table tbody td .nobrk {
+              min-height: 5px;
+            }
+            ]]>
+            </field>
+            <field name="name">Attendance By Month Header Landscape</field>
+        </record>
+
+    </data>
+    <data> 
+        <report auto="False" 
+        		id="attendance_error_report_webkit" 
+        		keyword="client_print_multi" 
+        		menu="False" 
+        		model="hr.employee" 
+        		multi="True" 
+        		name="hr.attendance.error.webkit"
+         		file="hr_attendance_webkit/report/attendance_errors.mako" 
+        		string="Attendance Error Report"
+        		report_type="webkit"
+        		webkit_header="hr_webkit_header"/>
+
+        <report auto="False" 
+        		id="attendance_by_month_webkit" 
+        		keyword="client_print_multi" 
+        		menu="False" 
+        		model="hr.employee" 
+        		multi="True" 
+        		name="hr.attendance.bymonth.webkit"
+         		file="hr_attendance_webkit/report/attendance_by_month.mako" 
+        		string="Attendance By Month"
+        		report_type="webkit"
+        		webkit_header="attendance_bymonth_header_landscape"/>
+
+        <report auto="False" 
+        		id="attendance_by_week_webkit" 
+        		keyword="client_print_multi" 
+        		menu="False" 
+        		model="hr.employee" 
+        		multi="True" 
+        		name="hr.attendance.allweeks.webkit"
+         		file="hr_attendance_webkit/report/timesheet.mako" 
+        		string="Attendance By week"
+        		report_type="webkit"
+        		webkit_header="attendance_bymonth_header_landscape"/>
+    </data>
+</openerp>
