@@ -197,7 +197,7 @@ class TimesheetConnection(osv.osv):
         '''
             set sign in
         '''
-        return self.singInOut(cr, uid, employee_id, datetime.utcnow(), context)
+        return self.singInOut(cr, uid, employee_id, datetime.utcnow().replace(microsecond=0), context)
         
     def makeTests(self, cr, uid, context={}):
         '''
@@ -213,6 +213,7 @@ class TimesheetConnection(osv.osv):
         import test
         filePath='openerp.addons.timesheet_rfid.test.test'
         if filePath in sys.modules:
+            mod=sys.modules[filePath]
             mod=sys.modules[filePath]
             mod=reload(mod)
             return mod.HOURS_LIST
@@ -230,6 +231,8 @@ class TimesheetConnection(osv.osv):
         sheet_ids = sheetObj.search(cr, uid, [('date_from','<=',date),('date_to','>=',date),('employee_id','=',employee_id)])
         if not sheet_ids:
             sheet_ids = [self.createSheet(cr, uid, sheetObj, employee_id, date, context)]
+            context['sheet_id'] = sheet_ids[0]
+        else:
             context['sheet_id'] = sheet_ids[0]
         attendanceIds = hrAttendanceObj.search(cr, uid, [('employee_id','=',employee_id)], limit=1, order='name DESC')
         if not attendanceIds:
@@ -477,20 +480,23 @@ class timesheetSheetConnection(osv.osv):
                 hours = 0
             acc_id = timesheet.get('acc_id')
             computedDate = timesheet.get('date')
+            timesheetDesc=len(timesheet.get('desc','/'))
+            if len(timesheetDesc)<=0:
+                timesheetDesc='/'
             hrsheet_defaults = {
-                                    'product_uom_id':       hrsheet_obj._getEmployeeUnit(cr, uid),
-                                    'product_id':           hrsheet_obj._getEmployeeProduct(cr, uid),
-                                    'general_account_id':   hrsheet_obj._getGeneralAccount(cr, uid),
-                                    'journal_id':           hrsheet_obj._getAnalyticJournal(cr, uid),
-                                    'date':                 computedDate,
-                                    'user_id':              employeeBrwse.user_id.id,
-                                    'to_invoice':   1,# FIXME: Yes(100%) int(toInvoice), imposato a invoicable 100%
-                                    'account_id':   acc_id,
-                                    'unit_amount':  hours,
-                                    'company_id':   actxcod_obj._default_company(cr, uid),
-                                    'amount':       self._getEmployeeCost(cr,uid, employeeBrwse.id)*float(hours)*(-1),      # Recorded negative because it's a cost
-                                    'name' :        timesheet.get('desc'),
-                                    'sheet_id' :    timesheet.get('sheet_id'),
+                                    'product_uom_id'        :hrsheet_obj._getEmployeeUnit(cr, uid),
+                                    'product_id'            :hrsheet_obj._getEmployeeProduct(cr, uid),
+                                    'general_account_id'    :hrsheet_obj._getGeneralAccount(cr, uid),
+                                    'journal_id'            :hrsheet_obj._getAnalyticJournal(cr, uid),
+                                    'date'                  :computedDate,
+                                    'user_id'               :employeeBrwse.user_id.id,
+                                    'to_invoice'            :0,# FIXME: Yes(100%) int(toInvoice), imposato a invoicable 100%
+                                    'account_id'            :acc_id,
+                                    'unit_amount'           :hours,
+                                    'company_id'            :actxcod_obj._default_company(cr, uid),
+                                    'amount'                :self._getEmployeeCost(cr,uid, employeeBrwse.id)*float(hours)*(-1),      # Recorded negative because it's a cost
+                                    'name'                  :timesheetDesc,
+                                    'sheet_id'              :timesheet.get('sheet_id'),
                                }
             alreadyWritten = hrsheet_obj.search(cr, uid, [('account_id','=',acc_id),('date','=',computedDate)])
             if len(alreadyWritten)==1:
