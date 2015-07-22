@@ -479,7 +479,7 @@ class timesheetSheetConnection(osv.osv):
                 hours = 0
             acc_id = timesheet.get('acc_id')
             computedDate = timesheet.get('date')
-            timesheetDesc=len(timesheet.get('desc','/'))
+            timesheetDesc=timesheet.get('desc','/')
             if len(timesheetDesc)<=0:
                 timesheetDesc='/'
             hrsheet_defaults = {
