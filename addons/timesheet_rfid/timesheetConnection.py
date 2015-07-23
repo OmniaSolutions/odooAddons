@@ -178,7 +178,6 @@ class TimesheetConnection(osv.osv):
                           'date'       : str(date.date()),
                           'today'      : today,
                           }
-                print date
                 daysList.append(dayDict)
             return daysList, sheetId, sheetState
         return [],False, False
