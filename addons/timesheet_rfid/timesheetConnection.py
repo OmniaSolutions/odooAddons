@@ -39,23 +39,36 @@ class TimesheetConnection(osv.osv):
         if employee_id:
             employee_name = self.browse(cr, uid, employee_id[0]).name
         return {'employee_id':employee_id, 'employee_name': employee_name}
+    
+    def getEmployeeIdAndUserId(self, cr, uid, tagId, context={}):
+        """
+            get the employee id and the user id
+        """
+        employee_ids = self.search(cr, uid, [('otherid','=',tagId)])
+        for brwE in self.browse(cr, uid, employee_ids):
+            return brwE.id,brwE.user_id.id,brwE.name
+        return False,False,False
+        
         
     def getTimesheetInfos(self, cr, uid, vals, context = {}):
         '''
+            *
             collect and send timesheet infos
+            *
+            vals: [employee_id,user_id, targetDate]
         '''
-        uid = self.getUserIdFromEmployeeId(cr, uid, vals[0])
-        daysList, sheet_id, sheetState = self.getDaysAndSheet(cr, uid, vals[0], vals[1], context = {})
+        employee_id     = vals[0]
+        user_id         = vals[1]
+        targetDate      = vals[2]
+        daysList, sheet_id, sheetState = self.getDaysAndSheet(cr, uid, employee_id, targetDate, context = {})
         attendances = self.getAttendancesBySheetAndDays(cr, uid, sheet_id, daysList, context)
         sheetReadonly = False
         if sheetState == 'confirm':
             sheetReadonly = True
-        timesheetDict = self.getTimesheetActivities(cr, uid, vals[0], sheet_id, context)
+        timesheetDict = self.getTimesheetActivities(cr, uid, user_id, sheet_id, context)
         accAccObj = self.pool.get('account.analytic.account')
         accIdsPre = accAccObj.search(cr, uid, [('type','in',['normal', 'contract']), ('state', '<>', 'close'),('use_timesheets','=',1)], order='name')
         projProjObj = self.pool.get('project.project')
-        
-        employee_id = vals[0]
         userId = self.pool.get('hr.employee').browse(cr, uid, employee_id).user_id.id
         accIds = []
         for accId in accIdsPre:
@@ -167,7 +180,7 @@ class TimesheetConnection(osv.osv):
                 monthName = calendar.month_name[date.month]
                 dayNumber = date.day
                 weekDayId = calendar.weekday(date.year, date.month, date.day)
-                dayName   = calendar.day_name[weekDayId]
+                dayName   = "" #calendar.day_name[weekDayId]
                 today = False
                 if date.date() == targetDate:
                     today = True
@@ -257,7 +270,7 @@ class TimesheetConnection(osv.osv):
                 return 'Entrata segnata'
         return False
         
-    def getNextUserAction(self, cr, uid, vals, context):
+    def getNextUserAction(self, cr, uid, tagId, context):
         outAction = 'Not computed by server'
         currentDateTime = datetime.utcnow()
         date = currentDateTime.date()
@@ -265,34 +278,44 @@ class TimesheetConnection(osv.osv):
         morningTarget = datetime(year=date.year,month=date.month,day=date.day,hour=MORNING_HOUR,minute=0,second=0)
         eveningTarget = datetime(year=date.year,month=date.month,day=date.day,hour=EVENING_HOUR,minute=0,second=0)
         midnightOldTarget = datetime(year=date.year,month=date.month,day=date.day,hour=MIDNIGHT_HOUR,minute=59,second=59)
-        employee_name = vals.get('employee_name',False)
-        if employee_name:
-            hrAttendanceObj = self.pool.get('hr.attendance')
-            employee_ids = self.search(cr, uid, [('name','=',employee_name)])
-            for employee_id in employee_ids:
-                attendance = hrAttendanceObj.search(cr, uid, [('employee_id','=',employee_id)], limit=1, order='name DESC')
-                if attendance:
-                    attendanceBrws = hrAttendanceObj.browse(cr, uid, attendance[-1], context)
-                    lastAction = attendanceBrws.action
-                    datetimeActStr = attendanceBrws.name
-                    datetimeAct = datetime.strptime(datetimeActStr, DEFAULT_SERVER_DATETIME_FORMAT)
-                    if currentDateTime>=midnightTarget and currentDateTime<=morningTarget:            #00:00 --> 8:00
-                        if datetimeAct.date() == date and lastAction == 'sign_in':
-                            outAction = 'Uscita'
-                        else:
-                            outAction = 'Entrata'
-                    elif currentDateTime>=morningTarget and currentDateTime<=eveningTarget:           #08:00 --> 19:00
-                        if lastAction == 'sign_in':    
-                            outAction = 'Uscita'
-                        else:
-                            outAction = 'Entrata'
-                    elif currentDateTime>=eveningTarget and currentDateTime<=midnightOldTarget:       #19:00 --> 23:59:59
+        hrAttendanceObj = self.pool.get('hr.attendance')
+        employee_ids = self.search(cr, uid, [('otherid','=',tagId)])
+        for employee_id in employee_ids:
+            attendance = hrAttendanceObj.search(cr, uid, [('employee_id','=',employee_id)], limit=1, order='name DESC')
+            if attendance:
+                attendanceBrws = hrAttendanceObj.browse(cr, uid, attendance[-1], context)
+                lastAction = attendanceBrws.action
+                datetimeActStr = attendanceBrws.name
+                datetimeAct = datetime.strptime(datetimeActStr, DEFAULT_SERVER_DATETIME_FORMAT)
+                if currentDateTime>=midnightTarget and currentDateTime<=morningTarget:            #00:00 --> 8:00
+                    if datetimeAct.date() == date and lastAction == 'sign_in':
                         outAction = 'Uscita'
-                    return outAction
-                else:
-                    outAction = 'Entrata'
+                    else:
+                        outAction = 'Entrata'
+                elif currentDateTime>=morningTarget and currentDateTime<=eveningTarget:           #08:00 --> 19:00
+                    if lastAction == 'sign_in':    
+                        outAction = 'Uscita'
+                    else:
+                        outAction = 'Entrata'
+                elif currentDateTime>=eveningTarget and currentDateTime<=midnightOldTarget:       #19:00 --> 23:59:59
+                    outAction = 'Uscita'
+                return outAction
+            else:
+                outAction = 'Entrata'
         return outAction
-            
+
+
+    def getLastAttendenceAction(self, cr, uid, employee_id, context):
+        """
+            return the next user action the the user will do if press the button
+        """
+        hrAttendanceObj = self.pool.get('hr.attendance')
+        attendance = hrAttendanceObj.search(cr, uid, [('employee_id','=',employee_id)], limit=1, order='name DESC')
+        if attendance:
+            attendanceBrws = hrAttendanceObj.browse(cr, uid, attendance[-1], context)
+            return attendanceBrws.action
+        return False
+
     def createSheet(self, cr, uid, sheetObj, employee_id, date, context):
         date_from, date_to = self._getWeekFromTo(date)
         vals = {
