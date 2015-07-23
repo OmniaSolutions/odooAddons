@@ -507,7 +507,7 @@ class timesheetSheetConnection(osv.osv):
                 hours = 0
             acc_id = timesheet.get('acc_id')
             computedDate = timesheet.get('date')
-            timesheetDesc=len(timesheet.get('desc','/'))
+            timesheetDesc=timesheet.get('desc','/')
             if len(timesheetDesc)<=0:
                 timesheetDesc='/'
             hrsheet_defaults = {
@@ -517,7 +517,7 @@ class timesheetSheetConnection(osv.osv):
                                     'journal_id'            :hrsheet_obj._getAnalyticJournal(cr, uid),
                                     'date'                  :computedDate,
                                     'user_id'               :employeeBrwse.user_id.id,
-                                    'to_invoice'            :0,# FIXME: Yes(100%) int(toInvoice), imposato a invoicable 100%
+                                    'to_invoice'            :0,# 1 = Yes(100%) int(toInvoice), imposato a invoicable 100%
                                     'account_id'            :acc_id,
                                     'unit_amount'           :hours,
                                     'company_id'            :actxcod_obj._default_company(cr, uid),
@@ -532,14 +532,15 @@ class timesheetSheetConnection(osv.osv):
                 #non posso fare la scrittura per tutte le attendances perche' il totale di ognuna sara' diverso.
                 res = hrsheet_obj.write(cr, uid, alreadyWritten[0],hrsheet_defaults)
                 if not res:
-                    raise Exception('Write timesheet failed')
+                    raise Exception('Update timesheet failed')
                 else:
-                    _logger.info("Update data from consuntivator [%s]"%hrsheet_defaults)
+                    _logger.info("Update data from consuntivator ID:[%s]->[%s]"%(str(alreadyWritten[0]),str(hrsheet_defaults)))
             elif len(alreadyWritten)==0:
-                if not hrsheet_obj.create(cr, uid, hrsheet_defaults, context):
-                    raise Exception('Write timesheet failed')
+                create_id=hrsheet_obj.create(cr, uid, hrsheet_defaults, context)
+                if not create_id:
+                    raise Exception('Create timesheet failed')
                 else:
-                    _logger.info("Update data from consuntivator [%s]"%hrsheet_defaults)
+                    _logger.info("New data from consuntivator ID: [%s]->[%s]"%(str(create_id),str(hrsheet_defaults)))
         _logger.info("Action_compile_timesheet DONE !!")
         return True
 
