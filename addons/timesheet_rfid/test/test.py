@@ -116,45 +116,45 @@ HOURS_LIST = [
 
 
                 #Test chiusura alle 12
-            (117, timeNow.replace( day=15, month=7, hour=9, minute=0)), 
-            (117, timeNow.replace( day=16, month=7, hour=10, minute=0)), 
+            (117, timeNow.replace( day=15, month=7, hour=9, minute=1)), 
+            (117, timeNow.replace( day=16, month=7, hour=10, minute=2)), 
                     
                 #Test chiusura alle 18
-            (117, timeNow.replace( day=16, month=7, hour=12, minute=0)), 
-            (117, timeNow.replace( day=16, month=7, hour=13, minute=0)), 
+            (117, timeNow.replace( day=16, month=7, hour=12, minute=3)), 
+            (117, timeNow.replace( day=16, month=7, hour=13, minute=4)), 
             (117, timeNow.replace( day=17, month=7, hour=10, minute=5)), 
                     
                 #Test minuti non recuperati la sera
-            (117, timeNow.replace( day=17, month=7, hour=12, minute=0)), 
-            (117, timeNow.replace( day=17, month=7, hour=13, minute=0)),
+            (117, timeNow.replace( day=17, month=7, hour=12, minute=1)), 
+            (117, timeNow.replace( day=17, month=7, hour=13, minute=2)),
             (117, timeNow.replace( day=17, month=7, hour=17, minute=1)),
                     
                 #Test minuti recuperati la sera
             (117, timeNow.replace( day=18, month=7, hour=8, minute=5)),
-            (117, timeNow.replace( day=18, month=7, hour=12, minute=0)), 
-            (117, timeNow.replace( day=18, month=7, hour=13, minute=0)),
+            (117, timeNow.replace( day=18, month=7, hour=12, minute=1)), 
+            (117, timeNow.replace( day=18, month=7, hour=13, minute=2)),
             (117, timeNow.replace( day=18, month=7, hour=17, minute=6)),
                     
                 #Test entro alle 17:00 ed entro alle 17:30        a mezzogiorno e mezzo perdo la mezz'ora
-            (117, timeNow.replace( day=19, month=7, hour=8, minute=0)),
+            (117, timeNow.replace( day=19, month=7, hour=8, minute=1)),
             (117, timeNow.replace( day=19, month=7, hour=12, minute=29)),
-            (117, timeNow.replace( day=19, month=7, hour=17, minute=0)),
+            (117, timeNow.replace( day=19, month=7, hour=17, minute=2)),
             (117, timeNow.replace( day=19, month=7, hour=17, minute=30)),
      
                 #Test esco 12:30 entro 13:00 e perdo la mezz'ora perche' ho un'ora di pausa pranzo
             (117, timeNow.replace( day=20, month=7, hour=7, minute=48)),
             (117, timeNow.replace( day=20, month=7, hour=12, minute=33)),
-            (117, timeNow.replace( day=20, month=7, hour=13, minute=0)),
+            (117, timeNow.replace( day=20, month=7, hour=13, minute=3)),
             (117, timeNow.replace( day=20, month=7, hour=17, minute=00)),
                
                 #Test entro alle 17:30 e non esco
-            (117, timeNow.replace( day=21, month=7, hour=8, minute=0)),
-            (117, timeNow.replace( day=21, month=7, hour=12, minute=0)),
+            (117, timeNow.replace( day=21, month=7, hour=8, minute=3)),
+            (117, timeNow.replace( day=21, month=7, hour=12, minute=4)),
             (117, timeNow.replace( day=21, month=7, hour=18, minute=30)),
-            (117, timeNow.replace( day=22, month=7, hour=8, minute=05)),
-   
-                #Test entro alle 16:30 ed esco alle 17:01 non recuperando il ritardo della mattina
-            (117, timeNow.replace( day=22, month=7, hour=12, minute=29)),
-            (117, timeNow.replace( day=22, month=7, hour=16, minute=30)),
-            (117, timeNow.replace( day=22, month=7, hour=17, minute=01)),
+#             (117, timeNow.replace( day=22, month=7, hour=8, minute=05)),
+#    
+#                 #Test entro alle 16:30 ed esco alle 17:01 non recuperando il ritardo della mattina
+#             (117, timeNow.replace( day=22, month=7, hour=12, minute=29)),
+#             (117, timeNow.replace( day=22, month=7, hour=16, minute=30)),
+#             (117, timeNow.replace( day=22, month=7, hour=17, minute=01)),
               ]
