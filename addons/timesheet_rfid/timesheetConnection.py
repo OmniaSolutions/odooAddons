@@ -196,6 +196,9 @@ class TimesheetConnection(osv.osv):
         return [],False, False
     
     def getUserIdFromEmployeeId(self, cr, uid, employee_id):
+        '''
+            Return user ID form employee_id
+        '''
         brws = self.browse(cr, uid, employee_id)
         if brws:
             if brws.user_id:
@@ -206,9 +209,12 @@ class TimesheetConnection(osv.osv):
         '''
             set sign in
         '''
-        return self.singInOut(cr, uid, employee_id, datetime.utcnow(), context)
+        return self.singInOut(cr, uid, employee_id, datetime.utcnow().replace(microsecond=0), context)
         
     def makeTests(self, cr, uid, context={}):
+        '''
+            Called from "Test Feed" menu
+        '''
         for empId, dateTime in self.getTestList():
             self.singInOut(cr, uid, empId, correctDate(str(dateTime),context), context)
             
@@ -224,6 +230,9 @@ class TimesheetConnection(osv.osv):
             return mod.HOURS_LIST
         
     def singInOut(self, cr, uid, employee_id, currentDateTime, context):
+        '''
+            Set sign_in or sign_out
+        ''' 
         _logger.info("Call from consuntivator singInOut employee_id %s"%(str(employee_id)))
         uid = self.getUserIdFromEmployeeId(cr, uid, employee_id)
         hrAttendanceObj = self.pool.get('hr.attendance')
@@ -232,6 +241,8 @@ class TimesheetConnection(osv.osv):
         sheet_ids = sheetObj.search(cr, uid, [('date_from','<=',date),('date_to','>=',date),('employee_id','=',employee_id)])
         if not sheet_ids:
             sheet_ids = [self.createSheet(cr, uid, sheetObj, employee_id, date, context)]
+            context['sheet_id'] = sheet_ids[0]
+        else:
             context['sheet_id'] = sheet_ids[0]
         attendanceIds = hrAttendanceObj.search(cr, uid, [('employee_id','=',employee_id)], limit=1, order='name DESC')
         if len(attendanceIds)>0:
@@ -317,6 +328,9 @@ class TimesheetConnection(osv.osv):
         return False
 
     def createSheet(self, cr, uid, sheetObj, employee_id, date, context):
+        '''
+            Create a sheet for timesheet_sheet.sheet object
+        '''
         date_from, date_to = self._getWeekFromTo(date)
         vals = {
                 'date_from'     : date_from,
@@ -328,6 +342,9 @@ class TimesheetConnection(osv.osv):
         return sheetObj.create(cr, uid, vals, context)
         
     def _getWeekFromTo(self, date = False):
+        '''
+            Get dates for create sheet
+        '''
         if not date:
             date = datetime.utcnow().date()
         weekday = date.weekday()
@@ -337,7 +354,7 @@ class TimesheetConnection(osv.osv):
         
     def computeDateRange(self, cr, uid, employeeID, hrAttendanceObj, currentDatetime, context = {}):
         '''
-            compute and set sign-in and sign-out
+            Compute vals for write
         '''
         def commonOperations(cr, uid, hrAttendanceObj, employeeID, currentDatetime, vals, context={}):
             action = self.setOldAttendances(cr, uid, hrAttendanceObj, employeeID, currentDatetime, context)
