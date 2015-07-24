@@ -49,7 +49,6 @@ class TimesheetConnection(osv.osv):
             return brwE.id,brwE.user_id.id,brwE.name
         return False,False,False
         
-        
     def getTimesheetInfos(self, cr, uid, vals, context = {}):
         '''
             *
@@ -234,6 +233,7 @@ class TimesheetConnection(osv.osv):
             Set sign_in or sign_out
         ''' 
         _logger.info("Call from consuntivator singInOut employee_id %s"%(str(employee_id)))
+        outString = 'Action not computed'
         uid = self.getUserIdFromEmployeeId(cr, uid, employee_id)
         hrAttendanceObj = self.pool.get('hr.attendance')
         sheetObj = self.pool.get('hr_timesheet_sheet.sheet')
@@ -245,43 +245,45 @@ class TimesheetConnection(osv.osv):
         else:
             context['sheet_id'] = sheet_ids[0]
         attendanceIds = hrAttendanceObj.search(cr, uid, [('employee_id','=',employee_id)], limit=1, order='name DESC')
-        if len(attendanceIds)>0:
-            brws = hrAttendanceObj.browse(cr, uid, attendanceIds[-1], context)
-            if brws:
-                action = brws.action
-                if action:
-                    if not self.computeDateRange(cr, uid, employee_id, hrAttendanceObj, currentDateTime, context):
-                        _logger.error("Unable to write the sign in sign out (computeDateRange)")
-                        return False
-                else:
-                    raise Exception("No Action Defined")
+        if not attendanceIds:
+            outString = self.computeAndWrite(cr, uid, currentDateTime, employee_id, hrAttendanceObj, 'sign_in', context)
         else:
+            lastAction = hrAttendanceObj.browse(cr, uid, attendanceIds[-1], context).action
+            if lastAction == 'sign_in':
+                outString = self.computeAndWrite(cr, uid, currentDateTime, employee_id, hrAttendanceObj, 'sign_out', context)
+            elif lastAction == 'sign_out':
+                outString = self.computeAndWrite(cr, uid, currentDateTime, employee_id, hrAttendanceObj, 'sign_in', context)
+            else:
+                raise Exception("No Action Defined")
+        return outString
+    
+    def computeAndWrite(self, cr, uid, date, employee_id, hrAttendanceObj, action, context):
+        '''
+            Compute and write vals for attendances creation
+        '''
+        vals = self.computeVals(date, employee_id, action, context)
+        if self.writeAction(cr, uid, employee_id, hrAttendanceObj, vals, context):
+            return self.returnOutStringFromAction(action, employee_id)
 
-            for sheet_id in sheet_ids:
-                vals = {
-                        'action'        : 'sign_in',
-                        'name'          : str(date)+' '+str(currentDateTime.time()).split('.')[0],
-                        'day'           : str(date),
-                        'employee_id'   : employee_id,
-                }
-                context['sheet_id']=sheet_id
-                _logger.info("Call singInOut write action %s"%(str(vals)))
-                if not self.writeAction(cr, uid, employee_id, hrAttendanceObj, vals, context):
-                    _logger.error("Unable to write the sign in sign out (writeAction)")
-                    return False
-                break
-        attendance = hrAttendanceObj.search(cr, uid, [('employee_id','=',employee_id)], limit=1, order='name DESC')
-        if attendance:
-            lastAction = hrAttendanceObj.browse(cr, uid, attendance[-1], context).action
-            if lastAction == 'sign_out':
-                _logger.info("Uscita segnata for employee_id %s"%str(employee_id))
-                return 'Uscita segnata'
-            elif lastAction == 'sign_in':
-                _logger.info("Entrata segnata for employee_id %s"%str(employee_id))
-                return 'Entrata segnata'
-        return False
+    def returnOutStringFromAction(self, action, employee_id):
+        '''
+            Return successful string for sign in/out
+        '''
+        outString = 'Action not computed'
+        if action == 'sign_in':
+            outString = 'Entrata segnata'
+            _logger.info("Signed in for employee_id = %s"%str(employee_id))
+        elif action == 'sign_out':
+            outString = 'Uscita segnata'
+            _logger.info("Signed out for employee_id = %s"%str(employee_id))
+        else:
+            _logger.error("Signed action not valid: %s"%str(action))
+        return outString
         
     def getNextUserAction(self, cr, uid, tagId, context):
+        '''
+            Return next action for consuntivator
+        '''
         outAction = 'Not computed by server'
         currentDateTime = datetime.utcnow()
         date = currentDateTime.date()
@@ -352,163 +354,16 @@ class TimesheetConnection(osv.osv):
         sundayDate = mondayDate+timedelta(6)
         return mondayDate,sundayDate
         
-    def computeDateRange(self, cr, uid, employeeID, hrAttendanceObj, currentDatetime, context = {}):
+    def computeVals(self,tarDatetime, employee_id, action, context):
         '''
             Compute vals for write
         '''
-        def commonOperations(cr, uid, hrAttendanceObj, employeeID, currentDatetime, vals, context={}):
-            action = self.setOldAttendances(cr, uid, hrAttendanceObj, employeeID, currentDatetime, context)
-            if action == 'sign_in':
-                vals['action']  ='sign_out'
-            elif action == 'sign_out':
-                vals['action']  ='sign_in'
-            else:
-                return False
-            trueDateTime = currentDatetime.replace(microsecond=0)
-            vals = self.computeVals(trueDateTime, employeeID, vals['action'], context)
-            _logger.info("Call commonOperations write action %s"%(str(vals)))
-            if not self.writeAction(cr, uid, employeeID, hrAttendanceObj, vals, context):
-                return False
-            
-        def commonMorningOperation(cr, uid, hrAttendanceObj, employeeID, vals, morningTarget, currentDatetime, context):
-            if not self.setOldAttendances(cr, uid, hrAttendanceObj, employeeID, currentDatetime, context):
-                return False
-            vals = self.computeVals(morningTarget, employeeID, 'sign_in', context)
-            _logger.info("Call commonMorningOperation write action %s"%(str(vals)))
-            if not self.writeAction(cr, uid, employeeID, hrAttendanceObj, vals, context):
-                return False
-            trueDateTime = currentDatetime.replace(microsecond=0)
-            vals = self.computeVals(trueDateTime, employeeID, 'sign_out', context)
-            _logger.info("Call commonMorningOperation write action %s"%(str(vals)))
-            if not self.writeAction(cr, uid, employeeID, hrAttendanceObj, vals, context):
-                return False
-            
-        def eveningOperations(cr, uid, employeeID, date, hrAttendanceObj, vals, morningTarget, currentDatetime, context):
-            todaySignIn = hrAttendanceObj.search(cr, uid, [('employee_id','=',employeeID), ('day', '=', date)])
-            if len(todaySignIn) == 0:
-                return commonMorningOperation(cr, uid, hrAttendanceObj, employeeID, vals, morningTarget, currentDatetime, context)
-            else: 
-                return commonOperations(cr, uid, hrAttendanceObj, employeeID, currentDatetime, vals, context)
-            
-        def operations(cr, uid, employeeID, hrAttendanceObj, currentDateTime, context = {}):
-            date = currentDatetime.date()
-            midnightTarget = datetime(year=date.year,month=date.month,day=date.day,hour=0,minute=0,second=0)
-            morningTarget = datetime(year=date.year,month=date.month,day=date.day,hour=MORNING_HOUR,minute=0,second=0)
-            eveningTarget = datetime(year=date.year,month=date.month,day=date.day,hour=EVENING_HOUR,minute=0,second=0)
-            midnightOldTarget = datetime(year=date.year,month=date.month,day=date.day,hour=MIDNIGHT_HOUR,minute=59,second=59)
-            vals = {
-                    'action'        : False,
-                    'name'          : False,
-                    'day'           : False,
-                    'employee_id'   : employeeID,
-            }
-            if currentDateTime>=midnightTarget and currentDateTime<=morningTarget:            #00:00 --> 8:00
-                return commonOperations(cr, uid, hrAttendanceObj, employeeID, currentDateTime, vals, context)
-            elif currentDateTime>=morningTarget and currentDateTime<=eveningTarget:           #08:00 --> 17:00
-                return commonOperations(cr, uid, hrAttendanceObj, employeeID, currentDateTime, vals, context)
-            elif currentDateTime>=eveningTarget and currentDateTime<=midnightOldTarget:       #17:00 --> 23:59:59
-                return eveningOperations(cr, uid, employeeID, date, hrAttendanceObj, vals, morningTarget, currentDateTime, context)
-
-        operations(cr, uid, employeeID, hrAttendanceObj, currentDatetime, context)
-        return True
-        
-    def computeVals(self,tarDatetime, employee_id, action, context):
         vals={}
         vals['action']      = action
         vals['name']        = str(tarDatetime)
         vals['day']         = str(tarDatetime.date())
         vals['employee_id'] = employee_id
         return vals
-        
-    def setOldAttendances(self, cr, uid, hrAttendanceObj, employee_id, currentDateTime, context):
-        def verifySign(lastDateTime):
-            middayTarget = brwsDatetime.replace(hour=10, minute=01)
-            if lastDateTime<middayTarget:
-                return 'morning'
-            else:
-                return 'afternoon'
-            return False
-        
-        def computeAndWrite(cr, uid, brwsDatetime, employee_id, action, hrAttendanceObj, hour, context):
-            localDatetime = brwsDatetime.replace(hour=hour, minute=0)
-            vals = self.computeVals(localDatetime, employee_id, action, context)
-            _logger.info("Call computeAndWrite write action %s"%(str(vals)))
-            res = self.writeAction(cr, uid, employee_id, hrAttendanceObj, vals)
-            if not res:
-                return False
-            return res
-            
-        def bodyAndSendEmail(cr, uid, attIds, employee_id, context):
-            body_html = self.computeBodyForMail(cr, uid, employee_id, attIds,context)
-            self.send_mail(cr, uid, body_html=body_html, context=context) 
-            return True
-        
-        attendances = hrAttendanceObj.search(cr, uid, [('employee_id','=',employee_id)],limit=1, order='name DESC')
-        brwse = hrAttendanceObj.browse(cr, uid, attendances)[0]
-        action = brwse.action
-        date = datetime.strptime(brwse.day+' 1:1:1', DEFAULT_SERVER_DATETIME_FORMAT)
-        brwsDatetime = datetime.strptime(brwse.name, DEFAULT_SERVER_DATETIME_FORMAT)
-        res = verifySign(brwsDatetime)
-        if action == 'sign_in' and date.date() != currentDateTime.date():
-            if res == 'afternoon':
-                tarDatetime = brwsDatetime.replace(hour=AFTERNOON_AUTOCOMPLETE_HOUR_UTC, minute=0)
-                if brwsDatetime > tarDatetime:
-                    tarDatetime = brwsDatetime + timedelta(minutes=1)
-                vals = self.computeVals(tarDatetime, employee_id, 'sign_out', context)
-                _logger.info("Call setOldAttendances write action %s"%(str(vals)))
-                attMidId = self.writeAction(cr, uid, employee_id, hrAttendanceObj, vals)
-                if not attMidId:
-                    return False
-                bodyAndSendEmail(cr, uid, [attMidId], employee_id, context)
-                return 'sign_out'
-            elif res == 'morning':
-                attMidId = computeAndWrite(cr, uid, brwsDatetime, employee_id, 'sign_out', hrAttendanceObj, 10, context)
-                if not attMidId:
-                    return False
-                bodyAndSendEmail(cr, uid, [attMidId], employee_id, context)
-                return 'sign_out'
-        return action
-        
-    def computeBodyForMail(self, cr, uid, employeeId, attendanceList=[], context={}):
-        outBody = 'Salve,<br>'
-        attendanceObj = self.pool.get('hr.attendance')
-        employeeBrws = self.pool.get('hr.employee').browse(cr, uid, employeeId, context)
-        outBody = outBody + "L'utente %s non ha timbrato le seguenti ore:<br>"%(employeeBrws.name)
-        for attId in attendanceList:
-            attBrws = attendanceObj.browse(cr, uid, attId, context)
-            outBody = outBody + "Azione %s in data e ora %s <br>"%(attBrws.action,correctDateForComputation(attBrws.name,context))
-        outBody = outBody + "Le ore qui descritte sono state salvate dalla procedura automatica.<br> Cordiali Saluti"
-        return outBody
-        
-    def send_mail(self, cr, uid,subject='[Timesheet Info]', body_html='', email_to=[], context=None):
-        if not email_to:
-            groupsObj = self.pool.get('res.groups')
-            groupsIds = groupsObj.search(cr, uid, [('name','=','Manager')])
-            for groupId in groupsIds:
-                groupBrws = groupsObj.browse(cr, uid, groupId, context)
-                categBrows = groupBrws.category_id
-                if categBrows and categBrows.name == 'Human Resources':
-                    for userBrws in groupBrws.users:
-                        userEmail = userBrws.email
-                        if userEmail:
-                            email_to.append(userEmail)
-                    break
-        values = {}
-        values['subject'] = subject
-        values['body_html'] = body_html
-        values['body'] = Template('MAIL_WORKFLOW_TEMPLATE').render_unicode(schedaObj=self)
-        values['res_id'] = False
-        mail_mail_obj = self.pool.get('mail.mail')
-        for mailAddress in email_to:
-            values['email_to'] = mailAddress
-            try:
-                msg_id = mail_mail_obj.create(cr, uid, values, context=context)
-                if msg_id:
-                    mail_mail_obj.send(cr, uid, [msg_id], context=context) 
-            except Exception,ex:
-                print ex
-                print 'Mail not delivered to %s'%mailAddress
-        return True
 
     def writeAction(self, cr, uid, employeeID, hrAttendanceObj, vals={}, context = {}):
         '''
