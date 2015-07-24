@@ -49,7 +49,6 @@ class TimesheetConnection(osv.osv):
             return brwE.id,brwE.user_id.id,brwE.name
         return False,False,False
         
-        
     def getTimesheetInfos(self, cr, uid, vals, context = {}):
         '''
             *
@@ -233,12 +232,12 @@ class TimesheetConnection(osv.osv):
         '''
             Set sign_in or sign_out
         ''' 
-        _logger.info("Call from consuntivator singInOut")
+        _logger.info("Call from consuntivator singInOut employee_id %s"%(str(employee_id)))
         outString = 'Action not computed'
         uid = self.getUserIdFromEmployeeId(cr, uid, employee_id)
-        date = currentDateTime.date()
         hrAttendanceObj = self.pool.get('hr.attendance')
         sheetObj = self.pool.get('hr_timesheet_sheet.sheet')
+        date = currentDateTime.date()
         sheet_ids = sheetObj.search(cr, uid, [('date_from','<=',date),('date_to','>=',date),('employee_id','=',employee_id)])
         if not sheet_ids:
             sheet_ids = [self.createSheet(cr, uid, sheetObj, employee_id, date, context)]
@@ -362,107 +361,9 @@ class TimesheetConnection(osv.osv):
         vals={}
         vals['action']      = action
         vals['name']        = str(tarDatetime)
-        vals['trueDateTime']= str(tarDatetime)
         vals['day']         = str(tarDatetime.date())
         vals['employee_id'] = employee_id
         return vals
-        
-#     def setOldAttendances(self, cr, uid, hrAttendanceObj, employee_id, currentDateTime, context):
-#         '''
-#             Set old attendances
-#         '''
-#         def verifySign(lastDateTime):
-#             middayTarget = brwsDatetime.replace(hour=10, minute=01)
-#             if lastDateTime<middayTarget:
-#                 return 'morning'
-#             else:
-#                 return 'afternoon'
-#             return False
-#         
-#         def computeAndWrite(cr, uid, brwsDatetime, employee_id, action, hrAttendanceObj, hour, context):
-#             localDatetime = brwsDatetime.replace(hour=hour, minute=0)
-#             vals = self.computeVals(localDatetime, employee_id, action, context)
-#             res = self.writeAction(cr, uid, employee_id, hrAttendanceObj, vals)
-#             if not res:
-#                 return False
-#             return res
-#             
-#         def bodyAndSendEmail(cr, uid, attIds, employee_id, context):
-#             body_html = self.computeBodyForMail(cr, uid, employee_id, attIds,context)
-#             self.send_mail(cr, uid, body_html=body_html, context=context) 
-#             return True
-#         
-#         attendances = hrAttendanceObj.search(cr, uid, [('employee_id','=',employee_id)],limit=1, order='name DESC')
-#         brwse = hrAttendanceObj.browse(cr, uid, attendances)[0]
-#         action = brwse.action
-#         date = datetime.strptime(brwse.day+' 1:1:1', DEFAULT_SERVER_DATETIME_FORMAT)
-#         brwsDatetime = datetime.strptime(brwse.name, DEFAULT_SERVER_DATETIME_FORMAT)
-#         res = verifySign(brwsDatetime)
-#         if action == 'sign_in' and date.date() != currentDateTime.date():
-#             if res == 'afternoon':
-#                 tarDatetime = brwsDatetime.replace(hour=AFTERNOON_AUTOCOMPLETE_HOUR_UTC, minute=0)
-#                 if brwsDatetime > tarDatetime:
-#                     tarDatetime = brwsDatetime + timedelta(minutes=1)
-#                 vals = self.computeVals(tarDatetime, employee_id, 'sign_out', context)
-#                 attMidId = self.writeAction(cr, uid, employee_id, hrAttendanceObj, vals)
-#                 if not attMidId:
-#                     return False
-#                 bodyAndSendEmail(cr, uid, [attMidId], employee_id, context)
-#                 return 'sign_out'
-#             elif res == 'morning':
-#                 attMidId = computeAndWrite(cr, uid, brwsDatetime, employee_id, 'sign_out', hrAttendanceObj, 10, context)
-#                 if not attMidId:
-#                     return False
-#                 bodyAndSendEmail(cr, uid, [attMidId], employee_id, context)
-#                 return 'sign_out'
-#         return action
-        
-#     def computeBodyForMail(self, cr, uid, employeeId, attendanceList=[], context={}):
-#         '''
-#             Create body for mail
-#         '''
-#         outBody = 'Salve,<br>'
-#         attendanceObj = self.pool.get('hr.attendance')
-#         employeeBrws = self.pool.get('hr.employee').browse(cr, uid, employeeId, context)
-#         outBody = outBody + "L'utente %s non ha timbrato le seguenti ore:<br>"%(employeeBrws.name)
-#         for attId in attendanceList:
-#             attBrws = attendanceObj.browse(cr, uid, attId, context)
-#             outBody = outBody + "Azione %s in data e ora %s <br>"%(attBrws.action,correctDateForComputation(attBrws.name,context))
-#         outBody = outBody + "Le ore qui descritte sono state salvate dalla procedura automatica.<br> Cordiali Saluti"
-#         return outBody
-#         
-#     def send_mail(self, cr, uid,subject='[Timesheet Info]', body_html='', email_to=[], context=None):
-#         '''
-#             Send mail
-#         '''
-#         if not email_to:
-#             groupsObj = self.pool.get('res.groups')
-#             groupsIds = groupsObj.search(cr, uid, [('name','=','Manager')])
-#             for groupId in groupsIds:
-#                 groupBrws = groupsObj.browse(cr, uid, groupId, context)
-#                 categBrows = groupBrws.category_id
-#                 if categBrows and categBrows.name == 'Human Resources':
-#                     for userBrws in groupBrws.users:
-#                         userEmail = userBrws.email
-#                         if userEmail:
-#                             email_to.append(userEmail)
-#                     break
-#         values = {}
-#         values['subject'] = subject
-#         values['body_html'] = body_html
-#         values['body'] = Template('MAIL_WORKFLOW_TEMPLATE').render_unicode(schedaObj=self)
-#         values['res_id'] = False
-#         mail_mail_obj = self.pool.get('mail.mail')
-#         for mailAddress in email_to:
-#             values['email_to'] = mailAddress
-#             try:
-#                 msg_id = mail_mail_obj.create(cr, uid, values, context=context)
-#                 if msg_id:
-#                     mail_mail_obj.send(cr, uid, [msg_id], context=context) 
-#             except Exception,ex:
-#                 print ex
-#                 print 'Mail not delivered to %s'%mailAddress
-#         return True
 
     def writeAction(self, cr, uid, employeeID, hrAttendanceObj, vals={}, context = {}):
         '''
@@ -493,7 +394,7 @@ class timesheetSheetConnection(osv.osv):
         hrsheet_obj = self.pool.get('hr.analytic.timesheet')
         actxcod_obj = self.pool.get('account.tax.code')
         hrEmployeeObj = self.pool.get('hr.employee')
-        _logger.info("Action_compile_timesheet Start Looping")
+        _logger.info("Action_compile_timesheet Start Looping on Vals - %s"%str(vals))
         for timesheet in vals:
             employeeBrwse = hrEmployeeObj.browse(cr, uid, timesheet.get('employee_id'))
             hours = timesheet.get('hours')
