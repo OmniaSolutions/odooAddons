@@ -62,8 +62,8 @@ class TimesheetConnection(osv.osv):
         rootContr       = vals[3]
         daysList, sheet_id, sheetState  = self.getDaysAndSheet(cr, uid, employee_id, targetDate, context = {})
         attendances                     = self.getAttendancesBySheetAndDays(cr, uid, sheet_id, daysList, context)
-        #timesheetDict                   = self.getTimesheetActivities(cr, uid, sheet_id, context)
-        timesheetDict                   = self.getTimesheetActivities(cr, uid, user_id, targetDate, context)
+        timesheetDict                   = self.getTimesheetActivities(cr, uid, sheet_id, context)
+        #timesheetDict                   = self.getTimesheetActivities(cr, uid, user_id, targetDate, context)
         accountList, parentsForCombo    = self.computeAccountList(cr, uid, user_id, rootContr, context={})
         outDict = { 
                     'accountList'       : accountList,
