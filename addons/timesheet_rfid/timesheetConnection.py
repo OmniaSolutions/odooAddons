@@ -193,13 +193,10 @@ class TimesheetConnection(osv.osv):
                 date = computed_date_from + timedelta(days=i)
                 monthName = calendar.month_name[date.month]
                 dayNumber = date.day
-                weekDayId = calendar.weekday(date.year, date.month, date.day)
-                dayName   = "" #calendar.day_name[weekDayId]
                 today = False
                 if date.date() == targetDate:
                     today = True
                 dayDict ={
-                          'dayName'    : dayName,
                           'dayNumber'  : dayNumber,
                           'monthName'  : monthName,
                           'date'       : str(date.date()),
@@ -333,14 +330,24 @@ class TimesheetConnection(osv.osv):
         return outAction
 
 
-    def getLastAttendenceAction(self, cr, uid, employee_id, context):
+    def getLastAttendenceAction(self, cr, uid, vals, context):
         """
             return the next user action the the user will do if press the button
         """
+        employee_id, timeOutSign = vals
+        seconds = '0'
         hrAttendanceObj = self.pool.get('hr.attendance')
         attendance = hrAttendanceObj.search(cr, uid, [('employee_id','=',employee_id)], limit=1, order='name DESC')
         if attendance:
             attendanceBrws = hrAttendanceObj.browse(cr, uid, attendance[-1], context)
+            lastAttStrDT = attendanceBrws.trueDateTime
+            if not lastAttStrDT:
+                lastAttStrDT = attendanceBrws.name
+            compDatetime = datetime.strptime(lastAttStrDT, DEFAULT_SERVER_DATETIME_FORMAT)
+            datetimeNow = datetime.utcnow().replace(microsecond = 0)
+            timediff = datetimeNow-compDatetime
+            if timediff < timedelta(seconds=timeOutSign):
+                return 'wait'
             return attendanceBrws.action
         return False
 
@@ -438,7 +445,7 @@ class timesheetSheetConnection(osv.osv):
                                }
             alreadyWritten = hrsheet_obj.search(cr, uid, [('account_id','=',acc_id),('date','=',computedDate),('user_id','=',user_id)])
             if len(alreadyWritten)==1:
-                #FIXME: nel caso in cui ci fossero piu' attendances collegate al medesimo sheet del medesimo giorno al momento non applico le modifiche
+                #nel caso in cui ci fossero piu' attendances collegate al medesimo sheet del medesimo giorno al momento non applico le modifiche
                 #se ne trovo una faccio una modifica senno' la creo
                 #non posso fare la scrittura per tutte le attendances perche' il totale di ognuna sara' diverso.
                 res = hrsheet_obj.write(cr, uid, alreadyWritten[0],hrsheet_defaults)
