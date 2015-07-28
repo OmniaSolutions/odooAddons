@@ -61,9 +61,8 @@ class TimesheetConnection(osv.osv):
         targetDate      = vals[2]
         rootContr       = vals[3]
         daysList, sheet_id, sheetState  = self.getDaysAndSheet(cr, uid, employee_id, targetDate, context = {})
-        attendances                     = self.getAttendancesBySheetAndDays(cr, uid, sheet_id, daysList, context)
+        attendances                     = self.getAttendancesBySheetAndDays(cr, uid, user_id, sheet_id, daysList, context)
         timesheetDict                   = self.getTimesheetActivities(cr, uid, sheet_id, context)
-        #timesheetDict                   = self.getTimesheetActivities(cr, uid, user_id, targetDate, context)
         accountList, parentsForCombo    = self.computeAccountList(cr, uid, user_id, rootContr, context={})
         outDict = { 
                     'accountList'       : accountList,
@@ -119,7 +118,7 @@ class TimesheetConnection(osv.osv):
                                     })
         return (accountList, parents)
         
-    def getAttendancesBySheetAndDays(self, cr, uid, sheet_id, daysList, context={}):
+    def getAttendancesBySheetAndDays(self, cr, uid, user_id, sheet_id, daysList, context={}):
         outdict = {}
         sheetDaysObj = self.pool.get('hr_timesheet_sheet.sheet.day')
         for elem in daysList:
@@ -127,7 +126,7 @@ class TimesheetConnection(osv.osv):
             compDatetime = datetime.strptime(stringDate+' 1:1:1', DEFAULT_SERVER_DATETIME_FORMAT)
             if compDatetime:
                 compDate = compDatetime.date()
-                sheetdaysIds = sheetDaysObj.search(cr, uid, [('sheet_id.user_id','=',uid),('name','=',compDate)])
+                sheetdaysIds = sheetDaysObj.search(cr, uid, [('sheet_id.user_id','=',user_id),('name','=',compDate)])
                 for idd in sheetdaysIds:
                     objBrwse = sheetDaysObj.browse(cr, uid, idd)
                     if objBrwse:
