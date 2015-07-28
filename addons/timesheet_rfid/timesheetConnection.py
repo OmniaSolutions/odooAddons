@@ -59,51 +59,66 @@ class TimesheetConnection(osv.osv):
         employee_id     = vals[0]
         user_id         = vals[1]
         targetDate      = vals[2]
-        daysList, sheet_id, sheetState = self.getDaysAndSheet(cr, uid, employee_id, targetDate, context = {})
-        attendances = self.getAttendancesBySheetAndDays(cr, uid, sheet_id, daysList, context)
+        rootContr       = vals[3]
+        daysList, sheet_id, sheetState  = self.getDaysAndSheet(cr, uid, employee_id, targetDate, context = {})
+        attendances                     = self.getAttendancesBySheetAndDays(cr, uid, user_id, sheet_id, daysList, context)
+        timesheetDict                   = self.getTimesheetActivities(cr, uid, sheet_id, context)
+        accountList, parentsForCombo    = self.computeAccountList(cr, uid, user_id, rootContr, context={})
+        outDict = { 
+                    'accountList'       : accountList,
+                    'daysList'          : daysList,
+                    'timesheetDict'     : timesheetDict,
+                    'sheet_id'          : sheet_id,
+                    'sheetReadonly'     : self.computeSheetState(sheetState),
+                    'timeAttDiff'       : attendances,
+                    'parentsForCombo'   : parentsForCombo,
+                    }
+        return outDict
+        
+    def computeSheetState(self, sheetState):
         sheetReadonly = False
         if sheetState == 'confirm':
             sheetReadonly = True
-        timesheetDict = self.getTimesheetActivities(cr, uid, user_id, sheet_id, context)
+        return sheetReadonly
+        
+    def computeAccountList(self, cr, uid, user_id, rootContr, context={}):
+        def parentRecursion(oggBrse):
+            if oggBrse.parent_id:
+                grandParentName = oggBrse.parent_id.name
+                if rootContr == grandParentName:
+                    return True
+                return parentRecursion(oggBrse.parent_id)
+            return False
         accAccObj = self.pool.get('account.analytic.account')
-        accIdsPre = accAccObj.search(cr, uid, [('type','in',['normal', 'contract']), ('state', '<>', 'close'),('use_timesheets','=',1)], order='name')
         projProjObj = self.pool.get('project.project')
-        userId = self.pool.get('hr.employee').browse(cr, uid, employee_id).user_id.id
+        accIdsPre = accAccObj.search(cr, uid, [('type','in',['normal', 'contract']), ('state', '<>', 'close'),('use_timesheets','=',1)], order='name')
         accIds = []
         for accId in accIdsPre:
             relatedProjects = projProjObj.search(cr, uid, [('analytic_account_id','=',accId)])
             for proj in relatedProjects:
                 usersAllowed = projProjObj.browse(cr, uid, proj).members
                 for member in usersAllowed:
-                    if userId == member.id:
+                    if user_id == member.id:
                         accIds.append(accId)
                         break
-        brwsList = accAccObj.browse(cr, uid, accIds, context)
+                break
         accountList = []
-        for oggBrse in brwsList:
-            grandparent = ''
-            parent = ''
+        parents = ['']
+        for oggBrse in accAccObj.browse(cr, uid, accIds, context):
             if oggBrse.parent_id:
-                parent=oggBrse.parent_id.complete_name
-            if oggBrse.parent_id.parent_id:
-                grandparent = oggBrse.parent_id.parent_id.complete_name
-            accountList.append({
-                            'complete_name' : unicode(oggBrse.complete_name),
-                            'acc_id'        : oggBrse.id,
-                            'parent'        : parent,
-                            'grandparent'   : grandparent,
-                            })
-        outDict = { 
-                    'accountList'   : accountList,
-                    'daysList'      : daysList,
-                    'timesheetDict' : timesheetDict,
-                    'sheet_id'      : sheet_id,
-                    'sheetReadonly' : sheetReadonly,
-                    'timeAttDiff'   : attendances,
-                    }
-        return outDict
+                if parentRecursion(oggBrse.parent_id):
+                    parentName = oggBrse.parent_id.name
+                    if parentName not in parents:
+                        parents.append(parentName)
+                    accountList.append({
+                                    'complete_name' : '%s / %s'%(parentName, oggBrse.name),
+                                    'acc_id'        : oggBrse.id,
+                                    'parent'        : oggBrse.parent_id.complete_name,
+                                    'grandparent'   : oggBrse.parent_id.parent_id.complete_name,
+                                    })
+        return (accountList, parents)
         
-    def getAttendancesBySheetAndDays(self, cr, uid, sheet_id, daysList, context={}):
+    def getAttendancesBySheetAndDays(self, cr, uid, user_id, sheet_id, daysList, context={}):
         outdict = {}
         sheetDaysObj = self.pool.get('hr_timesheet_sheet.sheet.day')
         for elem in daysList:
@@ -111,7 +126,7 @@ class TimesheetConnection(osv.osv):
             compDatetime = datetime.strptime(stringDate+' 1:1:1', DEFAULT_SERVER_DATETIME_FORMAT)
             if compDatetime:
                 compDate = compDatetime.date()
-                sheetdaysIds = sheetDaysObj.search(cr, uid, [('sheet_id.user_id','=',uid),('name','=',compDate)])
+                sheetdaysIds = sheetDaysObj.search(cr, uid, [('sheet_id.user_id','=',user_id),('name','=',compDate)])
                 for idd in sheetdaysIds:
                     objBrwse = sheetDaysObj.browse(cr, uid, idd)
                     if objBrwse:
@@ -120,8 +135,8 @@ class TimesheetConnection(osv.osv):
                         total_timesheet  = objBrwse.total_timesheet
                         outdict[str(compDatetime.day)] = [total_difference, total_attendance, total_timesheet]
         return outdict
-        
-    def getTimesheetActivities(self, cr, uid, userID, sheet_id, context):
+
+    def getTimesheetActivities(self, cr, uid, sheet_id, context):
         '''
             return timesheet activities by sheet
         '''
@@ -129,8 +144,8 @@ class TimesheetConnection(osv.osv):
         if sheet_id:
             hrsheet_obj = self.pool.get('hr.analytic.timesheet')
             timesheetIds = hrsheet_obj.search(cr, uid, [('sheet_id','=', sheet_id)], context)
-            for timeId in timesheetIds:
-                accBrwse = hrsheet_obj.browse(cr, uid, timeId, context).line_id
+            for timeBrws in hrsheet_obj.browse(cr, uid, timesheetIds, context):
+                accBrwse = timeBrws.line_id
                 if accBrwse.date in outDict.keys():
                     found = 0
                     for elem in outDict[accBrwse.date]:
@@ -178,13 +193,10 @@ class TimesheetConnection(osv.osv):
                 date = computed_date_from + timedelta(days=i)
                 monthName = calendar.month_name[date.month]
                 dayNumber = date.day
-                weekDayId = calendar.weekday(date.year, date.month, date.day)
-                dayName   = "" #calendar.day_name[weekDayId]
                 today = False
                 if date.date() == targetDate:
                     today = True
                 dayDict ={
-                          'dayName'    : dayName,
                           'dayNumber'  : dayNumber,
                           'monthName'  : monthName,
                           'date'       : str(date.date()),
@@ -318,14 +330,24 @@ class TimesheetConnection(osv.osv):
         return outAction
 
 
-    def getLastAttendenceAction(self, cr, uid, employee_id, context):
+    def getLastAttendenceAction(self, cr, uid, vals, context):
         """
             return the next user action the the user will do if press the button
         """
+        employee_id, timeOutSign = vals
+        seconds = '0'
         hrAttendanceObj = self.pool.get('hr.attendance')
         attendance = hrAttendanceObj.search(cr, uid, [('employee_id','=',employee_id)], limit=1, order='name DESC')
         if attendance:
             attendanceBrws = hrAttendanceObj.browse(cr, uid, attendance[-1], context)
+            lastAttStrDT = attendanceBrws.trueDateTime
+            if not lastAttStrDT:
+                lastAttStrDT = attendanceBrws.name
+            compDatetime = datetime.strptime(lastAttStrDT, DEFAULT_SERVER_DATETIME_FORMAT)
+            datetimeNow = datetime.utcnow().replace(microsecond = 0)
+            timediff = datetimeNow-compDatetime
+            if timediff < timedelta(seconds=timeOutSign):
+                return 'wait'
             return attendanceBrws.action
         return False
 
@@ -397,6 +419,7 @@ class timesheetSheetConnection(osv.osv):
         _logger.info("Action_compile_timesheet Start Looping on Vals - %s"%str(vals))
         for timesheet in vals:
             employeeBrwse = hrEmployeeObj.browse(cr, uid, timesheet.get('employee_id'))
+            user_id = employeeBrwse.user_id.id
             hours = timesheet.get('hours')
             if not hours:
                 hours = 0
@@ -411,7 +434,7 @@ class timesheetSheetConnection(osv.osv):
                                     'general_account_id'    :hrsheet_obj._getGeneralAccount(cr, uid),
                                     'journal_id'            :hrsheet_obj._getAnalyticJournal(cr, uid),
                                     'date'                  :computedDate,
-                                    'user_id'               :employeeBrwse.user_id.id,
+                                    'user_id'               :user_id,
                                     'to_invoice'            :0,# 1 = Yes(100%) int(toInvoice), imposato a invoicable 100%
                                     'account_id'            :acc_id,
                                     'unit_amount'           :hours,
@@ -420,9 +443,9 @@ class timesheetSheetConnection(osv.osv):
                                     'name'                  :timesheetDesc,
                                     'sheet_id'              :timesheet.get('sheet_id'),
                                }
-            alreadyWritten = hrsheet_obj.search(cr, uid, [('account_id','=',acc_id),('date','=',computedDate)])
+            alreadyWritten = hrsheet_obj.search(cr, uid, [('account_id','=',acc_id),('date','=',computedDate),('user_id','=',user_id)])
             if len(alreadyWritten)==1:
-                #FIXME: nel caso in cui ci fossero piu' attendances collegate al medesimo sheet del medesimo giorno al momento non applico le modifiche
+                #nel caso in cui ci fossero piu' attendances collegate al medesimo sheet del medesimo giorno al momento non applico le modifiche
                 #se ne trovo una faccio una modifica senno' la creo
                 #non posso fare la scrittura per tutte le attendances perche' il totale di ognuna sara' diverso.
                 res = hrsheet_obj.write(cr, uid, alreadyWritten[0],hrsheet_defaults)
