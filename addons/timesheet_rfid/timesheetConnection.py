@@ -180,7 +180,7 @@ class TimesheetConnection(osv.osv):
                 monthName = calendar.month_name[date.month]
                 dayNumber = date.day
                 weekDayId = calendar.weekday(date.year, date.month, date.day)
-                dayName   = "" #calendar.day_name[weekDayId]
+                dayName   = "" #calendar.day_name[weekDayId]# remove this comment wance the unicode xml-rpc transfer is fixed
                 today = False
                 if date.date() == targetDate:
                     today = True
