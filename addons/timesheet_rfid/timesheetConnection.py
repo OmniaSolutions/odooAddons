@@ -108,7 +108,7 @@ class TimesheetConnection(osv.osv):
             if oggBrse.parent_id:
                 if parentRecursion(oggBrse.parent_id):
                     parentName = oggBrse.parent_id.name
-                    if oggBrse.state not in ['close','cancelled'] and oggBrse.parent_id.state not in ['close','cancelled']:
+                    if oggBrse.state not in ['close','cancelled']:
                         if parentName not in parents:
                             parents.append(parentName)
                         accountList.append({
