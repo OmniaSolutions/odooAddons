@@ -1,0 +1,2 @@
+"id","model_access/active","model_access/perm_create","model_access/perm_unlink","model_access/name","model_access/model_id/id","model_access/perm_read","model_access/perm_write","menu_access/id","category_id/id","comment","implied_ids/id","name","view_access/id"
+"__export__.res_groups_133","True","True","True","hr.attendance_forced","inject_attendance.model_hr_attendance_forced","True","True","inject_attendance.menu_force_insert_attendance","","","","Inject Attendances",""
