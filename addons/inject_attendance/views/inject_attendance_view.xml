@@ -1,0 +1,38 @@
+<openerp>
+    <data>
+        
+        <record id="view_attendance_forced_form" model="ir.ui.view">
+            <field name="name">hr.attendance_forced.form</field>
+            <field name="model">hr.attendance_forced</field>
+            <field name="arch" type="xml">
+                <form string="Configure PLM Module" class= "oe_form_configuration" version="7.0">
+                    <sheet>
+                    <group>
+                    	<field name="employee_id"/>
+	                    <field name="in_field"/>
+	                    <field name="out_field"/>
+                     </group>
+                    <footer>
+                        <button string="Ok" type="object" name="accept_wizard" class="oe_highlight"/>
+                        or
+                        <button string="Cancel" type="object" special="cancel" class="oe_link"/>
+                    </footer>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <record id="open_force_attendance_wizard" model="ir.actions.act_window">
+            <field name="name">Insert Attendances</field>
+            <field name="res_model">hr.attendance_forced</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="view_type">form</field>
+            <field name="view_mode">form</field>
+            <field name="target">new</field>
+        </record>
+        
+        <menuitem action="open_force_attendance_wizard" id="menu_force_insert_attendance"
+            parent="hr.menu_hr_configuration" sequence="1" groups="base.group_hr_manager"/>
+        
+    </data>
+</openerp>
