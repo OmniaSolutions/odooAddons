@@ -100,9 +100,10 @@ class Hr_attendance_avoid_control(osv.osv):
                  }
         
     def _altern_si_so(self, cr, uid, ids, context={}):
-        attBrws = self.browse(cr, uid, ids[0])
-        if attBrws.overwrite:
-            return True
+        for attId in ids:
+            attBrws = self.browse(cr, uid, attId)
+            if attBrws.overwrite:
+                return True
         return super(Hr_attendance_avoid_control,self)._altern_si_so(cr, uid, ids, context)
 
     _constraints = [(_altern_si_so, 'Error ! Sign in (resp. Sign out) must follow Sign out (resp. Sign in)', ['action'])]
