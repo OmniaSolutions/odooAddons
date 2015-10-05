@@ -108,15 +108,26 @@ class TimesheetConnection(osv.osv):
             if oggBrse.parent_id:
                 if parentRecursion(oggBrse.parent_id):
                     parentName = oggBrse.parent_id.name
-                    if parentName not in parents:
-                        parents.append(parentName)
-                    accountList.append({
-                                    'complete_name' : '%s / %s'%(parentName, oggBrse.name),
-                                    'acc_id'        : oggBrse.id,
-                                    'parent'        : oggBrse.parent_id.complete_name,
-                                    'grandparent'   : oggBrse.parent_id.parent_id.complete_name,
-                                    })
+                    if oggBrse.state not in ['close','cancelled'] and self.verifyRelatedProjectState(cr, uid, oggBrse, context):#oggBrse.project_id
+                        if parentName not in parents:
+                            parents.append(parentName)
+                        accountList.append({
+                                        'complete_name' : '%s / %s'%(parentName, oggBrse.name),
+                                        'acc_id'        : oggBrse.id,
+                                        'parent'        : oggBrse.parent_id.complete_name,
+                                        'grandparent'   : oggBrse.parent_id.parent_id.complete_name,
+                                        })
         return (accountList, parents)
+        
+    def verifyRelatedProjectState(self, cr, uid, acc_an_acc_brws, context={}):
+        proj_proj_obj = self.pool.get('project.project')
+        relatedProjIds = proj_proj_obj.search(cr,uid,[('analytic_account_id','=',acc_an_acc_brws.id)])
+        for proj_id in relatedProjIds:
+            projBrws = proj_proj_obj.browse(cr, uid,proj_id )
+            if projBrws.state in ['close','cancelled']:
+                return False
+            break
+        return True
         
     def getAttendancesBySheetAndDays(self, cr, uid, user_id, sheet_id, daysList, context={}):
         outdict = {}
