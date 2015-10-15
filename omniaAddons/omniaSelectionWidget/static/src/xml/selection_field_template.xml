@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- vim:fdl=1:
+-->
+<templates id="template" xml:space="preserve"> 
+	<t t-name="FieldSelectionCustom">
+		<select id="ts"> 
+			<option value="'wowowo'">wowowo</option>
+		</select>		
+	</t> 
+</templates>
