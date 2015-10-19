@@ -29,7 +29,6 @@ instance.web.form.FieldSelectionExtention = instance.web.form.FieldSelection.ext
     	            selfff.$("select").val(JSON.stringify(selfff.found[0]));
     	        });
         	}
-
         } else {
             this.$el.text(found[0]);
         }
@@ -60,12 +59,15 @@ instance.web.form.FieldSelectionExtention = instance.web.form.FieldSelection.ext
         	elem.onchange = function(){
         		resArray = selfff.get_selected_val();
         		if (resArray.length == 2){
+        			// To clear children options
 	            	selfff.$("select")[0].options.length = 0;
 		        	new instance.web.Model(selfff.view.model).call("get_selection_vals",[resArray[0]]).then(function(values3){
-		        		selfff.$("select").append($('<option>', {
+		        		// To set first value as empty
+		        		selfff.$("select").append($('<option>', {		
 					    	value: '',
 					    	text: ''
 							}));
+		        		// Set avaible options due to selected val
 			            for (i=0; i< values3.length; i++){
 					        selfff.$("select").append($('<option>', {
 					    	value: values3[i][0],
@@ -73,19 +75,19 @@ instance.web.form.FieldSelectionExtention = instance.web.form.FieldSelection.ext
 							}));
 						}
 					});
-	        		selfff.$("select")[0].options.selectedIndex = 0;	//To set as default empty index
+		        	// To set as default empty index
+	        		selfff.$("select")[0].options.selectedIndex = 0;
         		}
     		}
     	}
-
     },
+    
     store_dom_value: function () {
         if (!this.get('effective_readonly') && this.$('select').length) {
             var val = this.$('select').val();
             this.internal_set_value(val);
         }
     },
-
 });
 instance.web.form.widgets = instance.web.form.widgets.extend({
     'selection_field_extention' : 'instance.web.form.FieldSelectionExtention',
