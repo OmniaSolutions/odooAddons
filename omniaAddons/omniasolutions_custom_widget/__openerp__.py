@@ -21,7 +21,7 @@
 ##############################################################################
 
 {
-    'name': 'Custom Selection Widget',
+    'name': 'Omnia Custom Widget',
     'version': '1.1',
     'author': 'OmniaSolutions',
     'website': 'http://www.omniasolutions.eu',
@@ -36,7 +36,6 @@
              'views/api_import_static.xml'
         ],
     'qweb' : [
-        "static/src/xml/*.xml",
         ],
     'js': [
         ],
