@@ -26,11 +26,12 @@ instance.web.form.FieldSelectionExtention = instance.web.form.FieldSelection.ext
             	selfff.attach_onchange(selectionTarget,selfff);
             	new instance.web.Model(this.view.model).call("get_selection_vals",[selfff.selectedOption]).then(function(values2){
     	            selfff.$().html(QWeb.render("FieldSelectionSelect", {widget: selfff, values: values2}));
-    	            selfff.$("select").val(JSON.stringify(selfff.found[0]));
+    	            selfff.$("select").val(selfff.found[0]);
     	        });
         	}
         } else {
             this.$el.text(found[0]);
+            this.$el.val(found[0]);
         }
     },
 
@@ -85,6 +86,9 @@ instance.web.form.FieldSelectionExtention = instance.web.form.FieldSelection.ext
     store_dom_value: function () {
         if (!this.get('effective_readonly') && this.$('select').length) {
             var val = this.$('select').val();
+            if (val.charAt(0) == '"'){
+            	val = JSON.parse(val);
+            }
             this.internal_set_value(val);
         }
     },
