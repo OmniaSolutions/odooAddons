@@ -30,8 +30,12 @@ instance.web.form.FieldSelectionExtention = instance.web.form.FieldSelection.ext
     	        });
         	}
         } else {
-            this.$el.text(found[0]);
-            this.$el.val(found[0]);
+        	parent = this.getParent();
+        	current_id = parent.get_field_value('id');
+        	new instance.web.Model(this.view.model).call("get_val_fromdb_name",[selfff.found[0], current_id]).then(function(toDisplay){
+        		selfff.$el.text(toDisplay);
+        		selfff.$el.val(toDisplay);
+	        });
         }
     },
 
@@ -86,8 +90,13 @@ instance.web.form.FieldSelectionExtention = instance.web.form.FieldSelection.ext
     store_dom_value: function () {
         if (!this.get('effective_readonly') && this.$('select').length) {
             var val = this.$('select').val();
-            if (val.charAt(0) == '"'){
-            	val = JSON.parse(val);
+            if (val != null){
+	            if (val.charAt(0) == '"'){
+	            	val = JSON.parse(val); 
+	            }
+            }
+            else{
+            	val = JSON.parse(false);
             }
             this.internal_set_value(val);
         }
