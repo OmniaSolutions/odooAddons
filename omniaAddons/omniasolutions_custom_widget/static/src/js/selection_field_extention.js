@@ -26,7 +26,7 @@ instance.web.form.FieldSelectionExtention = instance.web.form.FieldSelection.ext
             	selfff.attach_onchange(selectionTarget,selfff);
             	new instance.web.Model(this.view.model).call("get_selection_vals",[selfff.selectedOption]).then(function(values2){
     	            selfff.$().html(QWeb.render("FieldSelectionSelect", {widget: selfff, values: values2}));
-    	            selfff.$("select").val(selfff.found[0]);
+    	            selfff.$("select").val(JSON.stringify(found[0]));
     	        });
         	}
         } else {
