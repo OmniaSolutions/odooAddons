@@ -12,7 +12,7 @@
             </field>
         </record>
         
-
+<!-- 
         <record id="order_inherit_form_omnia" model="ir.ui.view">
 			<field name="name">order.form.omnia</field>
 			<field name="model">stock.picking.out</field>
@@ -23,6 +23,7 @@
                </xpath>
 			</field>
 		</record>
+        -->
     </data>
 </openerp>
 	

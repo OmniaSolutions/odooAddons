@@ -27,27 +27,27 @@ class stock_picking(orm.Model):
     _inherit = 'stock.picking'
     _columns =  {     'ddt_sequence':  fields.many2one('ir.sequence',string="DDT Sequence"),
     }
-class stock_picking_out(orm.Model):
-    _inherit = "stock.picking.out"
-    _columns =  {
-        'ddt_sequence':  fields.many2one('ir.sequence',string="DDT Sequence"),
-    }
-
+# class stock_picking_out(orm.Model):
+#     _inherit = "stock.picking.out"
+#     _columns =  {
+#         'ddt_sequence':  fields.many2one('ir.sequence',string="DDT Sequence"),
+#     }
+# 
     def getLastDDtDate(self,cr,uid,brwseId):
         """
             get last ddt date from all ddt
         """
-        
+         
         sql="""SELECT ddt_number,ddt_date FROM STOCK_PICKING WHERE DDT_NUMBER IS NOT NULL AND ddt_sequence=%s ORDER BY DDT_DATE DESC;""" %(brwseId)
         cr.execute(sql)
         results=cr.dictfetchall()
         for result in results:
             return datetime.strptime(result.get('ddt_date','2000-01-01'),'%Y-%m-%d')
         return datetime.strptime('2000-01-01','%Y-%m-%d')
-        
-    
+         
+     
     def button_ddt_number(self, cr, uid, ids, vals, context=None):
-        
+         
         for brwsPick in self.browse(cr,uid,ids,context=context):
             brwseId=brwsPick.ddt_sequence['id']
             if brwseId==None:
@@ -63,7 +63,7 @@ class stock_picking_out(orm.Model):
             if brwsPick.ddt_number==False or len(str(brwsPick.ddt_number))==0:
                 if lastDDtDate>dateTest:
                     raise osv.except_osv(('Error'),("Impossibile staccare il ddt data antecedente all'ultimo ddt"))
-                
+                 
                 if brwsPick.ddt_sequence:
                     code=brwsPick.ddt_sequence['code']
                     number= self.pool.get('ir.sequence').get(cr, uid, code)

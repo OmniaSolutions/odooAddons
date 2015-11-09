@@ -27,6 +27,7 @@
     'name': 'omnia_ddt_extended',
     'version': '0.1',
     'category': 'Custom',
+    'sequence':1,
     'description': """
 Manage DDT documents
 ====================
@@ -41,5 +42,6 @@ Manage DDT documents
     ],
     'installable': True,
     'auto_install': False,
+    'application':True,
 }
 
