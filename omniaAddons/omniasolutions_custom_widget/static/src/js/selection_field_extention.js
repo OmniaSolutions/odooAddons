@@ -40,7 +40,7 @@ instance.web.form.FieldSelectionExtention = instance.web.form.FieldSelection.ext
     },
 
     get_selected_val : function () {
-    	elements = $('.omniasolutions_x_mat_pop');
+    	elements = $('.omniasolutions_'+this.name);
     	if (elements.length == 2){
     		customEl = elements[1];
     		elemType = customEl.tagName;
