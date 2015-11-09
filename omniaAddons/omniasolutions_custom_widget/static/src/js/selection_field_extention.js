@@ -57,6 +57,7 @@ instance.web.form.FieldSelectionExtention = instance.web.form.FieldSelection.ext
     			}
     		}
     	}
+    	return []
     },
     
     attach_onchange: function(elem,selfff) {
