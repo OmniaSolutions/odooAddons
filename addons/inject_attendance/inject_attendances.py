@@ -57,7 +57,7 @@ class Hr_inject_attendance(osv.osv):
 
         
     def verifyPreviousSignIsNotSignIn(self, cr, uid, dateIn, employee_id, attendanceObj, context={}):
-        alreadyWrittenAttendancesIds = attendanceObj.search(cr, uid, [('name','<=',str(dateIn))], limit=1, order='name DESC')
+        alreadyWrittenAttendancesIds = attendanceObj.search(cr, uid, [('name','<=',str(dateIn)),('employee_id','=',employee_id)], limit=1, order='name DESC')
         for attId in alreadyWrittenAttendancesIds:
             attBrws = attendanceObj.browse(cr, uid, attId )
             if attBrws.action ==  'sign_out':
@@ -67,7 +67,7 @@ class Hr_inject_attendance(osv.osv):
         raise osv.except_osv(_('Error!'),_("Previous employee sign is a sign_in, you can't set a sign_in again."))
     
     def verifyNextSignIsNotSignOut(self, cr, uid, dateTo, employee_id, attendanceObj, context={}):
-        alreadyWrittenAttendancesIds = attendanceObj.search(cr, uid, [('name','>=',str(dateTo))], limit=1, order='name ASC')
+        alreadyWrittenAttendancesIds = attendanceObj.search(cr, uid, [('name','>=',str(dateTo)),('employee_id','=',employee_id)], limit=1, order='name ASC')
         for attId in alreadyWrittenAttendancesIds:
             attBrws = attendanceObj.browse(cr, uid, attId )
             if attBrws.action ==  'sign_in':
@@ -76,8 +76,8 @@ class Hr_inject_attendance(osv.osv):
             return True
         raise osv.except_osv(_('Error!'),_("Next employee sign is a sign_out, you can't set a sign_out again."))
         
-    def verifyNoDatesInTheMiddle(self, cr, uid, dateIn, dateTo, employeeId, attendanceObj, context={}):
-        alreadyWrittenAttendances = attendanceObj.search(cr, uid, [('name','>=',str(dateIn)),('name','<=',str(dateTo))])
+    def verifyNoDatesInTheMiddle(self, cr, uid, dateIn, dateTo, employee_id, attendanceObj, context={}):
+        alreadyWrittenAttendances = attendanceObj.search(cr, uid, [('name','>=',str(dateIn)),('name','<=',str(dateTo)),('employee_id','=',employee_id)])
         if not alreadyWrittenAttendances:
             return True
         raise osv.except_osv(_('Error!'),_("One or more dates are written inside the selected dates interval"))
