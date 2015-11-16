@@ -21,9 +21,12 @@
             <field name="type">form</field>
             <field name="arch" type="xml">
                 <form string="Description of Goods">
-                  <field name="name" select="1"/>
-		    <newline/>
-                    <field name="note"/>
+                	<sheet>
+                		<group>
+		                    <field name="name"/>
+		                    <field name="note"/> 
+		                </group>
+                    </sheet>
                 </form>
             </field>
         </record>

@@ -20,10 +20,13 @@
             <field name="model">stock.picking.carriage_condition</field>
             <field name="type">form</field>
             <field name="arch" type="xml">
-                <form string="Carriage Condition">
-                    <field name="name" select="1"/>
-		    <newline/>
-                    <field name="note"/>
+                <form string="Carriage Condition"> 
+                	<sheet>
+                		<group>
+		                    <field name="name"/>
+		                    <field name="note"/> 
+		                </group>
+                    </sheet>
                 </form>
             </field>
         </record>

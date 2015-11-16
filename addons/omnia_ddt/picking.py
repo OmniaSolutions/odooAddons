@@ -35,7 +35,8 @@ class stock_picking_carriage_condition(models.Model):
     _description = "Carriage Condition"
     name = fields.Char('Carriage Condition', size=64, required=True, readonly=False)
     note = fields.Text('Note')
- 
+
+
 class stock_picking_goods_description(models.Model):
     """
     Description of Goods
@@ -45,7 +46,8 @@ class stock_picking_goods_description(models.Model):
  
     name = fields.Char('Description of Goods', size=64, required=True, readonly=False)
     note = fields.Text('Note')
- 
+
+
 class stock_picking_reason(models.Model):
     """
     Reason for Transportation
@@ -55,26 +57,7 @@ class stock_picking_reason(models.Model):
      
     name = fields.Char('Reason For Transportation', size=64, required=True, readonly=False)
     note = fields.Text('Note')
- 
-#     def action_invoice_create(self, cursor, user, ids, journal_id=False,
-#             group=False, type='out_invoice', context=None):
-#         res = super(stock_picking, self).action_invoice_create(cursor, user, ids, journal_id,
-#             group, type, context)
-#    #     for picking in self.browse(cursor, user, ids, context=context):
-#    #         self.pool.get('account.invoice').write(cursor, user, res[picking.id], {
-#    #             'carriage_condition_id': picking.carriage_condition_id.id,
-#     #            'goods_description_id': picking.goods_description_id.id,
-#     #            'transportation_reason_id': picking.transportation_reason_id.id,
-#     #            })
-#         return res
-# 
 
-
-
-# Redefinition of the new fields in order to update the model stock.picking in the orm
-# FIXME: this is a temporary workaround because of a framework bug (ref: lp996816).
-# It should be removed as soon as
-# the bug is fixed
 
 class stock_picking_custom(models.Model):
     _inherit = 'stock.picking'
@@ -101,12 +84,16 @@ class stock_picking_custom(models.Model):
             get last ddt date from all ddt
         """
          
-        sql="""SELECT ddt_number,ddt_date FROM STOCK_PICKING WHERE DDT_NUMBER IS NOT NULL ORDER BY DDT_DATE DESC;""" 
+        sql="""SELECT ddt_number,ddt_date FROM STOCK_PICKING WHERE DDT_NUMBER IS NOT NULL ORDER BY DDT_DATE DESC LIMIT 1;""" 
         cr.execute(sql)
         results=cr.dictfetchall()
+        failReturnDate = datetime.strptime('2000-01-01','%Y-%m-%d')
         for result in results:
-            return datetime.strptime(result.get('ddt_date','2000-01-01'),'%Y-%m-%d')
-        return datetime.strptime('2000-01-01','%Y-%m-%d')
+            ddtDate = result.get('ddt_date','2000-01-01')
+            if not ddtDate:
+                return failReturnDate
+            return datetime.strptime(ddtDate,'%Y-%m-%d')
+        return failReturnDate
 
     def button_ddt_number(self,cr, uid, ids, vals,context=None):
         lastDDtDate=self.getLastDDtDate(cr,uid)
@@ -119,7 +106,6 @@ class stock_picking_custom(models.Model):
             if brwsPick.ddt_number==False or len(str(brwsPick.ddt_number))==0:
                 if lastDDtDate>dateTest:
                     pass
-                    #raise osv.except_osv(('Error'),("Impossibile staccare il ddt data antecedente all'ultimo ddt"))
                 number= self.pool.get('ir.sequence').get(cr, uid, 'stock.ddt')
                 self.write(cr, uid, [brwsPick.id], {'ddt_number':number})
         return True
@@ -131,4 +117,5 @@ class stock_picking_custom(models.Model):
     def copy(self, cr, uid, ids, default={}, context=None):
         default.update({'ddt_number': ''})
         return super(stock_picking_custom, self).copy(cr, uid, ids, default, context)
+    
 stock_picking_custom()
