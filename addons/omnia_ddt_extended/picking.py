@@ -23,9 +23,10 @@
 ##############################################################################
 from datetime import datetime
 from openerp.osv import orm, fields, osv
-class stock_picking(orm.Model):
+class Stock_picking(orm.Model):
     _inherit = 'stock.picking'
-    _columns =  {     'ddt_sequence':  fields.many2one('ir.sequence',string="DDT Sequence"),
+    _columns =  {     
+                 'ddt_sequence':  fields.many2one('ir.sequence',string="DDT Sequence"),
     }
 
     def getLastDDtDate(self,cr,uid,brwseId):
@@ -33,7 +34,7 @@ class stock_picking(orm.Model):
             get last ddt date from all ddt
         """
         
-        sql="""SELECT ddt_number,ddt_date FROM STOCK_PICKING WHERE DDT_NUMBER IS NOT NULL AND ddt_sequence=%s ORDER BY DDT_DATE DESC;""" %(brwseId)
+        sql="""SELECT ddt_number,ddt_date FROM STOCK_PICKING WHERE DDT_NUMBER IS NOT NULL AND ddt_sequence=%s ORDER BY DDT_DATE DESC LIMIT 1;""" %(brwseId)
         cr.execute(sql)
         results=cr.dictfetchall()
         for result in results:
@@ -44,7 +45,7 @@ class stock_picking(orm.Model):
     def button_ddt_number(self, cr, uid, ids, vals, context=None):
         
         for brwsPick in self.browse(cr,uid,ids,context=context):
-            brwseId=brwsPick.ddt_sequence['id']
+            brwseId=brwsPick.ddt_sequence.id
             if brwseId==None:
                 sql="""SELECT id FROM IR_SEQUENCE WHERE CODE ='stock.ddt';"""
                 cr.execute(sql)
@@ -60,17 +61,19 @@ class stock_picking(orm.Model):
                     raise osv.except_osv(('Error'),("Impossibile staccare il ddt data antecedente all'ultimo ddt"))
                 
                 if brwsPick.ddt_sequence:
-                    code=brwsPick.ddt_sequence['code']
+                    code=brwsPick.ddt_sequence.code
                     number= self.pool.get('ir.sequence').get(cr, uid, code)
                 else:
                     number= self.pool.get('ir.sequence').get(cr, uid, 'stock.ddt')
                 self.write(cr, uid, [brwsPick.id], {'ddt_number':number})
         return True
 
-class stock_picking_out_omnia(orm.Model):
+Stock_picking()
+
+class Stock_picking_out_omnia(orm.Model):
     _inherit = "ir.sequence"
     _columns =  {
         'use_for_ddt':  fields.boolean(string="Use for DDT"),
     }
 
-stock_picking_out_omnia()
+Stock_picking_out_omnia()
