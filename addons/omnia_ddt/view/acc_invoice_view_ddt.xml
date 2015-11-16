@@ -11,7 +11,7 @@
 	            		<field string="DDT" 
 	            			name="ddt_number_invoice" 
 	            			widget="many2many_tags"
-	            			domain="[('ddt_number', '!=', False),('state','=','done'),('partner_id','=',partner_id),('invoice_id','=',False)]">
+	            			domain="[('ddt_number', '!=', False),('state','=','done'),('partner_id','=',partner_id),('invoice_id','=',False),('use_for_ddt','=',True) ]">
 		            		<tree string="Invoice Lines" >
 		            			<field name="ddt_number"/>
 		            			<field name="ddt_date"/>

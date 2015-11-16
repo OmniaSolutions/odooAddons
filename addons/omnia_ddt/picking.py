@@ -62,22 +62,23 @@ class stock_picking_reason(models.Model):
 class stock_picking_custom(models.Model):
     _inherit = 'stock.picking'
     _name = 'stock.picking'
-    carriage_condition_id = fields.Many2one('stock.picking.carriage_condition', 'Carriage condition')
-    goods_description_id = fields.Many2one('stock.picking.goods_description', 'Description of goods')
-    transportation_reason_id = fields.Many2one('stock.picking.transportation_reason', 'Reason for transportation')
-    ddt_number = fields.Char('DDT', size=64)
-    ddt_date = fields.Date('DDT date')
-    volume = fields.Char('Volume',size=64)
-    note_ddt = fields.Text('Note')
+    carriage_condition_id       = fields.Many2one('stock.picking.carriage_condition',       'Carriage condition')
+    goods_description_id        = fields.Many2one('stock.picking.goods_description',        'Description of goods')
+    transportation_reason_id    = fields.Many2one('stock.picking.transportation_reason',    'Reason for transportation')
+    invoice_id                  = fields.Many2one('account.invoice',                        'numberDDT', readonly = 1)
+    delivery_address            = fields.Many2one('res.partner',                                "Indirizzo di spedizione secondario")
+    ddt_number  = fields.Char('DDT',    size=64)
+    volume      = fields.Char('Volume', size=64)
+    ddt_date    = fields.Date('DDT date')
     actual_date = fields.Date('Data')
-    invoice_id = fields.Many2one('account.invoice','numberDDT', readonly = 1)
-    ddt_reason = fields.Selection((
+    note_ddt    = fields.Text('Note')
+    ddt_reason  = fields.Selection((
                                     ('MITTENTE', 'Mittente'),
                                     ('DESTINATARIO', 'Destinatario'),
                                     ('VETTORE', 'Vettore'),
                                     ),
                                     'Trasporto a Cura di')
-    delivery_address = fields.Many2one('res.partner',string="Indirizzo di spedizione secondario")
+    use_for_ddt = fields.Boolean('Use for DDT')
  
     def getLastDDtDate(self,cr,uid):
         """

@@ -41,7 +41,7 @@ class Omnia_ddt_account_invoice(models.Model):
             brwsObj = objAccInv.browse(cr,uid,ids,context=context)
             for ogg in brwsObj:
                 if (ogg.origin !='merged') and (ogg.origin!=False):     # acc invoice has value and not merged
-                    idspicking.extend(objStckPkng.search(cr,uid,[('name','=',ogg.origin),('ddt_number','!=',False),('invoice_id','=',None)],context=context))
+                    idspicking.extend(objStckPkng.search(cr,uid,[('name','=',ogg.origin),('ddt_number','!=',False),('invoice_id','=',None),('use_for_ddt','=',True)],context=context))
                 elif ogg.origin =='merged':                             # Used only in case of "account_invoice_merge_no_unlink" module
                     idsmerge=objAccInv.search(cr,uid,[('merged_invoice_id','=',ogg.id)],context=context)
                     mergedInvoices=self.browse(cr,uid,idsmerge,context=context)
@@ -49,7 +49,7 @@ class Omnia_ddt_account_invoice(models.Model):
                         if mergedInv.origin:
                             listaddt=mergedInv.origin.split(",")
                             for oggddt in listaddt:
-                                idspicking.extend(objStckPkng.search(cr,uid,[('name','=',oggddt.strip()),('ddt_number','!=',False),('invoice_id','=',None)],context=context))
+                                idspicking.extend(objStckPkng.search(cr,uid,[('name','=',oggddt.strip()),('ddt_number','!=',False),('invoice_id','=',None),('use_for_ddt','=',True)],context=context))
             for ddtId in idspicking:
                 objStckPkng.write(cr, uid, ddtId, {'invoice_id':ids[0]})
         return True

@@ -27,12 +27,7 @@ class stock_picking(orm.Model):
     _inherit = 'stock.picking'
     _columns =  {     'ddt_sequence':  fields.many2one('ir.sequence',string="DDT Sequence"),
     }
-# class stock_picking_out(orm.Model):
-#     _inherit = "stock.picking.out"
-#     _columns =  {
-#         'ddt_sequence':  fields.many2one('ir.sequence',string="DDT Sequence"),
-#     }
-# 
+
     def getLastDDtDate(self,cr,uid,brwseId):
         """
             get last ddt date from all ddt
