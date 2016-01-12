@@ -30,10 +30,11 @@
 {
     'name': 'omnia_invoice_mail',
     'version': '0.0',
-    'category': 'Custom',
+    'category': 'Accounting',
     'description': """
 Manage mail on invoice
 ====================
+This module allows you to send by email the selected invoices.
 """,
     'author': 'OmniaSolutions.eu',
     'maintainer': 'OmniaSolutions.eu',

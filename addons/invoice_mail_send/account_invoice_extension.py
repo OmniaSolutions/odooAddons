@@ -33,7 +33,6 @@ Created on Jan 12, 2016
 '''
 
 from osv import osv, fields
-import logging
 
 class omnia_account_invoice_mail(osv.osv):
     
@@ -52,25 +51,9 @@ class omnia_account_invoice_mail(osv.osv):
             if alsoCompanyAddress:
                 customerEmail = customerBrws.email
                 email_to.append(customerEmail)
-#             user = self.pool.get('res.users').browse(cr, uid, uid, context=context)
-#             mail_values = {
-#                  'email_from': user.partner_id.email,
-#                  'email_to': email_to,
-#                  'subject': 'Invitation to follow %s' % invoiceBrows.name_get()[0][1],
-#                  'body_html': '''  ''',
-#                  'auto_delete': True,
-#                  'type': 'email',
-#             }
-#             mail_obj = self.pool.get('mail.mail')
-#             mail_id = mail_obj.create(cr, uid, mail_values, context=context)
-#             mail_obj.send(cr, uid, [mail_id], recipient_ids=[customerBrws.id], context=context)
-            
-            
-            
             try:
                 ir_model_data = self.pool.get('ir.model.data')
                 template_id = ir_model_data.get_object_reference(cr, uid, 'account', 'email_template_edi_invoice')[1]
-                #templateBrws = ir_model_data.browse(cr, uid, template_id)
             except ValueError:
                 template_id = False
             context.update({
@@ -83,7 +66,6 @@ omnia_account_invoice_mail()
 
 class plm_temporary_mail(osv.osv_memory):
     _name = "temporary.mail"
-# Specialized Actions callable interactively
 
     def action_generate_mails(self, cr, uid, ids, context=None):
         """

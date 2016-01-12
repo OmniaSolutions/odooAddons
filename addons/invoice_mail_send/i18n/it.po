@@ -1,0 +1,52 @@
+# Translation of OpenERP Server.
+# This file contains the translation of the following modules:
+#	* invoice_mail_send
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: OpenERP Server 7.0-20151111\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2016-01-12 11:13+0000\n"
+"PO-Revision-Date: 2016-01-12 11:13+0000\n"
+"Last-Translator: <>\n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: \n"
+"Plural-Forms: \n"
+
+#. module: invoice_mail_send
+#: model:ir.model,name:invoice_mail_send.model_temporary_mail
+msgid "temporary.mail"
+msgstr "temporary.mail"
+
+#. module: invoice_mail_send
+#: view:temporary.mail:0
+msgid "Are you sure you want to generate email for all selected invoices?"
+msgstr "Sei sicuro di voler generare le email dalle fatture selezionate?"
+
+#. module: invoice_mail_send
+#: view:temporary.mail:0
+msgid "Generate Mail"
+msgstr "Invia Email"
+
+#. module: invoice_mail_send
+#: model:ir.model,name:invoice_mail_send.model_account_invoice
+msgid "Invoice"
+msgstr "Fattura"
+
+#. module: invoice_mail_send
+#: view:temporary.mail:0
+msgid "Cancel"
+msgstr "Cancella"
+
+#. module: invoice_mail_send
+#: model:ir.actions.act_window,name:invoice_mail_send.act_temporary_mail
+msgid "Generate invoices"
+msgstr "Crea fatture"
+
+#. module: invoice_mail_send
+#: view:temporary.mail:0
+msgid "Generate"
+msgstr "Crea"
+
