@@ -23,48 +23,50 @@
 ##############################################################################
 from datetime import datetime
 from openerp.osv import orm, fields, osv
+import logging
+
+
 class Stock_picking(orm.Model):
     _inherit = 'stock.picking'
     _columns =  {     
                  'ddt_sequence':  fields.many2one('ir.sequence',string="DDT Sequence"),
     }
 
-    def getLastDDtDate(self,cr,uid,brwseId):
+    def getLastDDtDate(self, cr, uid, sequence_id, context={}):
         """
             get last ddt date from all ddt
         """
-        
-        sql="""SELECT ddt_number,ddt_date FROM STOCK_PICKING WHERE DDT_NUMBER IS NOT NULL AND ddt_sequence=%s ORDER BY DDT_DATE DESC LIMIT 1;""" %(brwseId)
-        cr.execute(sql)
-        results=cr.dictfetchall()
-        for result in results:
-            return datetime.strptime(result.get('ddt_date','2000-01-01'),'%Y-%m-%d')
-        return datetime.strptime('2000-01-01','%Y-%m-%d')
-        
+        if sequence_id:
+            sql="""SELECT ddt_number,ddt_date FROM STOCK_PICKING WHERE ddt_number IS NOT NULL AND ddt_sequence=%s ORDER BY DDT_DATE DESC LIMIT 1;""" %(sequence_id)
+            cr.execute(sql)
+            results=cr.dictfetchall()
+            for result in results:
+                return datetime.strptime(result.get('ddt_date','2000-01-01'),'%Y-%m-%d')
+            return datetime.strptime('2000-01-01','%Y-%m-%d')
+        raise osv.except_osv(('Error'),('No sequence is provided!'))
     
     def button_ddt_number(self, cr, uid, ids, vals, context=None):
-        
-        for brwsPick in self.browse(cr,uid,ids,context=context):
+        for brwsPick in self.browse(cr, uid, ids, context=context):
             brwseId=brwsPick.ddt_sequence.id
             if brwseId==None:
-                sql="""SELECT id FROM IR_SEQUENCE WHERE CODE ='stock.ddt';"""
+                sql = """SELECT id FROM IR_SEQUENCE WHERE CODE ='stock.ddt';"""
                 cr.execute(sql)
-                brwseId=cr.dictfetchall()[0]['id']
-            lastDDtDate=self.getLastDDtDate(cr,uid,brwseId)
+                brwseId = cr.dictfetchall()[0]['id']
+            lastDDtDate = self.getLastDDtDate(cr, uid, brwseId)
             if brwsPick.ddt_date==False:
-                dateTest=datetime.now()
+                dateTest = datetime.now()
                 self.write(cr, uid, [brwsPick.id], {'ddt_date': str(dateTest.strftime('%Y-%m-%d'))})
             else:
-                dateTest=datetime.strptime(brwsPick.ddt_date,'%Y-%m-%d')
-            if brwsPick.ddt_number==False or len(str(brwsPick.ddt_number))==0:
-                if lastDDtDate>dateTest:
-                    raise osv.except_osv(('Error'),("Impossibile staccare il ddt data antecedente all'ultimo ddt"))
+                dateTest = datetime.strptime(brwsPick.ddt_date,'%Y-%m-%d')
+            if brwsPick.ddt_number==False or len(str(brwsPick.ddt_number)) == 0:
+                if lastDDtDate > dateTest:
+                    raise osv.except_osv(('Error'), ("Impossibile staccare il ddt data antecedente all'ultimo ddt"))
                 
                 if brwsPick.ddt_sequence:
-                    code=brwsPick.ddt_sequence.code
-                    number= self.pool.get('ir.sequence').get(cr, uid, code)
+                    code = brwsPick.ddt_sequence.code
+                    number = self.pool.get('ir.sequence').next_by_code(cr, uid, code)
                 else:
-                    number= self.pool.get('ir.sequence').get(cr, uid, 'stock.ddt')
+                    number = self.pool.get('ir.sequence').next_by_code(cr, uid, 'stock.ddt')
                 self.write(cr, uid, [brwsPick.id], {'ddt_number':number})
         return True
 
