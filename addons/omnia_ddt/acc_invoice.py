@@ -33,27 +33,25 @@ class Omnia_ddt_account_invoice(models.Model):
 
     def recupera_fattura(self, cr, uid, ids, context=None):   
         idspicking = []
-        objAccInv = self.pool.get('account.invoice')
         objStckPkng = self.pool.get('stock.picking')
         if ids:
             if isinstance(ids, int):
                 ids = [ids]
-            brwsObj = objAccInv.browse(cr, uid, ids, context=context)
+            brwsObj = self.browse(cr, uid, ids, context=context)
             for ogg in brwsObj:
                 if (ogg.origin != 'merged') and (ogg.origin != False):     # acc invoice has value and not merged
-                    idspicking.extend(objStckPkng.search(cr, uid, [('name', '=', ogg.origin),
+                    idspicking.extend(objStckPkng.search(cr, uid, [('origin', '=', ogg.origin),
                                                                    ('ddt_number', '!=', False),
                                                                    ('invoice_id', '=', None),
                                                                    ('use_for_ddt', '=', True)],
                                                                    context=context))
                 elif ogg.origin =='merged':                             # Used only in case of "account_invoice_merge_no_unlink" module
-                    idsmerge = objAccInv.search(cr, uid, [('merged_invoice_id', '=', ogg.id)], context=context)
-                    mergedInvoices=self.browse(cr, uid, idsmerge,c ontext=context)
-                    for mergedInv in mergedInvoices:
+                    idsmerge = self.search(cr, uid, [('merged_invoice_id', '=', ogg.id)], context=context)
+                    for mergedInv in self.browse(cr, uid, idsmerge, context=context):
                         if mergedInv.origin:
                             listaddt = mergedInv.origin.split(",")
                             for oggddt in listaddt:
-                                idspicking.extend(objStckPkng.search(cr, uid, [('name','=',oggddt.strip()),
+                                idspicking.extend(objStckPkng.search(cr, uid, [('origin','=',oggddt.strip()),
                                                                                ('ddt_number','!=',False),
                                                                                ('invoice_id','=',None),
                                                                                ('use_for_ddt','=',True)],
