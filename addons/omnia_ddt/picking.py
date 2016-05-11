@@ -96,18 +96,18 @@ class stock_picking_custom(models.Model):
             return datetime.strptime(ddtDate,'%Y-%m-%d')
         return failReturnDate
 
-    def button_ddt_number(self,cr, uid, ids, vals,context=None):
-        lastDDtDate=self.getLastDDtDate(cr,uid)
-        for brwsPick in self.browse(cr,uid,ids,context=context):
-            if brwsPick.ddt_date==False:
-                dateTest=datetime.now()
+    def button_ddt_number(self, cr, uid, ids, vals,context=None):
+        lastDDtDate = self.getLastDDtDate(cr, uid)
+        for brwsPick in self.browse(cr, uid, ids, context=context):
+            if brwsPick.ddt_date is False:
+                dateTest = datetime.now()
                 self.write(cr, uid, [brwsPick.id], {'ddt_date': str(dateTest.strftime('%Y-%m-%d'))})
             else:
-                dateTest=datetime.strptime(brwsPick.ddt_date,'%Y-%m-%d')
-            if brwsPick.ddt_number==False or len(str(brwsPick.ddt_number))==0:
+                dateTest = datetime.strptime(brwsPick.ddt_date, '%Y-%m-%d')
+            if brwsPick.ddt_number is False or len(str(brwsPick.ddt_number)) == 0:
                 if lastDDtDate>dateTest:
                     pass
-                number= self.pool.get('ir.sequence').get(cr, uid, 'stock.ddt')
+                number = self.pool.get('ir.sequence').next_by_code(cr, uid, 'stock.ddt')
                 self.write(cr, uid, [brwsPick.id], {'ddt_number':number})
         return True
 

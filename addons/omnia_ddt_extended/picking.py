@@ -37,9 +37,9 @@ class Stock_picking(orm.Model):
             get last ddt date from all ddt
         """
         if sequence_id:
-            sql="""SELECT ddt_number,ddt_date FROM STOCK_PICKING WHERE ddt_number IS NOT NULL AND ddt_sequence=%s ORDER BY DDT_DATE DESC LIMIT 1;""" %(sequence_id)
+            sql = """SELECT ddt_number, ddt_date FROM STOCK_PICKING WHERE ddt_number IS NOT NULL AND ddt_sequence=%s ORDER BY DDT_DATE DESC LIMIT 1;""" %(sequence_id)
             cr.execute(sql)
-            results=cr.dictfetchall()
+            results = cr.dictfetchall()
             for result in results:
                 return datetime.strptime(result.get('ddt_date','2000-01-01'),'%Y-%m-%d')
             return datetime.strptime('2000-01-01','%Y-%m-%d')
@@ -47,20 +47,20 @@ class Stock_picking(orm.Model):
     
     def button_ddt_number(self, cr, uid, ids, vals, context=None):
         for brwsPick in self.browse(cr, uid, ids, context=context):
-            brwseId=brwsPick.ddt_sequence.id
-            if brwseId==None:
+            brwseId = brwsPick.ddt_sequence.id
+            if brwseId is None:
                 sql = """SELECT id FROM IR_SEQUENCE WHERE CODE ='stock.ddt';"""
                 cr.execute(sql)
                 brwseId = cr.dictfetchall()[0]['id']
             lastDDtDate = self.getLastDDtDate(cr, uid, brwseId)
-            if brwsPick.ddt_date==False:
+            if brwsPick.ddt_date is False:
                 dateTest = datetime.now()
                 self.write(cr, uid, [brwsPick.id], {'ddt_date': str(dateTest.strftime('%Y-%m-%d'))})
             else:
                 dateTest = datetime.strptime(brwsPick.ddt_date,'%Y-%m-%d')
-            if brwsPick.ddt_number==False or len(str(brwsPick.ddt_number)) == 0:
+            if brwsPick.ddt_number is False or len(str(brwsPick.ddt_number)) == 0:
                 if lastDDtDate > dateTest:
-                    raise osv.except_osv(('Error'), ("Impossibile staccare il ddt data antecedente all'ultimo ddt"))
+                    raise osv.except_osv(('Error'), ("Impossibile staccare il ddt con data antecedente all'ultimo ddt"))
                 
                 if brwsPick.ddt_sequence:
                     code = brwsPick.ddt_sequence.code
