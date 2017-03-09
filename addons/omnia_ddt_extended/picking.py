@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 ##############################################################################
-#    
+#
 #
 #    Author : Smerghetto Daniel (Omniasolutions)
 #    mail:daniel.smerghetto@omniasolutions.eu
-#    Copyright (c) 2014 Omniasolutions (http://www.omniasolutions.eu) 
+#    Copyright (c) 2014 Omniasolutions (http://www.omniasolutions.eu)
 #    All Right Reserved
 #
 #    This program is free software: you can redistribute it and/or modify
@@ -22,29 +22,29 @@
 #
 ##############################################################################
 from datetime import datetime
-from openerp.osv import orm, fields, osv
+from odoo.exceptions import UserError
+from odoo import fields
+from odoo import models
 import logging
 
 
-class Stock_picking(orm.Model):
+class Stock_picking(models.Model):
     _inherit = 'stock.picking'
-    _columns =  {     
-                 'ddt_sequence':  fields.many2one('ir.sequence',string="DDT Sequence"),
-    }
+    ddt_sequence = fields.Many2one('ir.sequence', string="DDT Sequence")
 
     def getLastDDtDate(self, cr, uid, sequence_id, context={}):
         """
             get last ddt date from all ddt
         """
         if sequence_id:
-            sql = """SELECT ddt_number, ddt_date FROM STOCK_PICKING WHERE ddt_number IS NOT NULL AND ddt_sequence=%s ORDER BY DDT_DATE DESC LIMIT 1;""" %(sequence_id)
+            sql = """SELECT ddt_number, ddt_date FROM STOCK_PICKING WHERE ddt_number IS NOT NULL AND ddt_sequence=%s ORDER BY DDT_DATE DESC LIMIT 1;""" % (sequence_id)
             cr.execute(sql)
             results = cr.dictfetchall()
             for result in results:
-                return datetime.strptime(result.get('ddt_date','2000-01-01'),'%Y-%m-%d')
-            return datetime.strptime('2000-01-01','%Y-%m-%d')
-        raise osv.except_osv(('Error'),('No sequence is provided!'))
-    
+                return datetime.strptime(result.get('ddt_date', '2000-01-01'), '%Y-%m-%d')
+            return datetime.strptime('2000-01-01', '%Y-%m-%d')
+        raise UserError(_('No sequence is provided!'))
+
     def button_ddt_number(self, cr, uid, ids, vals, context=None):
         for brwsPick in self.browse(cr, uid, ids, context=context):
             brwseId = brwsPick.ddt_sequence.id
@@ -57,25 +57,23 @@ class Stock_picking(orm.Model):
                 dateTest = datetime.now()
                 self.write(cr, uid, [brwsPick.id], {'ddt_date': str(dateTest.strftime('%Y-%m-%d'))})
             else:
-                dateTest = datetime.strptime(brwsPick.ddt_date,'%Y-%m-%d')
+                dateTest = datetime.strptime(brwsPick.ddt_date, '%Y-%m-%d')
             if brwsPick.ddt_number is False or len(str(brwsPick.ddt_number)) == 0:
                 if lastDDtDate > dateTest:
-                    raise osv.except_osv(('Error'), ("Impossibile staccare il ddt con data antecedente all'ultimo ddt"))
-                
+                    raise UserError(_("Impossibile staccare il ddt con data antecedente all'ultimo ddt"))
                 if brwsPick.ddt_sequence:
                     code = brwsPick.ddt_sequence.code
                     number = self.pool.get('ir.sequence').next_by_code(cr, uid, code)
                 else:
                     number = self.pool.get('ir.sequence').next_by_code(cr, uid, 'stock.ddt')
-                self.write(cr, uid, [brwsPick.id], {'ddt_number':number})
+                self.write(cr, uid, [brwsPick.id], {'ddt_number': number})
         return True
 
 Stock_picking()
 
-class Stock_picking_out_omnia(orm.Model):
+
+class Stock_picking_out_omnia(models.Model):
     _inherit = "ir.sequence"
-    _columns =  {
-        'use_for_ddt':  fields.boolean(string="Use for DDT"),
-    }
+    use_for_ddt = fields.Boolean(string="Use for DDT")
 
 Stock_picking_out_omnia()

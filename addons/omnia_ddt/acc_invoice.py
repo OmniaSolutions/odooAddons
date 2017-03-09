@@ -17,47 +17,45 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 ##############################################################################
-'''    
+'''
 Created on 10/lug/2013
 @author: mboscolo
 '''
-from openerp import models, fields, api
-from openerp.osv import osv
+from odoo import models
+from odoo import fields
+from odoo import api
 import logging
 
+
 class Omnia_ddt_account_invoice(models.Model):
-    
+
     _name = "account.invoice"
     _inherit = ['account.invoice']
     ddt_number_invoice = fields.One2many('stock.picking', 'invoice_id', 'DDT_number')
 
-    def recupera_fattura(self, cr, uid, ids, context=None):   
+    @api.multi
+    def recupera_fattura(self):
         idspicking = []
-        objStckPkng = self.pool.get('stock.picking')
-        if ids:
-            if isinstance(ids, int):
-                ids = [ids]
-            brwsObj = self.browse(cr, uid, ids, context=context)
-            for ogg in brwsObj:
-                if (ogg.origin != 'merged') and (ogg.origin != False):     # acc invoice has value and not merged
-                    idspicking.extend(objStckPkng.search(cr, uid, [('origin', '=', ogg.origin),
-                                                                   ('ddt_number', '!=', False),
-                                                                   ('invoice_id', '=', None),
-                                                                   ('use_for_ddt', '=', True)],
-                                                                   context=context))
-                elif ogg.origin =='merged':                             # Used only in case of "account_invoice_merge_no_unlink" module
-                    idsmerge = self.search(cr, uid, [('merged_invoice_id', '=', ogg.id)], context=context)
-                    for mergedInv in self.browse(cr, uid, idsmerge, context=context):
-                        if mergedInv.origin:
-                            listaddt = mergedInv.origin.split(",")
-                            for oggddt in listaddt:
-                                idspicking.extend(objStckPkng.search(cr, uid, [('origin','=',oggddt.strip()),
-                                                                               ('ddt_number','!=',False),
-                                                                               ('invoice_id','=',None),
-                                                                               ('use_for_ddt','=',True)],
-                                                                               context=context))
-            for ddtId in idspicking:
-                objStckPkng.write(cr, uid, ddtId, {'invoice_id': ids[0]})
+        objStckPkng = self.env.get('stock.picking')
+        for ogg in self:
+            if (ogg.origin != 'merged') and (ogg.origin is not False):     # acc invoice has value and not merged
+                idspicking.extend(objStckPkng.search([('origin', '=', ogg.origin),
+                                                      ('ddt_number', '!=', False),
+                                                      ('invoice_id', '=', None),
+                                                      ('use_for_ddt', '=', True)],
+                                                     )).ids
+            elif ogg.origin == 'merged':                             # Used only in case of "account_invoice_merge_no_unlink" module
+                for mergedInv in self.search([('merged_invoice_id', '=', ogg.id)]):
+                    if mergedInv.origin:
+                        listaddt = mergedInv.origin.split(",")
+                        for oggddt in listaddt:
+                            idspicking.extend(objStckPkng.search([('origin', '=', oggddt.strip()),
+                                                                  ('ddt_number', '!=', False),
+                                                                  ('invoice_id', '=', None),
+                                                                  ('use_for_ddt', '=', True)],
+                                                                 )).ids
+        for ddtId in idspicking:
+            objStckPkng.write(ddtId, {'invoice_id': self.env.ids[0]})
         return True
-        
+
 Omnia_ddt_account_invoice()
