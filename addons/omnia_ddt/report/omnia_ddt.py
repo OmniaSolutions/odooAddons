@@ -18,6 +18,7 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 ##############################################################################
+import odoo
 '''
 Created on 10/lug/2013
 @author: mboscolo
@@ -103,3 +104,11 @@ class omnia_ddt_parser(report_sxw.rml_parse):
             'getPaymentTerm': self.getPaymentTerm,
             'getIvaValue': self.getIvaValue,
         })
+
+
+mResurcePath = os.path.join(odoo.addons.get_module_resource('omnia_ddt'), 'report', 'stock_ddt_html.mako')
+report_sxw.report_sxw('report.omnia_ddt_parser',
+                       'stock.picking.out', 
+                       mResurcePath,
+                       parser=omnia_ddt_parser,
+                       header=False)
