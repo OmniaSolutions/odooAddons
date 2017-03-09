@@ -27,6 +27,7 @@ from datetime import datetime
 from odoo import models
 from odoo import fields
 from odoo import api
+from odoo import _
 
 
 class stock_picking_carriage_condition(models.Model):

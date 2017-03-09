@@ -24,6 +24,7 @@ Created on 10/lug/2013
 '''
 from odoo.report import report_sxw
 import os
+from odoo import _
 
 
 class omnia_ddt_parser(report_sxw.rml_parse):

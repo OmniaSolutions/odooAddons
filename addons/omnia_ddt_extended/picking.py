@@ -25,6 +25,8 @@ from datetime import datetime
 from odoo.exceptions import UserError
 from odoo import fields
 from odoo import models
+from odoo import _
+from odoo import api
 import logging
 
 
@@ -32,30 +34,32 @@ class Stock_picking(models.Model):
     _inherit = 'stock.picking'
     ddt_sequence = fields.Many2one('ir.sequence', string="DDT Sequence")
 
-    def getLastDDtDate(self, cr, uid, sequence_id, context={}):
+    @api.model
+    def getLastDDtDate(self, sequence_id):
         """
             get last ddt date from all ddt
         """
         if sequence_id:
             sql = """SELECT ddt_number, ddt_date FROM STOCK_PICKING WHERE ddt_number IS NOT NULL AND ddt_sequence=%s ORDER BY DDT_DATE DESC LIMIT 1;""" % (sequence_id)
-            cr.execute(sql)
-            results = cr.dictfetchall()
+            self.env.cr.execute(sql)
+            results = self.env.cr.dictfetchall()
             for result in results:
                 return datetime.strptime(result.get('ddt_date', '2000-01-01'), '%Y-%m-%d')
             return datetime.strptime('2000-01-01', '%Y-%m-%d')
         raise UserError(_('No sequence is provided!'))
 
-    def button_ddt_number(self, cr, uid, ids, vals, context=None):
-        for brwsPick in self.browse(cr, uid, ids, context=context):
+    @api.multi
+    def button_ddt_number(self, vals):
+        for brwsPick in self:
             brwseId = brwsPick.ddt_sequence.id
             if brwseId is None:
                 sql = """SELECT id FROM IR_SEQUENCE WHERE CODE ='stock.ddt';"""
-                cr.execute(sql)
-                brwseId = cr.dictfetchall()[0]['id']
-            lastDDtDate = self.getLastDDtDate(cr, uid, brwseId)
+                self.env.cr.execute(sql)
+                brwseId = self.env.cr.dictfetchall()[0]['id']
+            lastDDtDate = self.getLastDDtDate(brwseId)
             if brwsPick.ddt_date is False:
                 dateTest = datetime.now()
-                self.write(cr, uid, [brwsPick.id], {'ddt_date': str(dateTest.strftime('%Y-%m-%d'))})
+                brwsPick.write({'ddt_date': str(dateTest.strftime('%Y-%m-%d'))})
             else:
                 dateTest = datetime.strptime(brwsPick.ddt_date, '%Y-%m-%d')
             if brwsPick.ddt_number is False or len(str(brwsPick.ddt_number)) == 0:
@@ -63,10 +67,10 @@ class Stock_picking(models.Model):
                     raise UserError(_("Impossibile staccare il ddt con data antecedente all'ultimo ddt"))
                 if brwsPick.ddt_sequence:
                     code = brwsPick.ddt_sequence.code
-                    number = self.pool.get('ir.sequence').next_by_code(cr, uid, code)
+                    number = self.env.get('ir.sequence').next_by_code(code)
                 else:
-                    number = self.pool.get('ir.sequence').next_by_code(cr, uid, 'stock.ddt')
-                self.write(cr, uid, [brwsPick.id], {'ddt_number': number})
+                    number = self.env.get('ir.sequence').next_by_code('stock.ddt')
+                brwsPick.write({'ddt_number': number})
         return True
 
 Stock_picking()

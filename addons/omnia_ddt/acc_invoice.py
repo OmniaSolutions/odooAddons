@@ -24,6 +24,7 @@ Created on 10/lug/2013
 from odoo import models
 from odoo import fields
 from odoo import api
+from odoo import _
 import logging
 
 
