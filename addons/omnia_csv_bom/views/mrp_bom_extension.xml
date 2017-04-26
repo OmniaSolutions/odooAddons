@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<openerp>
+    <data>
+    
+        <record model="ir.ui.view" id="act_plm_export_csv_omnia_view">
+            <field name="name">Export CSV Bom</field>
+            <field name="model">mrp.bom_csv_wizard</field>
+            <field name="type">form</field>
+            <field name="arch" type="xml">
+                <form string="Export CSV Bom">
+                    <label string="This wizard will allow to create a BOM CSV and export it." colspan="4"/>
+                    <group col="2" colspan="4">
+                    	<field name="datas_fname"/>
+                    	<field name="download_datas" readonly="1" filename="datas_fname"/>
+                    	<field name="showHeaders"/>
+                    	<button string="Compute CSV" name="createCsvFile" type="object"/>
+                    </group>
+                    <newline/>
+                    <separator colspan="4"/>
+                    <group col="2" colspan="4">
+                        <button special="cancel" string="Ok" />
+                    </group>
+                </form>
+            </field>
+        </record>
+
+        <act_window name="Export BOM CSV"
+            res_model="mrp.bom_csv_wizard"
+            src_model="mrp.bom"
+            view_mode="form"
+            target="new"
+            key2="client_action_multi"
+            id="act_plm_export_csv_omnia"/>
+            
+    </data>
+</openerp>
