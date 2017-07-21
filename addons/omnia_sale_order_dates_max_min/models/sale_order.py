@@ -37,7 +37,7 @@ class SaleOrder(models.Model):
     _inherit = 'sale.order'
 
     @api.multi
-    @api.depends('order_line.customer_lead', 'order_line')
+    @api.depends('order_line.customer_lead', 'order_line', 'date_order')
     def _get_oldest_commitment_date(self):
         """Compute the commitment date"""
         dates_list = []
