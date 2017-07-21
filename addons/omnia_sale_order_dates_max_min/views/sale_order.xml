@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<openerp>
+	<data>
+		<record model="ir.ui.view" id="max_date_sale_order">
+	        <field name="name">max.date.sale.order</field>
+	        <field name="model">sale.order</field>
+	        <field name="type">form</field>
+	        <field name="inherit_id" ref="sale_order_dates.view_order_form_inherit_sale_stock_inherit_sale_order_dates"/>
+	        <field name="arch" type="xml"> 
+				<field name="commitment_date" position="after">
+					<field name="commitment_date_last"></field>
+				</field>
+			</field>
+		</record>
+	</data>
+</openerp>   
