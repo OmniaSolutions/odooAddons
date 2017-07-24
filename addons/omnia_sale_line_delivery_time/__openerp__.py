@@ -28,7 +28,7 @@
     'sequence': 15,
     'summary': 'Sale Order Customization',
     'images': [],
-    'depends': ['omnia_sale_order_dates_max_min'],
+    'depends': ['sale', 'omnia_sale_order_dates_max_min'],
     'description': """ """,
     'data': [
              'views/sale_order.xml',

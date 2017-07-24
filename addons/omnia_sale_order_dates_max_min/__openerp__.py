@@ -28,7 +28,7 @@
     'sequence': 15,
     'summary': 'Adds commitment last date on sale order.',
     'images': [],
-    'depends': ['sale_order_dates'],
+    'depends': ['sale', 'sale_order_dates'],
     'description': """ """,
     'data': [
              'views/sale_order.xml',

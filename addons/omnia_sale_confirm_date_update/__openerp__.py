@@ -28,7 +28,7 @@
     'sequence': 15,
     'summary': 'This module updates Sale Order date when Quotation is confirmed.',
     'images': [],
-    'depends': [],
+    'depends': ['sale'],
     'description': """ """,
     'data': [
        ],
