@@ -38,6 +38,7 @@
              #view
             'views/product_category.xml',
             'views/sequence.xml',
+            'views/inventory_view.xml',
     ],
     'installable': True,
     'auto_install': False,
