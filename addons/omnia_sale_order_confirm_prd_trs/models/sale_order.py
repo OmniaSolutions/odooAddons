@@ -30,6 +30,13 @@ from openerp import _
 from openerp import api
 from datetime import date
 
+class stockpicking(models.Model):
+    _name = "stock.picking"
+    _inherit = "stock.picking"
+    
+    @api.model
+    def create(self, vals):
+        return super(stockpicking, self).create(vals)
 
 class SaleOrder(models.Model):
     _name = "sale.order"
@@ -97,7 +104,7 @@ class SaleOrder(models.Model):
 
     @api.multi
     def setupAnalyticLines(self, newBaseName):
-        count = 0
+        count = 1
         for line in self.order_line:
             if self.getProductCategoryName(line) == 'MACHINE':
                 for _elem in range(int(line.product_uom_qty)):
