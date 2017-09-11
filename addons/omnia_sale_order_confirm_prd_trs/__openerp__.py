@@ -33,7 +33,7 @@
     'author': 'OmniaSolutions.eu',
     'maintainer': 'OmniaSolutions.eu',
     'website': 'http://www.OmniaSolutions.eu',
-    'depends': ['sale'],
+    'depends': ['sale', 'purchase'],
     'data': [
              #view
             'views/product_category.xml',
