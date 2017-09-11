@@ -46,7 +46,7 @@ class ProcurementOrderOmnia(models.Model):
             mrpProdOrders = forceMrpBrws
         else:
             mrpProdOrders = mrpProdEnv.search([
-                ('state', 'in', ['draft', 'confirmed'])
+                ('state', 'in', ['confirmed'])
                 ])
         for mrpOrderBrws in mrpProdOrders:
             for moveLineBrws in mrpOrderBrws.move_lines:
