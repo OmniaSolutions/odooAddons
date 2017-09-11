@@ -20,29 +20,13 @@
 #
 ##############################################################################
 
+'''
+Created on Jul 21, 2017
 
-{
-    'name': 'omnia_csv_bom',
-    'version': '1.1',
-    'sequence': 1,
-    'category': 'Custom',
-    'description': """
-Export BOM in CSV mode 
-====================
-""",
-    'author': 'OmniaSolutions.eu',
-    'maintainer': 'OmniaSolutions.eu',
-    'website': 'http://www.OmniaSolutions.eu',
-    'depends': ['mrp'],
-    'data': [
-                #view
-                'views/mrp_bom_extension.xml',
-             
-    ],
-    'installable': True,
-    'application': False,
-    'auto_install': False,
-}
+@author: daniel
+'''
 
+import procurement_order
+import manufacturing_order
 
 # vim:expandtab:smartindent:tabstop=4:softtabstop=4:shiftwidth=4:

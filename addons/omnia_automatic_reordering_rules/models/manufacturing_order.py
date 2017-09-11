@@ -20,6 +20,25 @@
 #
 ##############################################################################
 
-import models
+'''
+Created on Jul 21, 2017
+
+@author: daniel
+'''
+from openerp.tools import DEFAULT_SERVER_DATETIME_FORMAT
+import datetime
+from openerp import models
+from openerp import api
+from openerp import fields
+from openerp import _
+
+
+class ManufacturingOrderOmnia(models.Model):
+    _inherit = 'mrp.production'
+
+    @api.multi
+    def auto_reordering_rules_calculation(self):
+        self.env['procurement.order.omnia'].auto_reordering_rules_calculation(forceMrpBrws=self)
+        
 
 # vim:expandtab:smartindent:tabstop=4:softtabstop=4:shiftwidth=4:

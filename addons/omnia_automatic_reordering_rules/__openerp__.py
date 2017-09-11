@@ -19,7 +19,28 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 ##############################################################################
-
-import mrp_bom_extension
+{
+    'name': 'Omnia Automatic Reordering Rules',
+    'version': '1.1',
+    'author': 'OmniaSolutions',
+    'website': 'http://www.omniasolutions.eu',
+    'category': 'Omnia Reordering Rules Customization',
+    'sequence': 15,
+    'summary': 'Creates automatic reordering rules based on manufacturing order.',
+    'images': [],
+    'depends': ['mrp'],
+    'description': """ """,
+    'data': [
+             'views/inventory_extension.xml',
+             'views/mrp_extension.xml',
+       ],
+    'demo': [
+        ],
+    'test': [
+        ],
+    'installable': True,
+    'application': False,
+    'auto_install': False,
+}
 
 # vim:expandtab:smartindent:tabstop=4:softtabstop=4:shiftwidth=4:

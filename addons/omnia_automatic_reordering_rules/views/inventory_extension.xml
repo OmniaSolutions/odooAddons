@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<openerp>
+    <data>
+
+        <!--  Run Schedulers -->
+
+        <record id="view_compute_reordering_rules_wizard_omnia" model="ir.ui.view">
+            <field name="name">Run Scheduler Reordering Rules</field>
+            <field name="model">procurement.order.omnia</field>
+            <field name="arch" type="xml">
+                <form string="Scheduler Parameters">
+                    <p>
+                        Compute all reordering rules from manufacturing orders.
+                    </p>
+                    <footer>
+                        <button name="auto_reordering_rules_calculation" string="Run Scheduler Reordering Rules" type="object" class="btn-primary"/>
+                        <button string="Cancel" class="btn-default" special="cancel" />
+                    </footer>
+                </form>
+            </field>
+        </record>
+
+         <record id="action_compute_schedulers_omnia" model="ir.actions.act_window">
+            <field name="name">Run Scheduler Reordering Rules</field>
+            <field name="res_model">procurement.order.omnia</field>
+            <field name="view_type">form</field>
+            <field name="view_mode">form</field>
+            <field name="target">new</field>
+         </record>
+
+        <record forcecreate="True" id="ir_cron_create_reordering_rules" model="ir.cron">
+            <field name="name">Run Reordering Rules Creation</field>
+            <field name="active" eval="False"/>
+            <field name="user_id" ref="base.user_root"/>
+            <field name="interval_number">1</field>
+            <field name="interval_type">days</field>
+            <field name="numbercall">-1</field>
+            <field name="doall" eval="False"/>
+            <field name="model">procurement.order.omnia</field>
+            <field name="function" eval="'auto_reordering_rules_calculation'"/>
+            <field name="args" eval="'(None,)'"/>
+        </record>
+
+    </data>
+</openerp>
