@@ -41,5 +41,7 @@
             <field name="args" eval="'(None,)'"/>
         </record>
 
+		<menuitem action="action_compute_schedulers_omnia" id="action_compute_schedulers_omnia_menuitem" parent="stock.menu_stock_sched" sequence="1" groups="stock.group_stock_manager"/>
+    
     </data>
 </openerp>
