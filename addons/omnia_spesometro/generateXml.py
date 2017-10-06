@@ -6,6 +6,7 @@ Created on Oct 5, 2017
 from OdooQtUi.RPC.rpc import connectionObj
 import agenzia_entrate
 import os
+import sys
 from datetime import datetime
 import time
 from OdooQtUi.utils_odoo_conn import utils
@@ -230,6 +231,17 @@ class GenerateXml(object):
             AltriDatiIdentificativi = fatturaAltriDatiIdentificativi(Denominazione, Nome, Cognome, Indirizzo, NumeroCivico, CAP, Comune, Provincia, Nazione)
             DatiFatturaBodyDTR = [fatturaBodyDTR()]
             return agenzia_entrate.CedentePrestatoreDTRType(IdentificativiFiscali, AltriDatiIdentificativi, DatiFatturaBodyDTR)
+
+        def encodeStringByDict(vals, val):
+            res = vals.get(val, '')
+            return encodeString(res)
+        
+        def encodeString(res):
+            if not res:
+                res = None
+            else:
+                res = res.encode('ascii', 'ignore')
+            return res
             
         def getCommonVals(vals):
             codiceFiscale = vals.get('fiscalcode', None) or None
@@ -238,15 +250,17 @@ class GenerateXml(object):
             Nome = None
             Cognome = None
             if is_company:
-                Denominazione = unicode(vals.get('name', ''), 'latin-1')
+                Denominazione = encodeStringByDict(vals, 'name')
             else:
                 nameList = vals.get('name', '').split(' ')
-                Nome = nameList[0]
+                Nome = nameList[0].encode('ascii', 'ignore')
+                Nome = encodeString(Nome)
                 Cognome = ' '.join(nameList[1:])
-            Indirizzo = vals.get('street', None) or None
-            NumeroCivico = vals.get('street2', None) or None
+                Cognome = encodeString(Cognome)
+            Indirizzo = encodeStringByDict(vals, 'street')
+            NumeroCivico = encodeStringByDict(vals, 'street2')
             CAP = vals.get('zip', None) or None
-            Comune = vals.get('city', None) or None
+            Comune = encodeStringByDict(vals, 'city')
             Provincia = getProvince(vals) or None
             Nazione, idPaese = getCountry(vals)
             idCodice = '' # Boh
@@ -272,31 +286,28 @@ class GenerateXml(object):
         progressivo = 1
         numberInvoices = len(self.odooReadInvoices)
         self.label_progress.setText('Reading infos and generating XML files')
-        try:
-            for fatturaVals in self.odooReadInvoices:
-                index = self.odooReadInvoices.index(fatturaVals)
-                self.progressBar.setValue(self.percentage(index, numberInvoices))
-                prt = fatturaVals.get('partner_id', False)
-                partnerVals = {}
-                if prt:
-                    prtId, _prtName = prt
-                    partnerVals = self.getPartnerVals(prtId)
-                fiscalCode = partnerVals.get('fiscalcode', '')
-                DTE = None
-                DTR = None
-                ANN = None
-                versione = None # Pare non serva
-                if self.getInvoiceType(fatturaVals) == 'DTE':
-                    DTE = fatturaDTE()
-                elif self.getInvoiceType(fatturaVals) == 'DTR':
-                    DTR = fatturaDTR()
-                Signature = fatturaSignature()
-                header = fatturaHeader(progressivo, fiscalCode)
-                _fatturaTypeObj = agenzia_entrate.DatiFatturaType(versione=versione, DatiFatturaHeader=header, DTE=DTE, DTR=DTR, ANN=ANN, Signature=Signature)
-                self.createXML(progressivo, _fatturaTypeObj)
-                progressivo = progressivo + 1
-        except Exception, ex:
-            utils.launchMessage('Errors during generating xml files\n %r' % (ex), msgType='error')
+        for fatturaVals in self.odooReadInvoices:
+            index = self.odooReadInvoices.index(fatturaVals)
+            self.progressBar.setValue(self.percentage(index, numberInvoices))
+            prt = fatturaVals.get('partner_id', False)
+            partnerVals = {}
+            if prt:
+                prtId, _prtName = prt
+                partnerVals = self.getPartnerVals(prtId)
+            fiscalCode = partnerVals.get('fiscalcode', '')
+            DTE = None
+            DTR = None
+            ANN = None
+            versione = None # Pare non serva
+            if self.getInvoiceType(fatturaVals) == 'DTE':
+                DTE = fatturaDTE()
+            elif self.getInvoiceType(fatturaVals) == 'DTR':
+                DTR = fatturaDTR()
+            Signature = fatturaSignature()
+            header = fatturaHeader(progressivo, fiscalCode)
+            _fatturaTypeObj = agenzia_entrate.DatiFatturaType(versione=versione, DatiFatturaHeader=header, DTE=DTE, DTR=DTR, ANN=ANN, Signature=Signature)
+            self.createXML(progressivo, _fatturaTypeObj)
+            progressivo = progressivo + 1
         self.progressBar.setValue(0)
         self.label_progress.setText('')
     
@@ -311,11 +322,6 @@ class GenerateXml(object):
         newFilePath = os.path.join(outDir, newFileName)
         with open(newFilePath, 'w') as outFile:
             _fatturaTypeObj.export(outFile, 0)
-#         if not os.path.exists(newFilePath):
-#             with open(newFilePath, 'wb') as aaa:
-#                 pass
-#         cmd = 'python %s -s %s' % (generatorFilePath, newFilePath)
-#         res = os.popen(cmd)
         if os.path.exists(newFilePath):
             print 'File %r generated' % (newFileName)
         
