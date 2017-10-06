@@ -2380,14 +2380,14 @@ class AltriDatiIdentificativiNoSedeType(GeneratedsSuper):
             if not self.gds_validate_simple_patterns(
                     self.validate_String80LatinType_patterns_, value):
                 warnings_.warn('Value "%s" does not match xsd pattern restrictions: %s' % (value.encode('utf-8'), self.validate_String80LatinType_patterns_, ))
-    validate_String80LatinType_patterns_ = [['^[\\p{IsBasicLatin}\\p{IsLatin-1Supplement}]{1,80}$']]
+    validate_String80LatinType_patterns_ = [['^[\\p{IsBasicLatin}\\p{[\x80-\xFF]}]{1,80}$']]
     def validate_String60LatinType(self, value):
         # Validate type String60LatinType, a restriction on xs:normalizedString.
         if value is not None and Validate_simpletypes_:
             if not self.gds_validate_simple_patterns(
                     self.validate_String60LatinType_patterns_, value):
                 warnings_.warn('Value "%s" does not match xsd pattern restrictions: %s' % (value.encode('utf-8'), self.validate_String60LatinType_patterns_, ))
-    validate_String60LatinType_patterns_ = [['^[\\p{IsBasicLatin}\\p{IsLatin-1Supplement}]{1,60}$']]
+    validate_String60LatinType_patterns_ = [['^[\\p{IsBasicLatin}\\p{[\x80-\xFF]}]{1,60}$']]
     def hasContent_(self):
         if (
             self.Denominazione is not None or
@@ -2532,14 +2532,14 @@ class AltriDatiIdentificativiNoCAPType(GeneratedsSuper):
             if not self.gds_validate_simple_patterns(
                     self.validate_String80LatinType_patterns_, value):
                 warnings_.warn('Value "%s" does not match xsd pattern restrictions: %s' % (value.encode('utf-8'), self.validate_String80LatinType_patterns_, ))
-    validate_String80LatinType_patterns_ = [['^[\\p{IsBasicLatin}\\p{IsLatin-1Supplement}]{1,80}$']]
+    validate_String80LatinType_patterns_ = [['^[\\p{IsBasicLatin}\\p{[\x80-\xFF]}]{1,80}$']]
     def validate_String60LatinType(self, value):
         # Validate type String60LatinType, a restriction on xs:normalizedString.
         if value is not None and Validate_simpletypes_:
             if not self.gds_validate_simple_patterns(
                     self.validate_String60LatinType_patterns_, value):
                 warnings_.warn('Value "%s" does not match xsd pattern restrictions: %s' % (value.encode('utf-8'), self.validate_String60LatinType_patterns_, ))
-    validate_String60LatinType_patterns_ = [['^[\\p{IsBasicLatin}\\p{IsLatin-1Supplement}]{1,60}$']]
+    validate_String60LatinType_patterns_ = [['^[\\p{IsBasicLatin}\\p{[\x80-\xFF]}]{1,60}$']]
     def hasContent_(self):
         if (
             self.Denominazione is not None or
@@ -2687,7 +2687,7 @@ class IndirizzoNoCAPType(GeneratedsSuper):
             if not self.gds_validate_simple_patterns(
                     self.validate_String60LatinType_patterns_, value):
                 warnings_.warn('Value "%s" does not match xsd pattern restrictions: %s' % (value.encode('utf-8'), self.validate_String60LatinType_patterns_, ))
-    validate_String60LatinType_patterns_ = [['^[\\p{IsBasicLatin}\\p{IsLatin-1Supplement}]{1,60}$']]
+    validate_String60LatinType_patterns_ = [['^[\\p{IsBasicLatin}\\p{[\x80-\xFF]}]{1,60}$']]
     def validate_NumeroCivicoType(self, value):
         # Validate type NumeroCivicoType, a restriction on xs:normalizedString.
         if value is not None and Validate_simpletypes_:
@@ -2869,7 +2869,7 @@ class IndirizzoType(GeneratedsSuper):
             if not self.gds_validate_simple_patterns(
                     self.validate_String60LatinType_patterns_, value):
                 warnings_.warn('Value "%s" does not match xsd pattern restrictions: %s' % (value.encode('utf-8'), self.validate_String60LatinType_patterns_, ))
-    validate_String60LatinType_patterns_ = [['^[\\p{IsBasicLatin}\\p{IsLatin-1Supplement}]{1,60}$']]
+    validate_String60LatinType_patterns_ = [['^[\\p{IsBasicLatin}\\p{[\x80-\xFF]}]{1,60}$']]
     def validate_NumeroCivicoType(self, value):
         # Validate type NumeroCivicoType, a restriction on xs:normalizedString.
         if value is not None and Validate_simpletypes_:
@@ -3042,14 +3042,14 @@ class RappresentanteFiscaleType(GeneratedsSuper):
             if not self.gds_validate_simple_patterns(
                     self.validate_String80LatinType_patterns_, value):
                 warnings_.warn('Value "%s" does not match xsd pattern restrictions: %s' % (value.encode('utf-8'), self.validate_String80LatinType_patterns_, ))
-    validate_String80LatinType_patterns_ = [['^[\\p{IsBasicLatin}\\p{IsLatin-1Supplement}]{1,80}$']]
+    validate_String80LatinType_patterns_ = [['^[\\p{IsBasicLatin}\\p{[\x80-\xFF]}]{1,80}$']]
     def validate_String60LatinType(self, value):
         # Validate type String60LatinType, a restriction on xs:normalizedString.
         if value is not None and Validate_simpletypes_:
             if not self.gds_validate_simple_patterns(
                     self.validate_String60LatinType_patterns_, value):
                 warnings_.warn('Value "%s" does not match xsd pattern restrictions: %s' % (value.encode('utf-8'), self.validate_String60LatinType_patterns_, ))
-    validate_String60LatinType_patterns_ = [['^[\\p{IsBasicLatin}\\p{IsLatin-1Supplement}]{1,60}$']]
+    validate_String60LatinType_patterns_ = [['^[\\p{IsBasicLatin}\\p{[\x80-\xFF]}]{1,60}$']]
     def hasContent_(self):
         if (
             self.IdFiscaleIVA is not None or
@@ -3172,14 +3172,14 @@ class RappresentanteFiscaleITType(GeneratedsSuper):
             if not self.gds_validate_simple_patterns(
                     self.validate_String80LatinType_patterns_, value):
                 warnings_.warn('Value "%s" does not match xsd pattern restrictions: %s' % (value.encode('utf-8'), self.validate_String80LatinType_patterns_, ))
-    validate_String80LatinType_patterns_ = [['^[\\p{IsBasicLatin}\\p{IsLatin-1Supplement}]{1,80}$']]
+    validate_String80LatinType_patterns_ = [['^[\\p{IsBasicLatin}\\p{[\x80-\xFF]}]{1,80}$']]
     def validate_String60LatinType(self, value):
         # Validate type String60LatinType, a restriction on xs:normalizedString.
         if value is not None and Validate_simpletypes_:
             if not self.gds_validate_simple_patterns(
                     self.validate_String60LatinType_patterns_, value):
                 warnings_.warn('Value "%s" does not match xsd pattern restrictions: %s' % (value.encode('utf-8'), self.validate_String60LatinType_patterns_, ))
-    validate_String60LatinType_patterns_ = [['^[\\p{IsBasicLatin}\\p{IsLatin-1Supplement}]{1,60}$']]
+    validate_String60LatinType_patterns_ = [['^[\\p{IsBasicLatin}\\p{[\x80-\xFF]}]{1,60}$']]
     def hasContent_(self):
         if (
             self.IdFiscaleIVA is not None or

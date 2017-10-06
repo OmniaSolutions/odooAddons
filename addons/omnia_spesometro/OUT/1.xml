@@ -1,0 +1,56 @@
+<DatiFatturaType  xmlns:ds="http://www.w3.org/2000/09/xmldsig#" >
+    <DatiFatturaHeader>
+        <ProgressivoInvio>1</ProgressivoInvio>
+        <IdSistema>False</IdSistema>
+    </DatiFatturaHeader>
+    <DTR>
+        <CessionarioCommittenteDTR>
+            <IdentificativiFiscali>
+                <IdFiscaleIVA>
+                    <IdPaese>IT</IdPaese>
+                    <IdCodice></IdCodice>
+                </IdFiscaleIVA>
+            </IdentificativiFiscali>
+            <AltriDatiIdentificativi>
+                <Denominazione>Gdc Immobiliare Srl</Denominazione>
+                <Sede>
+                    <Indirizzo>Via Vicenza 62/ Bis</Indirizzo>
+                    <CAP>36071</CAP>
+                    <Comune>Arzignano</Comune>
+                    <Nazione>IT</Nazione>
+                </Sede>
+            </AltriDatiIdentificativi>
+        </CessionarioCommittenteDTR>
+        <CedentePrestatoreDTR>
+            <IdentificativiFiscali>
+                <IdFiscaleIVA>
+                    <IdPaese>IT</IdPaese>
+                    <IdCodice></IdCodice>
+                </IdFiscaleIVA>
+            </IdentificativiFiscali>
+            <AltriDatiIdentificativi>
+                <Denominazione>Acquacontrol Automazioni srl</Denominazione>
+                <Sede>
+                    <Indirizzo>Via Seconda strada, 151</Indirizzo>
+                    <CAP>36071</CAP>
+                    <Comune>Arzignano</Comune>
+                    <Nazione>IT</Nazione>
+                </Sede>
+            </AltriDatiIdentificativi>
+            <DatiFatturaBodyDTR>
+                <DatiGenerali>
+                    <TipoDocumento></TipoDocumento>
+                    <Data>2017-01-04</Data>
+                    <Numero>ACQ/2017/0001</Numero>
+                </DatiGenerali>
+                <DatiRiepilogo>
+                    <ImponibileImporto>3726.800000000000182</ImponibileImporto>
+                    <DatiIVA>
+                        <Imposta>672.049999999999955</Imposta>
+                        <Aliquota>0.</Aliquota>
+                    </DatiIVA>
+                </DatiRiepilogo>
+            </DatiFatturaBodyDTR>
+        </CedentePrestatoreDTR>
+    </DTR>
+</DatiFatturaType>

@@ -21,7 +21,7 @@
 import sys
 from lxml import etree as etree_
 
-import ??? as supermod
+import agenzia_entrate as supermod
 
 def parsexml_(infile, parser=None, **kwargs):
     if parser is None:
