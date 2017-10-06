@@ -1,10 +1,13 @@
 
 from OdooQtUi.RPC.rpc import connectionObj
+from OdooQtUi.utils_odoo_conn import constants
+from OdooQtUi.utils_odoo_conn import utils
 from PyQt4 import QtGui
 from PyQt4 import QtCore
 from ui_spesometro.ui_main_window import Ui_MainWindow
 from OdooQtUi.interface.login import LoginDialComplete
 from generateXml import GenerateXml
+from datetime import datetime
 import sys
 import os
 import json
@@ -32,9 +35,33 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         self.currentDir = os.getcwd()
         self.loginFile = os.path.join(self.currentDir, self.loginFileName)
         self.journalFile = os.path.join(self.currentDir, self.journalFileName)
+        
+        starting_day_of_current_year = datetime.now().date().replace(month=1, day=1)    
+        ending_day_of_current_year = datetime.now().date().replace(month=12, day=31)
+        self.dateEdit_from.setDate(QtCore.QDate(starting_day_of_current_year.year, starting_day_of_current_year.month, starting_day_of_current_year.day))
+        self.dateEdit_to.setDate(QtCore.QDate(ending_day_of_current_year.year, ending_day_of_current_year.month, ending_day_of_current_year.day))
 
     def setStyleWidgets(self):
-        pass
+        self.setStyleSheet(constants.VIOLET_BACKGROUND)
+        self.pushButton_generate_xml.setStyleSheet(constants.LOGIN_ACCEPT_BUTTON + 'font-size: 24px;')
+        commonButtonStyle = constants.BUTTON_COMMON + constants.BACKGROUND_LIGHT_BLUE + constants.BOLD_FONT + 'color:black;'
+        self.pushButton_login.setStyleSheet(commonButtonStyle)
+        self.pushButton_spesometro.setStyleSheet(commonButtonStyle)
+        self.pushButton_settings.setStyleSheet(commonButtonStyle)
+        self.pushButton_ok.setStyleSheet(constants.LOGIN_ACCEPT_BUTTON + 'font-size: 15px;')
+        self.tableWidget.setStyleSheet(constants.TABLE_LIST_LIST)
+        self.label_date_from.setStyleSheet(constants.LOGIN_LABEL)
+        self.label_date_to.setStyleSheet(constants.LOGIN_LABEL)
+        self.label_out_file_name.setStyleSheet(constants.LOGIN_LABEL)
+        self.label_sezionali.setStyleSheet(constants.LOGIN_LABEL)
+        self.dateEdit_from.setStyleSheet(constants.DATE_STYLE)
+        self.dateEdit_to.setStyleSheet(constants.DATE_STYLE)
+        self.lineEdit_out_file_name.setStyleSheet(constants.LOGIN_LINEEDIT_STYLE)
+        self.widget_content.setStyleSheet(constants.BACKGROUND_WHITE)
+        self.dockWidget_2.setStyleSheet(constants.BACKGROUND_WHITE)
+        self.pushButton_apply_journals.setStyleSheet(constants.BUTTON_STYLE)
+        self.pushButton_open_path.setStyleSheet(constants.BUTTON_STYLE)
+        self.label_progress.setStyleSheet(constants.LOGIN_LABEL)
 
     def setEvents(self):
         # Dock widgets
@@ -43,26 +70,25 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         self.pushButton_spesometro.clicked.connect(self.setSpesometro)
         # Other widgets
         self.pushButton_ok.clicked.connect(self.acceptMW)
-        self.pushButton_cancel.clicked.connect(self.rejectMW)
         self.pushButton_apply_journals.clicked.connect(self.saveJournals)
-        self.pushButton_download.clicked.connect(self.downloadFile)
         self.pushButton_generate_xml.clicked.connect(self.generateXml)
+        self.pushButton_open_path.clicked.connect(self.openPath)
 
     def acceptMW(self):
         self.close()
 
-    def rejectMW(self):
-        self.close()
-
-    def downloadFile(self):
-        pass
-
+    def openPath(self):
+        newSavePath = utils.getDirectoryFromSystem(parent=None, pathToOpen='')
+        self.lineEdit_out_file_name.setText(newSavePath)
+        
     def generateXml(self):
         date_from = self.dateEdit_from.dateTime().toPyDateTime().strftime(DEFAULT_DATE_FORMAT)
         date_to = self.dateEdit_to.dateTime().toPyDateTime().strftime(DEFAULT_DATE_FORMAT)
         selectedJournals = self.getSelectedJournals()
-        xmlGeneratorObj = GenerateXml(date_from, date_to, selectedJournals)
+        savingPath = unicode(self.lineEdit_out_file_name.text())
+        xmlGeneratorObj = GenerateXml(date_from, date_to, selectedJournals, self.progressBar, self.label_progress, savingPath)
         xmlGeneratorObj.startReading()
+        utils.launchMessage('End to generate XML files.', msgType='info')
 
     def getSelectedJournals(self):
         #FIXME: da implementare la ricerca dei sezionali selezionati
