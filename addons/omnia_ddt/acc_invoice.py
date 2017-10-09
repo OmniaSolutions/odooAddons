@@ -50,7 +50,6 @@ class omnia_ddt_account_invoice(osv.osv):
                         listaddt=oggetto.origin.split(",")
                         for oggddt in listaddt:
                             idspicking.append(objStckPkng.search(cr,uid,[('name','=',oggddt.strip()),('ddt_number','!=',False)],context=context))
-        
         for ddt in idspicking:
             if ddt:
                 namesSrc=[str(objStckPkng.browse(cr,uid,ddt[0]).name)]
@@ -60,6 +59,6 @@ class omnia_ddt_account_invoice(osv.osv):
                     self.write(cr,uid,ids,{'ddt_number_invoice':ddt[0]},context=context)
                 else:
                     raise osv.except_osv(('Error'),("DDT gia' in uso")) 
-
         return True
+
 omnia_ddt_account_invoice()
