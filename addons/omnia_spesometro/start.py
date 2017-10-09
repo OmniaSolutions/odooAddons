@@ -10,10 +10,11 @@ from generateXml import GenerateXml
 from datetime import datetime
 import sys
 import os
-import json
+import pickle
 
 DEFAULT_DATE_FORMAT = '%m/%d/%Y'
 DEFAULT_TIME_FORMAT = '%H:%M:%S'
+JOURNAL_TYPES = ['sale', 'sale_refund', 'purchase', 'purchase_refund']
 
 
 class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
@@ -27,11 +28,11 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         self.setEvents()
 
     def initFields(self):
-        self.odooJournals = []
         self.journalFields = ['code', 'type', 'name']
         self.activeLanguage = 'en_US'
         self.loginFileName = 'login.db'
         self.journalFileName = 'journal.db'
+        self.rowItemRel = {}
         self.currentDir = os.getcwd()
         self.loginFile = os.path.join(self.currentDir, self.loginFileName)
         self.journalFile = os.path.join(self.currentDir, self.journalFileName)
@@ -91,8 +92,11 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         utils.launchMessage('End to generate XML files.', msgType='info')
 
     def getSelectedJournals(self):
-        #FIXME: da implementare la ricerca dei sezionali selezionati
-        return self.odooJournals
+        checkedJournals = []
+        for pyObjectJournal in self.rowItemRel.values():
+            if pyObjectJournal.checked:
+                checkedJournals.append(pyObjectJournal)
+        return checkedJournals
 
     def setSettings(self):
         self.stackedWidget.setCurrentIndex(1)
@@ -100,12 +104,12 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
 
     def writeToFile(self, filePath, toWrite):
         with open(filePath, 'wb') as fileObj:
-            fileObj.write(json.dumps(toWrite))
+            fileObj.write(pickle.dumps(toWrite))
         
     def readFromFile(self, filePath):
         if os.path.exists(filePath):
             with open(filePath, 'rb') as fileObj:
-                fileContent = json.loads(fileObj.read())
+                fileContent = pickle.loads(fileObj.read())
                 return fileContent
         return False
         
@@ -127,7 +131,7 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
             connectionObj.loginWithUser()
 
     def saveJournals(self):
-        self.writeToFile(self.journalFile, self.odooJournals)
+        self.writeToFile(self.journalFile, self.rowItemRel)
 
     def saveLogin(self):
         self.writeToFile(self.loginFile, connectionObj.getLoginInfos())
@@ -161,35 +165,50 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
             return True
         return False
         
-    def loadJournals(self, journals=[]):
-        if self.checkLogged(True) and not self.odooJournals:
-            journalIds = connectionObj.search('account.journal', [])
+    def loadJournals(self, journals={}):
+        if self.checkLogged(True) and not self.rowItemRel:
+            journalIds = connectionObj.search('account.journal', [('type', 'in', JOURNAL_TYPES)])
             if not journals:
-                self.odooJournals = connectionObj.read('account.journal', self.journalFields, journalIds)
+                odooJournals = connectionObj.read('account.journal', self.journalFields, journalIds)
+                for journalDict in odooJournals:
+                    code = journalDict.get('code', '')
+                    journalType = journalDict.get('type', '')
+                    name = journalDict.get('name', '')
+                    obj_id = journalDict.get('id', '')
+                    rowIndex = self.addLineToSezionaliTable('', code, name, journalType, obj_id, False)
+                    journalDict['row_index'] = rowIndex
             else:
-                self.odooJournals = journals
-            for journalDict in self.odooJournals:
-                code = journalDict.get('code', '')
-                journalType = journalDict.get('type', '')
-                name = journalDict.get('name', '')
-                obj_id = journalDict.get('id', '')
-                rowIndex = self.addLineToSezionaliTable(code, name, journalType, obj_id)
-                journalDict['row_index'] = rowIndex
+                self.rowItemRel = journals
+                for pyObject in self.rowItemRel.values():
+                    rowIndex = self.addLineToSezionaliTable(pyObject.code,
+                                                            pyObject.odooCode,
+                                                            pyObject.odooName,
+                                                            pyObject.journalType,
+                                                            pyObject.odooID,
+                                                            pyObject.checked
+                                                            )
+
             self.tableWidget.resizeColumnsToContents()
         
-    def addLineToSezionaliTable(self, code, name, journalType, objId):
+    def addLineToSezionaliTable(self, code, odooCode, name, journalType, objId, checked=False):
         
         def setItemReadonly(item):
             item.setFlags(QtCore.Qt.ItemIsEnabled)
             
         rowCount = self.tableWidget.rowCount()
         self.tableWidget.setRowCount(rowCount + 1)
-        outCodeWidgetItem = QtGui.QTableWidgetItem('')
+        outCodeWidgetItem = QtGui.QTableWidgetItem(code)
         outCodeWidgetItem.setFlags(QtCore.Qt.ItemIsUserCheckable |
                                    QtCore.Qt.ItemIsEnabled |
                                    QtCore.Qt.ItemIsEditable)
-        outCodeWidgetItem.setCheckState(QtCore.Qt.Unchecked)
-        codeItem = QtGui.QTableWidgetItem(code)
+        tableRowObj = classTableRow()
+        if not checked:
+            outCodeWidgetItem.setCheckState(QtCore.Qt.Unchecked)
+            tableRowObj.checked = False
+        else:
+            outCodeWidgetItem.setCheckState(QtCore.Qt.Checked)
+            tableRowObj.checked = True
+        codeItem = QtGui.QTableWidgetItem(odooCode)
         nameItem = QtGui.QTableWidgetItem(name)
         journalItem = QtGui.QTableWidgetItem(journalType)
         obj_id = QtGui.QTableWidgetItem(unicode(objId))
@@ -202,8 +221,32 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         self.tableWidget.setItem(rowCount, 2, nameItem)
         self.tableWidget.setItem(rowCount, 3, journalItem)
         self.tableWidget.setItem(rowCount, 4, obj_id)
-        return rowCount
         
+        self.tableWidget.itemClicked.connect(self.handleItemClicked)
+        self.tableWidget.itemChanged.connect(self.cellChanged)
+        tableRowObj.code = code
+        tableRowObj.odooCode = odooCode
+        tableRowObj.odooName = name
+        tableRowObj.journalType = journalType
+        tableRowObj.odooID = objId
+        self.rowItemRel[rowCount] = tableRowObj
+        return rowCount
+
+    def cellChanged(self, item):
+        rowIndex = item.row()
+        colIndex = item.column()
+        value = unicode(item.text())
+        pyObject = self.rowItemRel.get(rowIndex, None)
+        if colIndex == 0 and pyObject:
+            pyObject.code = value
+        
+    def handleItemClicked(self, item):
+        rowIndex = item.row()
+        if item.checkState() == QtCore.Qt.Checked:
+            self.rowItemRel[rowIndex].checked = True
+        else:
+            self.rowItemRel[rowIndex].checked = False
+
     def center(self):
         frameGm = self.frameGeometry()
         screen = QtGui.QApplication.desktop().screenNumber(QtGui.QApplication.desktop().cursor().pos())
@@ -212,6 +255,16 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         self.move(frameGm.topLeft())
 
 
+class classTableRow(object):
+    
+    def __init__(self):
+        self.code = ''
+        self.odooCode = ''
+        self.odooName = ''
+        self.journalType = ''
+        self.odooID = ''
+        self.checked = False
+    
 if __name__ == '__main__':
     app = QtGui.QApplication(sys.argv)
     mainW = MainWindow()

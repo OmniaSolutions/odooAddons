@@ -1,3 +1,4 @@
+# -*- encoding: utf-8 -*-
 '''
 Created on Oct 5, 2017
 
@@ -51,6 +52,12 @@ INVOICE_FIELDS = [
     'amount_tax',
     ]
 
+INVOICE_STATES = [
+    'open',
+    'sent',
+    'paid'
+    ]
+
 
 class GenerateXml(object):
     
@@ -101,19 +108,24 @@ class GenerateXml(object):
         return connectionObj.search('account.invoice.line',
                              [('invoice_id','in',invoiceIds)])
         
-    def getAllInvoices(self):
+    def getAllInvoices(self, journalId):
         return connectionObj.search('account.invoice',
-                             [('date_invoice','>=',self.date_from),('date_invoice','<=',self.date_to)])
+                             [('date_invoice','>=',self.date_from),
+                              ('date_invoice','<=',self.date_to),
+                              ('state', 'in', INVOICE_STATES),
+                              ('journal_id', '=', journalId)])
 
     def startReading(self):
         self.label_progress.setText('Reading invoices from database')
         self.progressBar.setValue(0)
-        invIds = self.getAllInvoices()
-        numberInvoices = len(invIds)
-        for invId in invIds:
-            index = invIds.index(invId)
-            self.progressBar.setValue(self.percentage(index, numberInvoices))
-            self.odooReadInvoices.append(self.getInvoiceVals(invId))
+        for journalObj in self.journals:
+            self.label_progress.setText('Reading invoices from journal %r' % (journalObj.odooName))
+            invIds = self.getAllInvoices(journalObj.odooID)
+            numberInvoices = len(invIds)
+            for invId in invIds:
+                index = invIds.index(invId)
+                self.progressBar.setValue(self.percentage(index, numberInvoices))
+                self.odooReadInvoices.append([self.getInvoiceVals(invId), journalObj])
         self.generateInvoices()
         self.progressBar.setValue(0)
 
@@ -145,8 +157,9 @@ class GenerateXml(object):
             13 Amministratore di condominio
             14 Soggetto che sottoscrive la dichiarazione per conto di una p
             '''
+            return None
             Carica = None
-            agenzia_entrate.DichiaranteType(CodiceFiscale=fiscalCode, Carica)
+            agenzia_entrate.DichiaranteType(CodiceFiscale=fiscalCode, Carica=Carica)
 
         def fatturaHeader(progressivo, fiscalCode):
             '''
@@ -223,7 +236,7 @@ class GenerateXml(object):
             return None, idPaese
 
         def fatturaDatiGenerali():
-            TipoDocumento = '' #Esempio TD01 per le fatture
+            TipoDocumento = journalObj.code #Esempio TD01 per le fatture
             Data = datetime.strptime(fatturaVals.get('date_invoice'), SERVER_DATE_FORMAT)   # Data fattura in formato italiano
             Numero = fatturaVals.get('number', None) or None # Numero fattura
             return agenzia_entrate.DatiGeneraliType(TipoDocumento, Data.date(), Numero)
@@ -359,8 +372,8 @@ class GenerateXml(object):
         progressivo = 1
         numberInvoices = len(self.odooReadInvoices)
         self.label_progress.setText('Reading infos and generating XML files')
-        for fatturaVals in self.odooReadInvoices:
-            index = self.odooReadInvoices.index(fatturaVals)
+        for fatturaVals, journalObj in self.odooReadInvoices:
+            index = self.odooReadInvoices.index([fatturaVals, journalObj])
             self.progressBar.setValue(self.percentage(index, numberInvoices))
             prt = fatturaVals.get('partner_id', False)
             partnerVals = {}
@@ -372,9 +385,9 @@ class GenerateXml(object):
             DTR = None
             ANN = None
             versione = None # Pare non serva
-            if self.getInvoiceType(fatturaVals) == 'DTE':
+            if self.getInvoiceType(fatturaVals) == 'DTE':   # Emesse
                 DTE = fatturaDTE()
-            elif self.getInvoiceType(fatturaVals) == 'DTR':
+            elif self.getInvoiceType(fatturaVals) == 'DTR': # Ricevute
                 DTR = fatturaDTR()
             Signature = fatturaSignature()
             header = fatturaHeader(progressivo, fiscalCode)
