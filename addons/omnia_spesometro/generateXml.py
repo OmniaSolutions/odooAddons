@@ -122,23 +122,81 @@ class GenerateXml(object):
 
     def generateInvoices(self):
 
+        def dichiarante(fiscalCode):
+            '''
+            CODICE DI CARICA
+            1 Rappresentante legale, negoziale o di fatto, socio amministratore
+            2 Rappresentante di minore, inabilitato o interdetto, amministratore di sostegno, ovvero curatore dell’eredità giacente,
+            amministratore di eredità devoluta sotto condizione sospensiva o in favore di nascituro non ancora concepito
+            3 Curatore fallimentare
+            4 Commissario liquidatore (liquidazione coatta amministrativa ovvero amministrazione straordinaria)
+            5 Custode giudiziario (custodia giudiziaria), ovvero amministratore giudiziario in qualità di rappresentante dei
+            beni sequestrati ovvero commissario giudiziale (amministrazione controllata)
+            6 Rappresentante fiscale di soggetto non residente
+            7 Erede
+            8 Liquidatore (liquidazione volontaria)
+            9 Soggetto tenuto a presentare la dichiarazione ai fini IVA per conto del soggetto estinto a seguito di operazioni
+            straordinarie o altre trasformazioni sostanziali soggettive (cessionario d’azienda, società beneficiaria, incorporante,
+            conferitaria, ecc.); ovvero, ai fini delle imposte sui redditi e/o dell’IRAP, rappresentante della società beneficiaria
+            (scissione) o della società risultante dalla fusione o incorporazione
+            10 Rappresentante fiscale di soggetto non residente con le limitazioni di cui all’art. 44, comma 3, del d.l. n. 331/1993
+            11 Soggetto esercente l’attività tutoria del minore o interdetto in relazione alla funzione istituzionale rivestita
+            12 Liquidatore (liquidazione volontaria di ditta individuale - periodo ante messa in liquidazione)
+            13 Amministratore di condominio
+            14 Soggetto che sottoscrive la dichiarazione per conto di una p
+            '''
+            Carica = None
+            agenzia_entrate.DichiaranteType(CodiceFiscale=fiscalCode, Carica)
+
         def fatturaHeader(progressivo, fiscalCode):
-            return agenzia_entrate.DatiFatturaHeaderType(ProgressivoInvio=unicode(progressivo), IdSistema=unicode(fiscalCode))
+            '''
+            Questo blocco va valorizzato solo se il soggetto obbligato alla comunicazione dei dati fattura non coincide con il soggetto passivo IVA al quale i dati si riferiscono. NON deve essere valorizzato se per il soggetto trasmittente è vera una delle seguenti affermazioni:
+            - coincide  con il soggetto IVA al quale i dati si riferiscono;
+            - è legato da vincolo di incarico con il soggetto IVA al quale i dati si riferiscono;
+            - è un intermediario.
+            In tutti gli altri casi questo blocco DEVE essere valorizzato.
+            '''
+            IdSistema = None    # Da non valorizzare mai perchè riservato al sistema
+            Dichiarante = dichiarante(fiscalCode)
+            return agenzia_entrate.DatiFatturaHeaderType(ProgressivoInvio=unicode(progressivo), IdSistema=IdSistema, Dichiarante=Dichiarante)
         
         def fatturaSede(Indirizzo, NumeroCivico, CAP, Comune, Provincia, Nazione):
             return agenzia_entrate.IndirizzoNoCAPType(Indirizzo, NumeroCivico, CAP, Comune, Provincia, Nazione)
 
+        def fatturaStabileOrganizzazione():
+            '''
+                Blocco da valorizzare nei casi di cedente / prestatore non residente, con stabile organizzazione in Italia
+            '''
+            return None
+            Indirizzo = None
+            NumeroCivico = None
+            CAP = None
+            Comune = None
+            Provincia = None
+            Nazione = None
+            agenzia_entrate.IndirizzoType(Indirizzo, NumeroCivico, CAP, Comune, Provincia, Nazione)
+        
+        def fatturaRappresentanteFiscale():
+            '''
+                Blocco da valorizzare nei casi in cui il cedente / prestatore si avvalga di un rappresentante fiscale in Italia.
+            '''
+            return None
+            IdFiscaleIVA = None
+            Denominazione = None
+            Nome = None
+            Cognome = None
+            agenzia_entrate.RappresentanteFiscaleType(IdFiscaleIVA, Denominazione, Nome, Cognome)
+            
         def fatturaAltriDatiIdentificativi(Denominazione, Nome, Cognome, Indirizzo, NumeroCivico, CAP, Comune, Provincia, Nazione):
             # TODO:    Capire cosa fare
             Sede = fatturaSede(Indirizzo, NumeroCivico, CAP, Comune, Provincia, Nazione)
-            StabileOrganizzazione = None    # Sembra non servire
-            RappresentanteFiscale = None    # Sembra non servire
+            StabileOrganizzazione = fatturaStabileOrganizzazione()    # Sembra non servire
+            RappresentanteFiscale = fatturaRappresentanteFiscale()    # Sembra non servire
             return agenzia_entrate.AltriDatiIdentificativiNoCAPType(Denominazione, Nome, Cognome, Sede, StabileOrganizzazione, RappresentanteFiscale)
             agenzia_entrate.AltriDatiIdentificativiNoSedeType(Denominazione, Nome, Cognome, Sede, StabileOrganizzazione, RappresentanteFiscale)
         
         def fatturaIdFiscaleIva(idPaese, idCodice):
             #IdPaese = ''    # esempio IT
-            #IdCodice = ''    # boh
             return agenzia_entrate.IdFiscaleITIvaType(idPaese, idCodice)
             
         def fatturaIdentificativiFiscali(codiceFiscale, idPaese, idCodice):
@@ -155,13 +213,14 @@ class GenerateXml(object):
             return None
         
         def getCountry(vals):
+            idPaese = 'IT'  # Può essere solo IT
             country = vals.get('country_id', None)
             if country:
                 idCountry, _countryName = country
                 res = connectionObj.read('res.country', ['name', 'code'], [idCountry])
                 for elemDict in res:
-                    return elemDict.get('code', None), elemDict.get('code', None)
-            return None, None
+                    return elemDict.get('code', None), idPaese
+            return None, idPaese
 
         def fatturaDatiGenerali():
             TipoDocumento = '' #Esempio TD01 per le fatture
@@ -189,23 +248,37 @@ class GenerateXml(object):
             return [res]
 
         def fatturaBody():
+            # TODO: Ciclo for per andare a mettere dati di fatture dello stesso cliente
             DatiGenerali = fatturaDatiGenerali()
             DatiRiepilogo = fatturaDatiRiepilogo()
             return [agenzia_entrate.DatiFatturaBodyDTEType(DatiGenerali, DatiRiepilogo)]
 
         def fatturaBodyDTR():
+            # TODO: Ciclo for per andare a mettere dati di fatture dello stesso fornitore
             DatiGenerali = fatturaDatiGenerali()
             DatiRiepilogo = fatturaDatiRiepilogo()
-            return agenzia_entrate.DatiFatturaBodyDTRType(DatiGenerali, DatiRiepilogo)
+            return [agenzia_entrate.DatiFatturaBodyDTRType(DatiGenerali, DatiRiepilogo)]
             
         def fatturaDTE():
+            # Fattura emessa
+            '''
+                Non devono essere riportati in questo blocco i dati delle così dette autofatture, cioè fatture emesse dall'acquirente nei casi in cui non le abbia 
+                ricevute oppure, pur avendole ricevute, abbia rilevato in esse delle irregolarità. Tali dati devono essere riportati come dati delle fatture ricevute.
+            '''
             CedentePrestatoreDTE = fatturaCedentePrestatore(partnerVals)
             CessionarioCommittenteDTE = fatturaConcessionarioCommittente(companyVals)
             Rettifica = None    # Pare non serva
             return agenzia_entrate.DTEType(CedentePrestatoreDTE=CedentePrestatoreDTE, CessionarioCommittenteDTE=CessionarioCommittenteDTE, Rettifica=Rettifica)
 
+        def fatturaDTR():
+            # Fattura ricevuta
+            CessionarioCommittenteDTR = fatturaConcessionarioCommittenteDTR(partnerVals)
+            CedentePrestatoreDTR = fatturaCedentePrestatoreDTR(companyVals)
+            Rettifica = None
+            return agenzia_entrate.DTRType(CessionarioCommittenteDTR=CessionarioCommittenteDTR, CedentePrestatoreDTR=CedentePrestatoreDTR, Rettifica=Rettifica)
+
         def fatturaCedentePrestatore(vals):
-            # Chi la manda
+            # Chi la manda (fornitore)
             codiceFiscale, idPaese, idCodice, Denominazione, Nome, Cognome, Indirizzo, NumeroCivico, CAP, Comune, Provincia, Nazione = getCommonVals(vals)
             IdentificativiFiscali = fatturaIdentificativiFiscali(codiceFiscale, idPaese, idCodice)
             AltriDatiIdentificativi = fatturaAltriDatiIdentificativi(Denominazione, Nome, Cognome, Indirizzo, NumeroCivico, CAP, Comune, Provincia, Nazione)
@@ -213,6 +286,11 @@ class GenerateXml(object):
             
         def fatturaConcessionarioCommittente(vals):
             # Chi la riceve la fattura, quindi ha chiesto un lavoro
+            '''
+                Blocco contenente le informazioni relative al cessionario/committente (cliente) e ai dati fattura a lui riferiti.
+                Può essere replicato per trasmettere dati di fatture relative a clienti diversi
+            '''
+            # TODO: Inserire un ciclo che va a creare n concessionari committenti, uno per ogni fattura emessa
             codiceFiscale, idPaese, idCodice, Denominazione, Nome, Cognome, Indirizzo, NumeroCivico, CAP, Comune, Provincia, Nazione = getCommonVals(vals)
             IdentificativiFiscali = fatturaIdentificativiFiscali(codiceFiscale, idPaese, idCodice)
             AltriDatiIdentificativi = fatturaAltriDatiIdentificativi(Denominazione, Nome, Cognome, Indirizzo, NumeroCivico, CAP, Comune, Provincia, Nazione)
@@ -226,11 +304,12 @@ class GenerateXml(object):
             return agenzia_entrate.CessionarioCommittenteDTRType(IdentificativiFiscali, AltriDatiIdentificativi)
         
         def fatturaCedentePrestatoreDTR(vals):
+            # TODO: Ciclo for
             codiceFiscale, idPaese, idCodice, Denominazione, Nome, Cognome, Indirizzo, NumeroCivico, CAP, Comune, Provincia, Nazione = getCommonVals(vals)
             IdentificativiFiscali = fatturaIdentificativiFiscali(codiceFiscale, idPaese, idCodice)
             AltriDatiIdentificativi = fatturaAltriDatiIdentificativi(Denominazione, Nome, Cognome, Indirizzo, NumeroCivico, CAP, Comune, Provincia, Nazione)
-            DatiFatturaBodyDTR = [fatturaBodyDTR()]
-            return agenzia_entrate.CedentePrestatoreDTRType(IdentificativiFiscali, AltriDatiIdentificativi, DatiFatturaBodyDTR)
+            DatiFatturaBodyDTR = fatturaBodyDTR()
+            return [agenzia_entrate.CedentePrestatoreDTRType(IdentificativiFiscali, AltriDatiIdentificativi, DatiFatturaBodyDTR)]
 
         def encodeStringByDict(vals, val):
             res = vals.get(val, '')
@@ -257,21 +336,15 @@ class GenerateXml(object):
                 Nome = encodeString(Nome)
                 Cognome = ' '.join(nameList[1:])
                 Cognome = encodeString(Cognome)
-            Indirizzo = encodeStringByDict(vals, 'street')
-            NumeroCivico = encodeStringByDict(vals, 'street2')
+            Indirizzo = encodeStringByDict(vals, 'street')  # Se si mette il civico qua allora non si deve mettere il "NumeroCivico"
+            NumeroCivico = encodeStringByDict(vals, 'street2') or None
             CAP = vals.get('zip', None) or None
             Comune = encodeStringByDict(vals, 'city')
             Provincia = getProvince(vals) or None
             Nazione, idPaese = getCountry(vals)
-            idCodice = '' # Boh
+            idCodice = vals.get('vat', None) or None # Partita iva
             return codiceFiscale, idPaese, idCodice, Denominazione, Nome, Cognome, Indirizzo, NumeroCivico, CAP, Comune, Provincia, Nazione
             
-        def fatturaDTR():
-            CessionarioCommittenteDTR = fatturaConcessionarioCommittenteDTR(partnerVals)
-            CedentePrestatoreDTR = fatturaCedentePrestatoreDTR(companyVals)
-            Rettifica = None
-            return agenzia_entrate.DTRType(CessionarioCommittenteDTR=CessionarioCommittenteDTR, CedentePrestatoreDTR=[CedentePrestatoreDTR], Rettifica=Rettifica)
-
         def fatturaSignature():
             # Ci va?
             return None
@@ -324,4 +397,3 @@ class GenerateXml(object):
             _fatturaTypeObj.export(outFile, 0)
         if os.path.exists(newFilePath):
             print 'File %r generated' % (newFileName)
-        
