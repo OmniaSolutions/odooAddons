@@ -38,6 +38,16 @@ PARTNER_FIELDS =[
     'is_company',
     ]
 
+TAX_FIELDS = [
+    'amount'
+    ]
+
+TAX_INVOICE_FIELDS = [
+    'amount',
+    'base',
+    'base_code_id',
+    ]
+
 INVOICE_FIELDS = [
     'id',
     'number',
@@ -50,6 +60,7 @@ INVOICE_FIELDS = [
     'type',
     'amount_total',
     'amount_tax',
+    'tax_line',
     ]
 
 INVOICE_STATES = [
@@ -98,6 +109,16 @@ class GenerateXml(object):
                                   [partnerId]):
             return resdict
         return {}
+    
+    def getTaxLineVals(self, ids):
+        return connectionObj.read('account.invoice.tax',
+                                  TAX_INVOICE_FIELDS,
+                                  ids)
+    
+    def getTaxVals(self, taxId):
+        return connectionObj.read('account.tax',
+                                  TAX_FIELDS,
+                                  taxId)
         
     def readInvoiceLines(self, lineIds):
         return connectionObj.read('account.invoice.line',
@@ -116,23 +137,44 @@ class GenerateXml(object):
                               ('journal_id', '=', journalId)])
 
     def startReading(self):
-        self.label_progress.setText('Reading invoices from database')
-        self.progressBar.setValue(0)
+        progressivo = 1
         for journalObj in self.journals:
-            self.label_progress.setText('Reading invoices from journal %r' % (journalObj.odooName))
+            partnerDict = {'DTE':{}, 'DTR': {}}
             invIds = self.getAllInvoices(journalObj.odooID)
-            numberInvoices = len(invIds)
             for invId in invIds:
-                index = invIds.index(invId)
-                self.progressBar.setValue(self.percentage(index, numberInvoices))
-                self.odooReadInvoices.append([self.getInvoiceVals(invId), journalObj])
-        self.generateInvoices()
-        self.progressBar.setValue(0)
+                invVals = self.getInvoiceVals(invId)
+                invType = self.getInvoiceType(invVals)
+                partnerId = invVals.get('partner_id', False)
+                if partnerId:
+                    partnerId = partnerId[0]
+                    if partnerId in partnerDict[invType].keys():
+                        partnerDict[invType][partnerId].append(invVals)
+                    else:
+                        partnerDict[invType][partnerId] = [invVals]
+            if partnerDict['DTE'] or partnerDict['DTR']:
+                progressivo = self.generateInvoices(journalObj, partnerDict, progressivo)
+        
+#     def startReading(self):
+#         self.label_progress.setText('Reading invoices from database')
+#         self.progressBar.setValue(0)
+#         for journalObj in self.journals:
+#             self.label_progress.setText('Reading invoices from journal %r' % (journalObj.odooName))
+#             invIds = self.getAllInvoices(journalObj.odooID)
+#             numberInvoices = len(invIds)
+#             for invId in invIds:
+#                 index = invIds.index(invId)
+#                 self.progressBar.setValue(self.percentage(index, numberInvoices))
+#                 self.odooReadInvoices.append([self.getInvoiceVals(invId), journalObj])
+#         self.generateInvoices()
+#         self.progressBar.setValue(0)
 
     def percentage(self, currentVal, maxVal):
         return int(100 * currentVal / maxVal)
 
-    def generateInvoices(self):
+    def correctImporto(self, importo):
+        return float("%.2f" % round(importo, 2))
+        
+    def generateInvoices(self, journalObj, partnerDictTop, progressivo):
 
         def dichiarante(fiscalCode):
             '''
@@ -235,58 +277,75 @@ class GenerateXml(object):
                     return elemDict.get('code', None), idPaese
             return None, idPaese
 
-        def fatturaDatiGenerali():
+        def fatturaDatiGenerali(invoiceVals):
             TipoDocumento = journalObj.code #Esempio TD01 per le fatture
-            Data = datetime.strptime(fatturaVals.get('date_invoice'), SERVER_DATE_FORMAT)   # Data fattura in formato italiano
-            Numero = fatturaVals.get('number', None) or None # Numero fattura
+            Data = datetime.strptime(invoiceVals.get('date_invoice'), SERVER_DATE_FORMAT)   #TODO: Data fattura in formato italiano
+            Numero = invoiceVals.get('number', None) or None # Numero fattura
             return agenzia_entrate.DatiGeneraliType(TipoDocumento, Data.date(), Numero)
         
-        def fatturaDatiIVA():
-            Imposta = fatturaVals.get('amount_tax', 0.0) # Iva calcolata in euro
-            Aliquota = 0 # TODO: Iva ad esempio 22
+        def fatturaDatiIVA(Imposta, Aliquota):
             res = agenzia_entrate.DatiIVAType(unicode(Imposta), unicode(Aliquota))
             res.Aliquota = Aliquota
             res.Imposta = Imposta
             return res
             
-        def fatturaDatiRiepilogo():
-            ImponibileImporto = fatturaVals.get('amount_total', 0.0)   # Importo fattura
-            DatiIVA = fatturaDatiIVA()
-            Natura = None # ???
-            Detraibile = None # ???
-            Deducibile = None # ???
-            EsigibilitaIVA = None # ???
-            res = agenzia_entrate.DatiRiepilogoType(ImponibileImporto=None, DatiIVA=DatiIVA, Natura=Natura, Detraibile=Detraibile, Deducibile=Deducibile, EsigibilitaIVA=EsigibilitaIVA)
-            res.ImponibileImporto = ImponibileImporto
-            return [res]
+        def fatturaDatiRiepilogo(invoiceVals):
+            outDatiRiepilogo = []
+            taxLines = invoiceVals.get('tax_line')
+            for vals in self.getTaxLineVals(taxLines):
+                base = self.correctImporto(vals.get('amount', 0.0))
+                ImponibileImporto = self.correctImporto(vals.get('base', 0.0))
+                print 'Importo %r' % (base)
+                print 'ImponibileImporto %r' % (ImponibileImporto)
+                taxPercentage = 0
+                if ImponibileImporto and base:
+                    taxPercentage = int(100 * base / ImponibileImporto)
+                print 'taxPercentage %r' % (taxPercentage)
+                DatiIVA = fatturaDatiIVA(base, taxPercentage)
+                print 'Aliquota %r' % (DatiIVA.Aliquota)
+                print 'Imposta %r' % (DatiIVA.Imposta)
+                Natura = None # ???
+                Detraibile = None # ???
+                Deducibile = None # ???
+                EsigibilitaIVA = None # ???
+                res = agenzia_entrate.DatiRiepilogoType(ImponibileImporto=None, DatiIVA=DatiIVA, Natura=Natura, Detraibile=Detraibile, Deducibile=Deducibile, EsigibilitaIVA=EsigibilitaIVA)
+                res.ImponibileImporto = ImponibileImporto
+                outDatiRiepilogo.append(res)
+            return outDatiRiepilogo
 
-        def fatturaBody():
+        def fatturaBody(invoiceList):
             # TODO: Ciclo for per andare a mettere dati di fatture dello stesso cliente
-            DatiGenerali = fatturaDatiGenerali()
-            DatiRiepilogo = fatturaDatiRiepilogo()
-            return [agenzia_entrate.DatiFatturaBodyDTEType(DatiGenerali, DatiRiepilogo)]
+            outBody = []
+            for invoiceVals in invoiceList:
+                DatiGenerali = fatturaDatiGenerali(invoiceVals)
+                DatiRiepilogo = fatturaDatiRiepilogo(invoiceVals)
+                outBody.append(agenzia_entrate.DatiFatturaBodyDTEType(DatiGenerali, DatiRiepilogo))
+            return outBody
 
-        def fatturaBodyDTR():
+        def fatturaBodyDTR(invoiceList):
             # TODO: Ciclo for per andare a mettere dati di fatture dello stesso fornitore
-            DatiGenerali = fatturaDatiGenerali()
-            DatiRiepilogo = fatturaDatiRiepilogo()
-            return [agenzia_entrate.DatiFatturaBodyDTRType(DatiGenerali, DatiRiepilogo)]
+            outBody = []
+            for invoiceVals in invoiceList:
+                DatiGenerali = fatturaDatiGenerali(invoiceVals)
+                DatiRiepilogo = fatturaDatiRiepilogo(invoiceVals)
+                outBody.append(agenzia_entrate.DatiFatturaBodyDTRType(DatiGenerali, DatiRiepilogo))
+            return outBody
             
-        def fatturaDTE():
+        def fatturaDTE(partnerDict):
             # Fattura emessa
             '''
                 Non devono essere riportati in questo blocco i dati delle così dette autofatture, cioè fatture emesse dall'acquirente nei casi in cui non le abbia 
                 ricevute oppure, pur avendole ricevute, abbia rilevato in esse delle irregolarità. Tali dati devono essere riportati come dati delle fatture ricevute.
             '''
-            CedentePrestatoreDTE = fatturaCedentePrestatore(partnerVals)
-            CessionarioCommittenteDTE = fatturaConcessionarioCommittente(companyVals)
+            CedentePrestatoreDTE = fatturaCedentePrestatore(companyVals)
+            CessionarioCommittenteDTE = fatturaConcessionarioCommittente(partnerDict)
             Rettifica = None    # Pare non serva
             return agenzia_entrate.DTEType(CedentePrestatoreDTE=CedentePrestatoreDTE, CessionarioCommittenteDTE=CessionarioCommittenteDTE, Rettifica=Rettifica)
 
-        def fatturaDTR():
+        def fatturaDTR(partnerDict):
             # Fattura ricevuta
-            CessionarioCommittenteDTR = fatturaConcessionarioCommittenteDTR(partnerVals)
-            CedentePrestatoreDTR = fatturaCedentePrestatoreDTR(companyVals)
+            CessionarioCommittenteDTR = fatturaConcessionarioCommittenteDTR(companyVals)
+            CedentePrestatoreDTR = fatturaCedentePrestatoreDTR(partnerDict)
             Rettifica = None
             return agenzia_entrate.DTRType(CessionarioCommittenteDTR=CessionarioCommittenteDTR, CedentePrestatoreDTR=CedentePrestatoreDTR, Rettifica=Rettifica)
 
@@ -296,19 +355,35 @@ class GenerateXml(object):
             IdentificativiFiscali = fatturaIdentificativiFiscali(codiceFiscale, idPaese, idCodice)
             AltriDatiIdentificativi = fatturaAltriDatiIdentificativi(Denominazione, Nome, Cognome, Indirizzo, NumeroCivico, CAP, Comune, Provincia, Nazione)
             return agenzia_entrate.CedentePrestatoreDTEType(IdentificativiFiscali, AltriDatiIdentificativi)
-            
-        def fatturaConcessionarioCommittente(vals):
+
+        def fatturaCedentePrestatoreDTR(partnerDict):
+            # TODO: Ciclo for
+            outPrestatori = []
+            for partnerId, invoiceList in partnerDict.items():
+                partnerVals = self.getPartnerVals(partnerId)
+                codiceFiscale, idPaese, idCodice, Denominazione, Nome, Cognome, Indirizzo, NumeroCivico, CAP, Comune, Provincia, Nazione = getCommonVals(partnerVals)
+                IdentificativiFiscali = fatturaIdentificativiFiscali(codiceFiscale, idPaese, idCodice)
+                AltriDatiIdentificativi = fatturaAltriDatiIdentificativi(Denominazione, Nome, Cognome, Indirizzo, NumeroCivico, CAP, Comune, Provincia, Nazione)
+                DatiFatturaBodyDTR = fatturaBodyDTR(invoiceList)
+                outPrestatori.append(agenzia_entrate.CedentePrestatoreDTRType(IdentificativiFiscali, AltriDatiIdentificativi, DatiFatturaBodyDTR))
+            return outPrestatori
+
+        def fatturaConcessionarioCommittente(partnerDict):
             # Chi la riceve la fattura, quindi ha chiesto un lavoro
             '''
                 Blocco contenente le informazioni relative al cessionario/committente (cliente) e ai dati fattura a lui riferiti.
                 Può essere replicato per trasmettere dati di fatture relative a clienti diversi
             '''
-            # TODO: Inserire un ciclo che va a creare n concessionari committenti, uno per ogni fattura emessa
-            codiceFiscale, idPaese, idCodice, Denominazione, Nome, Cognome, Indirizzo, NumeroCivico, CAP, Comune, Provincia, Nazione = getCommonVals(vals)
-            IdentificativiFiscali = fatturaIdentificativiFiscali(codiceFiscale, idPaese, idCodice)
-            AltriDatiIdentificativi = fatturaAltriDatiIdentificativi(Denominazione, Nome, Cognome, Indirizzo, NumeroCivico, CAP, Comune, Provincia, Nazione)
-            DatiFatturaBodyDTE = fatturaBody()
-            return [agenzia_entrate.CessionarioCommittenteDTEType(IdentificativiFiscali, AltriDatiIdentificativi, DatiFatturaBodyDTE)]
+            outCommittenti = []
+            for partnerId, invoiceList in partnerDict.items():
+                partnerVals = self.getPartnerVals(partnerId)
+                codiceFiscale, idPaese, idCodice, Denominazione, Nome, Cognome, Indirizzo, NumeroCivico, CAP, Comune, Provincia, Nazione = getCommonVals(partnerVals)
+                IdentificativiFiscali = fatturaIdentificativiFiscali(codiceFiscale, idPaese, idCodice)
+                AltriDatiIdentificativi = fatturaAltriDatiIdentificativi(Denominazione, Nome, Cognome, Indirizzo, NumeroCivico, CAP, Comune, Provincia, Nazione)
+                DatiFatturaBodyDTE = fatturaBody(invoiceList)
+                committente = agenzia_entrate.CessionarioCommittenteDTEType(IdentificativiFiscali, AltriDatiIdentificativi, DatiFatturaBodyDTE)
+                outCommittenti.append(committente)
+            return outCommittenti
 
         def fatturaConcessionarioCommittenteDTR(vals):
             codiceFiscale, idPaese, idCodice, Denominazione, Nome, Cognome, Indirizzo, NumeroCivico, CAP, Comune, Provincia, Nazione = getCommonVals(vals)
@@ -316,14 +391,6 @@ class GenerateXml(object):
             AltriDatiIdentificativi = fatturaAltriDatiIdentificativi(Denominazione, Nome, Cognome, Indirizzo, NumeroCivico, CAP, Comune, Provincia, Nazione)
             return agenzia_entrate.CessionarioCommittenteDTRType(IdentificativiFiscali, AltriDatiIdentificativi)
         
-        def fatturaCedentePrestatoreDTR(vals):
-            # TODO: Ciclo for
-            codiceFiscale, idPaese, idCodice, Denominazione, Nome, Cognome, Indirizzo, NumeroCivico, CAP, Comune, Provincia, Nazione = getCommonVals(vals)
-            IdentificativiFiscali = fatturaIdentificativiFiscali(codiceFiscale, idPaese, idCodice)
-            AltriDatiIdentificativi = fatturaAltriDatiIdentificativi(Denominazione, Nome, Cognome, Indirizzo, NumeroCivico, CAP, Comune, Provincia, Nazione)
-            DatiFatturaBodyDTR = fatturaBodyDTR()
-            return [agenzia_entrate.CedentePrestatoreDTRType(IdentificativiFiscali, AltriDatiIdentificativi, DatiFatturaBodyDTR)]
-
         def encodeStringByDict(vals, val):
             res = vals.get(val, '')
             return encodeString(res)
@@ -356,6 +423,8 @@ class GenerateXml(object):
             Provincia = getProvince(vals) or None
             Nazione, idPaese = getCountry(vals)
             idCodice = vals.get('vat', None) or None # Partita iva
+            if idCodice:
+                idCodice = idCodice.replace(idPaese, '')
             return codiceFiscale, idPaese, idCodice, Denominazione, Nome, Cognome, Indirizzo, NumeroCivico, CAP, Comune, Provincia, Nazione
             
         def fatturaSignature():
@@ -369,33 +438,27 @@ class GenerateXml(object):
             partnerId, _partnerName = companyValsl.get('partner_id', [None, None])
             companyVals = self.getPartnerVals(partnerId)
             break
-        progressivo = 1
-        numberInvoices = len(self.odooReadInvoices)
         self.label_progress.setText('Reading infos and generating XML files')
-        for fatturaVals, journalObj in self.odooReadInvoices:
-            index = self.odooReadInvoices.index([fatturaVals, journalObj])
-            self.progressBar.setValue(self.percentage(index, numberInvoices))
-            prt = fatturaVals.get('partner_id', False)
-            partnerVals = {}
-            if prt:
-                prtId, _prtName = prt
-                partnerVals = self.getPartnerVals(prtId)
-            fiscalCode = partnerVals.get('fiscalcode', '')
+        for invType, partnerDict in partnerDictTop.items():
             DTE = None
             DTR = None
             ANN = None
             versione = None # Pare non serva
-            if self.getInvoiceType(fatturaVals) == 'DTE':   # Emesse
-                DTE = fatturaDTE()
-            elif self.getInvoiceType(fatturaVals) == 'DTR': # Ricevute
-                DTR = fatturaDTR()
+            if invType== 'DTE':   # Emesse
+                DTE = fatturaDTE(partnerDict)
+            elif invType == 'DTR': # Ricevute
+                DTR = fatturaDTR(partnerDict)
+            # partnerVals = self.getPartnerVals(partnerId)
             Signature = fatturaSignature()
+            #fiscalCode = partnerVals.get('fiscalcode', '')
+            fiscalCode = None
             header = fatturaHeader(progressivo, fiscalCode)
             _fatturaTypeObj = agenzia_entrate.DatiFatturaType(versione=versione, DatiFatturaHeader=header, DTE=DTE, DTR=DTR, ANN=ANN, Signature=Signature)
             self.createXML(progressivo, _fatturaTypeObj)
             progressivo = progressivo + 1
         self.progressBar.setValue(0)
         self.label_progress.setText('')
+        return progressivo
     
     def createXML(self, progressivo, _fatturaTypeObj):
         newFileName = unicode(progressivo) + '.xml'
@@ -410,3 +473,4 @@ class GenerateXml(object):
             _fatturaTypeObj.export(outFile, 0)
         if os.path.exists(newFilePath):
             print 'File %r generated' % (newFileName)
+            print '\n\n\n'

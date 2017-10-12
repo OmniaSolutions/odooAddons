@@ -7,8 +7,8 @@ Created on Oct 10, 2017
 import subprocess
 import os
 import OdooQtUi
-
-cmd = "pyinstaller start.py -p %s --onefile" % (OdooQtUi.__path__[0])
+#--onefile
+cmd = "pyinstaller start.py -p %s" % (OdooQtUi.__path__[0])
 # Remove --onefile to have all files displayed
 
 print "Execute", cmd

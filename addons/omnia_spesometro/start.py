@@ -76,7 +76,8 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         self.pushButton_open_path.clicked.connect(self.openPath)
 
     def acceptMW(self):
-        self.close()
+        if utils.launchMessage('Are you sure you want to quit?', 'question'):
+            self.close()
 
     def openPath(self):
         newSavePath = utils.getDirectoryFromSystem(parent=None, pathToOpen='')
