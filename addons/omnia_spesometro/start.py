@@ -41,6 +41,8 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         ending_day_of_current_year = datetime.now().date().replace(month=12, day=31)
         self.dateEdit_from.setDate(QtCore.QDate(starting_day_of_current_year.year, starting_day_of_current_year.month, starting_day_of_current_year.day))
         self.dateEdit_to.setDate(QtCore.QDate(ending_day_of_current_year.year, ending_day_of_current_year.month, ending_day_of_current_year.day))
+        
+        self.dockWidget_2.setFeatures(QtGui.QDockWidget.DockWidgetFloatable | QtGui.QDockWidget.DockWidgetMovable)
 
     def setStyleWidgets(self):
         self.setStyleSheet(constants.VIOLET_BACKGROUND)
