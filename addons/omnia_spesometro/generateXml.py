@@ -11,6 +11,8 @@ import sys
 from datetime import datetime
 import time
 from OdooQtUi.utils_odoo_conn import utils
+import shutil
+import logging
 SERVER_DATE_FORMAT = '%Y-%m-%d'
 
 INVOICE_LINE_FIELDS = [
@@ -136,7 +138,15 @@ class GenerateXml(object):
                               ('state', 'in', INVOICE_STATES),
                               ('journal_id', '=', journalId)])
 
+    def cleanDir(self):
+        if self.savingPath:
+            currentDir = self.savingPath
+            outDir = os.path.join(currentDir, 'OUT_XML_SPESOMETRO')
+            if os.path.exists(outDir):
+                shutil.rmtree(outDir)
+        
     def startReading(self):
+        self.cleanDir()
         progressivo = 1
         for journalObj in self.journals:
             partnerDict = {'DTE':{}, 'DTR': {}}
@@ -172,7 +182,7 @@ class GenerateXml(object):
         return int(100 * currentVal / maxVal)
 
     def correctImporto(self, importo):
-        return float("%.2f" % round(importo, 2))
+        return round(importo, 2)
         
     def generateInvoices(self, journalObj, partnerDictTop, progressivo):
 
@@ -199,6 +209,7 @@ class GenerateXml(object):
             13 Amministratore di condominio
             14 Soggetto che sottoscrive la dichiarazione per conto di una p
             '''
+            logging.info('Dichiarante not used!')
             return None
             Carica = None
             agenzia_entrate.DichiaranteType(CodiceFiscale=fiscalCode, Carica=Carica)
@@ -222,6 +233,7 @@ class GenerateXml(object):
             '''
                 Blocco da valorizzare nei casi di cedente / prestatore non residente, con stabile organizzazione in Italia
             '''
+            logging.info('Stabile Organizzazione not used')
             return None
             Indirizzo = None
             NumeroCivico = None
@@ -235,6 +247,7 @@ class GenerateXml(object):
             '''
                 Blocco da valorizzare nei casi in cui il cedente / prestatore si avvalga di un rappresentante fiscale in Italia.
             '''
+            logging.info('Stabile Rappresentante Fiscale not used')
             return None
             IdFiscaleIVA = None
             Denominazione = None
@@ -256,6 +269,7 @@ class GenerateXml(object):
             
         def fatturaIdentificativiFiscali(codiceFiscale, idPaese, idCodice):
             IdFiscaleIVA = fatturaIdFiscaleIva(idPaese, idCodice)
+            print 'codiceFiscale %r' % (codiceFiscale)
             return agenzia_entrate.IdentificativiFiscaliType(IdFiscaleIVA, CodiceFiscale=codiceFiscale)
         
         def getProvince(vals):
@@ -284,7 +298,7 @@ class GenerateXml(object):
             return agenzia_entrate.DatiGeneraliType(TipoDocumento, Data.date(), Numero)
         
         def fatturaDatiIVA(Imposta, Aliquota):
-            res = agenzia_entrate.DatiIVAType(unicode(Imposta), unicode(Aliquota))
+            res = agenzia_entrate.DatiIVAType(None, None)
             res.Aliquota = Aliquota
             res.Imposta = Imposta
             return res
@@ -295,15 +309,10 @@ class GenerateXml(object):
             for vals in self.getTaxLineVals(taxLines):
                 base = self.correctImporto(vals.get('amount', 0.0))
                 ImponibileImporto = self.correctImporto(vals.get('base', 0.0))
-                print 'Importo %r' % (base)
-                print 'ImponibileImporto %r' % (ImponibileImporto)
                 taxPercentage = 0
                 if ImponibileImporto and base:
-                    taxPercentage = int(100 * base / ImponibileImporto)
-                print 'taxPercentage %r' % (taxPercentage)
+                    taxPercentage = self.correctImporto(int(100 * base / ImponibileImporto))
                 DatiIVA = fatturaDatiIVA(base, taxPercentage)
-                print 'Aliquota %r' % (DatiIVA.Aliquota)
-                print 'Imposta %r' % (DatiIVA.Imposta)
                 Natura = None # ???
                 Detraibile = None # ???
                 Deducibile = None # ???
@@ -337,6 +346,8 @@ class GenerateXml(object):
                 Non devono essere riportati in questo blocco i dati delle così dette autofatture, cioè fatture emesse dall'acquirente nei casi in cui non le abbia 
                 ricevute oppure, pur avendole ricevute, abbia rilevato in esse delle irregolarità. Tali dati devono essere riportati come dati delle fatture ricevute.
             '''
+            if not partnerDict:
+                return None
             CedentePrestatoreDTE = fatturaCedentePrestatore(companyVals)
             CessionarioCommittenteDTE = fatturaConcessionarioCommittente(partnerDict)
             Rettifica = None    # Pare non serva
@@ -344,6 +355,8 @@ class GenerateXml(object):
 
         def fatturaDTR(partnerDict):
             # Fattura ricevuta
+            if not partnerDict:
+                return None
             CessionarioCommittenteDTR = fatturaConcessionarioCommittenteDTR(companyVals)
             CedentePrestatoreDTR = fatturaCedentePrestatoreDTR(partnerDict)
             Rettifica = None
@@ -360,6 +373,8 @@ class GenerateXml(object):
             # TODO: Ciclo for
             outPrestatori = []
             for partnerId, invoiceList in partnerDict.items():
+                if not invoiceList:
+                    continue
                 partnerVals = self.getPartnerVals(partnerId)
                 codiceFiscale, idPaese, idCodice, Denominazione, Nome, Cognome, Indirizzo, NumeroCivico, CAP, Comune, Provincia, Nazione = getCommonVals(partnerVals)
                 IdentificativiFiscali = fatturaIdentificativiFiscali(codiceFiscale, idPaese, idCodice)
@@ -376,6 +391,8 @@ class GenerateXml(object):
             '''
             outCommittenti = []
             for partnerId, invoiceList in partnerDict.items():
+                if not invoiceList:
+                    continue
                 partnerVals = self.getPartnerVals(partnerId)
                 codiceFiscale, idPaese, idCodice, Denominazione, Nome, Cognome, Indirizzo, NumeroCivico, CAP, Comune, Provincia, Nazione = getCommonVals(partnerVals)
                 IdentificativiFiscali = fatturaIdentificativiFiscali(codiceFiscale, idPaese, idCodice)
@@ -446,8 +463,12 @@ class GenerateXml(object):
             versione = None # Pare non serva
             if invType== 'DTE':   # Emesse
                 DTE = fatturaDTE(partnerDict)
+                if not DTE:
+                    continue
             elif invType == 'DTR': # Ricevute
                 DTR = fatturaDTR(partnerDict)
+                if not DTR:
+                    continue
             # partnerVals = self.getPartnerVals(partnerId)
             Signature = fatturaSignature()
             #fiscalCode = partnerVals.get('fiscalcode', '')
