@@ -27,6 +27,7 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         self.loadFromFile()
         self.setStyleWidgets()
         self.setEvents()
+        self.setSpesometro()
 
     def initFields(self):
         self.journalFields = ['code', 'type', 'name']
@@ -34,7 +35,8 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         self.loginFileName = 'login.db'
         self.journalFileName = 'journal.db'
         self.imposteFileName = 'imposte.db'
-        self.rowItemRel = {}
+        self.rowItemRel = {}    # Used to save and read journal in settings
+        self.accountTaxes = []  # Used to save and read account taxes
         self.currentDir = os.getcwd()
         self.loginFile = os.path.join(self.currentDir, self.loginFileName)
         self.journalFile = os.path.join(self.currentDir, self.journalFileName)
@@ -165,7 +167,8 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
 
     def saveJournals(self):
         self.writeToFile(self.journalFile, self.rowItemRel)
-        self.writeToFile(self.imposteFile, self.rowItemRel)
+        self.writeToFile(self.imposteFile, self.accountTaxes)
+        utils.launchMessage('Tutti i cambiamenti sono stati salvati', 'info')
 
     def saveLogin(self):
         self.writeToFile(self.loginFile, connectionObj.getLoginInfos())
@@ -200,10 +203,10 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
             return True
         return False
 
-    def loadImposte(self, account_taxes={}):
+    def loadImposte(self, account_taxes=[]):
         if self.checkLogged(True):
-            taxIds = connectionObj.search('account.tax', [])
             if not account_taxes:
+                taxIds = connectionObj.search('account.tax', [])
                 odooImposte = connectionObj.read('account.tax', ACCOUNT_TAX_TYPES, taxIds)
                 for impostaDict in odooImposte:
                     odooName = impostaDict.get('name', '')
@@ -211,11 +214,10 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
                     odooTypeTax = impostaDict.get('type_tax_use', '')
                     odooAmount = impostaDict.get('amount', 0)
                     odooId = impostaDict.get('id', 0)
-                    rowIndex = self.addLineToImposteTable(odooName, odooDesc, odooTypeTax, odooAmount, odooId, '', '', '', '')
-                    impostaDict['row_index'] = rowIndex
+                    self.addLineToImposteTable(odooName, odooDesc, odooTypeTax, odooAmount, odooId, '', '', '', '')
             else:
-                for pyObject in account_taxes.values():
-                    rowIndex = self.addLineToImposteTable(pyObject.odooName,
+                for pyObject in account_taxes:
+                    self.addLineToImposteTable(pyObject.odooName,
                                                             pyObject.odooDesc,
                                                             pyObject.odooTypeTax,
                                                             pyObject.odooAmount,
@@ -229,8 +231,8 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
     
     def loadJournals(self, journals={}):
         if self.checkLogged(True) and not self.rowItemRel:
-            journalIds = connectionObj.search('account.journal', [('type', 'in', JOURNAL_TYPES)])
             if not journals:
+                journalIds = connectionObj.search('account.journal', [('type', 'in', JOURNAL_TYPES)])
                 odooJournals = connectionObj.read('account.journal', self.journalFields, journalIds)
                 for journalDict in odooJournals:
                     code = journalDict.get('code', '')
@@ -299,8 +301,27 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         tableRowObj.detraibile = detraibile
         tableRowObj.deducibile = deducibile
         tableRowObj.esigibilitaIVA = esigibilitaIVA
+        tableRowObj.rowIndex = rowCount
+        
+        self.accountTaxes.append(tableRowObj)
+        
+        self.tableWidget_imposte.itemChanged.connect(self.impostaChanged)
 
-        return rowCount
+    def impostaChanged(self, item):
+        rowIndex = item.row()
+        colIndex = item.column()
+        value = unicode(item.text())
+        for impostaObj in self.accountTaxes:
+            if impostaObj.rowIndex == rowIndex:
+                if colIndex == 5:   # Natura
+                    impostaObj.natura = value
+                elif colIndex == 6:   # Detraibile
+                    impostaObj.detraibile = value
+                elif colIndex == 7:   # Deducibile
+                    impostaObj.deducibile = value
+                elif colIndex == 8:   # Esigibilita IVA
+                    impostaObj.esigibilitaIVA = value
+                break
         
     def addLineToSezionaliTable(self, code, odooCode, name, journalType, objId, checked=False):
         

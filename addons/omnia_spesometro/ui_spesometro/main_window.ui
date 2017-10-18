@@ -419,7 +419,7 @@ p, li { white-space: pre-wrap; }
                    </column>
                    <column>
                     <property name="text">
-                     <string>Percentuale Imposta</string>
+                     <string>% Imposta</string>
                     </property>
                    </column>
                    <column>
