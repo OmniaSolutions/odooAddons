@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file '/srv/workspace/odooAddons-7/addons/omnia_spesometro/ui_spesometro/main_window.ui'
 #
-# Created: Wed Oct 18 10:29:36 2017
+# Created: Wed Oct 18 15:06:48 2017
 #      by: PyQt4 UI code generator 4.11.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -183,7 +183,7 @@ class Ui_MainWindow(object):
         self.verticalLayout_5.addWidget(self.textEdit_imposte)
         self.tableWidget_imposte = QtGui.QTableWidget(self.scrollAreaWidgetContents)
         self.tableWidget_imposte.setObjectName(_fromUtf8("tableWidget_imposte"))
-        self.tableWidget_imposte.setColumnCount(9)
+        self.tableWidget_imposte.setColumnCount(8)
         self.tableWidget_imposte.setRowCount(0)
         item = QtGui.QTableWidgetItem()
         self.tableWidget_imposte.setHorizontalHeaderItem(0, item)
@@ -201,8 +201,6 @@ class Ui_MainWindow(object):
         self.tableWidget_imposte.setHorizontalHeaderItem(6, item)
         item = QtGui.QTableWidgetItem()
         self.tableWidget_imposte.setHorizontalHeaderItem(7, item)
-        item = QtGui.QTableWidgetItem()
-        self.tableWidget_imposte.setHorizontalHeaderItem(8, item)
         self.tableWidget_imposte.horizontalHeader().setVisible(True)
         self.tableWidget_imposte.horizontalHeader().setCascadingSectionResizes(True)
         self.tableWidget_imposte.horizontalHeader().setDefaultSectionSize(50)
@@ -320,22 +318,20 @@ class Ui_MainWindow(object):
 "<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><br /></p></body></html>", None))
         self.tableWidget_imposte.setSortingEnabled(True)
         item = self.tableWidget_imposte.horizontalHeaderItem(0)
-        item.setText(_translate("MainWindow", "Nome Imposta", None))
+        item.setText(_translate("MainWindow", "Nome Conto", None))
         item = self.tableWidget_imposte.horizontalHeaderItem(1)
-        item.setText(_translate("MainWindow", "Codice Imposta", None))
+        item.setText(_translate("MainWindow", "Codice Conto", None))
         item = self.tableWidget_imposte.horizontalHeaderItem(2)
-        item.setText(_translate("MainWindow", "Applicazione Imposta", None))
+        item.setText(_translate("MainWindow", "Note Conto", None))
         item = self.tableWidget_imposte.horizontalHeaderItem(3)
-        item.setText(_translate("MainWindow", "Percentuale Imposta", None))
-        item = self.tableWidget_imposte.horizontalHeaderItem(4)
         item.setText(_translate("MainWindow", "ID Odoo", None))
-        item = self.tableWidget_imposte.horizontalHeaderItem(5)
+        item = self.tableWidget_imposte.horizontalHeaderItem(4)
         item.setText(_translate("MainWindow", "Natura", None))
-        item = self.tableWidget_imposte.horizontalHeaderItem(6)
+        item = self.tableWidget_imposte.horizontalHeaderItem(5)
         item.setText(_translate("MainWindow", "Detraibile", None))
-        item = self.tableWidget_imposte.horizontalHeaderItem(7)
+        item = self.tableWidget_imposte.horizontalHeaderItem(6)
         item.setText(_translate("MainWindow", "Deducibile", None))
-        item = self.tableWidget_imposte.horizontalHeaderItem(8)
+        item = self.tableWidget_imposte.horizontalHeaderItem(7)
         item.setText(_translate("MainWindow", "Esigibilità IVA", None))
         self.pushButton_ok.setText(_translate("MainWindow", "Ok", None))
         self.pushButton_login.setText(_translate("MainWindow", "Login", None))

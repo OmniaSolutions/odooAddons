@@ -48,6 +48,7 @@ TAX_INVOICE_FIELDS = [
     'amount',
     'base',
     'base_code_id',
+    'account_id'
     ]
 
 INVOICE_FIELDS = [
@@ -139,7 +140,7 @@ class GenerateXml(object):
                               ('date_invoice','<=',self.date_to),
                               ('state', 'in', INVOICE_STATES),
                               ('journal_id', '=', journalId)])
-
+        
     def getAllTaxLineIds(self, lineValsList):
         outList = []
         for lineVals in lineValsList:
@@ -171,10 +172,7 @@ class GenerateXml(object):
                 invIds = self.getAllInvoices(journalObj.odooID)
                 for invId in invIds:
                     invVals = self.getInvoiceVals(invId)
-                    lineIds = invVals.get('invoice_line', [])
-                    lineVals = self.readInvoiceLines(lineIds)
-                    tax_ids = self.getAllTaxLineIds(lineVals)
-                    invVals['tax_ids'] = tax_ids
+                    taxLineIds = invVals.get('tax_line', [])
                     invVals['local_journal_object'] = journalObj
                     invType = self.getInvoiceType(invVals)
                     partnerId = invVals.get('partner_id', False)
@@ -362,12 +360,21 @@ class GenerateXml(object):
                 if ImponibileImporto and base:
                     taxPercentage = self.correctImporto(int(100 * base / ImponibileImporto))
                 DatiIVA = fatturaDatiIVA(base, taxPercentage)
+                accountOdooId, accountOdooName = vals.get('account_id')
                 Natura = None # ???
                 Detraibile = None # ???
+                Detraibile1 = None
                 Deducibile = None # ???
                 EsigibilitaIVA = None # ???
+                for accTax in self.account_taxes:
+                    if accTax.odooId == accountOdooId:
+                        Natura = accTax.natura
+                        Detraibile1 = float(accTax.detraibile)
+                        Deducibile = accTax.deducibile
+                        EsigibilitaIVA = accTax.esigibilitaIVA
                 res = agenzia_entrate.DatiRiepilogoType(ImponibileImporto=None, DatiIVA=DatiIVA, Natura=Natura, Detraibile=Detraibile, Deducibile=Deducibile, EsigibilitaIVA=EsigibilitaIVA)
                 res.ImponibileImporto = ImponibileImporto
+                res.Detraibile = Detraibile1
                 outDatiRiepilogo.append(res)
             return outDatiRiepilogo
 

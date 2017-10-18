@@ -15,7 +15,7 @@ import pickle
 DEFAULT_DATE_FORMAT = '%m/%d/%Y'
 DEFAULT_TIME_FORMAT = '%H:%M:%S'
 JOURNAL_TYPES = ['sale', 'sale_refund', 'purchase', 'purchase_refund']
-ACCOUNT_TAX_TYPES = ['name', 'description', 'type_tax_use', 'amount']
+ACCOUNT_TAX_TYPES = ['name', 'note', 'code']
 
 
 class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
@@ -204,29 +204,28 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         return False
 
     def loadImposte(self, account_taxes=[]):
-        if self.checkLogged(True):
+        if self.checkLogged(True) and not self.accountTaxes:
             if not account_taxes:
-                taxIds = connectionObj.search('account.tax', [])
-                odooImposte = connectionObj.read('account.tax', ACCOUNT_TAX_TYPES, taxIds)
+                taxIds = connectionObj.search('account.account', [])
+                odooImposte = connectionObj.read('account.account', ACCOUNT_TAX_TYPES, taxIds)
                 for impostaDict in odooImposte:
                     odooName = impostaDict.get('name', '')
-                    odooDesc = impostaDict.get('description', '')
-                    odooTypeTax = impostaDict.get('type_tax_use', '')
-                    odooAmount = impostaDict.get('amount', 0)
+                    odooDesc = impostaDict.get('note', '')
+                    odooCode = impostaDict.get('code', '')
                     odooId = impostaDict.get('id', 0)
-                    self.addLineToImposteTable(odooName, odooDesc, odooTypeTax, odooAmount, odooId, '', '', '', '')
+                    self.addLineToImposteTable(odooName, odooDesc, odooCode, odooId, '', '', '', '')
             else:
                 for pyObject in account_taxes:
                     self.addLineToImposteTable(pyObject.odooName,
-                                                            pyObject.odooDesc,
-                                                            pyObject.odooTypeTax,
-                                                            pyObject.odooAmount,
-                                                            pyObject.odooId,
-                                                            pyObject.natura,
-                                                            pyObject.detraibile,
-                                                            pyObject.deducibile,
-                                                            pyObject.esigibilitaIVA
-                                                            )
+                                               pyObject.odooDesc,
+                                               pyObject.odooCode,
+                                               pyObject.odooId,
+                                               pyObject.natura,
+                                               pyObject.detraibile,
+                                               pyObject.deducibile,
+                                               pyObject.esigibilitaIVA
+                                               )
+            self.tableWidget_imposte.itemChanged.connect(self.impostaChanged)
             self.tableWidget_imposte.resizeColumnsToContents()
     
     def loadJournals(self, journals={}):
@@ -254,7 +253,7 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
 
             self.tableWidget.resizeColumnsToContents()
 
-    def addLineToImposteTable(self, odooName, odooDesc, odooTypeTax, odooAmount, odooId, natura, detraibile, deducibile, esigibilitaIVA):
+    def addLineToImposteTable(self, odooName, odooDesc, odooCode, odooId, natura, detraibile, deducibile, esigibilitaIVA):
         def setItemReadonly(item):
             item.setFlags(QtCore.Qt.ItemIsEnabled)
         
@@ -268,8 +267,7 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         tableRowObj = classTableRow()
         odooNameItem = QtGui.QTableWidgetItem(odooName)
         odooDescItem = QtGui.QTableWidgetItem(odooDesc)
-        odooTypeTaxItem = QtGui.QTableWidgetItem(odooTypeTax)
-        odooAmountItem = QtGui.QTableWidgetItem(unicode(odooAmount))
+        odooCodeItem = QtGui.QTableWidgetItem(odooCode)
         odooIdItem = QtGui.QTableWidgetItem(unicode(odooId))
         naturaItem = QtGui.QTableWidgetItem(natura)
         detraibileItem = QtGui.QTableWidgetItem(detraibile)
@@ -278,24 +276,21 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         
         setItemReadonly(odooNameItem)
         setItemReadonly(odooDescItem)
-        setItemReadonly(odooTypeTaxItem)
-        setItemReadonly(odooAmountItem)
+        setItemReadonly(odooCodeItem)
         setItemReadonly(odooIdItem)
         
         self.tableWidget_imposte.setItem(rowCount, 0, odooNameItem)
-        self.tableWidget_imposte.setItem(rowCount, 1, odooDescItem)
-        self.tableWidget_imposte.setItem(rowCount, 2, odooTypeTaxItem)
-        self.tableWidget_imposte.setItem(rowCount, 3, odooAmountItem)
-        self.tableWidget_imposte.setItem(rowCount, 4, odooIdItem)
-        self.tableWidget_imposte.setItem(rowCount, 5, naturaItem)
-        self.tableWidget_imposte.setItem(rowCount, 6, detraibileItem)
-        self.tableWidget_imposte.setItem(rowCount, 7, deducibileItem)
-        self.tableWidget_imposte.setItem(rowCount, 8, esigibilitaIVAItem)
+        self.tableWidget_imposte.setItem(rowCount, 1, odooCodeItem)
+        self.tableWidget_imposte.setItem(rowCount, 2, odooDescItem)
+        self.tableWidget_imposte.setItem(rowCount, 3, odooIdItem)
+        self.tableWidget_imposte.setItem(rowCount, 4, naturaItem)
+        self.tableWidget_imposte.setItem(rowCount, 5, detraibileItem)
+        self.tableWidget_imposte.setItem(rowCount, 6, deducibileItem)
+        self.tableWidget_imposte.setItem(rowCount, 7, esigibilitaIVAItem)
         
         tableRowObj.odooName = odooName
         tableRowObj.odooDesc = odooDesc
-        tableRowObj.odooTypeTax = odooTypeTax
-        tableRowObj.odooAmount = odooAmount
+        tableRowObj.odooCode = odooCode
         tableRowObj.odooId = odooId
         tableRowObj.natura = natura
         tableRowObj.detraibile = detraibile
@@ -305,7 +300,6 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         
         self.accountTaxes.append(tableRowObj)
         
-        self.tableWidget_imposte.itemChanged.connect(self.impostaChanged)
 
     def impostaChanged(self, item):
         rowIndex = item.row()
@@ -313,13 +307,13 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         value = unicode(item.text())
         for impostaObj in self.accountTaxes:
             if impostaObj.rowIndex == rowIndex:
-                if colIndex == 5:   # Natura
+                if colIndex == 4:   # Natura
                     impostaObj.natura = value
-                elif colIndex == 6:   # Detraibile
+                elif colIndex == 5:   # Detraibile
                     impostaObj.detraibile = value
-                elif colIndex == 7:   # Deducibile
+                elif colIndex == 6:   # Deducibile
                     impostaObj.deducibile = value
-                elif colIndex == 8:   # Esigibilita IVA
+                elif colIndex == 7:   # Esigibilita IVA
                     impostaObj.esigibilitaIVA = value
                 break
         

@@ -404,22 +404,17 @@ p, li { white-space: pre-wrap; }
                    </attribute>
                    <column>
                     <property name="text">
-                     <string>Nome Imposta</string>
+                     <string>Nome Conto</string>
                     </property>
                    </column>
                    <column>
                     <property name="text">
-                     <string>Codice Imposta</string>
+                     <string>Codice Conto</string>
                     </property>
                    </column>
                    <column>
                     <property name="text">
-                     <string>Applicazione Imposta</string>
-                    </property>
-                   </column>
-                   <column>
-                    <property name="text">
-                     <string>% Imposta</string>
+                     <string>Note Conto</string>
                     </property>
                    </column>
                    <column>
