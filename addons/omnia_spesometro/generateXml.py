@@ -63,6 +63,7 @@ INVOICE_FIELDS = [
     'amount_total',
     'amount_tax',
     'tax_line',
+    'invoice_line'
     ]
 
 INVOICE_STATES = [
@@ -74,7 +75,7 @@ INVOICE_STATES = [
 
 class GenerateXml(object):
     
-    def __init__(self, date_from, date_to, journals, progressBar, label_progress, savingPath=''):
+    def __init__(self, date_from, date_to, journals, progressBar, label_progress, account_taxes, savingPath=''):
         #self.invoiceType = invoiceType  # in_invoice, out_invoice, 'out_refund', 'in_refund'
         #Dati Fatture Emesse (DTE), Dati Fatture Ricevute (DTR) 
         self.date_from = date_from
@@ -83,6 +84,7 @@ class GenerateXml(object):
         self.progressBar = progressBar
         self.label_progress = label_progress
         self.savingPath = savingPath
+        self.account_taxes = account_taxes
         self.odooReadInvoices = []
         self.generatedInvoices = []
         super(GenerateXml, self).__init__()
@@ -138,6 +140,12 @@ class GenerateXml(object):
                               ('state', 'in', INVOICE_STATES),
                               ('journal_id', '=', journalId)])
 
+    def getAllTaxLineIds(self, lineValsList):
+        outList = []
+        for lineVals in lineValsList:
+            outList.extend(lineVals.get('invoice_line_tax_id', []))
+        return outList
+        
     def cleanDir(self):
         if self.savingPath:
             currentDir = self.savingPath
@@ -146,23 +154,61 @@ class GenerateXml(object):
                 shutil.rmtree(outDir)
         
     def startReading(self):
+
+        def checkLimit(baseDict, invVals):
+            keys = baseDict.keys()
+            keys.sort()
+            graterKey = keys[-1]
+            invCounter = len(baseDict[graterKey])
+            if invCounter < 1000:
+                baseDict[graterKey].append(invVals)
+            else:
+                baseDict[graterKey + 1] = [invVals]
+
+        def evaluateDTEDTR():
+            outDict = {'DTE':{}, 'DTR': {}}
+            for journalObj in self.journals:
+                invIds = self.getAllInvoices(journalObj.odooID)
+                for invId in invIds:
+                    invVals = self.getInvoiceVals(invId)
+                    lineIds = invVals.get('invoice_line', [])
+                    lineVals = self.readInvoiceLines(lineIds)
+                    tax_ids = self.getAllTaxLineIds(lineVals)
+                    invVals['tax_ids'] = tax_ids
+                    invVals['local_journal_object'] = journalObj
+                    invType = self.getInvoiceType(invVals)
+                    partnerId = invVals.get('partner_id', False)
+                    partnerId, _partnerName = partnerId
+                    if not partnerId in outDict[invType].keys():
+                        outDict[invType][partnerId] = []
+                    outDict[invType][partnerId].append(invVals)
+            return outDict
+
+        def checkTypePresent(filestoCreate, progressivo, docType):
+            if progressivo not in filestoCreate.keys():
+                filestoCreate[progressivo] = {docType: {}}
+
+        def checkPartnerIDPresent(filestoCreate, progressivo, docType, partnerId):
+            if not partnerId in filestoCreate[progressivo][docType].keys():
+                filestoCreate[progressivo][docType][partnerId] = []
+            
         self.cleanDir()
-        progressivo = 1
-        for journalObj in self.journals:
-            partnerDict = {'DTE':{}, 'DTR': {}}
-            invIds = self.getAllInvoices(journalObj.odooID)
-            for invId in invIds:
-                invVals = self.getInvoiceVals(invId)
-                invType = self.getInvoiceType(invVals)
-                partnerId = invVals.get('partner_id', False)
-                if partnerId:
-                    partnerId = partnerId[0]
-                    if partnerId in partnerDict[invType].keys():
-                        partnerDict[invType][partnerId].append(invVals)
-                    else:
-                        partnerDict[invType][partnerId] = [invVals]
-            if partnerDict['DTE'] or partnerDict['DTR']:
-                progressivo = self.generateInvoices(journalObj, partnerDict, progressivo)
+        progressivo = 0
+        filestoCreate = {}
+        dteDtrDict = evaluateDTEDTR()
+        for docType in dteDtrDict.keys():
+            for partnerId, invList in dteDtrDict[docType].items():
+                checkTypePresent(filestoCreate, progressivo, docType)
+                checkPartnerIDPresent(filestoCreate, progressivo, docType, partnerId)
+                for invVals in invList:
+                    invCounter = len(filestoCreate[progressivo][docType][partnerId])
+                    if invCounter > 999:    # Create new file if number of items is too much
+                        progressivo = progressivo + 1
+                        checkTypePresent(filestoCreate, progressivo, docType)
+                        checkPartnerIDPresent(filestoCreate, progressivo, docType, partnerId)
+                    filestoCreate[progressivo][docType][partnerId].append(invVals)
+            progressivo = progressivo + 1   # To create a new file when document type changes
+        self.generateInvoices(filestoCreate)
         
 #     def startReading(self):
 #         self.label_progress.setText('Reading invoices from database')
@@ -184,7 +230,7 @@ class GenerateXml(object):
     def correctImporto(self, importo):
         return round(importo, 2)
         
-    def generateInvoices(self, journalObj, partnerDictTop, progressivo):
+    def generateInvoices(self, filestoCreate):
 
         def dichiarante(fiscalCode):
             '''
@@ -292,6 +338,9 @@ class GenerateXml(object):
             return None, idPaese
 
         def fatturaDatiGenerali(invoiceVals):
+            journalObj = invoiceVals.get('local_journal_object', None)
+            if not journalObj:
+                return None
             TipoDocumento = journalObj.code #Esempio TD01 per le fatture
             Data = datetime.strptime(invoiceVals.get('date_invoice'), SERVER_DATE_FORMAT)   #TODO: Data fattura in formato italiano
             Numero = invoiceVals.get('number', None) or None # Numero fattura
@@ -456,30 +505,59 @@ class GenerateXml(object):
             companyVals = self.getPartnerVals(partnerId)
             break
         self.label_progress.setText('Reading infos and generating XML files')
-        for invType, partnerDict in partnerDictTop.items():
-            DTE = None
-            DTR = None
-            ANN = None
-            versione = None # Pare non serva
-            if invType== 'DTE':   # Emesse
-                DTE = fatturaDTE(partnerDict)
-                if not DTE:
+        
+        
+        for progressivo, docTypeDict in filestoCreate.items():
+            for docType, partnersDict in docTypeDict.items():
+                DTR = None
+                DTE = None
+                if docType == 'DTR':
+                    DTR = fatturaDTR(partnersDict)
+                    if not DTR:
+                        continue
+                elif docType == 'DTE':
+                    DTE = fatturaDTE(partnersDict)
+                    if not DTE:
+                        continue
+                else:
+                    logging.warning('Unable to find type %r' % (docType))
+                Signature = fatturaSignature()
+                fiscalCode = None
+                versione = None # Pare non serva
+                ANN = None
+                header = fatturaHeader(progressivo, fiscalCode)
+                if not DTE and not DTR:
                     continue
-            elif invType == 'DTR': # Ricevute
-                DTR = fatturaDTR(partnerDict)
-                if not DTR:
-                    continue
-            # partnerVals = self.getPartnerVals(partnerId)
-            Signature = fatturaSignature()
-            #fiscalCode = partnerVals.get('fiscalcode', '')
-            fiscalCode = None
-            header = fatturaHeader(progressivo, fiscalCode)
-            _fatturaTypeObj = agenzia_entrate.DatiFatturaType(versione=versione, DatiFatturaHeader=header, DTE=DTE, DTR=DTR, ANN=ANN, Signature=Signature)
-            self.createXML(progressivo, _fatturaTypeObj)
-            progressivo = progressivo + 1
-        self.progressBar.setValue(0)
+                fatturaTypeObj = agenzia_entrate.DatiFatturaType(versione=versione, DatiFatturaHeader=header, DTE=DTE, DTR=DTR, ANN=ANN, Signature=Signature)
+                self.createXML(progressivo, fatturaTypeObj)
         self.label_progress.setText('')
-        return progressivo
+        
+        
+        
+#         for invType, partnerDict in partnerDictTop.items():
+#             DTE = None
+#             DTR = None
+#             ANN = None
+#             versione = None # Pare non serva
+#             if invType== 'DTE':   # Emesse
+#                 DTE = fatturaDTE(partnerDict)
+#                 if not DTE:
+#                     continue
+#             elif invType == 'DTR': # Ricevute
+#                 DTR = fatturaDTR(partnerDict)
+#                 if not DTR:
+#                     continue
+#             # partnerVals = self.getPartnerVals(partnerId)
+#             Signature = fatturaSignature()
+#             #fiscalCode = partnerVals.get('fiscalcode', '')
+#             fiscalCode = None
+#             header = fatturaHeader(progressivo, fiscalCode)
+#             _fatturaTypeObj = agenzia_entrate.DatiFatturaType(versione=versione, DatiFatturaHeader=header, DTE=DTE, DTR=DTR, ANN=ANN, Signature=Signature)
+#             self.createXML(progressivo, _fatturaTypeObj)
+#             progressivo = progressivo + 1
+#         self.progressBar.setValue(0)
+#         self.label_progress.setText('')
+#         return progressivo
     
     def createXML(self, progressivo, _fatturaTypeObj):
         newFileName = unicode(progressivo) + '.xml'

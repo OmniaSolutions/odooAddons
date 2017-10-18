@@ -117,7 +117,7 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         date_to = self.dateEdit_to.dateTime().toPyDateTime().strftime(DEFAULT_DATE_FORMAT)
         selectedJournals = self.getSelectedJournals()
         savingPath = unicode(self.lineEdit_out_file_name.text())
-        xmlGeneratorObj = GenerateXml(date_from, date_to, selectedJournals, self.progressBar, self.label_progress, savingPath)
+        xmlGeneratorObj = GenerateXml(date_from, date_to, selectedJournals, self.progressBar, self.label_progress, self.accountTaxes, savingPath)
         xmlGeneratorObj.startReading()
         utils.launchMessage('End to generate XML files.', msgType='info')
 
