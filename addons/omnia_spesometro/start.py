@@ -15,6 +15,7 @@ import pickle
 DEFAULT_DATE_FORMAT = '%m/%d/%Y'
 DEFAULT_TIME_FORMAT = '%H:%M:%S'
 JOURNAL_TYPES = ['sale', 'sale_refund', 'purchase', 'purchase_refund']
+ACCOUNT_TAX_TYPES = ['name', 'description', 'type_tax_use', 'amount']
 
 
 class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
@@ -32,10 +33,12 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         self.activeLanguage = 'en_US'
         self.loginFileName = 'login.db'
         self.journalFileName = 'journal.db'
+        self.imposteFileName = 'imposte.db'
         self.rowItemRel = {}
         self.currentDir = os.getcwd()
         self.loginFile = os.path.join(self.currentDir, self.loginFileName)
         self.journalFile = os.path.join(self.currentDir, self.journalFileName)
+        self.imposteFile = os.path.join(self.currentDir, self.imposteFileName)
         
         starting_day_of_current_year = datetime.now().date().replace(month=1, day=1)    
         ending_day_of_current_year = datetime.now().date().replace(month=12, day=31)
@@ -51,8 +54,10 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         self.pushButton_login.setStyleSheet(commonButtonStyle)
         self.pushButton_spesometro.setStyleSheet(commonButtonStyle)
         self.pushButton_settings.setStyleSheet(commonButtonStyle)
+        self.pushButton_ok.setText('Exit')
         self.pushButton_ok.setStyleSheet(constants.LOGIN_ACCEPT_BUTTON + 'font-size: 15px;')
         self.tableWidget.setStyleSheet(constants.TABLE_LIST_LIST)
+        self.tableWidget_imposte.setStyleSheet(constants.TABLE_LIST_LIST)
         self.label_date_from.setStyleSheet(constants.LOGIN_LABEL)
         self.label_date_to.setStyleSheet(constants.LOGIN_LABEL)
         self.label_out_file_name.setStyleSheet(constants.LOGIN_LABEL)
@@ -65,6 +70,11 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         self.pushButton_apply_journals.setStyleSheet(constants.BUTTON_STYLE)
         self.pushButton_open_path.setStyleSheet(constants.BUTTON_STYLE)
         self.label_progress.setStyleSheet(constants.LOGIN_LABEL)
+        self.tableWidget_imposte.resizeColumnsToContents()
+        self.pushButton_help_imposte.setStyleSheet(constants.LOGIN_ACCEPT_BUTTON)
+        self.pushButton_help_journal.setStyleSheet(constants.LOGIN_ACCEPT_BUTTON)
+        self.textEdit_imposte.setHidden(True)
+        self.textEdit_journal.setHidden(True)
 
     def setEvents(self):
         # Dock widgets
@@ -76,6 +86,21 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         self.pushButton_apply_journals.clicked.connect(self.saveJournals)
         self.pushButton_generate_xml.clicked.connect(self.generateXml)
         self.pushButton_open_path.clicked.connect(self.openPath)
+        
+        self.pushButton_help_imposte.clicked.connect(self.expandHideImposteHelp)
+        self.pushButton_help_journal.clicked.connect(self.expandHideJournalHelp)
+
+    def expandHideImposteHelp(self):
+        if not self.textEdit_imposte.isVisible():
+            self.textEdit_imposte.setHidden(False)
+        else:
+            self.textEdit_imposte.setHidden(True)
+    
+    def expandHideJournalHelp(self):
+        if not self.textEdit_journal.isVisible():
+            self.textEdit_journal.setHidden(False)
+        else:
+            self.textEdit_journal.setHidden(True)
 
     def acceptMW(self):
         if utils.launchMessage('Are you sure you want to quit?', 'question'):
@@ -104,6 +129,7 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
     def setSettings(self):
         self.stackedWidget.setCurrentIndex(1)
         self.loadJournals()
+        self.loadImposte()
 
     def writeToFile(self, filePath, toWrite):
         with open(filePath, 'wb') as fileObj:
@@ -115,7 +141,11 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
                 fileContent = pickle.loads(fileObj.read())
                 return fileContent
         return False
-        
+
+    def loadStoredImposte(self):
+        odooImposte = self.readFromFile(self.imposteFile)
+        self.loadImposte(odooImposte)
+ 
     def loadStoredJournals(self):
         odooJournals = self.readFromFile(self.journalFile)
         self.loadJournals(odooJournals)
@@ -135,6 +165,7 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
 
     def saveJournals(self):
         self.writeToFile(self.journalFile, self.rowItemRel)
+        self.writeToFile(self.imposteFile, self.rowItemRel)
 
     def saveLogin(self):
         self.writeToFile(self.loginFile, connectionObj.getLoginInfos())
@@ -142,6 +173,7 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
     def loadFromFile(self):
         self.loadLoginSettings()
         self.loadStoredJournals()
+        self.loadStoredImposte()
         
     def setSpesometro(self):
         self.stackedWidget.setCurrentIndex(0)
@@ -167,7 +199,34 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         else:
             return True
         return False
-        
+
+    def loadImposte(self, account_taxes={}):
+        if self.checkLogged(True):
+            taxIds = connectionObj.search('account.tax', [])
+            if not account_taxes:
+                odooImposte = connectionObj.read('account.tax', ACCOUNT_TAX_TYPES, taxIds)
+                for impostaDict in odooImposte:
+                    odooName = impostaDict.get('name', '')
+                    odooDesc = impostaDict.get('description', '')
+                    odooTypeTax = impostaDict.get('type_tax_use', '')
+                    odooAmount = impostaDict.get('amount', 0)
+                    odooId = impostaDict.get('id', 0)
+                    rowIndex = self.addLineToImposteTable(odooName, odooDesc, odooTypeTax, odooAmount, odooId, '', '', '', '')
+                    impostaDict['row_index'] = rowIndex
+            else:
+                for pyObject in account_taxes.values():
+                    rowIndex = self.addLineToImposteTable(pyObject.odooName,
+                                                            pyObject.odooDesc,
+                                                            pyObject.odooTypeTax,
+                                                            pyObject.odooAmount,
+                                                            pyObject.odooId,
+                                                            pyObject.natura,
+                                                            pyObject.detraibile,
+                                                            pyObject.deducibile,
+                                                            pyObject.esigibilitaIVA
+                                                            )
+            self.tableWidget_imposte.resizeColumnsToContents()
+    
     def loadJournals(self, journals={}):
         if self.checkLogged(True) and not self.rowItemRel:
             journalIds = connectionObj.search('account.journal', [('type', 'in', JOURNAL_TYPES)])
@@ -192,6 +251,56 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
                                                             )
 
             self.tableWidget.resizeColumnsToContents()
+
+    def addLineToImposteTable(self, odooName, odooDesc, odooTypeTax, odooAmount, odooId, natura, detraibile, deducibile, esigibilitaIVA):
+        def setItemReadonly(item):
+            item.setFlags(QtCore.Qt.ItemIsEnabled)
+        
+        def setItemEditable(item):
+            item.setFlags(QtCore.Qt.ItemIsEnabled |
+                          QtCore.Qt.ItemIsEditable)
+            
+        rowCount = self.tableWidget_imposte.rowCount()
+        self.tableWidget_imposte.setRowCount(rowCount + 1)
+        
+        tableRowObj = classTableRow()
+        odooNameItem = QtGui.QTableWidgetItem(odooName)
+        odooDescItem = QtGui.QTableWidgetItem(odooDesc)
+        odooTypeTaxItem = QtGui.QTableWidgetItem(odooTypeTax)
+        odooAmountItem = QtGui.QTableWidgetItem(unicode(odooAmount))
+        odooIdItem = QtGui.QTableWidgetItem(unicode(odooId))
+        naturaItem = QtGui.QTableWidgetItem(natura)
+        detraibileItem = QtGui.QTableWidgetItem(detraibile)
+        deducibileItem = QtGui.QTableWidgetItem(deducibile)
+        esigibilitaIVAItem = QtGui.QTableWidgetItem(esigibilitaIVA)
+        
+        setItemReadonly(odooNameItem)
+        setItemReadonly(odooDescItem)
+        setItemReadonly(odooTypeTaxItem)
+        setItemReadonly(odooAmountItem)
+        setItemReadonly(odooIdItem)
+        
+        self.tableWidget_imposte.setItem(rowCount, 0, odooNameItem)
+        self.tableWidget_imposte.setItem(rowCount, 1, odooDescItem)
+        self.tableWidget_imposte.setItem(rowCount, 2, odooTypeTaxItem)
+        self.tableWidget_imposte.setItem(rowCount, 3, odooAmountItem)
+        self.tableWidget_imposte.setItem(rowCount, 4, odooIdItem)
+        self.tableWidget_imposte.setItem(rowCount, 5, naturaItem)
+        self.tableWidget_imposte.setItem(rowCount, 6, detraibileItem)
+        self.tableWidget_imposte.setItem(rowCount, 7, deducibileItem)
+        self.tableWidget_imposte.setItem(rowCount, 8, esigibilitaIVAItem)
+        
+        tableRowObj.odooName = odooName
+        tableRowObj.odooDesc = odooDesc
+        tableRowObj.odooTypeTax = odooTypeTax
+        tableRowObj.odooAmount = odooAmount
+        tableRowObj.odooId = odooId
+        tableRowObj.natura = natura
+        tableRowObj.detraibile = detraibile
+        tableRowObj.deducibile = deducibile
+        tableRowObj.esigibilitaIVA = esigibilitaIVA
+
+        return rowCount
         
     def addLineToSezionaliTable(self, code, odooCode, name, journalType, objId, checked=False):
         
@@ -271,7 +380,7 @@ class classTableRow(object):
 if __name__ == '__main__':
     app = QtGui.QApplication(sys.argv)
     mainW = MainWindow()
-    mainW.resize(1200, 800)
+    mainW.resize(1300, 800)
     mainW.center()
     mainW.show()
     app.exec_()

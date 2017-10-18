@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file '/srv/workspace/odooAddons-7/addons/omnia_spesometro/ui_spesometro/main_window.ui'
 #
-# Created: Fri Oct  6 16:06:33 2017
+# Created: Wed Oct 18 10:29:36 2017
 #      by: PyQt4 UI code generator 4.11.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -26,7 +26,7 @@ except AttributeError:
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         MainWindow.setObjectName(_fromUtf8("MainWindow"))
-        MainWindow.resize(938, 831)
+        MainWindow.resize(1193, 940)
         self.centralwidget = QtGui.QWidget(MainWindow)
         self.centralwidget.setObjectName(_fromUtf8("centralwidget"))
         self.verticalLayout_3 = QtGui.QVBoxLayout(self.centralwidget)
@@ -104,9 +104,20 @@ class Ui_MainWindow(object):
         self.gridLayout_2.setObjectName(_fromUtf8("gridLayout_2"))
         self.verticalLayout_2 = QtGui.QVBoxLayout()
         self.verticalLayout_2.setObjectName(_fromUtf8("verticalLayout_2"))
+        self.scrollArea = QtGui.QScrollArea(self.page_settings)
+        self.scrollArea.setFrameShape(QtGui.QFrame.NoFrame)
+        self.scrollArea.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
+        self.scrollArea.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
+        self.scrollArea.setWidgetResizable(True)
+        self.scrollArea.setObjectName(_fromUtf8("scrollArea"))
+        self.scrollAreaWidgetContents = QtGui.QWidget()
+        self.scrollAreaWidgetContents.setGeometry(QtCore.QRect(0, 0, 1025, 833))
+        self.scrollAreaWidgetContents.setObjectName(_fromUtf8("scrollAreaWidgetContents"))
+        self.verticalLayout_5 = QtGui.QVBoxLayout(self.scrollAreaWidgetContents)
+        self.verticalLayout_5.setObjectName(_fromUtf8("verticalLayout_5"))
         self.horizontalLayout_2 = QtGui.QHBoxLayout()
         self.horizontalLayout_2.setObjectName(_fromUtf8("horizontalLayout_2"))
-        self.label_sezionali = QtGui.QLabel(self.page_settings)
+        self.label_sezionali = QtGui.QLabel(self.scrollAreaWidgetContents)
         font = QtGui.QFont()
         font.setPointSize(12)
         font.setBold(True)
@@ -116,14 +127,25 @@ class Ui_MainWindow(object):
         self.horizontalLayout_2.addWidget(self.label_sezionali)
         spacerItem1 = QtGui.QSpacerItem(40, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
         self.horizontalLayout_2.addItem(spacerItem1)
-        self.pushButton_apply_journals = QtGui.QPushButton(self.page_settings)
+        self.pushButton_apply_journals = QtGui.QPushButton(self.scrollAreaWidgetContents)
         self.pushButton_apply_journals.setObjectName(_fromUtf8("pushButton_apply_journals"))
         self.horizontalLayout_2.addWidget(self.pushButton_apply_journals)
-        self.verticalLayout_2.addLayout(self.horizontalLayout_2)
-        self.label = QtGui.QLabel(self.page_settings)
-        self.label.setObjectName(_fromUtf8("label"))
-        self.verticalLayout_2.addWidget(self.label)
-        self.tableWidget = QtGui.QTableWidget(self.page_settings)
+        self.verticalLayout_5.addLayout(self.horizontalLayout_2)
+        self.pushButton_help_journal = QtGui.QPushButton(self.scrollAreaWidgetContents)
+        self.pushButton_help_journal.setObjectName(_fromUtf8("pushButton_help_journal"))
+        self.verticalLayout_5.addWidget(self.pushButton_help_journal)
+        self.textEdit_journal = QtGui.QTextEdit(self.scrollAreaWidgetContents)
+        sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.textEdit_journal.sizePolicy().hasHeightForWidth())
+        self.textEdit_journal.setSizePolicy(sizePolicy)
+        self.textEdit_journal.setMaximumSize(QtCore.QSize(16777215, 130))
+        self.textEdit_journal.setFrameShape(QtGui.QFrame.Box)
+        self.textEdit_journal.setReadOnly(True)
+        self.textEdit_journal.setObjectName(_fromUtf8("textEdit_journal"))
+        self.verticalLayout_5.addWidget(self.textEdit_journal)
+        self.tableWidget = QtGui.QTableWidget(self.scrollAreaWidgetContents)
         self.tableWidget.setObjectName(_fromUtf8("tableWidget"))
         self.tableWidget.setColumnCount(5)
         self.tableWidget.setRowCount(0)
@@ -142,7 +164,55 @@ class Ui_MainWindow(object):
         self.tableWidget.horizontalHeader().setStretchLastSection(True)
         self.tableWidget.verticalHeader().setVisible(False)
         self.tableWidget.verticalHeader().setCascadingSectionResizes(False)
-        self.verticalLayout_2.addWidget(self.tableWidget)
+        self.verticalLayout_5.addWidget(self.tableWidget)
+        self.pushButton_help_imposte = QtGui.QPushButton(self.scrollAreaWidgetContents)
+        self.pushButton_help_imposte.setObjectName(_fromUtf8("pushButton_help_imposte"))
+        self.verticalLayout_5.addWidget(self.pushButton_help_imposte)
+        self.textEdit_imposte = QtGui.QTextEdit(self.scrollAreaWidgetContents)
+        sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.textEdit_imposte.sizePolicy().hasHeightForWidth())
+        self.textEdit_imposte.setSizePolicy(sizePolicy)
+        self.textEdit_imposte.setAutoFillBackground(True)
+        self.textEdit_imposte.setFrameShape(QtGui.QFrame.Box)
+        self.textEdit_imposte.setFrameShadow(QtGui.QFrame.Plain)
+        self.textEdit_imposte.setLineWidth(1)
+        self.textEdit_imposte.setReadOnly(True)
+        self.textEdit_imposte.setObjectName(_fromUtf8("textEdit_imposte"))
+        self.verticalLayout_5.addWidget(self.textEdit_imposte)
+        self.tableWidget_imposte = QtGui.QTableWidget(self.scrollAreaWidgetContents)
+        self.tableWidget_imposte.setObjectName(_fromUtf8("tableWidget_imposte"))
+        self.tableWidget_imposte.setColumnCount(9)
+        self.tableWidget_imposte.setRowCount(0)
+        item = QtGui.QTableWidgetItem()
+        self.tableWidget_imposte.setHorizontalHeaderItem(0, item)
+        item = QtGui.QTableWidgetItem()
+        self.tableWidget_imposte.setHorizontalHeaderItem(1, item)
+        item = QtGui.QTableWidgetItem()
+        self.tableWidget_imposte.setHorizontalHeaderItem(2, item)
+        item = QtGui.QTableWidgetItem()
+        self.tableWidget_imposte.setHorizontalHeaderItem(3, item)
+        item = QtGui.QTableWidgetItem()
+        self.tableWidget_imposte.setHorizontalHeaderItem(4, item)
+        item = QtGui.QTableWidgetItem()
+        self.tableWidget_imposte.setHorizontalHeaderItem(5, item)
+        item = QtGui.QTableWidgetItem()
+        self.tableWidget_imposte.setHorizontalHeaderItem(6, item)
+        item = QtGui.QTableWidgetItem()
+        self.tableWidget_imposte.setHorizontalHeaderItem(7, item)
+        item = QtGui.QTableWidgetItem()
+        self.tableWidget_imposte.setHorizontalHeaderItem(8, item)
+        self.tableWidget_imposte.horizontalHeader().setVisible(True)
+        self.tableWidget_imposte.horizontalHeader().setCascadingSectionResizes(True)
+        self.tableWidget_imposte.horizontalHeader().setDefaultSectionSize(50)
+        self.tableWidget_imposte.horizontalHeader().setHighlightSections(True)
+        self.tableWidget_imposte.horizontalHeader().setMinimumSectionSize(50)
+        self.tableWidget_imposte.horizontalHeader().setStretchLastSection(True)
+        self.tableWidget_imposte.verticalHeader().setVisible(False)
+        self.verticalLayout_5.addWidget(self.tableWidget_imposte)
+        self.scrollArea.setWidget(self.scrollAreaWidgetContents)
+        self.verticalLayout_2.addWidget(self.scrollArea)
         self.gridLayout_2.addLayout(self.verticalLayout_2, 0, 0, 1, 1)
         self.stackedWidget.addWidget(self.page_settings)
         self.gridLayout.addWidget(self.stackedWidget, 0, 0, 1, 1)
@@ -184,6 +254,7 @@ class Ui_MainWindow(object):
         MainWindow.addDockWidget(QtCore.Qt.DockWidgetArea(1), self.dockWidget_2)
 
         self.retranslateUi(MainWindow)
+        self.stackedWidget.setCurrentIndex(1)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
     def retranslateUi(self, MainWindow):
@@ -197,15 +268,20 @@ class Ui_MainWindow(object):
         self.pushButton_generate_xml.setText(_translate("MainWindow", "Generate xml", None))
         self.label_sezionali.setText(_translate("MainWindow", "Sezionali", None))
         self.pushButton_apply_journals.setText(_translate("MainWindow", "Apply", None))
-        self.label.setText(_translate("MainWindow", "Esempio compilazione codici\n"
-"\n"
-"Fattura TD01\n"
-"Nota di credito TD04\n"
-"Nota di debito    TD05    \n"
-"Fattura acquisto IntraUE di beni     TD10\n"
-"Fattura acquisto IntraUE di servizi     TD11\n"
-"Fattura semplificata TD07\n"
-"Nota di credito semplificata TD08", None))
+        self.pushButton_help_journal.setText(_translate("MainWindow", "Help", None))
+        self.textEdit_journal.setHtml(_translate("MainWindow", "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
+"<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\n"
+"p, li { white-space: pre-wrap; }\n"
+"</style></head><body style=\" font-family:\'Sans Serif\'; font-size:9pt; font-weight:400; font-style:normal;\">\n"
+"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">Esempio compilazione codici</p>\n"
+"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-weight:600;\">TD01</span>    Fattura</p>\n"
+"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-weight:600;\">TD04</span>    Nota di credito</p>\n"
+"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-weight:600;\">TD05</span>    Nota di debito   </p>\n"
+"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-weight:600;\">TD10</span>    Fattura acquisto IntraUE di beni</p>\n"
+"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-weight:600;\">TD11</span>    Fattura acquisto IntraUE di servizi</p>\n"
+"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-weight:600;\">TD07</span>    Fattura semplificata</p>\n"
+"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-weight:600;\">TD08</span>    Nota di credito semplificata</p>\n"
+"<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><br /></p></body></html>", None))
         self.tableWidget.setSortingEnabled(True)
         item = self.tableWidget.horizontalHeaderItem(0)
         item.setText(_translate("MainWindow", "Out Code", None))
@@ -217,6 +293,50 @@ class Ui_MainWindow(object):
         item.setText(_translate("MainWindow", "Journal Type", None))
         item = self.tableWidget.horizontalHeaderItem(4)
         item.setText(_translate("MainWindow", "ID Odoo", None))
+        self.pushButton_help_imposte.setText(_translate("MainWindow", "Help", None))
+        self.textEdit_imposte.setHtml(_translate("MainWindow", "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
+"<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\n"
+"p, li { white-space: pre-wrap; }\n"
+"</style></head><body style=\" font-family:\'Sans Serif\'; font-size:9pt; font-weight:400; font-style:normal;\">\n"
+"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">Valori possibili per il campo <span style=\" font-weight:600;\">Natura</span></p>\n"
+"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-weight:600;\">N1    </span>escluse ex art. 15</p>\n"
+"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-weight:600;\">N2</span>    non soggette</p>\n"
+"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-weight:600;\">N3</span>    non imponibili</p>\n"
+"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-weight:600;\">N4</span>    esenti</p>\n"
+"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-weight:600;\">N5</span>    regime del margine / IVA non esposta in fattura</p>\n"
+"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-weight:600;\">N6</span>    inversione contabile (per le operazioni in reverse charge ovvero nei casi di autofatturazione per acquisti extra UE di servizi ovvero per importazioni di beni nei soli casi previsti)</p>\n"
+"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-weight:600;\">N7</span>    IVA assolta in altro stato UE (vendite a distanza ex art. 40 c. 3 e 4 e art. 41 c. 1 lett. b,  DL 331/93; prestazione di servizi di telecomunicazioni, tele-radiodiffusione ed elettronici ex art. 7-sexies lett. f, g, art. 74-sexies DPR 633/72)</p>\n"
+"<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><br /></p>\n"
+"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-weight:600;\">Detraibile    </span>formato numerico; i decimali vanno separati dall\'intero con il carattere  \'.\' (punto)</p>\n"
+"<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><br /></p>\n"
+"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-weight:600;\">Deducibile    </span>valori ammessi:</p>\n"
+"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">    [SI] = spesa deducibile</p>\n"
+"<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><br /></p>\n"
+"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-weight:600;\">Esigibilità IVA</span>   valori ammessi:</p>\n"
+"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">    [I]: IVA ad esigibilità immediata</p>\n"
+"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">    [D]: IVA ad esigibilità differita</p>\n"
+"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">    [S]: scissione dei pagamenti\\n</p>\n"
+"<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><br /></p>\n"
+"<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><br /></p></body></html>", None))
+        self.tableWidget_imposte.setSortingEnabled(True)
+        item = self.tableWidget_imposte.horizontalHeaderItem(0)
+        item.setText(_translate("MainWindow", "Nome Imposta", None))
+        item = self.tableWidget_imposte.horizontalHeaderItem(1)
+        item.setText(_translate("MainWindow", "Codice Imposta", None))
+        item = self.tableWidget_imposte.horizontalHeaderItem(2)
+        item.setText(_translate("MainWindow", "Applicazione Imposta", None))
+        item = self.tableWidget_imposte.horizontalHeaderItem(3)
+        item.setText(_translate("MainWindow", "Percentuale Imposta", None))
+        item = self.tableWidget_imposte.horizontalHeaderItem(4)
+        item.setText(_translate("MainWindow", "ID Odoo", None))
+        item = self.tableWidget_imposte.horizontalHeaderItem(5)
+        item.setText(_translate("MainWindow", "Natura", None))
+        item = self.tableWidget_imposte.horizontalHeaderItem(6)
+        item.setText(_translate("MainWindow", "Detraibile", None))
+        item = self.tableWidget_imposte.horizontalHeaderItem(7)
+        item.setText(_translate("MainWindow", "Deducibile", None))
+        item = self.tableWidget_imposte.horizontalHeaderItem(8)
+        item.setText(_translate("MainWindow", "Esigibilità IVA", None))
         self.pushButton_ok.setText(_translate("MainWindow", "Ok", None))
         self.pushButton_login.setText(_translate("MainWindow", "Login", None))
         self.pushButton_spesometro.setText(_translate("MainWindow", "Spesometro", None))
