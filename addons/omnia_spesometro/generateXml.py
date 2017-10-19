@@ -169,10 +169,11 @@ class GenerateXml(object):
         def evaluateDTEDTR():
             outDict = {'DTE':{}, 'DTR': {}}
             for journalObj in self.journals:
+                self.label_progress.setText('Lettura fatture dal sezionale %r' % (journalObj.odooName))
                 invIds = self.getAllInvoices(journalObj.odooID)
+                invNumber = len(invIds)
                 for invId in invIds:
                     invVals = self.getInvoiceVals(invId)
-                    taxLineIds = invVals.get('tax_line', [])
                     invVals['local_journal_object'] = journalObj
                     invType = self.getInvoiceType(invVals)
                     partnerId = invVals.get('partner_id', False)
@@ -180,6 +181,9 @@ class GenerateXml(object):
                     if not partnerId in outDict[invType].keys():
                         outDict[invType][partnerId] = []
                     outDict[invType][partnerId].append(invVals)
+                    index = invIds.index(invId)
+                    self.progressBar.setValue(self.percentage(index, invNumber))
+                self.progressBar.setValue(0)
             return outDict
 
         def checkTypePresent(filestoCreate, progressivo, docType):
@@ -192,21 +196,33 @@ class GenerateXml(object):
             
         self.cleanDir()
         progressivo = 0
+        invCounter = 1
         filestoCreate = {}
+        self.label_progress.setText('Lettura fatture dal database')
         dteDtrDict = evaluateDTEDTR()
+        self.label_progress.setText('Elaborazione dati')
+        self.updateLabel(self.label_progress)
         for docType in dteDtrDict.keys():
             for partnerId, invList in dteDtrDict[docType].items():
                 checkTypePresent(filestoCreate, progressivo, docType)
                 checkPartnerIDPresent(filestoCreate, progressivo, docType, partnerId)
                 for invVals in invList:
-                    invCounter = len(filestoCreate[progressivo][docType][partnerId])
+                    print invCounter
                     if invCounter > 999:    # Create new file if number of items is too much
                         progressivo = progressivo + 1
                         checkTypePresent(filestoCreate, progressivo, docType)
                         checkPartnerIDPresent(filestoCreate, progressivo, docType, partnerId)
+                        invCounter = 1
                     filestoCreate[progressivo][docType][partnerId].append(invVals)
+                    invCounter = invCounter + 1
             progressivo = progressivo + 1   # To create a new file when document type changes
         self.generateInvoices(filestoCreate)
+
+    def updateLabel(self, label):
+        label.repaint()
+        label.repaint()
+        self.progressBar.repaint()
+        self.progressBar.repaint()
         
 #     def startReading(self):
 #         self.label_progress.setText('Reading invoices from database')
@@ -313,7 +329,6 @@ class GenerateXml(object):
             
         def fatturaIdentificativiFiscali(codiceFiscale, idPaese, idCodice):
             IdFiscaleIVA = fatturaIdFiscaleIva(idPaese, idCodice)
-            print 'codiceFiscale %r' % (codiceFiscale)
             return agenzia_entrate.IdentificativiFiscaliType(IdFiscaleIVA, CodiceFiscale=codiceFiscale)
         
         def getProvince(vals):
@@ -511,10 +526,16 @@ class GenerateXml(object):
             partnerId, _partnerName = companyValsl.get('partner_id', [None, None])
             companyVals = self.getPartnerVals(partnerId)
             break
-        self.label_progress.setText('Reading infos and generating XML files')
+        self.label_progress.setText('Creazione file XML')
+        self.updateLabel(self.label_progress)
         
-        
+        evalNum = len(filestoCreate.keys())
         for progressivo, docTypeDict in filestoCreate.items():
+            newFileName = unicode(progressivo) + '.xml'
+            self.label_progress.setText('Creazione file XML %r' % (newFileName))
+            index = filestoCreate.keys().index(progressivo)
+            self.progressBar.setValue(self.percentage(index + 1, evalNum))
+            self.updateLabel(self.label_progress)
             for docType, partnersDict in docTypeDict.items():
                 DTR = None
                 DTE = None
@@ -536,7 +557,7 @@ class GenerateXml(object):
                 if not DTE and not DTR:
                     continue
                 fatturaTypeObj = agenzia_entrate.DatiFatturaType(versione=versione, DatiFatturaHeader=header, DTE=DTE, DTR=DTR, ANN=ANN, Signature=Signature)
-                self.createXML(progressivo, fatturaTypeObj)
+                self.createXML(fatturaTypeObj, newFileName)
         self.label_progress.setText('')
         
         
@@ -566,8 +587,7 @@ class GenerateXml(object):
 #         self.label_progress.setText('')
 #         return progressivo
     
-    def createXML(self, progressivo, _fatturaTypeObj):
-        newFileName = unicode(progressivo) + '.xml'
+    def createXML(self, _fatturaTypeObj, newFileName):
         currentDir = os.getcwd()
         if self.savingPath:
             currentDir = self.savingPath
