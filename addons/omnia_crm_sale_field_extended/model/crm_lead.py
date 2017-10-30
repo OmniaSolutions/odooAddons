@@ -27,7 +27,7 @@ class crm_lead(models.Model):
             return "30"
         if value > 50 and value <= 79:
             return "50"
-        if value > 80:
+        if value >= 80:
             return "80"
 
     @api.onchange("probability")

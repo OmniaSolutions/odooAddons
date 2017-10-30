@@ -1,1 +1,1 @@
-import crm_lead
+import sale_order

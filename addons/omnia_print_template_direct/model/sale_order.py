@@ -15,7 +15,7 @@ class sale_order(models.Model):
         self.ensure_one()
         return {
             'type': 'ir.actions.act_url',
-            'target': 'self',
+            'target': 'new',
             'url': '/quote/%s/%s?pdf=True' % (self.id, self.access_token)
         }
 

@@ -38,7 +38,7 @@ This Module add a print template inside the sale order to make if faster then th
     'author': 'OmniaSolutions.eu',
     'maintainer': 'OmniaSolutions.eu',
     'website': 'http://www.OmniaSolutions.eu',
-    'depends': ['sale'],
+    'depends': ['website_quote'],
     'data': [
         #  view
         'view/sale_order.xml',
