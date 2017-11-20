@@ -4,8 +4,8 @@
 
 
         <record id="action_picking_line_form_all" model="ir.ui.view">
-            <field name="name">stock.pack.operation.form</field>
-            <field name="model">stock.pack.operation</field>
+            <field name="name">stock.picking.form</field>
+            <field name="model">stock.picking</field>
             <field name="priority" eval="5"></field>
             <field name="arch" type="xml">
                 <form>
