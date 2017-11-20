@@ -45,7 +45,11 @@ class SaleOrder(models.Model):
     @api.multi
     def action_confirm(self):
         for order in self:
-            if self.checkMachineProductsPresents():
+            machinePresent = self.checkMachineProductsPresents()
+            machineNoProdPresent = False
+            if not machinePresent:
+                machineNoProdPresent = self.checkMachineProductsNoCreationPresents()
+            if machinePresent or machineNoProdPresent:
                 if not order.project_id:
                     newBaseName = self.getNextAnalyticNumber()
                     newAnalyticAccount = order.createRelatedAnalyticAccount(newBaseName)
@@ -59,7 +63,8 @@ class SaleOrder(models.Model):
                 else:
                     newBaseName = order.project_id.name
                     order.warehouse_id = self.getRelatedWarehouse(newBaseName)
-                order.setupAnalyticLines(newBaseName)
+                if machinePresent:
+                    order.setupAnalyticLines(newBaseName)
         res = super(SaleOrder, self).action_confirm()
         return res
 
@@ -89,6 +94,13 @@ class SaleOrder(models.Model):
     def getRelatedWarehouse(self, name):
         for warehouseBrws in self.env['stock.warehouse'].search([('name', '=', name)]):
             return warehouseBrws.id
+        return False
+
+    @api.multi
+    def checkMachineProductsNoCreationPresents(self):
+        for line in self.order_line:
+            if self.getProductCategoryName(line) == 'MACHINE NO PRODUCT':
+                return True
         return False
 
     @api.multi

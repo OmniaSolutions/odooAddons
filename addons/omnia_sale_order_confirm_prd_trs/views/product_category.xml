@@ -8,5 +8,10 @@
             <field name="name">Machine</field>
         </record>
 
+        <record id="product_category_macchina_3" model="product.category">
+            <field name="parent_id" ref="product.product_category_1"/>
+            <field name="name">Machine No Product</field>
+        </record>
+
     </data>
 </openerp>
