@@ -71,8 +71,8 @@ class SaleOrder(models.Model):
     @api.multi
     def getNextAnalyticNumber(self):
         newSequenceNumber = self.env['ir.sequence'].next_by_code('MATRICOLA')
-        return unicode(newSequenceNumber) + '/' + unicode(date.today().year)
-        
+        return unicode(date.today().year) + '/' + unicode(newSequenceNumber)
+
     @api.multi
     def createRelatedAnalyticAccount(self, newBaseName):
         toCreate = {
@@ -129,7 +129,7 @@ class SaleOrder(models.Model):
         
     @api.multi
     def createNewCodedProduct(self, newBaseName, count, oldProdBrws):
-        newProductName = unicode('{:03.0f}'.format(count)) + '/' + unicode(newBaseName)
+        newProductName = unicode(newBaseName) + '/' + unicode('{:03.0f}'.format(count))
         toCreate = {
             'name': newProductName,
             'route_ids': [(6, False, self.getRoutesToSet())]
