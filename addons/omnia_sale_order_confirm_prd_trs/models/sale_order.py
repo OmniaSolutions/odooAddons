@@ -52,7 +52,7 @@ class SaleOrder(models.Model):
             if machinePresent or machineNoProdPresent:
                 if not order.project_id:
                     newBaseName = self.getNextAnalyticNumber()
-                    newAnalyticAccount = order.createRelatedAnalyticAccount(newBaseName)
+                    newAnalyticAccount = order.createRelatedAnalyticAccount(newBaseName, order.partner_id)
                     if not newAnalyticAccount:
                         raise UserError(_('Unable to create analytic account!'))
                     newWarehouse = order.createRelatedWarehouse(newBaseName)
@@ -62,7 +62,8 @@ class SaleOrder(models.Model):
                     order.warehouse_id = newWarehouse.id
                 else:
                     newBaseName = order.project_id.name
-                    order.warehouse_id = self.getRelatedWarehouse(newBaseName)
+                    if not order.warehouse_id:
+                        order.warehouse_id = self.getRelatedWarehouse(newBaseName)
                 if machinePresent:
                     order.setupAnalyticLines(newBaseName)
         res = super(SaleOrder, self).action_confirm()
@@ -74,10 +75,10 @@ class SaleOrder(models.Model):
         return unicode(date.today().year) + '/' + unicode(newSequenceNumber)
 
     @api.multi
-    def createRelatedAnalyticAccount(self, newBaseName):
+    def createRelatedAnalyticAccount(self, newBaseName, partner_id):
         toCreate = {
             'name': newBaseName,
-            'code': newBaseName,
+            'partner_id': partner_id.id,
             }
         return self.env['account.analytic.account'].create(toCreate)
 
