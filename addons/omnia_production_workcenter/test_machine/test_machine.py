@@ -23,8 +23,8 @@ for workcenterLossReason in workcenterLossReasons.keys():
                                                                         'manual': True,
                                                                         })
 
-workcenterId = 1
-workOrderId = 46
+workcenterId = 2
+workOrderId = 49
 operations = [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
               {'id_loss_reason': workcenterLossReasons['mancanza_materiale'],
                'description': 'Mancanza Materiale'

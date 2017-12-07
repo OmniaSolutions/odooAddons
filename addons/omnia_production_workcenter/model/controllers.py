@@ -21,10 +21,35 @@
 ##############################################################################
 
 '''
-Created on Feb 13, 2015
+Created on Dec 7, 2017
 
-@author: dsmerghetto
+@author: daniel
 '''
 
-from . import production_workorder
-from . import controllers
+# -*- coding: utf-8 -*-
+from odoo import http
+from odoo.http import request
+
+
+class WorkCenters(http.Controller):
+    @http.route('/workcenter/', auth='public')
+    def index(self, **kw):
+        wcObj = request.env['mrp.workcenter']
+        woObj = request.env['mrp.workorder']
+        wcBrwsList = wcObj.search([], limit=30)
+        wcDict = {}
+        for wcBrws in wcBrwsList:
+            wcId = wcBrws.id
+            if wcId not in wcDict.keys():
+                wcDict[wcId] = {'work_orders': [],
+                                'wc_obj': wcBrws,}
+            woBrwsList = woObj.search([('workcenter_id', '=', wcBrws.id)], limit=5, order='id DESC')
+            for woBrws in woBrwsList:
+                wcDict[wcId]['work_orders'].append(woBrws)
+        
+        return http.request.render('omnia_production_workcenter.index', {
+            'workcenter_dict': wcDict,
+        })
+
+#     @http.route('/academy/academy/objects/', auth='public')
+#     def list(self, **kw):

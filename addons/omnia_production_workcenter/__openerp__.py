@@ -33,7 +33,8 @@
     'description': """
     """,
     'data': [
-             'views/production_workorder.xml'
+             'views/production_workorder.xml',
+             'views/templates.xml',
         ],
     'qweb' : [
         ],
