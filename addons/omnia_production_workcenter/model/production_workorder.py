@@ -62,3 +62,28 @@ class MrpWorkOrder(models.Model):
             self.end_previous() # End opened timeline
             return self.button_start()  # Start with a new timeline
         return True
+    
+    @api.multi
+    def clientMachineRecordProduction(self, productedQty):
+        for workOrder in self:
+            if isinstance(productedQty, dict):
+                lossReasonId = productedQty['id_loss_reason']
+                desc = productedQty['description']
+                timeline_obj = self.env['mrp.workcenter.productivity']
+                self.end_previous()
+                self.button_start()
+                productivityBrwsList = timeline_obj.search([('workorder_id', 'in', self.ids), 
+                                                            ('date_end', '=', False), 
+                                                            ('user_id', '=', self.env.user.id)])
+                for productivityBrws in productivityBrwsList:
+                    productivityBrws.button_block()
+                    productivityBrws.write({'date_end': False, 'loss_id': lossReasonId})
+            elif workOrder.qty_produced + productedQty >= workOrder.qty_production:
+                workOrder.record_production()
+                workOrder.button_finish()
+            else:
+                workOrder.qty_producing = productedQty
+                workOrder.record_production()
+                
+        return True
+        
