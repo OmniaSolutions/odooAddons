@@ -18,9 +18,10 @@
                 	}
                 	div.single_wc {
 						background-color: #dedede;
-					    border: 4px solid black;
-					    padding: 10px;
+					    border: 1px solid #875A7B;
+					    padding: 10px ;
 					    margin-right: 10px;
+					    margin-bottom: 5px;
                 	}
                 	td {
                 		padding: 0 22px 0 20px;
