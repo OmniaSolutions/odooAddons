@@ -54,7 +54,7 @@ class StockImmediateTransfer(models.TransientModel):
             for manufactObj in manufacturingObj.search([
                                                         ('name', '=', objBrws.origin),
                                                         ('state', '=', 'external')]):
-                manufactObj.write({'state': 'done'})
+                manufactObj.button_mark_done()
                 break
         return res
     

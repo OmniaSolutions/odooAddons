@@ -61,7 +61,14 @@ class MrpProduction(models.Model):
 
     @api.multi
     def button_cancel_produce_externally(self):
-        pass
+        stockPickingObj = self.env['stock.picking']
+        for manOrderBrws in self:
+            stockPickList = stockPickingObj.search([
+                                                    ('origin', '=', manOrderBrws.name),
+                                                    ])
+            for pickBrws in stockPickList:
+                pickBrws.action_cancel()
+            manOrderBrws.write({'state': 'confirmed'})
 
 
 class MrpProductionWizard(models.TransientModel):
