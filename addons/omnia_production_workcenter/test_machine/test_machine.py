@@ -4,7 +4,7 @@ Created on Dec 6, 2017
 @author: daniel
 '''
 
-
+from multiprocessing import Process
 from OdooQtUi.RPC.rpc import connectionObj
 import time
 import sys
@@ -32,7 +32,7 @@ def startMachine(workcenterId, workOrderId, nOfTotalPices=1, nOfPicesForCicle=1,
               }
     nOfLoop = int(nOfTotalPices / nOfPicesForCicle)
     operations = []
-    for i in range(nOfLoop):
+    for _i in range(nOfLoop):
         operations.append(nOfPicesForCicle)
         if nOfError > 0:
             if random.random() > 0.5:
@@ -62,22 +62,30 @@ def startMachine(workcenterId, workOrderId, nOfTotalPices=1, nOfPicesForCicle=1,
 
 
 def testWc():
+    MoName = raw_input("Manufactory Order name")
     WcName = raw_input("Name of WorkCenter (levigatura)") or "levigatura"
-    WoName = raw_input("Name of the WorkOrder (levigatura)") or "levigatura"
+    #WoName = raw_input("Name of the WorkOrder (levigatura)") or "levigatura"
     WcError = raw_input("number of rundom errors (3)") or "3"
     numberCircle = raw_input("number of cycle (10)") or "10"
     interaction = raw_input("number of item x cicle (2)") or "2"
+    moid = 0
+    for mo in connectionObj.search('mrp.production', [('name', '=', MoName)]):
+        moid = mo
+        break
     wcid = 0
     for wc in connectionObj.search('mrp.workcenter', [('name', '=', WcName)]):
         wcid = wc
         break
     woid = 0
-    for wc in connectionObj.search('mrp.workorder', [('name', '=', WoName),
+    for wc in connectionObj.search('mrp.workorder', [#('name', '=', WoName),
                                                      ('workcenter_id', '=', wcid),
-                                                     ('date_finished', '=', False)]):
+                                                     ('date_finished', '=', False),
+                                                     ('production_id', '=', moid)]):
         woid = wc
         break
-    startMachine(wcid, woid, int(numberCircle), int(interaction), int(WcError))
+    p = Process(target=startMachine, args=(wcid, woid, int(numberCircle), int(interaction), int(WcError),))
+    p.start()
+    p.join()
 
 
 def start():

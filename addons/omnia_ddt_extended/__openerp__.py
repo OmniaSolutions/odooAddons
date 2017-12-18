@@ -27,7 +27,7 @@
     'name': 'omnia_ddt_extended',
     'version': '0.1',
     'category': 'Custom',
-    'sequence':1,
+    'sequence': 1,
     'description': """
 Manage DDT documents
 ====================
