@@ -42,7 +42,6 @@
     'data': [
                 #view
                 'views/mrp_production_extension.xml',
-                #'views/stock_piking_extension.xml',
              
     ],
     'installable': True,
