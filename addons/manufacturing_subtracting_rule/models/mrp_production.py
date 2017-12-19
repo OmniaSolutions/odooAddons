@@ -92,8 +92,8 @@ class MrpProductionWizard(models.TransientModel):
     def getLocation(self):
         for lock in self.env['stock.location'].search([('usage', '=', 'supplier'),
                                         ('active', '=', True),
-                                        ('company_id', '=', False),
-                                        ('name', '=', 'Vendors')]):
+                                        ('company_id', '=', False)
+                                        ]):
             return lock.id
         return False
 
