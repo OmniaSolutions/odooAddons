@@ -87,6 +87,7 @@ class MrpProductionWizard(models.TransientModel):
                               'state': 'external'})
         self.createStockPickingIn(self.external_partner, productionBrws)
         self.createStockPickingOut(self.external_partner, productionBrws)
+        productionBrws.button_unreserve()   # Needed to evaluate picking out move
 
     def getLocation(self):
         for lock in self.env['stock.location'].search([('usage', '=', 'supplier'),

@@ -49,7 +49,7 @@ class StockImmediateTransfer(models.TransientModel):
         objIds = self.env.context.get('active_ids', [])
         relObj = self.env[model]
         objBrws = relObj.browse(objIds)
-        if objBrws.state == 'done' and objBrws.picking_type_id.code == 'incoming':
+        if model == 'stock.picking' and objBrws.state == 'done' and objBrws.picking_type_id.code == 'incoming':
             manufacturingObj = self.env['mrp.production']
             for manufactObj in manufacturingObj.search([
                                                         ('name', '=', objBrws.origin),
