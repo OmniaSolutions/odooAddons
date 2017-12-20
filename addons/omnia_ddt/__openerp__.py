@@ -52,8 +52,10 @@ Manage DDT documents
                 'view/transportation_reason_data.xml',
                 'view/transportation_reason_view.xml',
                 'view/acc_invoice_view_ddt.xml',
+                'view/import_report_css.xml',
 #              #report
                'report/report_omnia_account_invoice.xml',
+               'report/report_ddt.xml',
 #              #menu
                 'menu_configuration.xml',
 #              #security
