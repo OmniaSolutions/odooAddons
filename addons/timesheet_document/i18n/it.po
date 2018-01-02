@@ -1,0 +1,346 @@
+# Translation of Odoo Server.
+# This file contains the translation of the following modules:
+# 	* timesheet_document
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 10.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2018-01-02 13:52+0000\n"
+"PO-Revision-Date: 2018-01-02 14:58+0100\n"
+"Last-Translator: <>\n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: \n"
+"Language: en\n"
+"X-Generator: Poedit 1.8.11\n"
+
+#. module: timesheet_document
+#: model:ir.model.fields,help:timesheet_document.field_timesheet_document_state
+msgid ""
+" * The 'Draft' status is used when the Timesheet Document is created.\n"
+"\n"
+"                             * The 'Confermed' when Timesheet document is ready to be delivered to the customer\n"
+msgstr ""
+" * Lo stato 'Draft' e' utilizzato quando il  Timesheet Document viene generato.\n"
+"\n"
+"                             *  'Confermed' quando Timesheet document pronto per essere inviato al cliente\n"
+
+#. module: timesheet_document
+#: model:mail.template,subject:timesheet_document.email_template_timesheet_document
+msgid "${object.timesheet_customer_id.name|safe}"
+msgstr "${object.timesheet_customer_id.name|safe}"
+
+#. module: timesheet_document
+#: model:ir.ui.view,arch_db:timesheet_document.report_timesheet_document
+msgid "<b>Cliente:</b>"
+msgstr "<b>Cliente:</b>"
+
+#. module: timesheet_document
+#: model:ir.ui.view,arch_db:timesheet_document.report_timesheet_document
+msgid "<b>Date:</b>"
+msgstr "<b>Date:</b>"
+
+#. module: timesheet_document
+#: model:ir.ui.view,arch_db:timesheet_document.report_timesheet_document
+msgid "<b>Number:</b>"
+msgstr "<b>Numero:</b>"
+
+#. module: timesheet_document
+#: model:ir.ui.view,arch_db:timesheet_document.report_timesheet_document
+msgid "<b>Reference:</b>"
+msgstr "<b>Riferimento:</b>"
+
+#. module: timesheet_document
+#: model:mail.template,body_html:timesheet_document.email_template_timesheet_document
+msgid ""
+"<div style = \"font-family: 'Lucica Grande', Ubuntu, Arial, Verdana, sans-serif; font-size: 12px; color: rgb (34, 34, 34); background-color: rgb (255, 255 , 255); \">\n"
+"                                        <p> Dear Customer $ {object.timesheet_reference_id.name}, </ p>\n"
+"                                        <p> We attach the intervention report for the technical assistance provided. </ p>\n"
+"                                        <p> We kindly ask you to read it and return it countersigned for acceptance. </ p>\n"
+"                                        <p> In case of non-delivery within 5 working days from the date of entry, it will be considered accepted. </ p>\n"
+"                                        <br/>\n"
+"                                        <br/>\n"
+"                                        <p> For any clarification or further information please contact us </ p>\n"
+"                                        <br/>\n"
+"                                        <p> Best regards </ p>\n"
+"            "
+msgstr ""
+"<div style=\"font-family: 'Lucica Grande', Ubuntu, Arial, Verdana, sans-serif; font-size: 12px; color: rgb(34, 34, 34); background-color: rgb(255, 255, 255); \">\n"
+"                                        <p>Gentile Cliente ${object.timesheet_reference_id.name},</p>\n"
+"                                        <p>Alleghiamo il rapporto di intervento per l'assistenza tecnica fornita.</p>\n"
+"                                        <p>Vi chiediamo gentilmente di leggerlo e tornarcelo controfirmato per accettazione.</p>\n"
+"                                        <p>In caso di mancato recapito entro 5 giorni lavorativi dalla data di immisione, verra' considerato accettato.</p>   \n"
+"                                        <br/>\n"
+"                                        <br/>\n"
+"                                        <p>Per qualsiasi chiarimento o ulteriore informazione non esitate a contattarci</p> \n"
+"                                        <br/>                                   \n"
+"                                        <p>Cordiali Saluti</p>\n"
+"            "
+
+#. module: timesheet_document
+#: model:ir.model.fields,field_description:timesheet_document.field_timesheet_document_message_needaction
+msgid "Action Needed"
+msgstr "Azione Necessaria"
+
+#. module: timesheet_document
+#: model:ir.model,name:timesheet_document.model_account_analytic_line
+msgid "Analytic Line"
+msgstr "Linea conto analitico"
+
+#. module: timesheet_document
+#: model:ir.ui.view,arch_db:timesheet_document.timesheet_document_form
+msgid "Codice Documento"
+msgstr "Codice Documento"
+
+#. module: timesheet_document
+#: model:ir.ui.view,arch_db:timesheet_document.timesheet_document_form
+msgid "Codice Timesheet"
+msgstr "Codice Timesheet"
+
+#. module: timesheet_document
+#: selection:timesheet.document,state:0
+msgid "Confermed"
+msgstr "Confermato"
+
+#. module: timesheet_document
+#: model:ir.ui.view,arch_db:timesheet_document.timesheet_document_form
+msgid "Confirm"
+msgstr "Conferma"
+
+#. module: timesheet_document
+#: model:ir.model.fields,field_description:timesheet_document.field_timesheet_document_create_uid
+msgid "Created by"
+msgstr "Creato da"
+
+#. module: timesheet_document
+#: model:ir.model.fields,field_description:timesheet_document.field_timesheet_document_create_date
+msgid "Created on"
+msgstr "Creato il"
+
+#. module: timesheet_document
+#: model:ir.ui.view,arch_db:timesheet_document.report_timesheet_document
+msgid "Date"
+msgstr "Data"
+
+#. module: timesheet_document
+#: model:ir.model.fields,help:timesheet_document.field_timesheet_document_message_last_post
+msgid "Date of the last message posted on the record."
+msgstr "Data dell'ultimo messaggio postato per questo record"
+
+#. module: timesheet_document
+#: model:ir.ui.view,arch_db:timesheet_document.report_timesheet_document
+msgid "Description"
+msgstr "Descrizione"
+
+#. module: timesheet_document
+#: model:ir.model.fields,field_description:timesheet_document.field_timesheet_document_display_name
+msgid "Display Name"
+msgstr "Nome Mostrato"
+
+#. module: timesheet_document
+#: selection:timesheet.document,state:0
+msgid "Draft"
+msgstr "Draft"
+
+#. module: timesheet_document
+#: model:ir.model.fields,field_description:timesheet_document.field_timesheet_document_message_follower_ids
+msgid "Followers"
+msgstr "Followers"
+
+#. module: timesheet_document
+#: model:ir.model.fields,field_description:timesheet_document.field_timesheet_document_message_channel_ids
+msgid "Followers (Channels)"
+msgstr "Followers (Canali)"
+
+#. module: timesheet_document
+#: model:ir.model.fields,field_description:timesheet_document.field_timesheet_document_message_partner_ids
+msgid "Followers (Partners)"
+msgstr "Followers (Partner)"
+
+#. module: timesheet_document
+#: model:ir.model.fields,field_description:timesheet_document.field_timesheet_document_id
+msgid "ID"
+msgstr "ID"
+
+#. module: timesheet_document
+#: model:ir.model.fields,help:timesheet_document.field_timesheet_document_message_unread
+msgid "If checked new messages require your attention."
+msgstr "Se selezionato, nuovi messaggi richiedono la tua attenzione"
+
+#. module: timesheet_document
+#: model:ir.model.fields,help:timesheet_document.field_timesheet_document_message_needaction
+msgid "If checked, new messages require your attention."
+msgstr "Se selezionato, i nuovi messaggi richiedono la tua attenzione"
+
+#. module: timesheet_document
+#: model:ir.ui.view,arch_db:timesheet_document.report_timesheet_document
+msgid "If this document is not returned countersigned within 5 working days from its date of entry, it will be considered accepted."
+msgstr "In caso il presente documento non venga riconsegnato controfirmato entro 5 giorni lavorativi dalla sua data di immisione, verra' considerato accettato."
+
+#. module: timesheet_document
+#: model:ir.model.fields,field_description:timesheet_document.field_timesheet_document_message_is_follower
+msgid "Is Follower"
+msgstr "E' Follower"
+
+#. module: timesheet_document
+#: model:ir.model.fields,field_description:timesheet_document.field_timesheet_document_message_last_post
+msgid "Last Message Date"
+msgstr "Data Ultimo Messaggio"
+
+#. module: timesheet_document
+#: model:ir.model.fields,field_description:timesheet_document.field_timesheet_document___last_update
+msgid "Last Modified on"
+msgstr "Data di ultima modifica"
+
+#. module: timesheet_document
+#: model:ir.model.fields,field_description:timesheet_document.field_timesheet_document_write_uid
+msgid "Last Updated by"
+msgstr "Ultima modifica di"
+
+#. module: timesheet_document
+#: model:ir.model.fields,field_description:timesheet_document.field_timesheet_document_write_date
+msgid "Last Updated on"
+msgstr "Ultima modifica il"
+
+#. module: timesheet_document
+#: model:ir.model.fields,field_description:timesheet_document.field_timesheet_document_message_ids
+msgid "Messages"
+msgstr "Messaggi"
+
+#. module: timesheet_document
+#: model:ir.model.fields,field_description:timesheet_document.field_timesheet_document_timesheet_note
+msgid "Note"
+msgstr "Nota"
+
+#. module: timesheet_document
+#: model:ir.ui.view,arch_db:timesheet_document.report_timesheet_document
+msgid "Note:"
+msgstr "Note:"
+
+#. module: timesheet_document
+#: model:ir.model.fields,field_description:timesheet_document.field_timesheet_document_message_needaction_counter
+msgid "Number of Actions"
+msgstr "Numero di Azioni"
+
+#. module: timesheet_document
+#: model:ir.model.fields,help:timesheet_document.field_timesheet_document_message_needaction_counter
+msgid "Number of messages which requires an action"
+msgstr "Numero di messaggi che richiedono un'azione"
+
+#. module: timesheet_document
+#: model:ir.model.fields,help:timesheet_document.field_timesheet_document_message_unread_counter
+msgid "Number of unread messages"
+msgstr "Numero di messaggi non letti"
+
+#. module: timesheet_document
+#: model:ir.ui.view,arch_db:timesheet_document.report_timesheet_document
+msgid "Order"
+msgstr "Ordine"
+
+#. module: timesheet_document
+#: model:ir.model.fields,field_description:timesheet_document.field_timesheet_document_timesheet_customer_id
+msgid "Partner"
+msgstr "Partner"
+
+#. module: timesheet_document
+#: model:mail.template,report_name:timesheet_document.email_template_timesheet_document
+msgid "RapportoIntervento${(object.timesheet_date or '').replace('/','_')}"
+msgstr "RapportoIntervento ${(object.timesheet_date or '').replace('/','_')}"
+
+#. module: timesheet_document
+#: model:ir.model.fields,field_description:timesheet_document.field_timesheet_document_timesheet_reference_id
+msgid "Reference"
+msgstr "Riferimento"
+
+#. module: timesheet_document
+#: model:ir.ui.view,arch_db:timesheet_document.timesheet_document_form
+msgid "Reset To Draft"
+msgstr "Porta a Draft"
+
+#. module: timesheet_document
+#: model:ir.ui.view,arch_db:timesheet_document.timesheet_document_form
+msgid "Send by Email"
+msgstr "Invia per Email"
+
+#. module: timesheet_document
+#: model:ir.ui.view,arch_db:timesheet_document.report_timesheet_document
+msgid "Signature  ______________"
+msgstr "Firma  ______________"
+
+#. module: timesheet_document
+#: model:ir.model.fields,field_description:timesheet_document.field_timesheet_document_state
+msgid "Status"
+msgstr "Stato"
+
+#. module: timesheet_document
+#: model:ir.ui.view,arch_db:timesheet_document.report_timesheet_document
+msgid "TIMESHEET REPORT DOCUMENT"
+msgstr "RAPPORTO DI INTERVENTO"
+
+#. module: timesheet_document
+#: model:ir.ui.view,arch_db:timesheet_document.report_timesheet_document
+msgid "Time spent"
+msgstr "Tempo Utilizzato"
+
+#. module: timesheet_document
+#: model:ir.model.fields,field_description:timesheet_document.field_timesheet_document_timesheet_date
+msgid "Timesheet Date"
+msgstr "Data"
+
+#. module: timesheet_document
+#: model:ir.actions.act_window,name:timesheet_document.ir_actions_omnia_timsheet_sheet
+#: model:ir.actions.report.xml,name:timesheet_document.report_timesheet_document_id
+#: model:ir.ui.menu,name:timesheet_document.menu_act_omnia_hr_timesheet_sheet_form_my_current
+#: model:ir.ui.view,arch_db:timesheet_document.timesheet_document_tree
+msgid "Timesheet Document"
+msgstr "Timesheet Documento"
+
+#. module: timesheet_document
+#: model:ir.model.fields,field_description:timesheet_document.field_timesheet_document_name
+msgid "Timesheet Name"
+msgstr "Timesheet Nome"
+
+#. module: timesheet_document
+#: model:ir.model.fields,field_description:timesheet_document.field_account_analytic_line_timesheet_document_ref
+msgid "Timesheet Reference"
+msgstr "Timesheet Riferimento"
+
+#. module: timesheet_document
+#: model:ir.model.fields,field_description:timesheet_document.field_timesheet_document_timesheet_timesheet_line
+msgid "Timesheet timesheet line"
+msgstr "Timesheet timesheet line"
+
+#. module: timesheet_document
+#: model:ir.model.fields,field_description:timesheet_document.field_timesheet_document_timesheet_total
+msgid "Timesheet total"
+msgstr "Timesheet Totale"
+
+#. module: timesheet_document
+#: model:ir.model.fields,field_description:timesheet_document.field_timesheet_document_message_unread
+msgid "Unread Messages"
+msgstr "Messaggi Non Letti"
+
+#. module: timesheet_document
+#: model:ir.model.fields,field_description:timesheet_document.field_timesheet_document_message_unread_counter
+msgid "Unread Messages Counter"
+msgstr "Contatore di messsaggi non letti"
+
+#. module: timesheet_document
+#: code:addons/timesheet_document/model/timesheet.py:88
+#, python-format
+msgid "You cannot confirm a timesheet that have line already refereed line id: %r "
+msgstr "Non puoi confermare un timesheed che contiene delle linee gia referenziare all'id: %r "
+
+#. module: timesheet_document
+#: code:addons/timesheet_document/model/timesheet.py:95
+#, python-format
+msgid "You cannot confirm a timesheet that have no line"
+msgstr "Non puoi confermare un timesheet che non ha linee"
+
+#. module: timesheet_document
+#: model:ir.model,name:timesheet_document.model_timesheet_document
+msgid "timesheet.document"
+msgstr "timesheet.document"

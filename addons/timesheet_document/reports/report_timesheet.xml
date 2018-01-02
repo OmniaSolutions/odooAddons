@@ -1,0 +1,82 @@
+<?xml version="1.0"?>
+		<openerp>
+			<data>
+				<template id="report_timesheet_document" name="Timesheet Document">
+					<t t-foreach="docs" t-as="o">
+					<t t-call="report.external_layout">
+        				<div class="page">
+            				
+            				<div class="row">
+            				    <h2 style="text-align:center;padding: 5px">TIMESHEET REPORT DOCUMENT</h2>
+            				    <div>
+									<div style="position:relative;float: left;border-left: 1px solid #e6e6ff;padding-left: 8px;padding-right: 5px;"><b>Cliente:</b><p t-field="o.timesheet_customer_id.name"/>
+									   <p t-field="o.timesheet_customer_id.street"/>
+									   <p t-field="o.timesheet_customer_id.zip">,<i t-field="o.timesheet_customer_id.city"/></p>
+									</div>
+									<div style="position:relative;float: right;border-left: 1px solid #e6e6ff;padding-left: 8px;padding-right: 5px;">
+									   <b>Reference:</b><p t-field="o.timesheet_reference_id.name"/>
+									   <b>Date:</b><p t-field="o.timesheet_date"/>
+                                       <b>Number:</b><p t-field="o.name"/>
+									</div>
+								</div>
+								
+								<table style="width:100%;padding: 5px">
+									<tr>
+										<th style="background: #e6e6ff;padding: 5px;">Date</th>
+										<th style="background: #e6e6ff;padding: 5px;">Order</th>
+										<th style="background: #e6e6ff;padding: 5px;">Description</th>
+										<th style="background: #e6e6ff;padding: 5px;">Time spent</th>
+									</tr>
+									<tr t-foreach="o.timesheet_timesheet_line" t-as="l">
+										<td style="padding: 5px;">
+											<p  t-field="l.date"/>
+										</td>
+										<td>
+											<p t-field="l.account_id.name"/>
+										</td>
+										<td style="padding: 5px;">
+											<p t-field="l.name"/>
+										</td>
+										<td style="padding: 5px;">
+											<p t-field="l.unit_amount" style="text-align:right;"/>
+										</td>
+									</tr>
+									<tr>
+										<td colspan="4" style="padding: 5px;">
+												<p t-field="o.timesheet_total" style="text-align:right;font-weight: bold;"/>
+										</td>
+									</tr>
+									<tr>
+										<td colspan="4" style="background: #e6e6ff;padding: 5px;">
+												<p style="text-align:left;font-weight: bold;">Note:</p>
+										</td>
+									</tr>
+									<tr>
+										<td colspan="4" style="background: #e6e6ff;padding: 5px;">
+												<p t-field="o.timesheet_note" style="text-align:left;"/>
+										</td>
+									</tr>
+									<tr>
+										<td colspan="4" style="background: #e6e6ff;padding: 5px;">
+											<p  style="text-align:right;">Signature  ______________</p>
+										</td>
+									</tr>
+									<tr>
+										<td colspan="4" style="background: #e6e6ff;">
+										<br/>
+										</td>
+									</tr>
+									<tr>
+										<td colspan="4" style="background: #e6e6ff;padding: 5px">
+                                            If this document is not returned countersigned within 5 working days from its date of entry, it will be considered accepted.
+										</td>
+									</tr>
+								</table>
+								<br/>
+				            </div>
+				        </div>
+							</t>	
+							</t>			
+				</template>
+			</data>
+		</openerp>

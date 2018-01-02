@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+	<data>
+		
+		<record id="timesheet_document_form" model="ir.ui.view">
+            <field name="name">timesheet.document.form</field>
+            <field name="model">timesheet.document</field>
+            <field name="arch" type="xml">
+				<form>
+					<header>
+						<button name="action_confirm" 
+								string="Confirm" 
+								type="object"
+								states="draft" 
+								groups="base.group_user"/>
+						<button name="action_draft" 
+								string="Reset To Draft" 
+								type="object"
+								states="confirmed"
+								groups="base.group_user"/> 
+						<button name="action_quotation_send" 
+								string="Send by Email" 
+								type="object" 
+								class="oe_highlight" 
+								states="confirmed"
+								groups="base.group_user"/>
+						<field name="state" 
+							widget="statusbar" 
+							statusbar_visible="draft,confirmed" 
+							/>
+					</header>
+					<sheet>
+						<h1>
+						<label string="Codice Documento"
+						       attrs="{'invisible':[('state', '=', 'draft')]}"
+						/>
+						<field name="name"
+							string="Codice Timesheet"
+							attrs="{'invisible':[('state', '=', 'draft')]}"
+							class="oe_inline"					
+							/>
+						</h1>
+						<group>						
+						<field name="timesheet_customer_id"
+						 	domain="[('is_company','=',True),('customer','=',True)]" 
+						/>
+						<field name="timesheet_reference_id"
+						 	domain="[('parent_id','=',timesheet_customer_id)]"
+						/>
+						<field name="timesheet_date"/>
+						</group>						
+						<field name="timesheet_timesheet_line" domain="[('account_id.partner_id','=',timesheet_customer_id),('timesheet_document_ref','=',False)]"/>
+						
+						<group>
+							<field name="timesheet_total" />
+						</group>						
+						
+						<field name="timesheet_note" />			
+					</sheet>
+					<div class="oe_chatter">
+	                    <field name="message_follower_ids" widget="mail_followers"/>
+	                    <field name="message_ids" widget="mail_thread"/>
+	                </div>
+				</form>
+            </field>
+        </record>
+        
+        <record model="ir.ui.view" id="timesheet_document_tree">
+            <field name="name">TimeSheet Document</field>
+            <field name="model">timesheet.document</field>
+            <field name="arch" type="xml">
+                <tree string="Timesheet Document"
+                		colors="red:state=='draft';green:state=='confirmed'">
+                    <field name="name"/>
+                	<field name="timesheet_customer_id" />
+                    <field name="timesheet_reference_id"/>
+                    <field name="timesheet_date"/>
+                    <field name="timesheet_total"/>
+                    <field name="state"/>
+                </tree>
+            </field>
+        </record>
+        
+         <!--Email template -->
+        <record id="email_template_timesheet_document" model="mail.template">
+            <field name="name">Timesheet Document - Send by Email (Portal)</field>
+            <field name="email_from">${(user.email or '')|safe}</field>
+            <field name="subject">${object.timesheet_customer_id.name|safe}</field>
+            <field name="partner_to">${object.timesheet_reference_id.id}</field>
+            <field name="model_id" ref="timesheet_document.model_timesheet_document"/>
+            <field name="auto_delete" eval="True"/>
+            <field name="report_template" ref="timesheet_document.report_timesheet_document_id"/>
+            <field name="report_name">RapportoIntervento${(object.timesheet_date or '').replace('/','_')}</field>
+            <field name="lang">${object.timesheet_customer_id.lang}</field>
+            <field name="user_signature" eval="True"/>
+            <field name="body_html"><![CDATA[<div style = "font-family: 'Lucica Grande', Ubuntu, Arial, Verdana, sans-serif; font-size: 12px; color: rgb (34, 34, 34); background-color: rgb (255, 255 , 255); ">
+                                        <p> Dear Customer $ {object.timesheet_reference_id.name}, </ p>
+                                        <p> We attach the intervention report for the technical assistance provided. </ p>
+                                        <p> We kindly ask you to read it and return it countersigned for acceptance. </ p>
+                                        <p> In case of non-delivery within 5 working days from the date of entry, it will be considered accepted. </ p>
+                                        <br/>
+                                        <br/>
+                                        <p> For any clarification or further information please contact us </ p>
+                                        <br/>
+                                        <p> Best regards </ p>]]>
+            </field>
+        </record>
+        		
+        <act_window
+            id="ir_actions_omnia_timsheet_sheet"
+            name="Timesheet Document" 
+            res_model="timesheet.document"
+            src_model="timesheet.document" 
+            />
+        <!-- Menu definition -->
+        <menuitem name="Timesheet Document" 
+            id="menu_act_omnia_hr_timesheet_sheet_form_my_current" 
+            parent="hr_timesheet.menu_hr_time_tracking" 
+            action="ir_actions_omnia_timsheet_sheet" sequence="1"/>
+	</data>
+	
+    <data noupdate="1">   
+        <record id="seq_timesheet_document" model="ir.sequence">
+            <field name="name">Timesheet Document</field>
+            <field name="code">timesheet.document</field>
+            <field name="prefix">T-/%(year)s/</field>
+            <field name="padding">3</field>
+            <field name="company_id" eval="False"/>
+        </record>
+	</data>
+</odoo>

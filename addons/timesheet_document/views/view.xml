@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<openerp>
+    <data>
+
+        <record id="view_acc_anal_tree_custom" model="ir.ui.view">
+            <field name="name">account.analytic.tree.custom</field>
+            <field name="model">account.analytic.account</field>
+            <field name="inherit_id" ref="account.view_account_analytic_account_list"/>
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='company_id']" position="after">
+                    <field name="est_total" sum="#Estimated Total"/>
+                    <field name="remaining_total" sum="#Remaining Total"/>
+                    <field name="invoiced_total" sum="#Invoiced Total"/>
+                    <field name="toinvoice_total" sum="#To Invoice Total"/>
+                    <field name="remaining_hours" sum="#Remaining Hours"/>
+                </xpath>
+            </field>
+        </record>
+
+        
+        <record id="view_account_analytic_account_overdue_search_custom" model="ir.ui.view">
+            <field name="name">account.analytic.account.search.custom</field>
+            <field name="model">account.analytic.account</field>
+            <field name="inherit_id" ref="account_analytic_analysis.view_account_analytic_account_overdue_search"/>
+            <field name="arch" type="xml">
+                <xpath expr="//filter[@string='Parent']" position="replace">
+                	<filter string="Parent" name = "group_parentFilter" domain="[]" context="{'group_by':'parent_id'}"/>
+                </xpath>
+            </field>
+        </record>
+        
+        <record id="account_analytic_analysis.action_account_analytic_overdue_all" model="ir.actions.act_window">
+            <field name="name">Contracts</field>
+            <field name="res_model">account.analytic.account</field>
+            <field name="view_type">form</field>
+            <field name="view_mode">tree,form</field>
+            <field name="context">{'default_type':'contract', 'search_default_open':1, 'search_default_pending':1, 'default_manager_id':uid, 'search_default_group_parentFilter':1}</field>
+            <field name="domain">[('type','=','contract')]</field>
+            <field name="search_view_id" ref="account_analytic_analysis.view_account_analytic_account_overdue_search"/>
+            <field name="help" type="html">
+                <p class="oe_view_nocontent_create">
+                    Click to create a new contract.
+                </p><p>
+                    Use contracts to follow tasks, issues, timesheets or invoicing based on
+                    work done, expenses and/or sales orders. Odoo will automatically manage
+                    the alerts for the renewal of the contracts to the right salesperson.
+                </p>
+            </field>
+        </record>
+        
+        <record id="product_category_form_view_in" model="ir.ui.view">
+            <field name="name">product.category.form.in</field>
+            <field name="model">product.category</field>
+            <field name="inherit_id" ref="product.product_category_form_view"/>
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='type']" position="after">
+                	<field name = "analytic_template" domain="[('type','=','template')]"/>
+                </xpath>
+            </field>
+        </record>
+        
+    </data>
+</openerp>

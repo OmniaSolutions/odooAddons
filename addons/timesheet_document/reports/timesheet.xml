@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<openerp>
+	<data>
+		<report
+		    id="report_timesheet_document_id"
+		    model="timesheet.document"
+		    string="Timesheet Document"
+		    report_type="qweb-pdf"
+		    name="timesheet_document.report_timesheet_document"
+		    file="timesheet_document.report_timesheet"
+		    attachment_use="True" 
+		/>
+	</data>
+</openerp>
