@@ -6,7 +6,7 @@
 		    model="timesheet.document"
 		    string="Timesheet Document"
 		    report_type="qweb-pdf"
-		    name="timesheet_document.report_timesheet_document"
+		    name="timesheet_document.report_timesheet_documents"
 		    file="timesheet_document.report_timesheet"
 		    attachment_use="True" 
 		/>

@@ -13,10 +13,6 @@ class sale_order(models.Model):
     @api.multi
     def print_quotation_template(self):
         self.ensure_one()
-        return {
-            'type': 'ir.actions.act_url',
-            'target': 'new',
-            'url': '/quote/%s/%s?pdf=True' % (self.id, self.access_token)
-        }
-
-sale_order()
+        return {'type': 'ir.actions.act_url',
+                'target': 'new',
+                'url': '/quote/%s/%s?pdf=True' % (self.id, self.access_token)}
