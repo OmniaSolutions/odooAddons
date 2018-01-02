@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+<template id="report.assets_common_omnia_ddt" inherit_id="report.assets_common">
+    <xpath expr="." position="inside">
+        <link href="/omnia_ddt/static/src/css/ddt_report.css" rel="stylesheet" type="text/css"/>
+    </xpath>
+
+</template>
+
+</odoo>

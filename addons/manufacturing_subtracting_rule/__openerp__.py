@@ -28,43 +28,24 @@
 
 
 {
-    'name': 'omnia_DDT',
+    'name': 'Omnia Manufacturing Subtracting Rule',
     'version': '1.1',
     'sequence': 1,
     'category': 'Custom',
     'description': """
-Manage DDT documents
 ====================
 """,
     'author': 'OmniaSolutions.eu',
     'maintainer': 'OmniaSolutions.eu',
     'website': 'http://www.OmniaSolutions.eu',
-    #'depends': ['stock','delivery','report_webkit'],
-    'depends': ['stock','delivery'],
+    'depends': ['stock', 'delivery', 'mrp'],
     'data': [
                 #view
-                'view/carriage_condition_data.xml',
-                'view/carriage_condition_view.xml',
-                'view/goods_description_data.xml',
-                'view/goods_description_view.xml',
-                'view/picking_view.xml',
-                'view/sequence.xml',
-                'view/transportation_reason_data.xml',
-                'view/transportation_reason_view.xml',
-                'view/acc_invoice_view_ddt.xml',
-                'view/import_report_css.xml',
-#              #report
-               'report/report_omnia_account_invoice.xml',
-               'report/report_ddt.xml',
-#              #menu
-                'menu_configuration.xml',
-#              #security
-                'security/ddt_groups.xml',
-                'security/ir.model.access.csv',
+                'views/mrp_production_extension.xml',
              
     ],
     'installable': True,
-    'application': True,
+    'application': False,
     'auto_install': False,
 }
 

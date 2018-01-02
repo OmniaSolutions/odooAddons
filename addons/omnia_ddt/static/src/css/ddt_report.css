@@ -1,0 +1,49 @@
+.left_panel_element {
+	width: 50%;
+}
+
+.right_panel_element {
+	width: 50%;
+}
+
+.align_horizontally {
+	display: flex;
+	width: 100%;
+	position: relative;
+}
+
+.text_align_center {
+	text-align: center;
+}
+.text_align_right {
+	text-align: right;
+}
+.text_align_left {
+	text-align: left;
+}
+
+.table_title {
+	border: 1px solid;
+	width: 100%;
+	margin-bottom: 40px;
+}
+
+.table_title_bottom {
+	border: 1px solid;
+	width: 100%;
+	border-bottom: none;
+}
+
+.th_title {
+    border-right: 1px solid;
+    padding: 10px;
+    border-bottom: 1px solid;
+    background-color: #9fd0d5;
+    font-weight: bold;
+}
+
+.table_rows {
+    border-right: 1px solid;
+    padding: 10px;
+    height: 30px;
+}
