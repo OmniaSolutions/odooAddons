@@ -46,7 +46,6 @@ class MrpProduction(models.Model):
 
     state = fields.Selection(selection_add=[('external', 'External Production')])
     external_partner = fields.Many2one('res.partner', string='External Partner')
-    
 
     @api.multi
     def button_produce_externally(self):
@@ -63,9 +62,7 @@ class MrpProduction(models.Model):
     def button_cancel_produce_externally(self):
         stockPickingObj = self.env['stock.picking']
         for manOrderBrws in self:
-            stockPickList = stockPickingObj.search([
-                                                    ('origin', '=', manOrderBrws.name),
-                                                    ])
+            stockPickList = stockPickingObj.search([('origin', '=', manOrderBrws.name)])
             for pickBrws in stockPickList:
                 pickBrws.action_cancel()
             manOrderBrws.write({'state': 'confirmed'})
@@ -91,9 +88,8 @@ class MrpProductionWizard(models.TransientModel):
 
     def getLocation(self):
         for lock in self.env['stock.location'].search([('usage', '=', 'supplier'),
-                                        ('active', '=', True),
-                                        ('company_id', '=', False)
-                                        ]):
+                                                       ('active', '=', True),
+                                                       ('company_id', '=', False)]):
             return lock.id
         return False
 
@@ -103,68 +99,58 @@ class MrpProductionWizard(models.TransientModel):
             warehouseId = productionBrws.picking_type_id.warehouse_id.id
             pickTypeObj = self.env['stock.picking.type']
             for pick in pickTypeObj.search([('code', '=', 'incoming'),
-                                ('active', '=', True),
-                                ('warehouse_id', '=', warehouseId)]):
+                                            ('active', '=', True),
+                                            ('warehouse_id', '=', warehouseId)]):
                 return pick.id
             return False
-            
+
         stockObj = self.env['stock.picking']
         loc = self.getLocation()
-        toCreate = {
-                'partner_id': partner.id,
-                'location_id': loc,
-                'location_src_id': loc,
-                'location_dest_id': productionBrws.location_src_id.id,
-                'min_date': productionBrws.date_planned_start,
-                'move_type': 'direct',
-                'picking_type_id': getPickingType(),
-                'origin': productionBrws.name,
-                'move_lines': []
-            }
+        toCreate = {'partner_id': partner.id,
+                    'location_id': loc,
+                    'location_src_id': loc,
+                    'location_dest_id': productionBrws.location_src_id.id,
+                    'min_date': productionBrws.date_planned_start,
+                    'move_type': 'direct',
+                    'picking_type_id': getPickingType(),
+                    'origin': productionBrws.name,
+                    'move_lines': []}
         for productionLineBrws in productionBrws.move_finished_ids:
-            toCreate ['move_lines'].append(
+            toCreate['move_lines'].append(
                 (0, False, {
                     'product_id': productionLineBrws.product_id.id,
                     'product_uom_qty': productionLineBrws.product_uom_qty,
                     'product_uom': productionLineBrws.product_uom.id,
                     'name': productionLineBrws.name,
-                    'state': 'draft',
-                    })
-                )
+                    'state': 'assigned'}))
         stockObj.create(toCreate)
 
     def createStockPickingOut(self, partner, productionBrws):
-        
         def getPickingType():
             warehouseId = productionBrws.picking_type_id.warehouse_id.id
             pickTypeObj = self.env['stock.picking.type']
             for pick in pickTypeObj.search([('code', '=', 'outgoing'),
-                                ('active', '=', True),
-                                ('warehouse_id', '=', warehouseId)]):
+                                            ('active', '=', True),
+                                            ('warehouse_id', '=', warehouseId)]):
                 return pick.id
             return False
-            
+
         stockObj = self.env['stock.picking']
-        toCreate = {
-                'partner_id': partner.id,
-                'location_id': productionBrws.location_src_id.id,
-                'location_dest_id': self.getLocation(),
-                'location_src_id': productionBrws.location_src_id.id,
-                'min_date': datetime.datetime.now(),
-                'move_type': 'direct',
-                'picking_type_id': getPickingType(),
-                'origin': productionBrws.name,
-                'move_lines': []
-            }
+        toCreate = {'partner_id': partner.id,
+                    'location_id': productionBrws.location_src_id.id,
+                    'location_dest_id': self.getLocation(),
+                    'location_src_id': productionBrws.location_src_id.id,
+                    'min_date': datetime.datetime.now(),
+                    'move_type': 'direct',
+                    'picking_type_id': getPickingType(),
+                    'origin': productionBrws.name,
+                    'move_lines': []}
         for productionLineBrws in productionBrws.move_raw_ids:
-            toCreate ['move_lines'].append(
+            toCreate['move_lines'].append(
                 (0, False, {
                     'product_id': productionLineBrws.product_id.id,
                     'product_uom_qty': productionLineBrws.product_uom_qty,
                     'product_uom': productionLineBrws.product_uom.id,
                     'name': productionLineBrws.name,
-                    'state': 'draft',
-                    })
-                )
+                    'state': 'assigned'}))
         stockObj.create(toCreate)
-        

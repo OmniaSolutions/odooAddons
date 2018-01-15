@@ -38,23 +38,28 @@ from odoo import api
 class StockImmediateTransfer(models.TransientModel):
     _name = 'stock.immediate.transfer'
     _inherit = ['stock.immediate.transfer']
-    
+
     @api.multi
     def process(self):
         '''
             Be sure to close the manufacturing order only if finished product is arrived.
         '''
         res = super(StockImmediateTransfer, self).process()
-        model = self.env.context.get('active_model', '')
-        objIds = self.env.context.get('active_ids', [])
-        relObj = self.env[model]
-        objBrws = relObj.browse(objIds)
-        if model == 'stock.picking' and objBrws.state == 'done' and objBrws.picking_type_id.code == 'incoming':
-            manufacturingObj = self.env['mrp.production']
-            for manufactObj in manufacturingObj.search([
-                                                        ('name', '=', objBrws.origin),
-                                                        ('state', '=', 'external')]):
-                manufactObj.button_mark_done()
-                break
+        for objPick in self.pick_id:
+            if objPick.picking_type_id.code == 'incoming':
+                manufacturingObj = self.env['mrp.production']
+                for manufactObj in manufacturingObj.search([('name', '=', objPick.origin),
+                                                            ('state', '=', 'external')]):
+                    manufactObj.button_mark_done()
+                    break
+        #model = self.env.context.get('active_model', '')
+        #objIds = self.env.context.get('active_ids', [])
+        #relObj = self.env[model]
+        #objBrws = relObj.browse(objIds)
+        #if model == 'stock.picking' and objBrws.state == 'done' and objBrws.picking_type_id.code == 'incoming':
+            #manufacturingObj = self.env['mrp.production']
+            #for manufactObj in manufacturingObj.search([('name', '=', objBrws.origin),
+            #                                            ('state', '=', 'external')]):
+            #    manufactObj.button_mark_done()
+            #    break
         return res
-    
