@@ -133,7 +133,8 @@ class SaleOrder(models.Model):
         newProductName = unicode(newBaseName) + '/' + unicode('{:03.0f}'.format(count))
         toCreate = {
             'name': newProductName,
-            'route_ids': [(6, False, self.getRoutesToSet())]
+            'route_ids': [(6, False, self.getRoutesToSet())],
+            'parent_product': oldProdBrws.product_tmpl_id.id,
             }
         return oldProdBrws.copy(default=toCreate)
     

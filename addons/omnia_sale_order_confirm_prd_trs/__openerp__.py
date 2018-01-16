@@ -37,6 +37,7 @@
     'data': [
              #view
             'views/product_category.xml',
+            'views/product_product.xml',
             'views/sequence.xml',
             'views/inventory_view.xml',
     ],

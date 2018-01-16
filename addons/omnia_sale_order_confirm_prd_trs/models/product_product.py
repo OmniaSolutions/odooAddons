@@ -19,6 +19,21 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 ##############################################################################
-import sale_order
-import stock_warehouse
-import product_product
+'''
+Created on Sep 1, 2017
+
+@author: daniel
+'''
+from openerp.exceptions import UserError
+from openerp import models
+from openerp import fields
+from openerp import _
+from openerp import api
+
+
+class ProductTemplate(models.Model):
+    _name = "product.template"
+    _inherit = "product.template"
+    
+    parent_product = fields.Many2one('product.template', string=_('Parent product'))
+
