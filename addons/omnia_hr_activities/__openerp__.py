@@ -28,7 +28,7 @@
     'sequence': 15,
     'summary': 'Allow to set start and end date in the user activities',
     'images': [],
-    'depends': ['hr_timesheet','hr_timesheet_attendance'],
+    'depends': ['hr_timesheet'],
     'description': """
     """,
     'data': [
