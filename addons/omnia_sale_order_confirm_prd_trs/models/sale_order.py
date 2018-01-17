@@ -70,6 +70,21 @@ class SaleOrder(models.Model):
         return res
 
     @api.multi
+    def _create_analytic_account(self, prefix=None):
+        '''
+            Used to create account analytic account for service products and set as task
+        '''
+        orderName = self.getNextAnalyticNumber()
+        for order in self:
+            analytic = self.env['account.analytic.account'].create({
+                'name': orderName,
+                'code': order.client_order_ref,
+                'company_id': order.company_id.id,
+                'partner_id': order.partner_id.id
+            })
+            order.project_id = analytic
+
+    @api.multi
     def getNextAnalyticNumber(self):
         newSequenceNumber = self.env['ir.sequence'].next_by_code('MATRICOLA')
         return unicode(date.today().year) + '/' + unicode(newSequenceNumber)
