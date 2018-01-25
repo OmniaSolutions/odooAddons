@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<openerp>
+    <data>
+
+		<template id="s_omnia_page_break" name="Page Break" inherit_id="website.snippets">
+		    <xpath expr="//div[@id='snippet_structure']/div[@class='o_panel_body']" position="inside">
+		    	<t t-snippet="omnia_quote_page_break.omnia_2" t-thumbnail="/website/static/src/img/blocks/block_references.png"/>
+		    </xpath>
+		</template>
+
+		<template id="omnia_2" name="Page Break">
+		    <section >
+		        <div class="container">
+		            <div class="row">
+						<div style="page-break-after: always; height:40px;"></div>
+		            </div>
+		        </div>
+		    </section>
+		</template>
+
+    </data>
+</openerp>
