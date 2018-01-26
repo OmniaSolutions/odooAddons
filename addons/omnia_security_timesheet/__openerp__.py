@@ -28,7 +28,7 @@
     'sequence': 15,
     'summary': 'Disable user choice for timesheet and attendances',
     'images': [],
-    'depends': ['hr_timesheet'],
+    'depends': ['hr_timesheet', 'hr_timesheet_sheet','hr_attendance'],
     'description': """
     """,
     'data': [
