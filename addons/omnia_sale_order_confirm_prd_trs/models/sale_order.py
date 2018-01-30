@@ -136,12 +136,20 @@ class SaleOrder(models.Model):
         for line in self.order_line:
             if self.getProductCategoryName(line) == 'MACHINE':
                 for _elem in range(int(line.product_uom_qty)):
-                    newProdBrws = self.createNewCodedProduct(newBaseName, count, line.product_id)
+                    oldProdBrws = line.product_id
+                    newProdBrws = self.createNewCodedProduct(newBaseName, count, oldProdBrws)
                     newSaleOrderLine = line.copy(default={'order_id': line.order_id.id})
                     newSaleOrderLine.product_id = newProdBrws.id
+                    self.moveOldBoms(oldProdBrws, newProdBrws)
                     newSaleOrderLine.product_uom_qty = 1.0
                     count = count + 1
                 line.unlink()
+
+    @api.multi
+    def moveOldBoms(self, oldProdBrws, newProdBrws):
+        for bomBrws in oldProdBrws.bom_ids:
+            newBomBrws = bomBrws.copy()
+            newBomBrws.product_tmpl_id = newProdBrws.product_tmpl_id
         
     @api.multi
     def createNewCodedProduct(self, newBaseName, count, oldProdBrws):
