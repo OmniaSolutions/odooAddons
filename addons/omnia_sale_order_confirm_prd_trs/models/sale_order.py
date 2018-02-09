@@ -140,6 +140,7 @@ class SaleOrder(models.Model):
                     newProdBrws = self.createNewCodedProduct(newBaseName, count, oldProdBrws)
                     newSaleOrderLine = line.copy(default={'order_id': line.order_id.id})
                     newSaleOrderLine.product_id = newProdBrws.id
+                    newSaleOrderLine.name = newSaleOrderLine.product_id.description
                     self.moveOldBoms(oldProdBrws, newProdBrws)
                     newSaleOrderLine.product_uom_qty = 1.0
                     count = count + 1
@@ -158,6 +159,8 @@ class SaleOrder(models.Model):
             'name': newProductName,
             'route_ids': [(6, False, self.getRoutesToSet())],
             'parent_product': oldProdBrws.product_tmpl_id.id,
+            'description': '[%s] %s' % (oldProdBrws.name, oldProdBrws.description or '-'),
+            'description_sale': '[%s] %s' % (oldProdBrws.name, oldProdBrws.description or '-')
             }
         return oldProdBrws.copy(default=toCreate)
     
