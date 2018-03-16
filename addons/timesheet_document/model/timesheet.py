@@ -85,7 +85,8 @@ class TimesheetDocument(models.Model):
         if len(self.timesheet_timesheet_line) > 0:
             for line in self.timesheet_timesheet_line:
                 if line.timesheet_document_ref is not False:
-                    raise Warning(_('You cannot confirm a timesheet that have line already refereed line id: %r ' % line.id))
+                    if line.timesheet_document_ref != self.name:
+                        raise Warning(_('You cannot confirm a timesheet that have line already refereed line id: %r Ref: %r' % (line.id, line.timesheet_document_ref)))
             self.state = 'confirmed'
             if not self.name:
                 self.name = self.env['ir.sequence'].next_by_code('timesheet.document')
