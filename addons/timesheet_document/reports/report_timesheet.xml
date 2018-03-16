@@ -32,6 +32,7 @@
 										<th style="background: #e6e6ff;padding: 5px;">Date</th>
 										<th style="background: #e6e6ff;padding: 5px;">Order</th>
 										<th style="background: #e6e6ff;padding: 5px;">Description</th>
+										<th style="background: #e6e6ff;padding: 5px;">Out</th>
 										<th style="background: #e6e6ff;padding: 5px;">Time spent</th>
 									</tr>
 									<tr t-foreach="doc.timesheet_timesheet_line" t-as="l">
@@ -44,6 +45,9 @@
 										<td style="padding: 5px;">
 											<p t-field="l.name"/>
 										</td>
+										<td style="padding: 5px;">
+                                            <p t-field="l.omnia_activity_type"/>
+                                        </td>
 										<td style="padding: 5px;">
 											<p t-field="l.unit_amount" style="text-align:right;"/>
 										</td>
