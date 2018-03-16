@@ -49,7 +49,17 @@
 						/>
 						<field name="timesheet_date"/>
 						</group>						
-						<field name="timesheet_timesheet_line" domain="[('account_id.partner_id','=',timesheet_customer_id),('timesheet_document_ref','=',False)]"/>
+						<field name="timesheet_timesheet_line" domain="[('account_id.partner_id','=',timesheet_customer_id),('timesheet_document_ref','=',False)]">
+                            <tree editable="top" string="Timesheet Activities">
+                                <field name="date"/>
+                                <field name="user_id" required="1" options="{&quot;no_open&quot;: True}"/>
+                                <field name="name"/>
+                                <field name="project_id" required="1"/>
+                                <field name="task_id" context="{'default_project_id': project_id}" domain="[('project_id', '=', project_id)]"/>
+                                <field name="unit_amount" string="Duration" sum="Total time" widget="float_time"/>
+						        <field name="omnia_activity_type"/>
+						  </tree>
+						</field>
 						
 						<group>
 							<field name="timesheet_total" />

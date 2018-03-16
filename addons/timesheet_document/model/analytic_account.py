@@ -29,3 +29,4 @@ from openerp import models, fields
 class Account_analytic_line(models.Model):
     _inherit = 'account.analytic.line'
     timesheet_document_ref = fields.Char("Timesheet Reference", readonly=True)
+    omnia_activity_type = fields.Boolean("To Customer")
