@@ -34,3 +34,5 @@ Created on Dec 18, 2017
 
 import mrp_production
 import stock_picking
+import wizard
+import mrp_workorder
