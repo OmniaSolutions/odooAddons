@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<openerp>
+    <data>
+
+       <record id="view_account_line_hr_timesheet" model="ir.ui.view">
+            <field name="name">account.analytic.line.tree.hr_timesheet.omnia.activities</field>
+            <field name="model">account.analytic.line</field>
+            <field name="inherit_id" ref="hr_timesheet.hr_timesheet_line_tree"/>
+            <field name="arch" type="xml">
+                <field name="date" position="after">
+                    <field name="starting_date"/>
+                    <field name="ending_date"/>
+                </field>
+                <field name="date" position="replace">
+                	<field name="date" invisible="True" />
+                </field>
+            </field>
+        </record>
+        
+    </data>
+</openerp>
