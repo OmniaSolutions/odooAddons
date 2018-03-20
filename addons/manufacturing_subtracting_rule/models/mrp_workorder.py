@@ -22,11 +22,12 @@ class MrpWorkorder(models.Model):
 
     @api.multi
     def button_produce_externally(self):
+        print 'launch workorder'
         values = {}
         values['external_partner'] = self.operation_id.default_supplier.id
+        values['move_raw_ids'] = [(6, 0, self.production_id.move_raw_ids.ids)]
+        values['move_finished_ids'] = [(6, 0, self.production_id.move_finished_ids.ids)]
         obj_id = self.env['mrp.workorder.externally.wizard'].create(values)
-        obj_id.move_raw_ids = [(6, 0, self.production_id.move_raw_ids.ids)]
-        obj_id.move_finished_ids = [(6, 0, self.production_id.move_finished_ids.ids)]
         return {
             'type': 'ir.actions.act_window',
             'res_model': 'mrp.workorder.externally.wizard',

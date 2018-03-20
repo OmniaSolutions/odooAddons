@@ -11,18 +11,20 @@ import logging
 import datetime
 
 
-class MrpProductionWizard(models.TransientModel):
+class MrpProductionWizard(models.Model):
 
     _name = "mrp.production.externally.wizard"
 
     external_partner = fields.Many2one('res.partner', string='External Partner', required=True)
 
-    move_raw_ids = fields.Many2many('stock.move',
+    move_raw_ids = fields.One2many('stock.move',
                                     string='Raw Materials',
+                                    inverse_name='external_prod_raw',
                                     domain=[('scrapped', '=', False)])
 
-    move_finished_ids = fields.Many2many('stock.move',
+    move_finished_ids = fields.One2many('stock.move',
                                          string='Finished Products',
+                                         inverse_name='external_prod_finish',
                                          domain=[('scrapped', '=', False)])
 
     @api.multi
@@ -40,7 +42,9 @@ class MrpProductionWizard(models.TransientModel):
     def getOrigin(self, productionBrws, originBrw=None):
         return productionBrws.name
 
-    def getLocation(self):
+    def getLocation(self, originBrw):
+        if originBrw:
+            return originBrw.operation_id.routing_id.location_id.id
         for lock in self.env['stock.location'].search([('usage', '=', 'supplier'),
                                                        ('active', '=', True),
                                                        ('company_id', '=', False)]):
@@ -59,7 +63,7 @@ class MrpProductionWizard(models.TransientModel):
             return False
 
         stockObj = self.env['stock.picking']
-        loc = self.getLocation()
+        loc = self.getLocation(originBrw)
         toCreate = {'partner_id': partner.id,
                     'location_id': loc,
                     'location_src_id': loc,
@@ -92,7 +96,7 @@ class MrpProductionWizard(models.TransientModel):
         stockObj = self.env['stock.picking']
         toCreate = {'partner_id': partner.id,
                     'location_id': productionBrws.location_src_id.id,
-                    'location_dest_id': self.getLocation(),
+                    'location_dest_id': self.getLocation(originBrw),
                     'location_src_id': productionBrws.location_src_id.id,
                     'min_date': datetime.datetime.now(),
                     'move_type': 'direct',
@@ -116,6 +120,12 @@ class MrpWorkorderWizard(MrpProductionWizard):
 
     _name = "mrp.workorder.externally.wizard"
     external_partner = fields.Many2one('res.partner', string='External Partner', required=True)
+
+    operation_type = fields.Selection(selection=[('normal', _('Normal')), ('consume', _('Consume'))],
+                                      string=_('Operation'))
+    
+    consume_product_id = fields.Many2one(comodel_name='product.product', string=_('Product To Consume'))
+    consume_bom_id = fields.Many2one(comodel_name='mrp.bom', string=_('BOM To Consume'))
 
     @api.multi
     def button_produce_externally(self):

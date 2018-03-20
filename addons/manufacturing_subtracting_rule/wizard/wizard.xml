@@ -29,6 +29,9 @@
         <form>
             <group>
                 <field name="external_partner"/>
+	        	<field name="operation_type"/>
+	        	<field name="consume_product_id"/>
+	        	<field name="consume_bom_id"/>
                 <field name="move_raw_ids"/>
                 <field name="move_finished_ids"/>
             </group>
