@@ -31,9 +31,4 @@ Created on Dec 18, 2017
 
 @author: daniel
 '''
-
-import mrp_production
-import stock_picking
-import mrp_workorder
-import mrp_routing_workcenter
-
+import wizard

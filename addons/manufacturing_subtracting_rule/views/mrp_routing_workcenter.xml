@@ -1,0 +1,24 @@
+<odoo>
+    <data>
+	    <record id="msr_mrp_routing_workcenter_form_view" model="ir.ui.view">
+	        <field name="name">msr.mrp.routing.workcenter.form.view</field>
+	        <field name="model">mrp.routing.workcenter</field>
+	        <field name="inherit_id" ref="mrp.mrp_routing_workcenter_form_view"/>
+	        <field name="arch" type="xml">
+	            <field name="company_id" position="after">
+	                <field name="default_supplier" domain="{'search_default_supplier': 1,'default_customer': 0,'default_supplier': 1}"/>
+	            </field>
+	        </field>
+	    </record>
+	    <record id="msr_mrp_routing_workcenter_tree_view" model="ir.ui.view">
+            <field name="name">msr.mrp.routing.workcenter.tree.view</field>
+            <field name="model">mrp.routing.workcenter</field>
+            <field name="inherit_id" ref="mrp.mrp_routing_workcenter_tree_view"/>
+            <field name="arch" type="xml">
+                <field name="company_id" position="after">
+                    <field name="default_supplier"/>
+                </field>
+            </field>
+        </record>
+    </data>
+</odoo>

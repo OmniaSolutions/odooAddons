@@ -26,14 +26,28 @@
 #
 ##############################################################################
 
-'''
-Created on Dec 18, 2017
 
-@author: daniel
-'''
-
-import mrp_production
-import stock_picking
-import mrp_workorder
-import mrp_routing_workcenter
+{
+    'name': 'Omnia Manufacturing Subtracting Rule',
+    'version': '1.1',
+    'sequence': 1,
+    'category': 'Custom',
+    'description': """
+====================
+""",
+    'author': 'OmniaSolutions.eu',
+    'maintainer': 'OmniaSolutions.eu',
+    'website': 'http://www.OmniaSolutions.eu',
+    'depends': ['stock', 'delivery', 'mrp'],
+    'data': [
+                #wizard
+                'wizard/wizard.xml',
+                #view
+                'views/mrp_production_extension.xml',
+                'views/mrp_routing_workcenter.xml',
+    ],
+    'installable': True,
+    'application': False,
+    'auto_install': False,
+}
 
