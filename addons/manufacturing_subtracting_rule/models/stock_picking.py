@@ -51,6 +51,7 @@ class StockImmediateTransfer(models.TransientModel):
                 for manufactObj in manufacturingObj.search([('name', '=', objPick.origin),
                                                             ('state', '=', 'external')]):
                     manufactObj.button_mark_done()
+                    self.removeMaterialFromSupplier()
                     break
         #model = self.env.context.get('active_model', '')
         #objIds = self.env.context.get('active_ids', [])
@@ -63,3 +64,17 @@ class StockImmediateTransfer(models.TransientModel):
             #    manufactObj.button_mark_done()
             #    break
         return res
+
+    @api.multi
+    def removeMaterialFromSupplier(self):
+        for objPick in self.pick_id:
+            origin = objPick.origin
+            stockPickingObj = self.env['stock.picking']
+            for pikingBrws in stockPickingObj.search([('origin', '=', origin), ('name', 'ilike', 'OUT')]):
+                if pikingBrws.picking_type_id.code == 'outgoing':
+                    for lineBrws in pikingBrws.move_lines:
+                        for quantBrws in lineBrws.quant_ids:
+                            if quantBrws.location_id.id == pikingBrws.location_dest_id.id:
+                                quantBrws.write({'qty': 0})
+            
+        
