@@ -45,6 +45,8 @@ class StockMove(models.Model):
     _name = "stock.move"
     _inherit = ['stock.move']
     
-    external_prod_raw = fields.Many2one(comodel_name="mrp.workorder.externally.wizard", string="Raw")
-    external_prod_finish = fields.Many2one(comodel_name="mrp.workorder.externally.wizard", string="Finished")
+    external_prod_raw = fields.Many2one(comodel_name="mrp.production.externally.wizard", string="Raw")
+    external_prod_finish = fields.Many2one(comodel_name="mrp.production.externally.wizard", string="Finished")
+    external_prod_workorder_raw = fields.Many2one(comodel_name="mrp.workorder.externally.wizard", string="Raw Workorder")
+    external_prod_workorder_finish = fields.Many2one(comodel_name="mrp.workorder.externally.wizard", string="Finished Workorder")
     

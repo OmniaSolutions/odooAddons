@@ -47,14 +47,40 @@ class MrpProduction(models.Model):
     state = fields.Selection(selection_add=[('external', 'External Production')])
     external_partner = fields.Many2one('res.partner', string='External Partner')
 
+    @api.model
+    @api.returns('self', lambda value:value.id)
+    def create(self, vals):
+        return super(MrpProduction, self).create(vals)
+
+    def getSupplierLocation(self):
+        for lock in self.env['stock.location'].search([('usage', '=', 'supplier'),
+                                                       ('active', '=', True),
+                                                       ('company_id', '=', False)]):
+            return lock.id
+        return False
+
     @api.multi
     def button_produce_externally(self):
+        values = {}
+        location = self.routing_id.location_id
+        partner = location.partner_id
+        if not partner:
+            partner = self.env['res.partner'].search([], limit=1)
+        if not location:
+            location = self.getSupplierLocation()
+        values['external_partner'] = partner.id
+        values['move_raw_ids'] = [(6, 0, self.move_raw_ids.ids)]
+        values['move_finished_ids'] = [(6, 0, self.move_finished_ids.ids)]
+        values['partner_location_id'] = location.id
+        obj_id = self.env['mrp.production.externally.wizard'].create(values)
+        self.env.cr.commit()
         return {
             'type': 'ir.actions.act_window',
             'res_model': 'mrp.production.externally.wizard',
-            'view_mode': 'form',
+            'view_mode': 'form,tree',
             'view_type': 'form',
-            'views': [(False, 'form')],
+            'res_id': obj_id.id,
+            'context': {'wizard_id': obj_id.id},
             'target': 'new',
         }
 
