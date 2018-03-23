@@ -10,6 +10,17 @@ from odoo import _
 import logging
 import datetime
 
+# delete from stock_quant;
+# delete from stock_move;
+# delete from stock_picking;
+# delete from mrp_workorder;
+# delete from mrp_production;
+# 
+# select * from stock_quant
+# select * from stock_move
+# select * from stock_picking
+# select * from stock_picking_type
+# select * from stock_immediate_transfer
 
 class MrpProductionWizard(models.Model):
 
