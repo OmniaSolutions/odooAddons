@@ -52,9 +52,10 @@ class SaleOrderExtension(models.Model):
     
     @api.multi
     def createProdOrderWarehouse(self):
+        name = '%s-%s' % (self.name, self.env['ir.sequence'].next_by_code('SALE_PROD_ORDER'))
         toCreate = {
-            'name': self.name,
-            'code': self.name,
+            'name': name,
+            'code': name,
             }
         wareHouseBrws = self.env['stock.warehouse'].create(toCreate)
         return wareHouseBrws

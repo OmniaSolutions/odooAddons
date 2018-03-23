@@ -34,6 +34,7 @@
     'data': [
             'views/stock_warehouse.xml',
             'views/product_extension.xml',
+            'views/sequence_extension.xml',
             ],
 
     'demo': [],
