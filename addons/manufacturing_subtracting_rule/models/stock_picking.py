@@ -51,7 +51,7 @@ class StockImmediateTransfer(models.TransientModel):
                 for manufactObj in manufacturingObj.search([('name', '=', objPick.origin),
                                                             ('state', '=', 'external')]):
                     manufactObj.button_mark_done()
-                    self.removeMaterialFromSupplier()
+                    #self.removeMaterialFromSupplier()
                     break
         #model = self.env.context.get('active_model', '')
         #objIds = self.env.context.get('active_ids', [])

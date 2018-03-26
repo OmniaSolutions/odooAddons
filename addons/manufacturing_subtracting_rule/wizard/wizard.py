@@ -28,12 +28,12 @@ class MrpProductionWizard(models.Model):
 
     external_partner = fields.Many2one('res.partner', string='External Partner', required=True)
 
-    move_raw_ids = fields.One2many('stock.move',
+    move_raw_ids = fields.One2many('stock.tmp_move',
                                     string='Raw Materials',
                                     inverse_name='external_prod_raw',
                                     domain=[('scrapped', '=', False)])
 
-    move_finished_ids = fields.One2many('stock.move',
+    move_finished_ids = fields.One2many('stock.tmp_move',
                                          string='Finished Products',
                                          inverse_name='external_prod_finish',
                                          domain=[('scrapped', '=', False)])
@@ -44,7 +44,10 @@ class MrpProductionWizard(models.Model):
     
     consume_product_id = fields.Many2one(comodel_name='product.product', string=_('Product To Consume'))
     consume_bom_id = fields.Many2one(comodel_name='mrp.bom', string=_('BOM To Consume'))
-    partner_location_id = fields.Many2one(comodel_name='stock.location', string=_('Partner Location'))
+
+    external_warehouse_id = fields.Many2one('stock.warehouse', string='External Warehouse')
+    external_location_id = fields.Many2one('stock.location', string='External Location')
+    production_id = fields.Many2one('mrp.production', string='Production', readonly=True)
 
     @api.onchange('consume_bom_id')
     def changeBOMId(self):
@@ -58,29 +61,25 @@ class MrpProductionWizard(models.Model):
     def operationTypeChanged(self):
         prodObj = self.getParentProduction()
         wBrws = self.getWizardBrws()
+        cleanRelInfos = {'raw_material_production_id': False,
+                         'origin': ''}
+        manOrderRawLines = prodObj.copyAndCleanLines(prodObj.move_raw_ids)
+        manOrderFinishedLines = prodObj.copyAndCleanLines(prodObj.move_finished_ids)
         if self.operation_type == 'normal':
-            wBrws.write({'move_raw_ids': [(6, 0, prodObj.move_raw_ids.ids)],
-                         'move_finished_ids': [(6, 0, prodObj.move_finished_ids.ids)]
+            wBrws.write({'move_raw_ids': [(6, 0, manOrderRawLines)],
+                         'move_finished_ids': [(6, 0, manOrderFinishedLines)]
                          })
-            self.move_raw_ids = [(6, 0, prodObj.move_raw_ids.ids)]
-            self.move_finished_ids = [(6, 0, prodObj.move_finished_ids.ids)]
+            self.move_raw_ids = [(6, 0, manOrderRawLines)]
+            self.move_finished_ids = [(6, 0, manOrderFinishedLines)]
         elif self.operation_type == 'consume':
             _boms, lines = self.consume_bom_id.explode(self.consume_product_id, 1, picking_type=self.consume_bom_id.picking_type_id)
             moves = prodObj._generate_raw_moves(lines)
-            moves.write({
-                'location_dest_id': self.partner_location_id.id,
-                'raw_material_production_id': False,
-                'origin': ''
-                })
-            if not moves:
-                moves = prodObj.move_raw_ids.ids
-            else:
-                moves = moves.ids + prodObj.move_raw_ids.ids
-            wBrws.write({'move_raw_ids': [(6, 0, moves)],
-                         'move_finished_ids': [(6, 0, prodObj.move_finished_ids.ids)]
+            moves.write(cleanRelInfos)
+            wBrws.write({'move_raw_ids': [(6, 0, moves.ids)],
+                         'move_finished_ids': [(6, 0, manOrderFinishedLines)]
                          })
-            self.move_raw_ids = [(6, 0, moves)]
-            self.move_finished_ids = [(6, 0, prodObj.move_finished_ids.ids)]
+            self.move_raw_ids = [(6, 0, moves.ids)]
+            self.move_finished_ids = [(6, 0, manOrderFinishedLines)]
 
     @api.multi
     def getParentProduction(self):
@@ -88,29 +87,91 @@ class MrpProductionWizard(models.Model):
         objIds = self.env.context.get('active_ids', [])
         relObj = self.env[model]
         return relObj.browse(objIds)
+
+    def cancelProductionRows(self, prodObj):
+        for lineBrws in prodObj.move_raw_ids:
+            lineBrws.action_cancel()
+        for lineBrws in prodObj.move_finished_ids:
+            lineBrws.action_cancel()
+
+    def updateMoveLines(self, productionBrws):
+        move_raw_ids = []
+        move_finished_ids = []
+        productsToCheck = []
+        for lineBrws in self.move_raw_ids:
+            productsToCheck.append(lineBrws.product_id.id)
+            vals = {
+                'name': lineBrws.name,
+                'company_id': lineBrws.company_id.id,
+                'product_id': lineBrws.product_id.id,
+                'product_uom_qty': lineBrws.product_uom_qty,
+                'location_id': lineBrws.location_id.id,
+                'location_dest_id': lineBrws.location_dest_id.id,
+                'partner_id': self.external_partner.id,
+                'note': lineBrws.note,
+                'state': 'confirmed',
+                'origin': lineBrws.origin,
+                'warehouse_id': lineBrws.warehouse_id.id,
+                'production_id': lineBrws.production_id.id,
+                'product_uom': lineBrws.product_uom.id,
+            }
+            move_raw_ids.append((0, False, vals))
+        for lineBrws in self.move_finished_ids:
+            productsToCheck.append(lineBrws.product_id.id)
+            vals = {
+                'name': lineBrws.name,
+                'company_id': lineBrws.company_id.id,
+                'product_id': lineBrws.product_id.id,
+                'product_uom_qty': lineBrws.product_uom_qty,
+                'location_id': lineBrws.location_id.id,
+                'location_dest_id': lineBrws.location_dest_id.id,
+                'partner_id': self.external_partner.id,
+                'note': lineBrws.note,
+                'state': 'confirmed',
+                'origin': lineBrws.origin,
+                'warehouse_id': lineBrws.warehouse_id.id,
+                'production_id': lineBrws.production_id.id,
+                'product_uom': lineBrws.product_uom.id,
+            }
+            move_finished_ids.append((0, False, vals))
+        productionBrws.write({
+            'move_raw_ids': move_raw_ids,
+            'move_finished_ids': move_finished_ids,
+            'state': 'external',
+            'external_partner': self.external_partner.id
+            })
+        productsToCheck = list(set(productsToCheck))
+        for product in self.env['product.product'].browse(productsToCheck):
+            productionBrws.checkCreateReorderRule(product, productionBrws.location_src_id.get_warehouse())
         
     @api.multi
     def button_produce_externally(self):
         productionBrws = self.getParentProduction()
-        productionBrws.write({'external_partner': self.external_partner.id,
-                              'state': 'external'})
+        self.cancelProductionRows(productionBrws)
+        self.updateMoveLines(productionBrws)
         self.createStockPickingIn(self.external_partner, productionBrws)
         self.createStockPickingOut(self.external_partner, productionBrws)
-        productionBrws.button_unreserve()   # Needed to evaluate picking out move
+        #productionBrws.button_unreserve()   # Needed to evaluate picking out move
+#         productionBrws.move_raw_ids.action_done()
+#         productionBrws.move_finished_ids.action_done()
 
+    @api.multi
+    def button_close_wizard(self):
+        self.move_raw_ids.unlink()
+        self.move_finished_ids.unlink()
+        self.unlink()
+        
     def getOrigin(self, productionBrws, originBrw=None):
         return productionBrws.name
 
-    def getLocation(self, originBrw):
-        if self.partner_location_id:
-            return self.partner_location_id.id
-        if originBrw:
-            return originBrw.operation_id.routing_id.location_id.id
-        for lock in self.env['stock.location'].search([('usage', '=', 'supplier'),
-                                                       ('active', '=', True),
-                                                       ('company_id', '=', False)]):
-            return lock.id
-        return False
+#     def getLocation(self, originBrw):
+#         if originBrw:
+#             return originBrw.operation_id.routing_id.location_id.id
+#         for lock in self.env['stock.location'].search([('usage', '=', 'supplier'),
+#                                                        ('active', '=', True),
+#                                                        ('company_id', '=', False)]):
+#             return lock.id
+#         return False
 
     def createStockPickingIn(self, partner, productionBrws, originBrw=None):
 
@@ -124,25 +185,24 @@ class MrpProductionWizard(models.Model):
             return False
 
         stockObj = self.env['stock.picking']
-        loc = self.getLocation(originBrw)
+        customerProductionLocation = self.external_location_id
+        localStockLocation = productionBrws.location_src_id # Taken from manufacturing order
+        incomingMoves = []
+        for productionLineBrws in productionBrws.move_finished_ids:
+            if productionLineBrws.state == 'confirmed':
+                incomingMoves.append(productionLineBrws.id)
         toCreate = {'partner_id': partner.id,
-                    'location_id': loc,
-                    'location_src_id': loc,
-                    'location_dest_id': productionBrws.location_src_id.id,
+                    'location_id': customerProductionLocation.id,
+                    'location_src_id': customerProductionLocation.id,
+                    'location_dest_id': localStockLocation.id,
                     'min_date': productionBrws.date_planned_start,
                     'move_type': 'direct',
                     'picking_type_id': getPickingType(),
                     'origin': self.getOrigin(productionBrws, originBrw),
-                    'move_lines': []}
-        for productionLineBrws in self.move_finished_ids:
-            toCreate['move_lines'].append(
-                (0, False, {
-                    'product_id': productionLineBrws.product_id.id,
-                    'product_uom_qty': productionLineBrws.product_uom_qty,
-                    'product_uom': productionLineBrws.product_uom.id,
-                    'name': productionLineBrws.name,
-                    'state': 'assigned'}))
-        stockObj.create(toCreate)
+                    'move_lines': [],
+                    'state': 'draft'}
+        obj = stockObj.create(toCreate)
+        obj.write({'move_lines': [(6, False, incomingMoves)]})
 
     def createStockPickingOut(self, partner, productionBrws, originBrw=None):
         def getPickingType():
@@ -154,26 +214,29 @@ class MrpProductionWizard(models.Model):
                 return pick.id
             return False
 
+        customerProductionLocation = self.external_location_id
+        localStockLocation = productionBrws.location_src_id # Taken from manufacturing order
         stockObj = self.env['stock.picking']
+        outGoingMoves = []
+        for productionLineBrws in productionBrws.move_raw_ids:
+            if productionLineBrws.state == 'confirmed':
+                outGoingMoves.append(productionLineBrws.id)
         toCreate = {'partner_id': partner.id,
-                    'location_id': productionBrws.location_src_id.id,
-                    'location_dest_id': self.getLocation(originBrw),
-                    'location_src_id': productionBrws.location_src_id.id,
+                    'location_id': localStockLocation.id,
+                    'location_dest_id': customerProductionLocation.id,
+                    'location_src_id': localStockLocation.id,
                     'min_date': datetime.datetime.now(),
                     'move_type': 'direct',
                     'picking_type_id': getPickingType(),
                     'origin': self.getOrigin(productionBrws, originBrw),
-                    'move_lines': []}
-        for productionLineBrws in self.move_raw_ids:
-            toCreate['move_lines'].append(
-                (0, False, {
-                    'product_id': productionLineBrws.product_id.id,
-                    'product_uom_qty': productionLineBrws.product_uom_qty,
-                    'product_uom': productionLineBrws.product_uom.id,
-                    'name': productionLineBrws.name,
-                    'state': 'assigned'}))
-        stockObj.create(toCreate)
+                    'move_lines': [],
+                    'state': 'draft'}
+        obj = stockObj.create(toCreate)
+        obj.write({'move_lines': [(6, False, outGoingMoves)]})
 
+    @api.multi
+    def write(self, vals):
+        return super(MrpProductionWizard, self).write(vals)
 #  operation_id e' l'operazione del ruting che vado a fare mi da 'oggetto
 
 
