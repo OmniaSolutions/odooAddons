@@ -12,8 +12,12 @@
                          <span class="o_stat_text">External Production</span>
                      </div>
                  </button>
+                 
             </div>
 
+            <field name="date_order" position="after">
+                 <field name="manu_external_id"/>
+            </field>
         </field>
     </record> 
 
