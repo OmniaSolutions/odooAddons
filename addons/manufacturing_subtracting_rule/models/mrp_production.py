@@ -46,7 +46,7 @@ class MrpProduction(models.Model):
 
     state = fields.Selection(selection_add=[('external', 'External Production')])
     external_partner = fields.Many2one('res.partner', string='External Partner')
-
+    purchase_external_id = fields.Many2one('purchase.order', string='External Purchase')
     move_raw_ids_external_prod = fields.One2many('stock.move',
                                                  'raw_material_production_id',
                                                  'Raw Materials External Production',
@@ -58,6 +58,27 @@ class MrpProduction(models.Model):
                                                       'Finished Products External Production',
                                                       copy=False,
                                                       states={'done': [('readonly', True)], 'cancel': [('readonly', True)]})
+
+    @api.multi
+    def open_external_purchase(self):
+        newContext = self.env.context.copy()
+        manufacturingIds = []
+        if self.purchase_external_id:
+            manufacturingIds = [self.purchase_external_id.id]
+        else:
+            manObjs = self.env['purchase.order'].search([('manu_external_id', '=', self.id)])
+            if manObjs:
+                manufacturingIds = manObjs.ids
+        newContext['default_manu_external_id'] = self.id
+        return {
+            'name': _("Purchase External"),
+            'view_type': 'form',
+            'view_mode': 'tree,form',
+            'res_model': 'purchase.order',
+            'type': 'ir.actions.act_window',
+            'context': newContext,
+            'domain': [('id', 'in', manufacturingIds)],
+        }
 
     @api.model
     @api.returns('self', lambda value:value.id)

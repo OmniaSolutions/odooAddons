@@ -61,19 +61,8 @@ class StockImmediateTransfer(models.TransientModel):
             elif self.isIncoming(objPick):
                 self.removeMaterialFromSupplier(manufactObj)
                 manufactObj.button_mark_done()
-                self.createPurchaseOrder(objPick)
             break
         return res
-
-    def createPurchaseOrder(self, objPick):
-        purchaseObj = self.env['purchase.order']
-        purchaseObj = purchaseObj.create({
-            'partner_id': objPick.partner_id.id
-            })
-        purchaseObj.write({
-            'date_planned': objPick.min_date,
-            })
-        print ''
         
     def doneManRawMaterials(self, manOrder):
         for lineBrws in manOrder.move_raw_ids:

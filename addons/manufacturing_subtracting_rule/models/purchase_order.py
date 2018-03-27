@@ -27,15 +27,42 @@
 ##############################################################################
 
 '''
-Created on Dec 18, 2017
+Created on Mar 27, 2018
 
 @author: daniel
 '''
+from odoo import models
+from odoo import fields
+from odoo import api
+from odoo import _
+import logging
 
-import mrp_production
-import stock_picking
-import mrp_workorder
-import mrp_routing_workcenter
-import stock_move
-import purchase_order
 
+class PurchaseOrder(models.Model):
+
+    _name = "purchase.order"
+    _inherit = ['purchase.order']
+    
+    manu_external_id = fields.Many2one('mrp.production', string=_('External Production'))
+    
+    @api.multi
+    def open_external_manufacturing(self):
+        newContext = self.env.context.copy()
+        manufacturingIds = []
+        if self.manu_external_id:
+            manufacturingIds = [self.manu_external_id.id]
+        else:
+            manObjs = self.env['mrp.production'].search([('purchase_external_id', '=', self.id)])
+            if manObjs:
+                manufacturingIds = manObjs.ids
+        newContext['default_purchase_external_id'] = self.id
+        return {
+            'name': _("Manufacturing External"),
+            'view_type': 'form',
+            'view_mode': 'tree,form',
+            'res_model': 'mrp.production',
+            'type': 'ir.actions.act_window',
+            'context': newContext,
+            'domain': [('id', 'in', manufacturingIds)],
+        }
+        
