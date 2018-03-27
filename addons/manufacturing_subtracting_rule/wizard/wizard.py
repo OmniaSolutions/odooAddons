@@ -112,7 +112,7 @@ class MrpProductionWizard(models.Model):
                 'state': 'confirmed',
                 'origin': lineBrws.origin,
                 'warehouse_id': lineBrws.warehouse_id.id,
-                'production_id': lineBrws.production_id.id,
+                'production_id': False,
                 'product_uom': lineBrws.product_uom.id,
             }
             move_raw_ids.append((0, False, vals))
@@ -130,7 +130,7 @@ class MrpProductionWizard(models.Model):
                 'state': 'confirmed',
                 'origin': lineBrws.origin,
                 'warehouse_id': lineBrws.warehouse_id.id,
-                'production_id': lineBrws.production_id.id,
+                'production_id': productionBrws.id,
                 'product_uom': lineBrws.product_uom.id,
             }
             move_finished_ids.append((0, False, vals))
@@ -153,7 +153,10 @@ class MrpProductionWizard(models.Model):
         self.createStockPickingOut(self.external_partner, productionBrws)
         #productionBrws.button_unreserve()   # Needed to evaluate picking out move
 #         productionBrws.move_raw_ids.action_done()
-#         productionBrws.move_finished_ids.action_done()
+
+
+#         productionBrws.move_raw_ids.write({'state': 'done'})
+#         productionBrws.move_finished_ids.write({'state': 'done'})
 
     @api.multi
     def button_close_wizard(self):
@@ -190,7 +193,7 @@ class MrpProductionWizard(models.Model):
         incomingMoves = []
         for productionLineBrws in productionBrws.move_finished_ids:
             if productionLineBrws.state == 'confirmed':
-                incomingMoves.append(productionLineBrws.id)
+                incomingMoves.append(productionLineBrws)
         toCreate = {'partner_id': partner.id,
                     'location_id': customerProductionLocation.id,
                     'location_src_id': customerProductionLocation.id,
@@ -202,7 +205,16 @@ class MrpProductionWizard(models.Model):
                     'move_lines': [],
                     'state': 'draft'}
         obj = stockObj.create(toCreate)
-        obj.write({'move_lines': [(6, False, incomingMoves)]})
+        #obj.write({'move_lines': [(6, False, incomingMoves)]})
+        
+        newStockLines = []
+        for outMove in incomingMoves:
+            stockMove = outMove.copy(default={
+                'production_id': False,
+                'raw_material_production_id': False
+                })
+            newStockLines.append(stockMove.id)
+        obj.write({'move_lines': [(6, False, newStockLines)]})
 
     def createStockPickingOut(self, partner, productionBrws, originBrw=None):
         def getPickingType():
@@ -220,7 +232,7 @@ class MrpProductionWizard(models.Model):
         outGoingMoves = []
         for productionLineBrws in productionBrws.move_raw_ids:
             if productionLineBrws.state == 'confirmed':
-                outGoingMoves.append(productionLineBrws.id)
+                outGoingMoves.append(productionLineBrws)
         toCreate = {'partner_id': partner.id,
                     'location_id': localStockLocation.id,
                     'location_dest_id': customerProductionLocation.id,
@@ -232,7 +244,15 @@ class MrpProductionWizard(models.Model):
                     'move_lines': [],
                     'state': 'draft'}
         obj = stockObj.create(toCreate)
-        obj.write({'move_lines': [(6, False, outGoingMoves)]})
+        
+        newStockLines = []
+        for outMove in outGoingMoves:
+            stockMove = outMove.copy(default={
+                'production_id': False,
+                'raw_material_production_id': False
+                })
+            newStockLines.append(stockMove.id)
+        obj.write({'move_lines': [(6, False, newStockLines)]})
 
     @api.multi
     def write(self, vals):

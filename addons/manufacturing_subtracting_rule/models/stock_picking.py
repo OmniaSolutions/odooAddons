@@ -44,37 +44,95 @@ class StockImmediateTransfer(models.TransientModel):
         '''
             Be sure to close the manufacturing order only if finished product is arrived.
         '''
+        for objPick in self.pick_id:
+            if self.isIncoming(objPick):
+                maonOrder = self.getRelatedExternalManOrder(objPick)
+                if not maonOrder:
+                    continue
+                self.createFinishedProducts(maonOrder)
+                break
         res = super(StockImmediateTransfer, self).process()
         for objPick in self.pick_id:
-            if objPick.picking_type_id.code == 'incoming':
-                manufacturingObj = self.env['mrp.production']
-                for manufactObj in manufacturingObj.search([('name', '=', objPick.origin),
-                                                            ('state', '=', 'external')]):
-                    manufactObj.button_mark_done()
-                    #self.removeMaterialFromSupplier()
-                    break
-        #model = self.env.context.get('active_model', '')
-        #objIds = self.env.context.get('active_ids', [])
-        #relObj = self.env[model]
-        #objBrws = relObj.browse(objIds)
-        #if model == 'stock.picking' and objBrws.state == 'done' and objBrws.picking_type_id.code == 'incoming':
-            #manufacturingObj = self.env['mrp.production']
-            #for manufactObj in manufacturingObj.search([('name', '=', objBrws.origin),
-            #                                            ('state', '=', 'external')]):
-            #    manufactObj.button_mark_done()
-            #    break
+            manufactObj = self.getRelatedExternalManOrder(objPick)
+            if not manufactObj:
+                continue
+            if self.isOutGoing(objPick):
+                self.doneManRawMaterials(manufactObj)
+            elif self.isIncoming(objPick):
+                self.removeMaterialFromSupplier(manufactObj)
+                manufactObj.button_mark_done()
+                self.createPurchaseOrder(objPick)
+            break
         return res
 
-    @api.multi
-    def removeMaterialFromSupplier(self):
-        for objPick in self.pick_id:
-            origin = objPick.origin
-            stockPickingObj = self.env['stock.picking']
-            for pikingBrws in stockPickingObj.search([('origin', '=', origin), ('name', 'ilike', 'OUT')]):
-                if pikingBrws.picking_type_id.code == 'outgoing':
-                    for lineBrws in pikingBrws.move_lines:
-                        for quantBrws in lineBrws.quant_ids:
-                            if quantBrws.location_id.id == pikingBrws.location_dest_id.id:
-                                quantBrws.write({'qty': 0})
+    def createPurchaseOrder(self, objPick):
+        purchaseObj = self.env['purchase.order']
+        purchaseObj = purchaseObj.create({
+            'partner_id': objPick.partner_id.id
+            })
+        purchaseObj.write({
+            'date_planned': objPick.min_date,
+            })
+        print ''
+        
+    def doneManRawMaterials(self, manOrder):
+        for lineBrws in manOrder.move_raw_ids:
+            lineBrws.write({'state': 'done'})
+        
+    def getRelatedExternalManOrder(self, objPick):
+        manufacturingObj = self.env['mrp.production']
+        filterList = [('name', '=', objPick.origin),
+                      ('state', '=', 'external')]
+        for manufactObj in manufacturingObj.search(filterList):
+            return manufactObj
+        return None
+        
+    def isIncoming(self, objPick):
+        if objPick.picking_type_id.code == 'incoming':
+            return True
+        return False
+    
+    def isOutGoing(self, objPick):
+        if objPick.picking_type_id.code == 'outgoing':
+            return True
+        return False
+        
+    def removeMaterialFromSupplier(self, manufacturingObj):
+        stockQuantObj = self.env['stock.quant']
+        for consumedLineBrws in manufacturingObj.move_raw_ids:
+            if consumedLineBrws.state == 'cancel':
+                continue
+            prodBrws = consumedLineBrws.product_id
+            quantsForProduct = self.getStockQuant(stockQuantObj, consumedLineBrws.location_dest_id.id, prodBrws)
+            for quantsForProductBrws in quantsForProduct:
+                newQty = quantsForProductBrws.qty - consumedLineBrws.product_qty
+                quantsForProductBrws.write({'qty': newQty})
+                break
+
+    def getStockQuant(self, stockQuantObj, lineId, prodBrws):
+        quantsForProduct = stockQuantObj.search([
+            ('location_id', '=', lineId),
+            ('product_id', '=', prodBrws.id)
+            ])
+        return quantsForProduct
+        
+    def createFinishedProducts(self, manufacturingObj):
+        stockQuantObj = self.env['stock.quant']
+        for finishedLineBrws in manufacturingObj.move_finished_ids:
+            if finishedLineBrws.state == 'cancel':  # Skip old lines
+                continue
+            prodBrws = finishedLineBrws.product_id
+            quantsForProduct = self.getStockQuant(stockQuantObj, finishedLineBrws.location_id.id, prodBrws)
+            if not quantsForProduct:
+                stockQuantObj.create({
+                    'qty': finishedLineBrws.product_qty,
+                    'location_id': finishedLineBrws.location_id.id,
+                    'product_id': prodBrws.id
+                    })
+            else:
+                for quantsForProductBrws in quantsForProduct:
+                    newQty = quantsForProductBrws.qty + finishedLineBrws.product_qty
+                    quantsForProductBrws.write({'qty': newQty})
+                    break
             
         
