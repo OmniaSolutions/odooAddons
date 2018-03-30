@@ -36,7 +36,7 @@ Allow to select the payment bank from the pourches order
     'data': [
         # reports
         # views
-        'views/purchese.xml'],
+        'views/purchase.xml'],
     'demo': [],
     'test': [],
     'installable': True,
