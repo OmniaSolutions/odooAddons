@@ -28,4 +28,4 @@ from openerp import models, fields
 
 class PurchaseOrder(models.Model):
     _inherit = 'purchase.order'
-    bank_id = fields.One2Many('res.bank', "Payment Bank")
+    bank_id = fields.Many2one('res.bank', string="Payment Bank")
