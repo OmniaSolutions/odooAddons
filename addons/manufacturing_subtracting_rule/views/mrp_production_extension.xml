@@ -10,6 +10,18 @@
                 <button name="button_cancel_produce_externally" attrs="{'invisible': [('state', '!=', 'external')]}" string="Cancel Produce Externally" type="object"/>
             </button>
             
+            <div name="button_box" position="inside">
+                 <button name="open_external_purchase" type="object" class="oe_stat_button" icon="fa-arrows-v">
+                     <div class="o_form_field o_stat_info">
+                         <span class="o_stat_text">External Purchase</span>
+                     </div>
+                 </button>
+            </div>
+
+            <field name="origin" position="after">
+                 <field name="purchase_external_id"/>
+            </field>
+            
             <button name="action_assign" position="attributes">
                 <attribute name="attrs">{'invisible': ['|', ('availability', 'in', ('assigned', 'none')), ('state', '=', 'external')]}</attribute>
             </button>
@@ -23,7 +35,7 @@
             </button>
         </field>
     </record> 
-    
+
     <record id="mrp_workorder_form_view_omnia_subtracting_rule" model="ir.ui.view">
         <field name="model">mrp.workorder</field>
         <field name="inherit_id" ref="mrp.mrp_production_workcenter_form_view_inherit"/>

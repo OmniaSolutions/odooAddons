@@ -36,4 +36,6 @@ import mrp_production
 import stock_picking
 import mrp_workorder
 import mrp_routing_workcenter
+import stock_move
+import purchase_order
 

@@ -8,12 +8,40 @@
         <form>
             <group>
 	        	<field name="external_partner"/>
-	        	<field name="move_raw_ids"/>
-                <field name="move_finished_ids"/>
+	        	<field name="operation_type"/>
+	        	<field name="external_warehouse_id"/>
+	        	<field name="external_location_id"/>
+	        	<field name="consume_product_id" attrs="{'invisible': [('operation_type', '!=', 'consume')], 'required': [('operation_type', '=', 'consume')]}"/>
+	        	<field name="consume_bom_id" attrs="{'invisible': [('operation_type', '!=', 'consume')], 'required': [('operation_type', '=', 'consume')]}"
+	        			domain="[('product_tmpl_id', '=', consume_product_id.product_tmpl_id)]"/>
+	        			
+	            <field name="move_raw_ids" context="{'default_location_dest_id': external_location_id,
+	            									   'warehouse_id': external_warehouse_id,
+	            									   'wizard_obj_id': id}">
+	                <tree>
+	                    <field name="product_id"/>
+	                    <field name="product_uom_qty" />
+	                    <field name="state" />
+	                    <field name="origin" />
+	                    <field name="location_id" />
+	                    <field name="location_dest_id" />
+	                </tree>
+	            </field>
+	            
+	            <field name="move_finished_ids">
+	                <tree>
+	                    <field name="product_id"/>
+	                    <field name="product_uom_qty" />
+	                    <field name="state" />
+	                    <field name="origin" />
+	                    <field name="location_id" />
+	                    <field name="location_dest_id" />
+	                </tree>
+	            </field>
 			</group>
             <separator string=""/>
             <footer>
-            	<button special="cancel" string="Cancel"/>
+            	<button string="Cancel" name="button_close_wizard" type="object"/>
             	<button string="Produce Externally" name="button_produce_externally" type="object"/>
             </footer>
         </form>
@@ -29,6 +57,9 @@
         <form>
             <group>
                 <field name="external_partner"/>
+	        	<field name="operation_type"/>
+	        	<field name="consume_product_id" attrs="{'invisible': [('operation_type', '!=', 'consume')], 'required': [('operation_type', '=', 'consume')]}"/>
+	        	<field name="consume_bom_id" attrs="{'invisible': [('operation_type', '!=', 'consume')], 'required': [('operation_type', '=', 'consume')]}"/>
                 <field name="move_raw_ids"/>
                 <field name="move_finished_ids"/>
             </group>

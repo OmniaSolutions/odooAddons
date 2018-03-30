@@ -26,26 +26,43 @@
 #
 ##############################################################################
 
+'''
+Created on Mar 27, 2018
 
-{
-    'name': 'Omnia Manufacturing Subtracting Rule',
-    'version': '1.1',
-    'sequence': 1,
-    'category': 'Custom',
-    'description': """
-====================
-""",
-    'author': 'OmniaSolutions.eu',
-    'maintainer': 'OmniaSolutions.eu',
-    'website': 'http://www.OmniaSolutions.eu',
-    'depends': ['stock', 'delivery', 'mrp'],
-    'data': [
-                #view
-                'views/mrp_production_extension.xml',
-             
-    ],
-    'installable': True,
-    'application': False,
-    'auto_install': False,
-}
+@author: daniel
+'''
+from odoo import models
+from odoo import fields
+from odoo import api
+from odoo import _
+import logging
 
+
+class PurchaseOrder(models.Model):
+
+    _name = "purchase.order"
+    _inherit = ['purchase.order']
+    
+    manu_external_id = fields.Many2one('mrp.production', string=_('External Production'))
+    
+    @api.multi
+    def open_external_manufacturing(self):
+        newContext = self.env.context.copy()
+        manufacturingIds = []
+        if self.manu_external_id:
+            manufacturingIds = [self.manu_external_id.id]
+        else:
+            manObjs = self.env['mrp.production'].search([('purchase_external_id', '=', self.id)])
+            if manObjs:
+                manufacturingIds = manObjs.ids
+        newContext['default_purchase_external_id'] = self.id
+        return {
+            'name': _("Manufacturing External"),
+            'view_type': 'form',
+            'view_mode': 'tree,form',
+            'res_model': 'mrp.production',
+            'type': 'ir.actions.act_window',
+            'context': newContext,
+            'domain': [('id', 'in', manufacturingIds)],
+        }
+        

@@ -45,6 +45,7 @@
                 #view
                 'views/mrp_production_extension.xml',
                 'views/mrp_routing_workcenter.xml',
+                'views/purchase_extension.xml',
     ],
     'installable': True,
     'application': False,
