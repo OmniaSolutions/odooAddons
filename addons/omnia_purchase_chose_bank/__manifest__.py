@@ -20,17 +20,17 @@
 #
 ##############################################################################
 {
-    'name': 'Purchese Bank',
+    'name': 'Purchase Bank',
     'version': '0.1',
     'author': 'OmniaSolutions',
     'website': 'http://www.omniasolutions.eu',
-    'category': 'Purchese',
+    'category': 'Purchase',
     'sequence': 1,
-    'summary': 'Allow to select the payment bank from the pourches order',
+    'summary': 'Allow to select the payment bank from the purchase order',
     'images': [''],
-    'depends': ['purchese'],
+    'depends': ['purchase'],
     'description': """
-Allow to select the payment bank from the pourches order
+Allow to select the payment bank from the purchase order
 ==========================================================================
     """,
     'data': [
