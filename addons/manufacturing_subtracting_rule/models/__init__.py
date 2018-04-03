@@ -32,10 +32,10 @@ Created on Dec 18, 2017
 @author: daniel
 '''
 
-import mrp_production
-import stock_picking
-import mrp_workorder
-import mrp_routing_workcenter
-import stock_move
-import purchase_order
+from . import mrp_production
+from . import stock_picking
+from . import mrp_workorder
+from . import mrp_routing_workcenter
+from . import stock_move
+from . import purchase_order
 

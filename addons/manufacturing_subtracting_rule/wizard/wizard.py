@@ -10,17 +10,6 @@ from odoo import _
 import logging
 import datetime
 
-# delete from stock_quant;
-# delete from stock_move;
-# delete from stock_picking;
-# delete from mrp_workorder;
-# delete from mrp_production;
-# 
-# select * from stock_quant
-# select * from stock_move
-# select * from stock_picking
-# select * from stock_picking_type
-# select * from stock_immediate_transfer
 
 class MrpProductionWizard(models.Model):
 
@@ -29,19 +18,19 @@ class MrpProductionWizard(models.Model):
     external_partner = fields.Many2one('res.partner', string='External Partner', required=True)
 
     move_raw_ids = fields.One2many('stock.tmp_move',
-                                    string='Raw Materials',
-                                    inverse_name='external_prod_raw',
-                                    domain=[('scrapped', '=', False)])
+                                   string='Raw Materials',
+                                   inverse_name='external_prod_raw',
+                                   domain=[('scrapped', '=', False)])
 
     move_finished_ids = fields.One2many('stock.tmp_move',
-                                         string='Finished Products',
-                                         inverse_name='external_prod_finish',
-                                         domain=[('scrapped', '=', False)])
+                                        string='Finished Products',
+                                        inverse_name='external_prod_finish',
+                                        domain=[('scrapped', '=', False)])
 
     operation_type = fields.Selection(selection=[('normal', _('Normal')), ('consume', _('Consume'))],
                                       string=_('Operation'),
                                       default='normal')
-    
+
     consume_product_id = fields.Many2one(comodel_name='product.product', string=_('Product To Consume'))
     consume_bom_id = fields.Many2one(comodel_name='mrp.bom', string=_('BOM To Consume'))
 
@@ -52,11 +41,11 @@ class MrpProductionWizard(models.Model):
     @api.onchange('consume_bom_id')
     def changeBOMId(self):
         self.operationTypeChanged()
-    
+
     @api.multi
     def getWizardBrws(self):
         return self.browse(self._context.get('wizard_id', False))
-        
+
     @api.onchange('operation_type')
     def operationTypeChanged(self):
         prodObj = self.getParentProduction()
@@ -134,16 +123,14 @@ class MrpProductionWizard(models.Model):
                 'product_uom': lineBrws.product_uom.id,
             }
             move_finished_ids.append((0, False, vals))
-        productionBrws.write({
-            'move_raw_ids': move_raw_ids,
-            'move_finished_ids': move_finished_ids,
-            'state': 'external',
-            'external_partner': self.external_partner.id
-            })
+        productionBrws.write({'move_raw_ids': move_raw_ids,
+                              'move_finished_ids': move_finished_ids,
+                              'state': 'external',
+                              'external_partner': self.external_partner.id})
         productsToCheck = list(set(productsToCheck))
         for product in self.env['product.product'].browse(productsToCheck):
             productionBrws.checkCreateReorderRule(product, productionBrws.location_src_id.get_warehouse())
-        
+
     @api.multi
     def button_produce_externally(self):
         productionBrws = self.getParentProduction()
@@ -151,30 +138,15 @@ class MrpProductionWizard(models.Model):
         self.updateMoveLines(productionBrws)
         self.createStockPickingIn(self.external_partner, productionBrws)
         self.createStockPickingOut(self.external_partner, productionBrws)
-        #productionBrws.button_unreserve()   # Needed to evaluate picking out move
-#         productionBrws.move_raw_ids.action_done()
-
-
-#         productionBrws.move_raw_ids.write({'state': 'done'})
-#         productionBrws.move_finished_ids.write({'state': 'done'})
 
     @api.multi
     def button_close_wizard(self):
         self.move_raw_ids.unlink()
         self.move_finished_ids.unlink()
         self.unlink()
-        
+
     def getOrigin(self, productionBrws, originBrw=None):
         return productionBrws.name
-
-#     def getLocation(self, originBrw):
-#         if originBrw:
-#             return originBrw.operation_id.routing_id.location_id.id
-#         for lock in self.env['stock.location'].search([('usage', '=', 'supplier'),
-#                                                        ('active', '=', True),
-#                                                        ('company_id', '=', False)]):
-#             return lock.id
-#         return False
 
     def createStockPickingIn(self, partner, productionBrws, originBrw=None):
 
@@ -189,7 +161,7 @@ class MrpProductionWizard(models.Model):
 
         stockObj = self.env['stock.picking']
         customerProductionLocation = self.external_location_id
-        localStockLocation = productionBrws.location_src_id # Taken from manufacturing order
+        localStockLocation = productionBrws.location_src_id  # Taken from manufacturing order
         incomingMoves = []
         for productionLineBrws in productionBrws.move_finished_ids:
             if productionLineBrws.state == 'confirmed':
@@ -205,14 +177,10 @@ class MrpProductionWizard(models.Model):
                     'move_lines': [],
                     'state': 'draft'}
         obj = stockObj.create(toCreate)
-        #obj.write({'move_lines': [(6, False, incomingMoves)]})
-        
         newStockLines = []
         for outMove in incomingMoves:
-            stockMove = outMove.copy(default={
-                'production_id': False,
-                'raw_material_production_id': False
-                })
+            stockMove = outMove.copy(default={'production_id': False,
+                                              'raw_material_production_id': False})
             newStockLines.append(stockMove.id)
         obj.write({'move_lines': [(6, False, newStockLines)]})
 
@@ -227,7 +195,7 @@ class MrpProductionWizard(models.Model):
             return False
 
         customerProductionLocation = self.external_location_id
-        localStockLocation = productionBrws.location_src_id # Taken from manufacturing order
+        localStockLocation = productionBrws.location_src_id  # Taken from manufacturing order
         stockObj = self.env['stock.picking']
         outGoingMoves = []
         for productionLineBrws in productionBrws.move_raw_ids:
@@ -244,13 +212,10 @@ class MrpProductionWizard(models.Model):
                     'move_lines': [],
                     'state': 'draft'}
         obj = stockObj.create(toCreate)
-        
         newStockLines = []
         for outMove in outGoingMoves:
-            stockMove = outMove.copy(default={
-                'production_id': False,
-                'raw_material_production_id': False
-                })
+            stockMove = outMove.copy(default={'production_id': False,
+                                              'raw_material_production_id': False})
             newStockLines.append(stockMove.id)
         obj.write({'move_lines': [(6, False, newStockLines)]})
 
@@ -264,24 +229,16 @@ class MrpWorkorderWizard(MrpProductionWizard):
 
     _name = "mrp.workorder.externally.wizard"
     _inherit = ['mrp.production.externally.wizard']
-    
-    #external_partner = fields.Many2one('res.partner', string='External Partner', required=True)
-
-#     operation_type = fields.Selection(selection=[('normal', _('Normal')), ('consume', _('Consume'))],
-#                                       string=_('Operation'))
-#     
-#     consume_product_id = fields.Many2one(comodel_name='product.product', string=_('Product To Consume'))
-#     consume_bom_id = fields.Many2one(comodel_name='mrp.bom', string=_('BOM To Consume'))
 
     move_raw_ids = fields.One2many('stock.move',
-                                    string='Raw Materials',
-                                    inverse_name='external_prod_workorder_raw',
-                                    domain=[('scrapped', '=', False)])
+                                   string='Raw Materials',
+                                   inverse_name='external_prod_workorder_raw',
+                                   domain=[('scrapped', '=', False)])
 
     move_finished_ids = fields.One2many('stock.move',
-                                         string='Finished Products',
-                                         inverse_name='external_prod_workorder_finish',
-                                         domain=[('scrapped', '=', False)])
+                                        string='Finished Products',
+                                        inverse_name='external_prod_workorder_finish',
+                                        domain=[('scrapped', '=', False)])
 
     @api.multi
     def button_produce_externally(self):

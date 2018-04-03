@@ -31,4 +31,4 @@ Created on Dec 18, 2017
 
 @author: daniel
 '''
-import wizard
+from . import wizard
