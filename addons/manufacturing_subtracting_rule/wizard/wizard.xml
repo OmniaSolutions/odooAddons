@@ -23,6 +23,7 @@
 	                    <field name="product_uom_qty" />
 	                    <field name="state" />
 	                    <field name="origin" />
+	                    <field name="date_expected" />
 	                    <field name="location_id" />
 	                    <field name="location_dest_id" />
 	                </tree>
@@ -34,6 +35,7 @@
 	                    <field name="product_uom_qty" />
 	                    <field name="state" />
 	                    <field name="origin" />
+	                    <field name="date_expected" />
 	                    <field name="location_id" />
 	                    <field name="location_dest_id" />
 	                </tree>

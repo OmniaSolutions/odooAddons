@@ -36,6 +36,7 @@
         </field>
     </record> 
 
+<!-- 
     <record id="mrp_workorder_form_view_omnia_subtracting_rule" model="ir.ui.view">
         <field name="model">mrp.workorder</field>
         <field name="inherit_id" ref="mrp.mrp_production_workcenter_form_view_inherit"/>
@@ -44,20 +45,18 @@
                 <button name="button_produce_externally"  string="Produce Externally" type="object" attrs="{'invisible': ['|', ('state', '=', 'external'), ('state', '=', 'done')]}"/>
                 <button name="button_cancel_produce_externally"  string="Cancel Produce Externally" type="object" attrs="{'invisible': [('state', '!=', 'external')]}"/>
             </button>
-            <!-- da settare piu tardi quando la cosa inizia a funzionare e in funzione del work order non del
-            <button name="action_assign" position="attributes">
-                <attribute name="attrs">{'invisible': ['|', ('availability', 'in', ('assigned', 'none')), ('state', '=', 'external')]}</attribute>
-            </button>
-            
-            <button name="action_cancel" position="attributes">
-                <attribute name="attrs">{'invisible': ['|', ('state', 'in', ('done','cancel', 'external')), ('check_to_done', '=', True)]}</attribute>
-            </button>
-            
-            <button name="button_scrap" position="attributes">
-                <attribute name="attrs">{'invisible': ['|', ('availability', '=', 'none'), ('state', 'in', ('cancel', 'external'))]}</attribute>
-            </button>
-            -->
         </field>
     </record> 
+ -->
+    <record id="msr_mrp_production_view_search_inherit_planning" model="ir.ui.view">
+        <field name="name">msr.mrp.production.search.view.inherit.planning</field>
+        <field name="model">mrp.production</field>
+        <field name="inherit_id" ref="mrp.view_mrp_production_filter"/>
+        <field name="arch" type="xml">
+            <filter name="todo" position="attributes">
+                <attribute name="domain">[('state','in',('confirmed', 'planned','progress','external'))]</attribute>
+            </filter>
+        </field>
+    </record>
 
 </odoo>
