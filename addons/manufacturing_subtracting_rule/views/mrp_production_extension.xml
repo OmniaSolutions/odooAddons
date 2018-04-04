@@ -37,7 +37,20 @@
              
         </field>
     </record> 
-
+    
+    <record id="msr_mrp_production_view_search_inherit_planning" model="ir.ui.view">
+        <field name="name">msr.mrp.production.search.view.inherit.planning</field>
+        <field name="model">mrp.production</field>
+        <field name="inherit_id" ref="mrp.view_mrp_production_filter"/>
+        <field name="arch" type="xml">
+            <filter name="todo" position="attributes">
+                <attribute name="domain">[('state','in',('confirmed', 'planned','progress','external'))]</attribute>
+            </filter>
+        </field>
+    </record>
+        
+    
+<!-- 
     <record id="mrp_workorder_form_view_omnia_subtracting_rule" model="ir.ui.view">
         <field name="model">mrp.workorder</field>
         <field name="inherit_id" ref="mrp.mrp_production_workcenter_form_view_inherit"/>
@@ -48,6 +61,6 @@
             </button>
         </field>
     </record> 
- 
+  -->
  	</data>
 </odoo>

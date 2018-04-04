@@ -8,7 +8,8 @@
 #
 #    Author : Smerghetto Daniel  (Omniasolutions)
 #    mail:daniel.smerghetto@omniasolutions.eu
-#    Copyright (c) 2014 Omniasolutions (http://www.omniasolutions.eu) 
+#    Copyright (c) 2014 Omniasolutions (http://www.omniasolutions.eu)
+#    Copyright (c) 2018 Omniasolutions (http://www.omniasolutions.eu)
 #    All Right Reserved
 #
 #    This program is free software: you can redistribute it and/or modify
@@ -37,6 +38,8 @@ from odoo import api
 from odoo import _
 import logging
 import datetime
+from datetime import timedelta
+from odoo.tools import DEFAULT_SERVER_DATETIME_FORMAT
 
 
 class MrpProduction(models.Model):
@@ -81,7 +84,7 @@ class MrpProduction(models.Model):
         }
 
     @api.model
-    @api.returns('self', lambda value:value.id)
+    @api.returns('self', lambda value: value.id)
     def create(self, vals):
         return super(MrpProduction, self).create(vals)
 
@@ -112,7 +115,8 @@ class MrpProduction(models.Model):
             'warehouse_id': self.location_src_id.get_warehouse().id,
             'production_id': self.id,
             'product_uom': sourceMoveObj.product_uom.id,
-            })
+            'date_expected': sourceMoveObj.date_expected,
+            'mrp_original_move': False})
 
     def copyAndCleanLines(self, brwsList, location_dest_id, location_source_id):
         outElems = []
@@ -125,31 +129,28 @@ class MrpProduction(models.Model):
             return False
         locationName = partnerBrws.name
         return self.createProductionLocation(locationName)
-            
+
     def createProductionLocation(self, locationName):
-        
+
         def getParentLocation():
             return locationObj.with_context({'lang': 'en_US'}).search([
                 ('usage', '=', 'supplier'),
-                ('name', '=', 'Vendors')
-                ])
-            
+                ('name', '=', 'Vendors')])
+
         locationObj = self.env['stock.location']
         parentLoc = getParentLocation()
         vals = {
             'name': locationName,
             'location_id': parentLoc.id,
-            'usage': 'internal',
-            }
+            'usage': 'internal'}
         locBrws = locationObj.search([
             ('name', '=', locationName),
             ('location_id', '=', parentLoc.id),
-            ('usage', '=', 'internal')
-            ])
+            ('usage', '=', 'internal')])
         if not locBrws:
             locBrws = locationObj.create(vals)
         return locBrws
-        
+
     @api.multi
     def button_produce_externally(self):
         values = {}
@@ -186,18 +187,27 @@ class MrpProduction(models.Model):
         for manOrderBrws in self:
             stockPickList = stockPickingObj.search([('origin', '=', manOrderBrws.name)])
             for pickBrws in stockPickList:
+                pickBrws.move_lines.unlink()
                 pickBrws.action_cancel()
+                pickBrws.unlink()
             manOrderBrws.write({'state': 'confirmed'})
+            for move_line in manOrderBrws.move_raw_ids + manOrderBrws.move_finished_ids:
+                if move_line.mrp_original_move is False:
+                    move_line._action_cancel()
+                if move_line.state in ('draft', 'cancel'):
+                    if move_line.mrp_original_move:
+                        move_line.state = move_line.mrp_original_move
+                    else:
+                        move_line.unlink()
 
     def checkCreateReorderRule(self, prodBrws, warehouse):
         if not self.checkExistingReorderRule(prodBrws, warehouse):
             self.createReorderRule(prodBrws, warehouse)
-        
+
     def checkExistingReorderRule(self, prod_brws, warehouse):
         reorderRules = self.env['stock.warehouse.orderpoint'].search([
             ('product_id', '=', prod_brws.id),
-            ('warehouse_id', '=', warehouse.id),
-            ])
+            ('warehouse_id', '=', warehouse.id)])
         if reorderRules:
             return True
         return False
@@ -210,7 +220,6 @@ class MrpProduction(models.Model):
             'product_min_qty': 0,
             'product_max_qty': 0,
             'qty_multiple': 1,
-            'location_id': warehouse.lot_stock_id.id,
-            }
+            'location_id': warehouse.lot_stock_id.id}
         wareHouseBrws = self.env['stock.warehouse.orderpoint'].create(toCreate)
         return wareHouseBrws
