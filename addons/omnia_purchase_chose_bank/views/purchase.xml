@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+	<data>
+       <record id="omnia_bank_purchase_order_form" model="ir.ui.view">
+            <field name="name">omnia.bank.purchase.order.form</field>
+            <field name="model">purchase.order</field>
+            <field name="inherit_id" ref="purchase.purchase_order_form"/>
+            <field name="arch" type="xml">
+                <field name="payment_term_id" position="after">
+                    <field name="bank_id"/>
+                </field>
+            </field>
+        </record>
+    </data>
+</odoo>
