@@ -3,6 +3,7 @@ Created on 16 Jan 2018
 
 @author: mboscolo
 '''
+from odoo.addons import decimal_precision as dp
 from odoo import models
 from odoo import fields
 from odoo import api
@@ -10,17 +11,6 @@ from odoo import _
 import logging
 import datetime
 
-# delete from stock_quant;
-# delete from stock_move;
-# delete from stock_picking;
-# delete from mrp_workorder;
-# delete from mrp_production;
-# 
-# select * from stock_quant
-# select * from stock_move
-# select * from stock_picking
-# select * from stock_picking_type
-# select * from stock_immediate_transfer
 
 class MrpProductionWizard(models.Model):
 
@@ -89,9 +79,8 @@ class MrpProductionWizard(models.Model):
         return relObj.browse(objIds)
 
     def cancelProductionRows(self, prodObj):
-        for lineBrws in prodObj.move_raw_ids:
-            lineBrws.action_cancel()
-        for lineBrws in prodObj.move_finished_ids:
+        for lineBrws in prodObj.move_raw_ids + prodObj.move_finished_ids:
+            lineBrws.mrp_original_move = lineBrws.state
             lineBrws.action_cancel()
 
     def updateMoveLines(self, productionBrws):
@@ -114,6 +103,7 @@ class MrpProductionWizard(models.Model):
                 'warehouse_id': lineBrws.warehouse_id.id,
                 'production_id': False,
                 'product_uom': lineBrws.product_uom.id,
+                'date_expected': lineBrws.date_expected,
             }
             move_raw_ids.append((0, False, vals))
         for lineBrws in self.move_finished_ids:
@@ -132,6 +122,7 @@ class MrpProductionWizard(models.Model):
                 'warehouse_id': lineBrws.warehouse_id.id,
                 'production_id': productionBrws.id,
                 'product_uom': lineBrws.product_uom.id,
+                'date_expected': lineBrws.date_expected,
             }
             move_finished_ids.append((0, False, vals))
         productionBrws.write({
@@ -149,14 +140,10 @@ class MrpProductionWizard(models.Model):
         productionBrws = self.getParentProduction()
         self.cancelProductionRows(productionBrws)
         self.updateMoveLines(productionBrws)
-        self.createStockPickingIn(self.external_partner, productionBrws)
-        self.createStockPickingOut(self.external_partner, productionBrws)
-        #productionBrws.button_unreserve()   # Needed to evaluate picking out move
-#         productionBrws.move_raw_ids.action_done()
-
-
-#         productionBrws.move_raw_ids.write({'state': 'done'})
-#         productionBrws.move_finished_ids.write({'state': 'done'})
+        pickIn = self.createStockPickingIn(self.external_partner, productionBrws)
+        pickOut = self.createStockPickingOut(self.external_partner, productionBrws)
+        productionBrws.date_planned_finished = pickIn.max_date
+        productionBrws.date_planned_start = pickOut.max_date
 
     @api.multi
     def button_close_wizard(self):
@@ -166,15 +153,6 @@ class MrpProductionWizard(models.Model):
         
     def getOrigin(self, productionBrws, originBrw=None):
         return productionBrws.name
-
-#     def getLocation(self, originBrw):
-#         if originBrw:
-#             return originBrw.operation_id.routing_id.location_id.id
-#         for lock in self.env['stock.location'].search([('usage', '=', 'supplier'),
-#                                                        ('active', '=', True),
-#                                                        ('company_id', '=', False)]):
-#             return lock.id
-#         return False
 
     def createStockPickingIn(self, partner, productionBrws, originBrw=None):
 
@@ -205,8 +183,6 @@ class MrpProductionWizard(models.Model):
                     'move_lines': [],
                     'state': 'draft'}
         obj = stockObj.create(toCreate)
-        #obj.write({'move_lines': [(6, False, incomingMoves)]})
-        
         newStockLines = []
         for outMove in incomingMoves:
             stockMove = outMove.copy(default={
@@ -215,6 +191,7 @@ class MrpProductionWizard(models.Model):
                 })
             newStockLines.append(stockMove.id)
         obj.write({'move_lines': [(6, False, newStockLines)]})
+        return obj
 
     def createStockPickingOut(self, partner, productionBrws, originBrw=None):
         def getPickingType():
@@ -253,6 +230,7 @@ class MrpProductionWizard(models.Model):
                 })
             newStockLines.append(stockMove.id)
         obj.write({'move_lines': [(6, False, newStockLines)]})
+        return obj
 
     @api.multi
     def write(self, vals):
@@ -264,14 +242,6 @@ class MrpWorkorderWizard(MrpProductionWizard):
 
     _name = "mrp.workorder.externally.wizard"
     _inherit = ['mrp.production.externally.wizard']
-    
-    #external_partner = fields.Many2one('res.partner', string='External Partner', required=True)
-
-#     operation_type = fields.Selection(selection=[('normal', _('Normal')), ('consume', _('Consume'))],
-#                                       string=_('Operation'))
-#     
-#     consume_product_id = fields.Many2one(comodel_name='product.product', string=_('Product To Consume'))
-#     consume_bom_id = fields.Many2one(comodel_name='mrp.bom', string=_('BOM To Consume'))
 
     move_raw_ids = fields.One2many('stock.move',
                                     string='Raw Materials',
@@ -292,9 +262,87 @@ class MrpWorkorderWizard(MrpProductionWizard):
         workorderBrws.write({'external_partner': self.external_partner.id,
                              'state': 'external'})
         productionBrws = workorderBrws.production_id
-        self.createStockPickingIn(self.external_partner, productionBrws, workorderBrws)
-        self.createStockPickingOut(self.external_partner, productionBrws, workorderBrws)
+        pickIn = self.createStockPickingIn(self.external_partner, productionBrws, workorderBrws)
+        pickOut = self.createStockPickingOut(self.external_partner, productionBrws, workorderBrws)
+        productionBrws.date_planned_finished = pickIn.max_date
+        productionBrws.date_planned_start = pickOut.max_date
         productionBrws.button_unreserve()   # Needed to evaluate picking out move
 
     def getOrigin(self, productionBrws, originBrw):
         return "%s - %s - %s" % (productionBrws.name, originBrw.name, originBrw.external_partner.name)
+
+
+class TmpStockMove(models.Model):
+    _name = "stock.tmp_move"
+    _table = "stock_tmp_move"
+
+    name = fields.Char('Description', index=True, required=True)
+    company_id = fields.Many2one(
+        'res.company', 'Company',
+        default=lambda self: self.env['res.company']._company_default_get('stock.move'),
+        index=True, required=True)
+    product_id = fields.Many2one(
+        'product.product', 'Product',
+        domain=[('type', 'in', ['product', 'consu'])], index=True, required=True,
+        states={'done': [('readonly', True)]})
+    product_uom_qty = fields.Float('Quantity',
+                                   digits=dp.get_precision('Product Unit of Measure'),
+                                   default=1.0, required=True, states={'done': [('readonly', True)]},
+                                   help="This is the quantity of products from an inventory "
+                                        "point of view. For moves in the state 'done', this is the "
+                                        "quantity of products that were actually moved. For other "
+                                        "moves, this is the quantity of product that is planned to "
+                                        "be moved. Lowering this quantity does not generate a "
+                                        "backorder. Changing this quantity on assigned moves affects "
+                                        "the product reservation, and should be done with care.")
+    location_id = fields.Many2one(
+        'stock.location', 'Source Location',
+        auto_join=True, index=True, required=True, states={'done': [('readonly', True)]},
+        help="Sets a location if you produce at a fixed location. This can be a partner location if you subcontract the manufacturing operations.")
+    location_dest_id = fields.Many2one(
+        'stock.location', 'Destination Location',
+        auto_join=True, index=True, required=True, states={'done': [('readonly', True)]},
+        help="Location where the system will stock the finished products.")
+    partner_id = fields.Many2one(
+        'res.partner', 'Destination Address ',
+        states={'done': [('readonly', True)]},
+        help="Optional address where goods are to be delivered, specifically used for allotment")
+    note = fields.Text('Notes')
+    state = fields.Selection([
+        ('draft', 'New'), ('cancel', 'Cancelled'),
+        ('waiting', 'Waiting Another Move'), ('confirmed', 'Waiting Availability'),
+        ('assigned', 'Available'), ('done', 'Done')], string='Status',
+        copy=False, default='draft', index=True, readonly=True,
+        help="* New: When the stock move is created and not yet confirmed.\n"
+             "* Waiting Another Move: This state can be seen when a move is waiting for another one, for example in a chained flow.\n"
+             "* Waiting Availability: This state is reached when the procurement resolution is not straight forward. It may need the scheduler to run, a component to be manufactured...\n"
+             "* Available: When products are reserved, it is set to \'Available\'.\n"
+             "* Done: When the shipment is processed, the state is \'Done\'.")
+    origin = fields.Char("Source Document", readonly=True)
+    warehouse_id = fields.Many2one('stock.warehouse', 'Warehouse', help="Technical field depicting the warehouse to consider for the route selection on the next procurement (if any).")
+    production_id = fields.Many2one(comodel_name='mrp.production', string='Production Id', readonly=True)
+    external_prod_raw = fields.Many2one(comodel_name="mrp.production.externally.wizard", string="Raw", readonly=True)
+    external_prod_finish = fields.Many2one(comodel_name="mrp.production.externally.wizard", string="Finished", readonly=True)
+
+    scrapped = fields.Boolean('Scrapped', related='location_dest_id.scrap_location', readonly=True, store=True)
+    product_uom = fields.Many2one(
+        'product.uom', 'Unit of Measure', required=True, states={'done': [('readonly', True)]}, default=lambda self: self.env['product.uom'].search([], limit=1, order='id'))
+    date_expected = fields.Datetime('Scheduled date')
+
+    @api.model
+    def default_get(self, fields_list):
+        context = self.env.context
+        res = super(TmpStockMove, self).default_get(fields_list)
+        wh = context.get('warehouse_id', False)
+        if wh:
+            res['warehouse_id'] = wh
+            res['name'] = self.env['stock.warehouse'].browse(res['warehouse_id']).display_name
+        wizardId = context.get('wizard_obj_id', False)
+        if wizardId:
+            wizardObj = self.env["mrp.production.externally.wizard"].browse(wizardId)
+            res['location_id'] = wizardObj.production_id.location_src_id.id
+        return res
+
+    @api.model
+    def create(self, vals):
+        return super(TmpStockMove, self).create(vals)
