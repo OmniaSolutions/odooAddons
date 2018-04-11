@@ -110,31 +110,32 @@
 	         </tbody>
         </table>
             
-        <table class="table_title" id="ddt_info2">
-	        <colgroup>
-             	<col width="12%"/>
-				<col width="68%"/>
-				<col width="10%"/>
-				<col width="10%"/>    
-	        </colgroup>
-	        <thead>
-	            <tr>
-	                <th class="th_title">Cod Art. / commessa</th>
-	                <th class="th_title">Descrizione</th>
-	                <th class="th_title">U.M.</th>
-	                <th class="th_title">Q.tà</th>
-	            </tr>
-			</thead>
-			<tbody>
-				<t t-foreach="o.move_lines" t-as="move_line">
-		            <tr>
-		            	<td class="table_rows"> <div t-esc="move_line.product_id.default_code"/> </td>
-		            	<td class="table_rows"> <div t-esc="move_line.product_id.name"/> </td>
-		            	<td class="table_rows"> <div t-esc="move_line.product_uom.name"/> </td>
-		            	<td class="table_rows"> <div t-esc="move_line.product_qty"/> </td>
-		            </tr>
-				</t>
-			</tbody>
+        <table class="table table-condensed" id="ddt_info2"> <table>
+                    <colgroup>
+                        <col width="12%"/>
+                        <col width="68%"/>
+                        <col width="10%"/>
+                        <col width="10%"/>    
+                    </colgroup>
+                    <thead>
+                        <tr>
+                            <th class="th_title">Cod Art. / commessa</th>
+                            <th class="th_title">Descrizione</th>
+                            <th class="th_title">U.M.</th>
+                            <th class="th_title">Q.tà</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <t t-foreach="o.move_lines" t-as="move_line">
+                            <tr>
+                                <td class="table_rows"> <div t-esc="move_line.product_id.default_code"/> </td>
+                                <td class="table_rows"> <div t-esc="move_line.product_id.name"/> </td>
+                                <td class="table_rows"> <div t-esc="move_line.product_uom.name"/> </td>
+                                <td class="table_rows"> <div t-esc="move_line.product_qty"/> </td>
+                            </tr>
+                        </t>
+                    </tbody>
+                </table>
         </table> 
 
        	<table class="table_title_bottom" id="ddt_info3">
@@ -203,7 +204,7 @@
 	        </tbody>
       	</table>
       	
-       	<table style="width: 100%;">
+       	<table style="width: 100%;" id="ddt_info6">
         	<colgroup>
        	 		<col width="50%"/>
              	<col width="25%"/>
