@@ -88,8 +88,7 @@
 			        </table>
 				</div>
             
-<!-- corpo ordine -->
-        <table class="table_title">
+        <table class="table_title" id="ddt_info1">
              <colgroup>
 	             	<col width="20%"/>
 					<col width="20%"/>
@@ -111,7 +110,7 @@
 	         </tbody>
         </table>
             
-        <table class="table_title">
+        <table class="table_title" id="ddt_info2">
 	        <colgroup>
              	<col width="12%"/>
 				<col width="68%"/>
@@ -138,7 +137,7 @@
 			</tbody>
         </table> 
 
-       	<table class="table_title_bottom">
+       	<table class="table_title_bottom" id="ddt_info3">
         	<colgroup>
        	 		<col width="25%"/>
              	<col width="25%"/>
@@ -161,7 +160,7 @@
 	        </tbody>
       	</table>
 
-       	<table class="table_title_bottom">
+       	<table class="table_title_bottom"id="ddt_info4">
         	<colgroup>
        	 		<col width="25%"/>
              	<col width="25%"/>
@@ -184,7 +183,7 @@
 	        </tbody>
       	</table>
       	
-       	<table class="table_title_bottom">
+       	<table class="table_title_bottom" id="ddt_info5">
         	<colgroup>
        	 		<col width="50%"/>
              	<col width="25%"/>
