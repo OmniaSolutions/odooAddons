@@ -8,7 +8,7 @@
         <t t-set="data_report_header_spacing" t-value="9"/>
         <t t-set="data_report_dpi" t-value="110"/>
 
-        <t t-call="report.internal_layout">
+        <t t-call="report.external_layout">
             <div class="page" align="center">
             	<table style="text-align:left; margin-bottom: 40px; width: 100%;">
 		             <colgroup>
