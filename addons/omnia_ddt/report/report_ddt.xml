@@ -4,13 +4,9 @@
 <template id="omnia_ddt.stock_picking_ddt_pdf">
 	<t t-foreach="docs" t-as="o">
     <t t-call="report.html_container">
-        <t t-set="data_report_margin_top" t-value="12"/>
-        <t t-set="data_report_header_spacing" t-value="9"/>
-        <t t-set="data_report_dpi" t-value="110"/>
-
         <t t-call="report.external_layout">
             <div class="page" align="center">
-            	<table style="text-align:left; margin-bottom: 40px; width: 100%;">
+            	<table style="text-align:left; margin-bottom: 40px; width: 100%;" id="address_info">
 		             <colgroup>
 		             	<col width="50%"/>
 						<col width="50%"/> 
