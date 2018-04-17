@@ -8,7 +8,8 @@
 #
 #    Author : Smerghetto Daniel  (Omniasolutions)
 #    mail:daniel.smerghetto@omniasolutions.eu
-#    Copyright (c) 2014 Omniasolutions (http://www.omniasolutions.eu) 
+#    Copyright (c) 2014 Omniasolutions (http://www.omniasolutions.eu)
+#    Copyright (c) 2018 Omniasolutions (http://www.omniasolutions.eu)
 #    All Right Reserved
 #
 #    This program is free software: you can redistribute it and/or modify
@@ -27,15 +28,22 @@
 ##############################################################################
 
 '''
-Created on Dec 18, 2017
+Created on Apr 17, 2018
 
-@author: daniel
+@author: Matteo Boscolo
 '''
+from odoo import models
+from odoo import fields
+from odoo import api
+from odoo import _
+import logging
+import datetime
+from datetime import timedelta
+from odoo.tools import DEFAULT_SERVER_DATETIME_FORMAT
 
-from . import mrp_production
-from . import stock_picking
-from . import mrp_workorder
-from . import mrp_routing_workcenter
-from . import stock_move
-from . import purchase_order
-from . import mrp_bom
+
+class MrpBom(models.Model):
+
+    _name = "mrp.bom"
+    _inherit = ['mrp.bom']
+    external_partner = fields.Many2one('res.partner', string='External Partner')

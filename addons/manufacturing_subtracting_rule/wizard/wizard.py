@@ -273,7 +273,8 @@ class MrpProductionWizard(models.Model):
                     'origin': self.getOrigin(productionBrws, originBrw),
                     'move_lines': [],
                     'state': 'draft',
-                    'sub_contracting_operation': 'close'}
+                    'sub_contracting_operation': 'close',
+                    'sub_production_id': self.production_id}
         obj = stockObj.create(toCreate)
         newStockLines = []
         for outMove in incomingMoves:
@@ -310,7 +311,8 @@ class MrpProductionWizard(models.Model):
                     'origin': self.getOrigin(productionBrws, originBrw),
                     'move_lines': [],
                     'state': 'draft',
-                    'sub_contracting_operation': 'open'}
+                    'sub_contracting_operation': 'open',
+                    'sub_production_id': self.production_id}
         obj = stockObj.create(toCreate)
         newStockLines = []
         for outMove in outGoingMoves:

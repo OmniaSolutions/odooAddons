@@ -85,25 +85,14 @@ class MrpProduction(models.Model):
 
     @api.multi
     def open_external_pickings(self):
-        raise NotImplemented("do be done")
-        newContext = self.env.context.copy()
-        picking_ids = []
-        self.env['stock.piciking'].search('')
-        if self.purchase_external_id:
-            manufacturingIds = [self.purchase_external_id.id]
-        else:
-            manObjs = self.env['purchase.order'].search([('manu_external_id', '=', self.id)])
-            if manObjs:
-                manufacturingIds = manObjs.ids
-        newContext['default_manu_external_id'] = self.id
+        picking_ids = self.env['stock.picking'].search([('sub_production_id', '=', self.id)])
         return {
             'name': _("Purchase External"),
             'view_type': 'form',
             'view_mode': 'tree,form',
-            'res_model': 'purchase.order',
+            'res_model': 'stock.picking',
             'type': 'ir.actions.act_window',
-            'context': newContext,
-            'domain': [('id', 'in', manufacturingIds)],
+            'domain': [('id', 'in', picking_ids.ids)],
         }
 
     @api.model
@@ -178,7 +167,7 @@ class MrpProduction(models.Model):
     def button_produce_externally(self):
         values = {}
         location = self.routing_id.location_id.id
-        partner = self.routing_id.location_id.partner_id
+        partner = self.routing_id.location_id.partner_id or self.bom_id.external_partner
         if not partner:
             partner = self.env['res.partner'].search([], limit=1)
         if not location:
@@ -191,7 +180,7 @@ class MrpProduction(models.Model):
         values['consume_bom_id'] = self.bom_id.id
         values['external_warehouse_id'] = self.location_src_id.get_warehouse().id
         values['external_location_id'] = location.id
-        values['production_id'] = self.id
+        values['partner_id'] = self.external_partner
         values['request_date'] = datetime.datetime.now()
         obj_id = self.env['mrp.production.externally.wizard'].create(values)
         self.env.cr.commit()
