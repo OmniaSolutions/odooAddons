@@ -8,7 +8,7 @@
 #
 #    Author : Smerghetto Daniel  (Omniasolutions)
 #    mail:daniel.smerghetto@omniasolutions.eu
-#    Copyright (c) 2014 Omniasolutions (http://www.omniasolutions.eu) 
+#    Copyright (c) 2018 Omniasolutions (http://www.omniasolutions.eu)
 #    All Right Reserved
 #
 #    This program is free software: you can redistribute it and/or modify
@@ -33,6 +33,8 @@ Created on Dec 18, 2017
 '''
 from odoo import models
 from odoo import api
+from odoo import fields
+from odoo import _
 
 
 class StockImmediateTransfer(models.TransientModel):
@@ -57,13 +59,15 @@ class StockImmediateTransfer(models.TransientModel):
                 manufactObj.button_mark_done()
             break
         return res
-        
+
 
 class StockPicking(models.Model):
     _name = 'stock.picking'
     _inherit = ['stock.picking']
-    
-    
+
+    sub_contracting_operation = fields.Selection([('open', _('Open external Production')),
+                                                  ('close', _('Close external Production'))])
+
     @api.multi
     def action_assign(self):
         """In addition to what the method in the parent class does,
@@ -76,9 +80,8 @@ class StockPicking(models.Model):
                     continue
                 self.createFinishedProducts(maonOrder)
                 break
-        
         return super(StockPicking, self).action_assign()
-    
+
     def getRelatedExternalManOrder(self, objPick):
         manufacturingObj = self.env['mrp.production']
         filterList = [('name', '=', objPick.origin),
@@ -98,8 +101,7 @@ class StockPicking(models.Model):
                 stockQuantObj.create({
                     'quantity': finishedLineBrws.product_qty,
                     'location_id': finishedLineBrws.location_id.id,
-                    'product_id': prodBrws.id
-                    })
+                    'product_id': prodBrws.id})
             else:
                 for quantsForProductBrws in quantsForProduct:
                     newQty = quantsForProductBrws.quantity + finishedLineBrws.product_qty
@@ -107,19 +109,15 @@ class StockPicking(models.Model):
                     break
 
     def isIncoming(self, objPick):
-        if objPick.picking_type_id.code == 'incoming':
-            return True
-        return False
+        return objPick.sub_contracting_operation == 'close'
 
     def isOutGoing(self, objPick):
-        if objPick.picking_type_id.code == 'outgoing':
-            return True
-        return False
+        return objPick.sub_contracting_operation == 'open'
 
     def doneManRawMaterials(self, manOrder):
         for lineBrws in manOrder.move_raw_ids:
             lineBrws.write({'state': 'done'})
-        
+
     def removeMaterialFromSupplier(self, manufacturingObj):
         stockQuantObj = self.env['stock.quant']
         for consumedLineBrws in manufacturingObj.move_raw_ids:

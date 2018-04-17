@@ -83,6 +83,29 @@ class MrpProduction(models.Model):
             'domain': [('id', 'in', manufacturingIds)],
         }
 
+    @api.multi
+    def open_external_pickings(self):
+        raise NotImplemented("do be done")
+        newContext = self.env.context.copy()
+        picking_ids = []
+        self.env['stock.piciking'].search('')
+        if self.purchase_external_id:
+            manufacturingIds = [self.purchase_external_id.id]
+        else:
+            manObjs = self.env['purchase.order'].search([('manu_external_id', '=', self.id)])
+            if manObjs:
+                manufacturingIds = manObjs.ids
+        newContext['default_manu_external_id'] = self.id
+        return {
+            'name': _("Purchase External"),
+            'view_type': 'form',
+            'view_mode': 'tree,form',
+            'res_model': 'purchase.order',
+            'type': 'ir.actions.act_window',
+            'context': newContext,
+            'domain': [('id', 'in', manufacturingIds)],
+        }
+
     @api.model
     @api.returns('self', lambda value: value.id)
     def create(self, vals):
@@ -169,6 +192,7 @@ class MrpProduction(models.Model):
         values['external_warehouse_id'] = self.location_src_id.get_warehouse().id
         values['external_location_id'] = location.id
         values['production_id'] = self.id
+        values['request_date'] = datetime.datetime.now()
         obj_id = self.env['mrp.production.externally.wizard'].create(values)
         self.env.cr.commit()
         return {
