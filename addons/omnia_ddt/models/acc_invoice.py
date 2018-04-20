@@ -36,27 +36,23 @@ class Omnia_ddt_account_invoice(models.Model):
 
     @api.multi
     def recupera_fattura(self):
-        idspicking = []
         objStckPkng = self.env.get('stock.picking')
         for ogg in self:
             if (ogg.origin != 'merged') and (ogg.origin is not False):     # acc invoice has value and not merged
-                idspicking.extend(objStckPkng.search([('origin', '=', ogg.origin),
-                                                      ('ddt_number', '!=', False),
-                                                      ('invoice_id', '=', None),
-                                                      ('use_for_ddt', '=', True)],
-                                                     )).ids
+                picks = objStckPkng.search([('origin', '=', ogg.origin),
+                                            ('ddt_number', '!=', False),
+                                            ('invoice_id', '=', None),
+                                            ('use_for_ddt', '=', True)])
+                for objPick in picks:
+                    objPick.invoice_id = ogg.id
             elif ogg.origin == 'merged':                             # Used only in case of "account_invoice_merge_no_unlink" module
                 for mergedInv in self.search([('merged_invoice_id', '=', ogg.id)]):
                     if mergedInv.origin:
                         listaddt = mergedInv.origin.split(",")
                         for oggddt in listaddt:
-                            idspicking.extend(objStckPkng.search([('origin', '=', oggddt.strip()),
-                                                                  ('ddt_number', '!=', False),
-                                                                  ('invoice_id', '=', None),
-                                                                  ('use_for_ddt', '=', True)],
-                                                                 )).ids
-        for ddtId in idspicking:
-            objStckPkng.write(ddtId, {'invoice_id': self.env.ids[0]})
-        return True
-
-Omnia_ddt_account_invoice()
+                            picks = objStckPkng.search([('origin', '=', oggddt.strip()),
+                                                        ('ddt_number', '!=', False),
+                                                        ('invoice_id', '=', None),
+                                                        ('use_for_ddt', '=', True)])
+                            for objPick in picks:
+                                objPick.invoice_id = ogg.id

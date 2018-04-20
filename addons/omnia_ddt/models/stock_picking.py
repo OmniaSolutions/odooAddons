@@ -6,7 +6,7 @@
 #
 #    Author : Smerghetto Daniel  (Omniasolutions)
 #    mail:daniel.smerghetto@omniasolutions.eu
-#    Copyright (c) 2014 Omniasolutions (http://www.omniasolutions.eu)
+#    Copyright (c) 2014-2018 Omniasolutions (http://www.omniasolutions.eu)
 #    All Right Reserved
 #
 #    This program is free software: you can redistribute it and/or modify
@@ -34,7 +34,7 @@ class stock_picking_carriage_condition(models.Model):
     """
     Carriage condition
     """
-    _name = "stock.picking.carriage_condition"
+    _name = "picking_carriage_condition"
     _description = "Carriage Condition"
     name = fields.Char('Carriage Condition', size=64, required=True, readonly=False)
     note = fields.Text('Note')
@@ -44,7 +44,7 @@ class stock_picking_goods_description(models.Model):
     """
     Description of Goods
     """
-    _name = 'stock.picking.goods_description'
+    _name = 'picking_goods_description'
     _description = "Description of Goods"
 
     name = fields.Char('Description of Goods', size=64, required=True, readonly=False)
@@ -55,7 +55,7 @@ class stock_picking_reason(models.Model):
     """
     Reason for Transportation
     """
-    _name = 'stock.picking.transportation_reason'
+    _name = 'picking_transportation_reason'
     _description = 'Reason for transportation'
 
     name = fields.Char('Reason For Transportation', size=64, required=True, readonly=False)
@@ -65,9 +65,9 @@ class stock_picking_reason(models.Model):
 class stock_picking_custom(models.Model):
     _inherit = 'stock.picking'
     _name = 'stock.picking'
-    carriage_condition_id = fields.Many2one('stock.picking.carriage_condition', 'Carriage condition')
-    goods_description_id = fields.Many2one('stock.picking.goods_description', 'Description of goods')
-    transportation_reason_id = fields.Many2one('stock.picking.transportation_reason', 'Reason for transportation')
+    carriage_condition_id = fields.Many2one('picking_carriage_condition', 'Carriage condition')
+    goods_description_id = fields.Many2one('picking_goods_description', 'Description of goods')
+    transportation_reason_id = fields.Many2one('picking_transportation_reason', 'Reason for transportation')
     invoice_id = fields.Many2one('account.invoice', 'numberDDT', readonly=1)
     delivery_address = fields.Many2one('res.partner', "Indirizzo di spedizione secondario")
     ddt_number = fields.Char('DDT', size=64)
@@ -99,19 +99,20 @@ class stock_picking_custom(models.Model):
         return failReturnDate
 
     @api.multi
-    def button_ddt_number(self, vals={}):
+    def button_ddt_number(self):
         lastDDtDate = self.getLastDDtDate()
         for brwsPick in self:
+            brwsPick.use_for_ddt = True
             if brwsPick.ddt_date is False:
                 dateTest = datetime.now()
-                brwsPick.write({'ddt_date': str(dateTest.strftime('%Y-%m-%d'))})
+                brwsPick.ddt_date = str(dateTest.strftime('%Y-%m-%d'))
             else:
                 dateTest = datetime.strptime(brwsPick.ddt_date, '%Y-%m-%d')
             if brwsPick.ddt_number is False or len(str(brwsPick.ddt_number)) == 0:
                 if lastDDtDate > dateTest:
                     pass
                 number = self.env.get('ir.sequence').next_by_code('stock.ddt')
-                brwsPick.write({'ddt_number': number})
+                brwsPick.ddt_number = number
         return True
 
     # -----------------------------------------------------------------------------
@@ -120,7 +121,6 @@ class stock_picking_custom(models.Model):
 
     @api.multi
     def copy(self, default={}):
-        default.update({'ddt_number': ''})
+        default.update({'ddt_number': '',
+                        'ddt_date': ''})
         return super(stock_picking_custom, self).copy(default)
-
-stock_picking_custom()

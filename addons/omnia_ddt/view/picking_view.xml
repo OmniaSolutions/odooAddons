@@ -12,7 +12,7 @@
 					<field name="invoice_id" domain="[('partner_id','=',partner_id)]"/>
 				</field>
 				<field name="partner_id" position="after">
-					<field name="use_for_ddt"/>
+					<field name="use_for_ddt" groups="base.group_no_one"/>
 				</field>	
 				<page name="extra" position="after">
 					<page string="DDT Details">
@@ -34,9 +34,10 @@
             	<xpath expr="/form/header//button[@name='%(stock.act_stock_return_picking)d']" position="after">
 	            	<button name="button_ddt_number" 
 	            			string="Stacca DDT" 
-	            			states="done" 
+	            			attrs="{'invisible': [('ddt_number', '!=', False),('ddt_number','!=','')]}" 
 	            			type="object" 
-	            			class="oe_highlight" />
+	            			class="oe_highlight"
+	            		    />
 	            </xpath>
 			</field>
 		</record>

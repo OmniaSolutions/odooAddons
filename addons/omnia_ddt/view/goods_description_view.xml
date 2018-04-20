@@ -6,8 +6,8 @@
         # Description of Goods
         # -------------------------------------------------------------
         <record id="view_goods_description_tree" model="ir.ui.view">
-            <field name="name">stock.picking.goods_description.tree</field>
-            <field name="model">stock.picking.goods_description</field>
+            <field name="name">picking_goods_description.tree</field>
+            <field name="model">picking_goods_description</field>
             <field name="type">tree</field>
             <field name="arch" type="xml">
                 <tree string="Descriptions of Goods">
@@ -16,8 +16,8 @@
             </field>
         </record>
         <record id="stock_goods_description_form" model="ir.ui.view">
-            <field name="name">stock.picking.goods_description.form</field>
-            <field name="model">stock.picking.goods_description</field>
+            <field name="name">picking_goods_description.form</field>
+            <field name="model">picking_goods_description</field>
             <field name="type">form</field>
             <field name="arch" type="xml">
                 <form string="Description of Goods">
@@ -33,7 +33,7 @@
         
         <record id="action_goods_description_tree" model="ir.actions.act_window">
             <field name="name">Descriptions of Goods</field>
-            <field name="res_model">stock.picking.goods_description</field>
+            <field name="res_model">picking_goods_description</field>
             <field name="type">ir.actions.act_window</field>
             <field name="view_type">form</field>
             <field name="view_mode">tree,form</field>

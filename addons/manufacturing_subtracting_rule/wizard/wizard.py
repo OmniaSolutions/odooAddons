@@ -3,6 +3,7 @@ Created on 16 Jan 2018
 
 @author: mboscolo
 '''
+import math
 import logging
 import datetime
 from dateutil.relativedelta import relativedelta
@@ -11,6 +12,7 @@ from odoo import models
 from odoo import fields
 from odoo import api
 from odoo import _
+from odoo import tools
 from odoo.addons import decimal_precision as dp
 
 
@@ -176,7 +178,6 @@ class MrpProductionWizard(models.Model):
         move_raw_ids = []
         move_finished_ids = []
         productsToCheck = []
-        product_delay = 0.0
         for lineBrws in self.move_finished_ids:
             productsToCheck.append(lineBrws.product_id.id)
             vals = {
@@ -193,13 +194,13 @@ class MrpProductionWizard(models.Model):
                 'warehouse_id': lineBrws.warehouse_id.id,
                 'production_id': productionBrws.id,
                 'product_uom': lineBrws.product_uom.id,
-                'date_expected': self.request_date,
+                'date_expected': datetime.datetime.now(),
             }
-            product_delay = lineBrws.product_id.produce_delay
             move_finished_ids.append((0, False, vals))
-
+        product_delay = 0.0
         for lineBrws in self.move_raw_ids:
             productsToCheck.append(lineBrws.product_id.id)
+            product_delay = lineBrws.product_id.produce_delay
             vals = {
                 'name': lineBrws.name,
                 'company_id': lineBrws.company_id.id,
@@ -360,6 +361,3 @@ class MrpWorkorderWizard(MrpProductionWizard):
 
     def getOrigin(self, productionBrws, originBrw):
         return "%s - %s - %s" % (productionBrws.name, originBrw.name, originBrw.external_partner.name)
-
-
-

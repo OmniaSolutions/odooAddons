@@ -4,11 +4,12 @@
 #    OpenERP, Open Source Management Solution
 #    Copyright (C) 2004-2009 Tiny SPRL (<http://tiny.be>).
 #    Copyright (C) 2010-2012 OpenERP s.a. (<http://openerp.com>).
-#
+#    Copyright (C) 2018 OpenERP s.a. (<http://openerp.com>).
 #
 #    Author : Smerghetto Daniel  (Omniasolutions)
 #    mail:daniel.smerghetto@omniasolutions.eu
-#    Copyright (c) 2014 Omniasolutions (http://www.omniasolutions.eu) 
+#    Copyright (c) 2014 Omniasolutions (http://www.omniasolutions.eu)
+#    Copyright (c) 2018 Omniasolutions (http://www.omniasolutions.eu)
 #    All Right Reserved
 #
 #    This program is free software: you can redistribute it and/or modify
@@ -39,30 +40,25 @@ Manage DDT documents
     'author': 'OmniaSolutions.eu',
     'maintainer': 'OmniaSolutions.eu',
     'website': 'http://www.OmniaSolutions.eu',
-    #'depends': ['stock','delivery','report_webkit'],
-    'depends': ['stock','delivery'],
-    'data': [
-                #view
-                'view/carriage_condition_data.xml',
-                'view/carriage_condition_view.xml',
-                'view/goods_description_data.xml',
-                'view/goods_description_view.xml',
-                'view/picking_view.xml',
-                'view/sequence.xml',
-                'view/transportation_reason_data.xml',
-                'view/transportation_reason_view.xml',
-                'view/acc_invoice_view_ddt.xml',
-#              #report
-               'report/report_omnia_account_invoice.xml',
-#              #menu
-                'menu_configuration.xml',
-#              #security
-                'security/ddt_groups.xml',
-                'security/ir.model.access.csv',
-             
-    ],
+    'depends': ['sale', 'stock'],
+    'data': ['data/carriage_condition_data.xml',
+             'data/goods_description_data.xml',
+             'data/transportation_reason_data.xml',
+             'view/carriage_condition_view.xml',
+             'view/goods_description_view.xml',
+             'view/picking_view.xml',
+             'view/sequence.xml',
+             'view/transportation_reason_view.xml',
+             'view/acc_invoice_view_ddt.xml',
+             # report
+             'report/report_ddt.xml',
+             # menu
+             'view/menu_configuration.xml',
+             # security
+             'security/ddt_groups.xml',
+             'security/ir.model.access.csv'
+             ],
     'installable': True,
     'application': True,
     'auto_install': False,
 }
-

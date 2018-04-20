@@ -51,8 +51,6 @@
         </field>
     </record>
 
-
-
     <record id="mrp_workorder_externally_view_wizard" model="ir.ui.view">
         <field name="name">mrp.workorder.externally.view.wizard</field>
         <field name="model">mrp.workorder.externally.wizard</field>
@@ -74,7 +72,4 @@
         </form>
         </field>
     </record>
-
-
-
 </odoo>
