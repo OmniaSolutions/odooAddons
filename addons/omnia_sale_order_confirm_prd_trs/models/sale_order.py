@@ -162,7 +162,7 @@ class SaleOrder(models.Model):
             'description': '[%s] %s' % (oldProdBrws.name, oldProdBrws.description_sale or '-'),
             'description_sale': '[%s] %s' % (oldProdBrws.name, oldProdBrws.description_sale or '-')
             }
-        return oldProdBrws.copy(defaults=toCreate)
+        return oldProdBrws.copy(default=toCreate)
     
     @api.multi
     def getRoutesToSet(self):
