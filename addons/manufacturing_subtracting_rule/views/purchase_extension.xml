@@ -16,7 +16,7 @@
             </div>
 
             <field name="date_order" position="after">
-                 <field name="manu_external_id"/>
+                 <field name="production_external_id"/>
             </field>
         </field>
     </record> 

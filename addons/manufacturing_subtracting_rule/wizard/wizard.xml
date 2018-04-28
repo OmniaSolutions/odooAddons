@@ -12,6 +12,7 @@
 	        	<field name="external_warehouse_id"/>
 	        	<field name="external_location_id"/>
 	        	<field name="request_date"/>
+	        	<field name="create_purchese_order"/>
 	        	<field name="consume_product_id" attrs="{'invisible': [('operation_type', '!=', 'consume')], 'required': [('operation_type', '=', 'consume')]}"/>
 	        	<field name="consume_bom_id" attrs="{'invisible': [('operation_type', '!=', 'consume')], 'required': [('operation_type', '=', 'consume')]}"
 	        			domain="[('product_tmpl_id', '=', consume_product_id.product_tmpl_id)]"/>
@@ -62,7 +63,7 @@
                 <field name="external_partner"/>
 	        	<field name="operation_type" invisible="True"/><!-- the functionality is not ready at the moment-->
 	        	<field name="request_date"/>
-	        	<!--<field name="create_purchese_orders"/>-->
+	        	<field name="create_purchese_order"/>
 	        	<field name="consume_product_id" attrs="{'invisible': [('operation_type', '!=', 'consume')], 'required': [('operation_type', '=', 'consume')]}"/>
 	        	<field name="consume_bom_id" attrs="{'invisible': [('operation_type', '!=', 'consume')], 'required': [('operation_type', '=', 'consume')]}"/>
                 <field name="move_raw_ids"/>

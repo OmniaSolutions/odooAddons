@@ -134,7 +134,7 @@ class MrpProductionWizard(models.TransientModel):
     @api.onchange('consume_product_id')
     def _consume_bom_id(self):
         # create the row material related to the bom chosen
-        # if the @api.onchange('consume_product_id') may the @api.onchange('consume_product_id') should be fired to 
+        # if the @api.onchange('consume_product_id') may the @api.onchange('consume_product_id') should be fired to
         # so we can be sure that the raw material is updated for the wizar
         pass
 
@@ -261,16 +261,38 @@ class MrpProductionWizard(models.TransientModel):
         productionBrws.date_planned_start = pickOut.max_date
         self.createPurches()
 
+    @api.model
+    def getDefaultExternalServiceProduct(self):
+        """
+        get the default external product suitable for the purchase
+        """
+        product_brw = self.env['product.product'].search([('default_code', '=', 'external_service')])
+        if product_brw:
+            return product_brw
+        val = {'default_code': 'external_service',  # TODO: use a configuration variable for this
+               'type': 'service',
+               'purchase_ok': True,
+               'name': _('Servizio')}
+        return self.env['product.product'].create(val)
+
     @api.multi
     def createPurches(self):
         if not self.create_purchese_order:
             return
-#         PO = self.env['purchase.order']
-#         POL = self.env['purchase.order']
-#         PO.create({'partner_id':,
-#                    'date_planned':,
-#                    })
-#         for lineBrws in self.move_finished_ids:
+        obj_po = self.env['purchase.order'].create({
+            'partner_id': self.external_partner.id,
+            'date_planned': self.request_date,
+            'production_external_id': self.production_id.id})
+        obj_product_template = self.getDefaultExternalServiceProduct()
+        for lineBrws in self.move_finished_ids:
+            values = {'product_id': obj_product_template.id,
+                      'name': _("Manufacture on product ") + lineBrws.product_id.name,
+                      'product_qty': lineBrws.product_uom_qty,
+                      'product_uom': obj_product_template.uom_po_id.id,
+                      'price_unit': obj_product_template.price,
+                      'date_planned': self.request_date,
+                      'order_id': obj_po.id}
+            self.env['purchase.order.line'].create(values)
 
     @api.multi
     def button_close_wizard(self):

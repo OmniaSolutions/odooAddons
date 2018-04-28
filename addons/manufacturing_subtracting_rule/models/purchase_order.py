@@ -8,7 +8,7 @@
 #
 #    Author : Smerghetto Daniel  (Omniasolutions)
 #    mail:daniel.smerghetto@omniasolutions.eu
-#    Copyright (c) 2014 Omniasolutions (http://www.omniasolutions.eu) 
+#    Copyright (c) 2014 Omniasolutions (http://www.omniasolutions.eu)
 #    All Right Reserved
 #
 #    This program is free software: you can redistribute it and/or modify
@@ -42,15 +42,15 @@ class PurchaseOrder(models.Model):
 
     _name = "purchase.order"
     _inherit = ['purchase.order']
-    
-    manu_external_id = fields.Many2one('mrp.production', string=_('External Production'))
-    
+
+    production_external_id = fields.Many2one('mrp.production', string=_('External Production'))
+
     @api.multi
     def open_external_manufacturing(self):
         newContext = self.env.context.copy()
         manufacturingIds = []
-        if self.manu_external_id:
-            manufacturingIds = [self.manu_external_id.id]
+        if self.production_external_id:
+            manufacturingIds = [self.production_external_id.id]
         else:
             manObjs = self.env['mrp.production'].search([('purchase_external_id', '=', self.id)])
             if manObjs:
@@ -65,4 +65,3 @@ class PurchaseOrder(models.Model):
             'context': newContext,
             'domain': [('id', 'in', manufacturingIds)],
         }
-        

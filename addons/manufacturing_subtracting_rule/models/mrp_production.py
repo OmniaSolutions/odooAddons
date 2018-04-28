@@ -80,7 +80,7 @@ class MrpProduction(models.Model):
         if self.purchase_external_id:
             manufacturingIds = [self.purchase_external_id.id]
         else:
-            manObjs = self.env['purchase.order'].search([('manu_external_id', '=', self.id)])
+            manObjs = self.env['purchase.order'].search([('production_external_id', '=', self.id)])
             if manObjs:
                 manufacturingIds = manObjs.ids
         newContext['default_manu_external_id'] = self.id
