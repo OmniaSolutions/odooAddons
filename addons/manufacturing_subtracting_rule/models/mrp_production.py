@@ -8,7 +8,7 @@
 #
 #    Author : Smerghetto Daniel  (Omniasolutions)
 #    mail:daniel.smerghetto@omniasolutions.eu
-#    Copyright (c) 2014 Omniasolutions (http://www.omniasolutions.eu) 
+#    Copyright (c) 2014 Omniasolutions (http://www.omniasolutions.eu)
 #    Copyright (c) 2018 Omniasolutions (http://www.omniasolutions.eu)
 #    All Right Reserved
 #
@@ -36,6 +36,7 @@ from odoo import models
 from odoo import fields
 from odoo import api
 from odoo import _
+from odoo.exceptions import UserError
 import logging
 import datetime
 from datetime import timedelta
@@ -48,7 +49,17 @@ class MrpProduction(models.Model):
     _inherit = ['mrp.production']
 
     state = fields.Selection(selection_add=[('external', 'External Production')])
-    external_partner = fields.Many2one('res.partner', string='External Partner')
+
+    @api.multi
+    def _getDefaultPartner(self):
+        for mrp_production in self:
+            if mrp_production.routing_id.location_id.partner_id:
+                mrp_production.external_partner = mrp_production.routing_id.location_id.partner_id.id
+
+    external_partner = fields.Many2one('res.partner',
+                                       compute='_getDefaultPartner',
+                                       string='Default External Partner',
+                                       help='This is a computed field in order to modifier it go to Routing -> Production Place -> Set Owner of the location')
     purchase_external_id = fields.Many2one('purchase.order', string='External Purchase')
     move_raw_ids_external_prod = fields.One2many('stock.move',
                                                  'raw_material_production_id',
@@ -84,7 +95,7 @@ class MrpProduction(models.Model):
         }
 
     @api.model
-    @api.returns('self', lambda value:value.id)
+    @api.returns('self', lambda value: value.id)
     def create(self, vals):
         return super(MrpProduction, self).create(vals)
 
@@ -99,8 +110,13 @@ class MrpProduction(models.Model):
             return lock.id
         return False
 
-    def createTmpStockMove(self, sourceMoveObj, location_source_id, location_dest_id):
+    def createTmpStockMove(self, sourceMoveObj, location_source_id=None, location_dest_id=None):
         tmpMoveObj = self.env["stock.tmp_move"]
+        if not location_source_id:
+            location_source_id = sourceMoveObj.location_id.id
+        if not location_dest_id:
+            location_dest_id = sourceMoveObj.location_dest_id.id
+
         return tmpMoveObj.create({
             'name': sourceMoveObj.name,
             'company_id': sourceMoveObj.company_id.id,
@@ -108,7 +124,7 @@ class MrpProduction(models.Model):
             'product_uom_qty': sourceMoveObj.product_uom_qty,
             'location_id': location_source_id,
             'location_dest_id': location_dest_id,
-            'partner_id': self.external_partner.id,
+            'partner_id': self.routing_id.location_id.partner_id.id,
             'note': sourceMoveObj.note,
             'state': 'draft',
             'origin': sourceMoveObj.origin,
@@ -116,10 +132,9 @@ class MrpProduction(models.Model):
             'production_id': self.id,
             'product_uom': sourceMoveObj.product_uom.id,
             'date_expected': sourceMoveObj.date_expected,
-            'mrp_original_move': False
-            })
+            'mrp_original_move': False})
 
-    def copyAndCleanLines(self, brwsList, location_dest_id, location_source_id):
+    def copyAndCleanLines(self, brwsList, location_dest_id=None, location_source_id=None):
         outElems = []
         for elem in brwsList:
             outElems.append(self.createTmpStockMove(elem, location_source_id, location_dest_id).id)
@@ -130,31 +145,29 @@ class MrpProduction(models.Model):
             return False
         locationName = partnerBrws.name
         return self.createProductionLocation(locationName)
-            
+
     def createProductionLocation(self, locationName):
-        
         def getParentLocation():
-            return locationObj.with_context({'lang': 'en_US'}).search([
+            locations = locationObj.with_context({'lang': 'en_US'}).search([
                 ('usage', '=', 'supplier'),
-                ('name', '=', 'Vendors')
-                ])
-            
+                ('name', '=', 'Vendors')])
+            if locations:
+                return locations[-1]
+            raise UserError("No Vendor location defined")
         locationObj = self.env['stock.location']
         parentLoc = getParentLocation()
-        vals = {
-            'name': locationName,
-            'location_id': parentLoc.id,
-            'usage': 'internal',
-            }
-        locBrws = locationObj.search([
-            ('name', '=', locationName),
-            ('location_id', '=', parentLoc.id),
-            ('usage', '=', 'internal')
-            ])
+        vals = {'name': locationName,
+                'location_id': parentLoc.id,
+                'usage': 'internal'
+                }
+        locBrws = locationObj.search([('name', '=', locationName),
+                                      ('location_id', '=', parentLoc.id),
+                                      ('usage', '=', 'internal')
+                                      ])
         if not locBrws:
             locBrws = locationObj.create(vals)
         return locBrws
-        
+
     @api.multi
     def button_produce_externally(self):
         values = {}
@@ -197,7 +210,7 @@ class MrpProduction(models.Model):
             manOrderBrws.write({'state': 'confirmed'})
             for move_line in manOrderBrws.move_raw_ids + manOrderBrws.move_finished_ids:
                 if move_line.mrp_original_move is False:
-                    move_line._action_cancel()
+                    move_line.action_cancel()
                 if move_line.state in ('draft', 'cancel'):
                     if move_line.mrp_original_move:
                         move_line.state = move_line.mrp_original_move
@@ -207,25 +220,22 @@ class MrpProduction(models.Model):
     def checkCreateReorderRule(self, prodBrws, warehouse):
         if not self.checkExistingReorderRule(prodBrws, warehouse):
             self.createReorderRule(prodBrws, warehouse)
-        
+
     def checkExistingReorderRule(self, prod_brws, warehouse):
         reorderRules = self.env['stock.warehouse.orderpoint'].search([
             ('product_id', '=', prod_brws.id),
-            ('warehouse_id', '=', warehouse.id),
-            ])
+            ('warehouse_id', '=', warehouse.id)])
         if reorderRules:
             return True
         return False
 
     def createReorderRule(self, prod_brws, warehouse):
         logging.info('Creating reordering rule for product ID %r and warehouse ID %r' % (prod_brws.id, warehouse.id))
-        toCreate = {
-            'product_id': prod_brws.id,
-            'warehouse_id': warehouse.id,
-            'product_min_qty': 0,
-            'product_max_qty': 0,
-            'qty_multiple': 1,
-            'location_id': warehouse.lot_stock_id.id,
-            }
+        toCreate = {'product_id': prod_brws.id,
+                    'warehouse_id': warehouse.id,
+                    'product_min_qty': 0,
+                    'product_max_qty': 0,
+                    'qty_multiple': 1,
+                    'location_id': warehouse.lot_stock_id.id}
         wareHouseBrws = self.env['stock.warehouse.orderpoint'].create(toCreate)
         return wareHouseBrws

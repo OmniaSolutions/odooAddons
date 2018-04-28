@@ -20,6 +20,7 @@
 
             <field name="origin" position="after">
                  <field name="purchase_external_id"/>
+                 <field name="external_partner" readonly="True"/>
             </field>
             
             <button name="action_assign" position="attributes">

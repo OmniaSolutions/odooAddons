@@ -8,7 +8,8 @@
 #
 #    Author : Smerghetto Daniel  (Omniasolutions)
 #    mail:daniel.smerghetto@omniasolutions.eu
-#    Copyright (c) 2014 Omniasolutions (http://www.omniasolutions.eu) 
+#    Copyright (c) 2014 Omniasolutions (http://www.omniasolutions.eu)
+#    Copyright (c) 2018 Omniasolutions (http://www.omniasolutions.eu)
 #    All Right Reserved
 #
 #    This program is free software: you can redistribute it and/or modify
@@ -26,30 +27,26 @@
 #
 ##############################################################################
 
+'''
+Created on Apr 17, 2018
 
-{
-    'name': 'Omnia Manufacturing Subtracting Rule',
-    'version': '1.1',
-    'sequence': 1,
-    'category': 'Custom',
-    'description': """
-====================
-""",
-    'author': 'OmniaSolutions.eu',
-    'maintainer': 'OmniaSolutions.eu',
-    'website': 'http://www.OmniaSolutions.eu',
-    'depends': ['stock', 'delivery', 'mrp'],
-    'data': [
-                #wizard
-                'wizard/wizard.xml',
-                #view
-                'views/mrp_production_extension.xml',
-                'views/mrp_routing_workcenter.xml',
-                'views/purchase_extension.xml',
-                'views/mrp_bom.xml',
-    ],
-    'installable': True,
-    'application': False,
-    'auto_install': False,
-}
+@author: Matteo Boscolo
+'''
+from odoo import models
+from odoo import fields
+from odoo import api
+from odoo import _
+import logging
+import datetime
+from datetime import timedelta
+from odoo.tools import DEFAULT_SERVER_DATETIME_FORMAT
 
+
+class MrpBom(models.Model):
+
+    _name = "mrp.bom"
+    _inherit = ['mrp.bom']
+    external_partner = fields.Many2one('res.partner',
+                                       related='routing_id.location_id.partner_id',
+                                       string='External Partner',
+                                       help='This is a computed field in order to modifier it go to Routing -> Production Place -> Set Owner of the location')

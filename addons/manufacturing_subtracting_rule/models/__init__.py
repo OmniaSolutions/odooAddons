@@ -38,4 +38,5 @@ from . import mrp_workorder
 from . import mrp_routing_workcenter
 from . import stock_move
 from . import purchase_order
+from . import mrp_bom
 
