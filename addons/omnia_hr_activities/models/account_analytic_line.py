@@ -34,7 +34,7 @@ class AccountAnalyticLine(models.Model):
 
     def convertToDateTime(self, strDate):
         return fields.Datetime.from_string(strDate)
-        
+
     @api.onchange('ending_date')
     def endingDatechanged(self):
         if self.starting_date:
@@ -54,7 +54,5 @@ class AccountAnalyticLine(models.Model):
     def startingDatechanged(self):
         if self.starting_date:
             self.date = self.convertToDateTime(self.starting_date).date()
-    
-    
-    
+
 # vim:expandtab:smartindent:tabstop=4:softtabstop=4:shiftwidth=4:
