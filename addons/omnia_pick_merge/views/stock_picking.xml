@@ -1,0 +1,9 @@
+<odoo>
+        <act_window name="Merge Production"
+            res_model="merge_mold_production"
+            src_model="stock.picking"
+            view_mode="form"
+            target="new"
+            key2="client_action_multi"
+            id="show_merge"/>
+</odoo>

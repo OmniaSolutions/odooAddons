@@ -1,0 +1,16 @@
+<odoo>
+    <data>
+	    <record id="mrp_workorder_form_omnia_mrp_analytic" model="ir.ui.view">
+	        <field name="name">mrp.workorder.form.omnia.mrp.analytic</field>
+	        <field name="model">mrp.workorder</field>
+	        <field name="inherit_id" ref="mrp.mrp_production_workcenter_form_view_inherit"/>
+	        <field name="arch" type="xml">
+	            <field name="production_id" position="after">
+	                <field name="user_id"/>
+	                <field name="task_id"/>
+	                <field name="user_time_spent"/>
+	            </field>
+	        </field>
+	    </record>
+    </data>
+</odoo>
