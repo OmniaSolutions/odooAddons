@@ -14,22 +14,5 @@ class stock_picking_custom(models.Model):
     _inherit = 'stock.picking'
     _name = 'stock.picking'
 
-    merged_pick = fields.Many2many('stock.picking',
-                                   string=_('Merged Picking'))
-
-    @api.multi
-    def show_merge(self):
-        ids = self.ids
-        if len(ids) < 1:
-            return False
-        tmp_item = self.env['stock.tmp_merge_pick']
-        obj_merge_tmp = tmp_item.create()
-        obj_merge_tmp.populateFromPick(self.ids)
-        return {
-            'name': _("Merge Picking"),
-            'view_type': 'form',
-            'view_mode': 'form',
-            'res_id': self.ids[0],
-            'res_model': 'stock.tmp_merge_pick',
-            'type': 'ir.actions.act_window'
-        }
+    from_stock_id = fields.Many2one('stock.picking', string='Related move', index=True)
+    merged_pick_ids = fields.One2many('stock.picking', 'from_stock_id', string=_('Merge'))

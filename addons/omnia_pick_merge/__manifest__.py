@@ -38,7 +38,8 @@ merge picking
     'website': 'http://www.OmniaSolutions.eu',
     'depends': ['sale', 'stock'],
     'data': [
-             #'view/acc_invoice_view_ddt.xml',
+             'views/stock_picking.xml',
+             'wizard/wizard.xml',
              # report
              #'report/report_ddt.xml',
              # menu
