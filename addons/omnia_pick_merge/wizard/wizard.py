@@ -23,7 +23,7 @@ class TmpStockMoveLine(models.TransientModel):
     ref_stock_move_id = fields.Integer(string=_('Reference Move'))
     product_name = fields.Char(_('Product'))
     sale_order_line_id = fields.Integer(_('Reference Sale Order Line'))
-    move_quantity = fields.Float(_('Move Quantity'))
+    move_quantity = fields.Float(_('Move Quantity'), )
     merge_quantity = fields.Float(_('Quantity'))
     ref_id = fields.Many2one('stock.tmp_merge_pick')
 
@@ -77,11 +77,16 @@ class TmpStockMove(models.TransientModel):
         })
         tmpl_move = self.env['stock.move']
         for pick_line in self.ref_stock_move:
-            move_id = tmpl_move.search([('id', '=', pick_line.ref_stock_move_id)])
-            move_id.copy({'picking_id': out_pick.id})
-            move_id._action_cancel()
-            if move_id.picking_id not in out_pick.merged_pick_ids:
-                out_pick.merged_pick_ids = [(4, move_id.picking_id.id)]
+            old_move_id = tmpl_move.search([('id', '=', pick_line.ref_stock_move_id)])
+            old_move_id.copy({'picking_id': out_pick.id,
+                              'product_uom_qty': pick_line.merge_quantity})
+            if old_move_id.product_qty != pick_line.merge_quantity:
+                if old_move_id.product_qty < pick_line.merge_quantity:
+                    raise UserError(_('Unable to set quantity less then 0'))
+                old_move_id.copy({'product_uom_qty': old_move_id.product_qty - pick_line.merge_quantity})
+            old_move_id._action_cancel()
+            if old_move_id.picking_id not in out_pick.merged_pick_ids:
+                out_pick.merged_pick_ids = [(4, old_move_id.picking_id.id)]
 
         return {
             'name': _("New Move"),
