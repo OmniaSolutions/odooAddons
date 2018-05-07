@@ -151,6 +151,7 @@ class SaleOrder(models.Model):
         for bomBrws in oldProdBrws.bom_ids:
             newBomBrws = bomBrws.copy()
             newBomBrws.product_tmpl_id = newProdBrws.product_tmpl_id
+            newBomBrws.product_id = newProdBrws.id
         
     @api.multi
     def createNewCodedProduct(self, newBaseName, count, oldProdBrws):

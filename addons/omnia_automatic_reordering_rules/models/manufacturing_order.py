@@ -39,6 +39,5 @@ class ManufacturingOrderOmnia(models.Model):
     @api.multi
     def auto_reordering_rules_calculation(self):
         self.env['procurement.order.omnia'].auto_reordering_rules_calculation(forceMrpBrws=self)
-        
 
 # vim:expandtab:smartindent:tabstop=4:softtabstop=4:shiftwidth=4:

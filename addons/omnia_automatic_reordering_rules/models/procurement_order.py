@@ -31,6 +31,7 @@ from openerp import models
 from openerp import api
 from openerp import fields
 from openerp import _
+from openerp import SUPERUSER_ID
 
 
 class ProcurementOrderOmnia(models.Model):
@@ -83,6 +84,35 @@ class ProcurementOrderOmnia(models.Model):
         if warehouse_id:
             toCreate['warehouse_id'] = warehouse_id
         reorderRuleEnv.create(toCreate)
-        
 
+
+class ProcurementOrderExtension(models.Model):
+    _inherit = 'procurement.order'
+    
+    # This overload is necessary to replace standard behavior
+    # In this step I commented action_compute and signal_workflow actions
+    # So Manufacturing order will be created in draft state and user will confirm it manually
+    def make_mo(self, cr, uid, ids, context=None):
+        """ Make Manufacturing(production) order from procurement
+        @return: New created Production Orders procurement wise
+        """
+        res = {}
+        production_obj = self.pool.get('mrp.production')
+        procurement_obj = self.pool.get('procurement.order')
+        for procurement in procurement_obj.browse(cr, uid, ids, context=context):
+            if self.check_bom_exists(cr, uid, [procurement.id], context=context):
+                #create the MO as SUPERUSER because the current user may not have the rights to do it (mto product launched by a sale for example)
+                vals = self._prepare_mo_vals(cr, uid, procurement, context=context)
+                produce_id = production_obj.create(cr, SUPERUSER_ID, vals, context=dict(context, force_company=procurement.company_id.id))
+                res[procurement.id] = produce_id
+                self.write(cr, uid, [procurement.id], {'production_id': produce_id})
+                self.production_order_create_note(cr, uid, procurement, context=context)
+                #production_obj.action_compute(cr, uid, [produce_id], properties=[x.id for x in procurement.property_ids])
+                #production_obj.signal_workflow(cr, uid, [produce_id], 'button_confirm')
+            else:
+                res[procurement.id] = False
+                self.message_post(cr, uid, [procurement.id], body=_("No BoM exists for this product!"), context=context)
+        return res
+
+        
 # vim:expandtab:smartindent:tabstop=4:softtabstop=4:shiftwidth=4:
