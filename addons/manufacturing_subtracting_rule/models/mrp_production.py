@@ -201,6 +201,7 @@ class MrpProduction(models.Model):
     @api.multi
     def button_cancel_produce_externally(self):
         stockPickingObj = self.env['stock.picking']
+        purchaseOrderObj = self.env['purchase.order']
         for manOrderBrws in self:
             stockPickList = stockPickingObj.search([('origin', '=', manOrderBrws.name)])
             for pickBrws in stockPickList:
@@ -216,6 +217,9 @@ class MrpProduction(models.Model):
                         move_line.state = move_line.mrp_original_move
                     else:
                         move_line.unlink()
+            for purchese in purchaseOrderObj.search([('production_external_id', '=', self.id)]):
+                purchese.button_cancel()
+                purchese.unlink()
 
     def checkCreateReorderRule(self, prodBrws, warehouse):
         if not self.checkExistingReorderRule(prodBrws, warehouse):
