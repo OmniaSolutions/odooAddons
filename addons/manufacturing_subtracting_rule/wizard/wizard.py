@@ -16,7 +16,7 @@ from odoo import tools
 from odoo.addons import decimal_precision as dp
 
 
-class TmpStockMove(models.Model):
+class TmpStockMove(models.TransientModel):
     _name = "stock.tmp_move"
     _table = "stock_tmp_move"
 
@@ -65,9 +65,20 @@ class TmpStockMove(models.Model):
     origin = fields.Char("Source Document", readonly=True)
     warehouse_id = fields.Many2one('stock.warehouse', 'Warehouse', help="Technical field depicting the warehouse to consider for the route selection on the next procurement (if any).")
     production_id = fields.Many2one(comodel_name='mrp.production', string='Production Id', readonly=True)
-    external_prod_raw = fields.Many2one(comodel_name="mrp.production.externally.wizard", string="Raw", readonly=True)
-    external_prod_finish = fields.Many2one(comodel_name="mrp.production.externally.wizard", string="Finished", readonly=True)
-
+    # production filed
+    external_prod_raw = fields.Many2one(comodel_name="mrp.production.externally.wizard",
+                                        string="Raw",
+                                        readonly=True)
+    external_prod_finish = fields.Many2one(comodel_name="mrp.production.externally.wizard",
+                                           string="Finished",
+                                           readonly=True)
+    # workorder field
+    external_prod_workorder_raw = fields.Many2one(comodel_name="mrp.workorder.externally.wizar",
+                                                  string="Raw",
+                                                  readonly=True)
+    external_prod_workorder_finish = fields.Many2one(comodel_name="mrp.workorder.externally.wizard",
+                                                     string="Finished",
+                                                     readonly=True)
     scrapped = fields.Boolean('Scrapped', related='location_dest_id.scrap_location', readonly=True, store=True)
     product_uom = fields.Many2one(
         'product.uom', 'Unit of Measure', required=True, states={'done': [('readonly', True)]}, default=lambda self: self.env['product.uom'].search([], limit=1, order='id'))
@@ -92,7 +103,7 @@ class TmpStockMove(models.Model):
         return super(TmpStockMove, self).create(vals)
 
 
-class MrpProductionWizard(models.Model):
+class MrpProductionWizard(models.TransientModel):
 
     _name = "mrp.production.externally.wizard"
 
@@ -121,7 +132,31 @@ class MrpProductionWizard(models.Model):
     production_id = fields.Many2one('mrp.production',
                                     string=_('Production'),
                                     readonly=True)
-    request_date = fields.Datetime(string=_("Request date for the product"))
+    request_date = fields.Datetime(string=_("Request date for the product"),
+                                   default=lambda self: fields.datetime.now())
+    create_purchese_order = fields.Boolean(_('Automatic create Purchase'))
+
+    @api.onchange('consume_product_id')
+    def _consume_product_id(self):
+        # check if the product have bom in case not error
+        # update the bom with the first one
+        # create new in move in order to get the the corrisponding out object
+        pass
+
+    @api.onchange('consume_product_id')
+    def _consume_bom_id(self):
+        # create the row material related to the bom chosen
+        # if the @api.onchange('consume_product_id') may the @api.onchange('consume_product_id') should be fired to
+        # so we can be sure that the raw material is updated for the wizar
+        pass
+
+    @api.onchange('request_date')
+    def _request_date(self):
+        for move in self.move_raw_ids:
+            product_delay = move.product_id.produce_delay
+            move.date_expected = fields.Datetime.from_string(self.request_date) - relativedelta(days=product_delay or 0.0)
+        for move in self.move_finished_ids:
+            move.date_expected = self.request_date
 
     @api.onchange('external_location_id')
     def _external_location_id(self):
@@ -236,6 +271,41 @@ class MrpProductionWizard(models.Model):
         pickOut = self.createStockPickingOut(self.external_partner, productionBrws)
         productionBrws.date_planned_finished_wo = pickIn.scheduled_date
         productionBrws.date_planned_start_wo = pickOut.scheduled_date
+        self.createPurches()
+        #WARNING RDS odoo.models: stock.picking.create() includes unknown fields: location_src_id, min_date
+
+    @api.model
+    def getDefaultExternalServiceProduct(self):
+        """
+        get the default external product suitable for the purchase
+        """
+        product_brw = self.env['product.product'].search([('default_code', '=', 'external_service')])
+        if product_brw:
+            return product_brw
+        val = {'default_code': 'external_service',  # TODO: use a configuration variable for this
+               'type': 'service',
+               'purchase_ok': True,
+               'name': _('Servizio')}
+        return self.env['product.product'].create(val)
+
+    @api.multi
+    def createPurches(self):
+        if not self.create_purchese_order:
+            return
+        obj_po = self.env['purchase.order'].create({
+            'partner_id': self.external_partner.id,
+            'date_planned': self.request_date,
+            'production_external_id': self.production_id.id})
+        obj_product_template = self.getDefaultExternalServiceProduct()
+        for lineBrws in self.move_finished_ids:
+            values = {'product_id': obj_product_template.id,
+                      'name': _("Manufacture on product ") + lineBrws.product_id.name,
+                      'product_qty': lineBrws.product_uom_qty,
+                      'product_uom': obj_product_template.uom_po_id.id,
+                      'price_unit': obj_product_template.price,
+                      'date_planned': self.request_date,
+                      'order_id': obj_po.id}
+            self.env['purchase.order.line'].create(values)
 
     @api.multi
     def button_close_wizard(self):
@@ -330,16 +400,15 @@ class MrpProductionWizard(models.Model):
 
 
 class MrpWorkorderWizard(MrpProductionWizard):
-
     _name = "mrp.workorder.externally.wizard"
     _inherit = ['mrp.production.externally.wizard']
 
-    move_raw_ids = fields.One2many('stock.move',
+    move_raw_ids = fields.One2many('stock.tmp_move',
                                    string='Raw Materials',
                                    inverse_name='external_prod_workorder_raw',
                                    domain=[('scrapped', '=', False)])
 
-    move_finished_ids = fields.One2many('stock.move',
+    move_finished_ids = fields.One2many('stock.tmp_move',
                                         string='Finished Products',
                                         inverse_name='external_prod_workorder_finish',
                                         domain=[('scrapped', '=', False)])
@@ -361,3 +430,8 @@ class MrpWorkorderWizard(MrpProductionWizard):
 
     def getOrigin(self, productionBrws, originBrw):
         return "%s - %s - %s" % (productionBrws.name, originBrw.name, originBrw.external_partner.name)
+
+# WARNING RDS odoo.fields: Field stock.tmp_move.external_prod_workorder_raw with unknown comodel_name 'mrp.workorder.externally.wizar'
+#2018-05-07 10:37:26,155 11905 WARNING RDS odoo.models: stock.tmp_move.create() includes unknown fields: mrp_original_move
+#2018-05-07 10:37:26,460 11905 WARNING RDS odoo.models: stock.tmp_move.create() includes unknown fields: mrp_original_move
+#2018-05-07 10:37:26,480 11905 WARNING RDS odoo.models: mrp.production.externally.wizard.create() includes unknown fields: partner_id

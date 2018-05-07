@@ -36,6 +36,7 @@ from odoo import models
 from odoo import fields
 from odoo import api
 from odoo import _
+from odoo.exceptions import UserError
 import logging
 import datetime
 from datetime import timedelta
@@ -48,7 +49,17 @@ class MrpProduction(models.Model):
     _inherit = ['mrp.production']
 
     state = fields.Selection(selection_add=[('external', 'External Production')])
-    external_partner = fields.Many2one('res.partner', string='External Partner')
+
+    @api.multi
+    def _getDefaultPartner(self):
+        for mrp_production in self:
+            if mrp_production.routing_id.location_id.partner_id:
+                mrp_production.external_partner = mrp_production.routing_id.location_id.partner_id.id
+
+    external_partner = fields.Many2one('res.partner',
+                                       compute='_getDefaultPartner',
+                                       string='Default External Partner',
+                                       help='This is a computed field in order to modifier it go to Routing -> Production Place -> Set Owner of the location')
     purchase_external_id = fields.Many2one('purchase.order', string='External Purchase')
     move_raw_ids_external_prod = fields.One2many('stock.move',
                                                  'raw_material_production_id',
@@ -69,7 +80,7 @@ class MrpProduction(models.Model):
         if self.purchase_external_id:
             manufacturingIds = [self.purchase_external_id.id]
         else:
-            manObjs = self.env['purchase.order'].search([('manu_external_id', '=', self.id)])
+            manObjs = self.env['purchase.order'].search([('production_external_id', '=', self.id)])
             if manObjs:
                 manufacturingIds = manObjs.ids
         newContext['default_manu_external_id'] = self.id
@@ -181,6 +192,7 @@ class MrpProduction(models.Model):
         values['external_warehouse_id'] = self.location_src_id.get_warehouse().id
         values['external_location_id'] = location.id
         values['partner_id'] = self.external_partner
+        values['production_id'] = self.id
         values['request_date'] = datetime.datetime.now()
         obj_id = self.env['mrp.production.externally.wizard'].create(values)
         self.env.cr.commit()
@@ -197,6 +209,7 @@ class MrpProduction(models.Model):
     @api.multi
     def button_cancel_produce_externally(self):
         stockPickingObj = self.env['stock.picking']
+        purchaseOrderObj = self.env['purchase.order']
         for manOrderBrws in self:
             stockPickList = stockPickingObj.search([('origin', '=', manOrderBrws.name)])
             for pickBrws in stockPickList:
@@ -212,6 +225,9 @@ class MrpProduction(models.Model):
                         move_line.state = move_line.mrp_original_move
                     else:
                         move_line.unlink()
+            for purchese in purchaseOrderObj.search([('production_external_id', '=', self.id)]):
+                purchese.button_cancel()
+                purchese.unlink()
 
     def checkCreateReorderRule(self, prodBrws, warehouse):
         if not self.checkExistingReorderRule(prodBrws, warehouse):
