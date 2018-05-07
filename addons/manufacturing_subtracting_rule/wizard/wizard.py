@@ -93,8 +93,9 @@ class MrpProductionWizard(models.TransientModel):
 
     _name = "mrp.production.externally.wizard"
 
-    external_partner = fields.Many2one('res.partner', string='External Partner', required=True)
-
+    external_partner = fields.Many2one('res.partner',
+                                       string=_('External Partner'),
+                                       required=True)
     move_raw_ids = fields.One2many('stock.tmp_move',
                                    string=_('Raw Materials'),
                                    inverse_name='external_prod_raw',
