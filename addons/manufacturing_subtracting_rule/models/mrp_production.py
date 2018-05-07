@@ -83,7 +83,7 @@ class MrpProduction(models.Model):
             manObjs = self.env['purchase.order'].search([('production_external_id', '=', self.id)])
             if manObjs:
                 manufacturingIds = manObjs.ids
-        newContext['default_manu_external_id'] = self.id
+        newContext['default_production_external_id'] = self.id
         return {
             'name': _("Purchase External"),
             'view_type': 'form',
