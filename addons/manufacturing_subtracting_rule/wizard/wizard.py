@@ -73,7 +73,7 @@ class TmpStockMove(models.TransientModel):
                                            string="Finished",
                                            readonly=True)
     # workorder field
-    external_prod_workorder_raw = fields.Many2one(comodel_name="mrp.workorder.externally.wizar",
+    external_prod_workorder_raw = fields.Many2one(comodel_name="mrp.workorder.externally.wizard",
                                                   string="Raw",
                                                   readonly=True)
     external_prod_workorder_finish = fields.Many2one(comodel_name="mrp.workorder.externally.wizard",
@@ -431,7 +431,8 @@ class MrpWorkorderWizard(MrpProductionWizard):
     def getOrigin(self, productionBrws, originBrw):
         return "%s - %s - %s" % (productionBrws.name, originBrw.name, originBrw.external_partner.name)
 
-# WARNING RDS odoo.fields: Field stock.tmp_move.external_prod_workorder_raw with unknown comodel_name 'mrp.workorder.externally.wizar'
-#2018-05-07 10:37:26,155 11905 WARNING RDS odoo.models: stock.tmp_move.create() includes unknown fields: mrp_original_move
-#2018-05-07 10:37:26,460 11905 WARNING RDS odoo.models: stock.tmp_move.create() includes unknown fields: mrp_original_move
-#2018-05-07 10:37:26,480 11905 WARNING RDS odoo.models: mrp.production.externally.wizard.create() includes unknown fields: partner_id
+
+#WARNING RDS odoo.models: stock.tmp_move.create() includes unknown fields: mrp_original_move
+#WARNING RDS odoo.models: stock.tmp_move.create() includes unknown fields: mrp_original_move
+#WARNING RDS odoo.models: mrp.production.externally.wizard.create() includes unknown fields: partner_id
+#WARNING RDS odoo.fields: Field stock.tmp_move.external_prod_workorder_raw with unknown comodel_name 'mrp.workorder.externally.wizar'
