@@ -272,7 +272,7 @@ class MrpProductionWizard(models.TransientModel):
         productionBrws.date_planned_finished_wo = pickIn.scheduled_date
         productionBrws.date_planned_start_wo = pickOut.scheduled_date
         self.createPurches()
-        #WARNING RDS odoo.models: stock.picking.create() includes unknown fields: location_src_id, min_date
+        #  WARNING RDS odoo.models: stock.picking.create() includes unknown fields: location_src_id, min_date
 
     @api.model
     def getDefaultExternalServiceProduct(self):
