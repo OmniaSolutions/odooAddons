@@ -42,6 +42,7 @@ class TmpStockMove(models.TransientModel):
 
     @api.model
     def populateFromPick(self, pick_ids):
+        TmpStockMoveLineObj = self.env['stock.tmp_merge_pick_line']
         pick_ids = self.env['stock.picking'].browse(pick_ids)
         first_partner_id = -1
         for pick_id in pick_ids:
@@ -59,12 +60,12 @@ class TmpStockMove(models.TransientModel):
         for pick_id in pick_ids:
             for move in pick_id.move_lines:
                 if move.product_id:
-                    self.ref_stock_move = (0, 0, {'ref_id': self.id,
-                                                  'ref_stock_move_id': move.id,
-                                                  'product_name': move.product_id.display_name,
-                                                  'sale_order_line_id': move.sale_line_id.id,
-                                                  'move_quantity': move.product_qty,
-                                                  'merge_quantity': move.product_qty})
+                    TmpStockMoveLineObj.create({'ref_id': self.id,
+                                                'ref_stock_move_id': move.id,
+                                                'product_name': move.product_id.display_name,
+                                                'sale_order_line_id': move.sale_line_id.id,
+                                                'move_quantity': move.product_qty,
+                                                'merge_quantity': move.product_qty})
 
     @api.multi
     def button_merge_picking(self):
