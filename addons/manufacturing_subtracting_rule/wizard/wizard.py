@@ -279,6 +279,9 @@ class MrpProductionWizard(models.TransientModel):
         """
         get the default external product suitable for the purchase
         """
+        bom_product = self.production_id.bom_id.external_product
+        if bom_product:
+            return bom_product
         product_brw = self.env['product.product'].search([('default_code', '=', 'external_service')])
         if product_brw:
             return product_brw
@@ -296,16 +299,17 @@ class MrpProductionWizard(models.TransientModel):
             'partner_id': self.external_partner.id,
             'date_planned': self.request_date,
             'production_external_id': self.production_id.id})
-        obj_product_template = self.getDefaultExternalServiceProduct()
+        obj_product_product = self.getDefaultExternalServiceProduct()
         for lineBrws in self.move_finished_ids:
-            values = {'product_id': obj_product_template.id,
+            values = {'product_id': obj_product_product.id,
                       'name': _("Manufacture on product ") + lineBrws.product_id.name,
                       'product_qty': lineBrws.product_uom_qty,
-                      'product_uom': obj_product_template.uom_po_id.id,
-                      'price_unit': obj_product_template.price,
+                      'product_uom': obj_product_product.uom_po_id.id,
+                      'price_unit': obj_product_product.price,
                       'date_planned': self.request_date,
                       'order_id': obj_po.id}
-            self.env['purchase.order.line'].create(values)
+            new_product_line = self.env['purchase.order.line'].create(values)
+            new_product_line.onchange_product_id()
 
     @api.multi
     def button_close_wizard(self):
