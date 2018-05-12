@@ -50,3 +50,5 @@ class MrpBom(models.Model):
                                        related='routing_id.location_id.partner_id',
                                        string='External Partner',
                                        help='This is a computed field in order to modifier it go to Routing -> Production Place -> Set Owner of the location')
+    external_product = fields.Many2one('product.product',
+                                       string='External Product use for external production')
