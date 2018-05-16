@@ -32,14 +32,9 @@ class Stock_picking_ddt_pdf_report(report_sxw.rml_parse):
     def __init__(self, cr, uid, name, context):
         super(Stock_picking_ddt_pdf_report, self).__init__(cr, uid, name, context=context)
         self.localcontext.update({
-            'get_children': self.get_children,
-            'bom_type': self.bom_type,
             'trans': _,
             'context': context,
         })
-
-    def get_children(self, myObject, level=1):
-        return {}
 
 
 class Stock_picking_ddt_pdf(osv.AbstractModel):
