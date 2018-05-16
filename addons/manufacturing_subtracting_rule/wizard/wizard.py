@@ -93,8 +93,9 @@ class MrpProductionWizard(models.TransientModel):
 
     _name = "mrp.production.externally.wizard"
 
-    external_partner = fields.Many2one('res.partner', string='External Partner', required=True)
-
+    external_partner = fields.Many2one('res.partner',
+                                       string=_('External Partner'),
+                                       required=True)
     move_raw_ids = fields.One2many('stock.tmp_move',
                                    string=_('Raw Materials'),
                                    inverse_name='external_prod_raw',
@@ -266,6 +267,9 @@ class MrpProductionWizard(models.TransientModel):
         """
         get the default external product suitable for the purchase
         """
+        bom_product = self.production_id.bom_id.external_product
+        if bom_product:
+            return bom_product
         product_brw = self.env['product.product'].search([('default_code', '=', 'external_service')])
         if product_brw:
             return product_brw
@@ -292,7 +296,8 @@ class MrpProductionWizard(models.TransientModel):
                       'price_unit': obj_product_template.price,
                       'date_planned': self.request_date,
                       'order_id': obj_po.id}
-            self.env['purchase.order.line'].create(values)
+            new_product_line = self.env['purchase.order.line'].create(values)
+            new_product_line.onchange_product_id()
 
     @api.multi
     def button_close_wizard(self):

@@ -47,5 +47,4 @@ class StockMove(models.Model):
     external_prod_workorder_raw = fields.Many2one(comodel_name="mrp.workorder.externally.wizard", string="Raw Workorder")
     external_prod_workorder_finish = fields.Many2one(comodel_name="mrp.workorder.externally.wizard", string="Finished Workorder")
     mrp_original_move = fields.Char('Is genereted from orignin MO')
-
         
