@@ -55,10 +55,10 @@ class MrpBom(models.Model):
                     for sub_bom in bom_line.related_bom_ids:
                         if bom.type == sub_bom.type:
                             if sub_bom:
-                                totale_cost = totale_cost + sub_bom.standard_price
+                                totale_cost = totale_cost + sub_bom.standard_price * bom_line.product_qty
                                 break
                 else:
-                    totale_cost = totale_cost + bom_line.product_id.standard_price
+                    totale_cost = totale_cost + bom_line.product_id.standard_price * bom_line.product_qty
             bom.standard_price = totale_cost
     standard_price = fields.Float(compute=_compute_bom_cost)
 
