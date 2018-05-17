@@ -46,4 +46,46 @@ class StockMoveExtension(models.Model):
             createdMove.workorder_id = createdMove.replanning_raw_moves # To link to raw_moves
             createdMove.raw_material_production_id = createdMove.replanning_raw_moves.production_id # To link to production order
         return createdMove
-        
+
+    @api.multi
+    def write(self, vals):
+        for move in self:
+            msg = ''
+            if move.replanning_raw_moves: # Replanning change
+                product_id = vals.get('product_id', None)
+                if product_id:
+                    newProdBrws = self.env['product.product'].browse(product_id)
+                    msg = 'Changed product %s --> %s' % (self.product_id.name, newProdBrws.name)
+                
+                productUomQty = vals.get('product_uom_qty', None)
+                if productUomQty:
+                    prodBrws = self.product_id
+                    if product_id:
+                        prodBrws = newProdBrws
+                    msg = msg + '     Changed product %s with quantity %s --> %s' % (prodBrws.name, self.product_uom_qty, productUomQty)
+            if msg:
+                move.replanning_raw_moves.message_post(body=msg)
+        return super(StockMoveExtension, self).write(vals)
+
+    @api.multi
+    def open_related_workorder(self):
+        self.ensure_one()
+        if self.workorder_id:
+            return {
+                "type": "ir.actions.act_window",
+                "res_model": "mrp.workorder",
+                "views": [[False, "form"]],
+                "res_id": self.workorder_id.id,
+            }
+
+    @api.multi
+    def open_related_replannable_workorder(self):
+        self.ensure_one()
+        if self.replanning_raw_moves:
+            return {
+                "type": "ir.actions.act_window",
+                "res_model": "mrp.workorder",
+                "views": [[False, "form"]],
+                "res_id": self.replanning_raw_moves.id,
+            }
+

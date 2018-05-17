@@ -33,6 +33,7 @@
     'data': [
         'views/routing_operation_extension.xml',
         'views/mrp_workorder_extension.xml',
+        'views/manufacturing_order_extension.xml',
        ],
     'demo': [
         ],

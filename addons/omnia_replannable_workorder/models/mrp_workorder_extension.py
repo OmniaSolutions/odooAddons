@@ -47,7 +47,7 @@ class MrpWorkorderExtension(models.Model):
                 return
         self.has_to_be_checked = False
 
-    raw_prod_ids = fields.One2many('stock.move', inverse_name='replanning_raw_moves', string=_('Raw Moves'))
+    raw_prod_ids = fields.One2many('stock.move', inverse_name='replanning_raw_moves', string=_('Raw Moves'), track_visibility='onchange')
     has_to_be_checked = fields.Boolean(compute='checkMovesState', string="Check move states")
 
     def _generate_lot_ids(self):
