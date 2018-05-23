@@ -53,7 +53,7 @@ class MrpBom(models.Model):
             for bom_line in bom.bom_line_ids:
                 if bom_line.related_bom_ids:
                     for sub_bom in bom_line.related_bom_ids:
-                        if bom.type == sub_bom.type:
+                        if bom.type in [sub_bom.type, 'phantom']:
                             if sub_bom:
                                 totale_cost = totale_cost + sub_bom.standard_price * bom_line.product_qty
                                 break
