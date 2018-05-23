@@ -28,7 +28,7 @@
 
 
 {
-    'name': 'Omnia Manufacturing Subtracting Rule',
+    'name': 'Omnia Manufacturing Subcontracting Rule',
     'version': '1.1',
     'sequence': 1,
     'category': 'Custom',
