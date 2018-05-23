@@ -46,6 +46,11 @@ class PurchaseOrder(models.Model):
     production_external_id = fields.Many2one('mrp.production', string=_('External Production'))
 
     @api.multi
+    def open_external_pickings(self):
+        if self.production_external_id:
+            return self.production_external_id.open_external_pickings()
+        
+    @api.multi
     def open_external_manufacturing(self):
         newContext = self.env.context.copy()
         manufacturingIds = []

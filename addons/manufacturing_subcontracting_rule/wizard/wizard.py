@@ -260,6 +260,7 @@ class MrpProductionWizard(models.TransientModel):
         pickOut = self.createStockPickingOut(self.external_partner, productionBrws)
         productionBrws.date_planned_finished = pickIn.max_date
         productionBrws.date_planned_start = pickOut.max_date
+        productionBrws.external_pickings = [(6, 0, [pickIn.id, pickOut.id])]
         self.createPurches()
 
     @api.model
@@ -394,15 +395,15 @@ class MrpWorkorderWizard(MrpProductionWizard):
     _name = "mrp.workorder.externally.wizard"
     _inherit = ['mrp.production.externally.wizard']
 
-    move_raw_ids = fields.One2many('stock.move',
-                                   string='Raw Materials',
-                                   inverse_name='external_prod_workorder_raw',
-                                   domain=[('scrapped', '=', False)])
-
-    move_finished_ids = fields.One2many('stock.move',
-                                        string='Finished Products',
-                                        inverse_name='external_prod_workorder_finish',
-                                        domain=[('scrapped', '=', False)])
+#     move_raw_ids = fields.One2many('stock.move',
+#                                    string='Raw Materials',
+#                                    inverse_name='external_prod_workorder_raw',
+#                                    domain=[('scrapped', '=', False)])
+# 
+#     move_finished_ids = fields.One2many('stock.move',
+#                                         string='Finished Products',
+#                                         inverse_name='external_prod_workorder_finish',
+#                                         domain=[('scrapped', '=', False)])
 
     @api.multi
     def button_produce_externally(self):

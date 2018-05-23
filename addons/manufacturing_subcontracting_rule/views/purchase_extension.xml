@@ -9,10 +9,14 @@
             <div name="button_box" position="inside">
                  <button name="open_external_manufacturing" type="object" class="oe_stat_button" icon="fa-arrows-v">
                      <div class="o_form_field o_stat_info">
-                         <span class="o_stat_text">External Production</span>
+                         <span class="o_stat_text">Ext. Production</span>
                      </div>
                  </button>
-                 
+                 <button name="open_external_pickings" type="object" class="oe_stat_button" icon="fa-arrows-v">
+                     <div class="o_form_field o_stat_info">
+                         <span class="o_stat_text">Ext. Pickings</span>
+                     </div>
+                 </button>
             </div>
 
             <field name="date_order" position="after">

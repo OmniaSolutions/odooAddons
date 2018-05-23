@@ -33,6 +33,7 @@ Created on Dec 18, 2017
 '''
 from odoo import models
 from odoo import api
+from odoo import fields
 
 
 class StockImmediateTransfer(models.TransientModel):
@@ -63,7 +64,8 @@ class StockPicking(models.Model):
     _name = 'stock.picking'
     _inherit = ['stock.picking']
     
-    
+    external_production = fields.Many2one('mrp.production')
+
     @api.multi
     def action_assign(self):
         """In addition to what the method in the parent class does,

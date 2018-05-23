@@ -72,7 +72,23 @@ class MrpProduction(models.Model):
                                                       'Finished Products External Production',
                                                       copy=False,
                                                       states={'done': [('readonly', True)], 'cancel': [('readonly', True)]})
+    external_pickings = fields.One2many('stock.picking', 'external_production', string='External Pikings')
 
+
+    @api.multi
+    def open_external_pickings(self):
+        newContext = self.env.context.copy()
+        return {
+            'name': _("External Pickings"),
+            'view_type': 'form',
+            'view_mode': 'tree,form',
+            'res_model': 'stock.picking',
+            'type': 'ir.actions.act_window',
+            'context': newContext,
+            'domain': [('id', 'in', self.external_pickings.ids)],
+        }
+
+        
     @api.multi
     def open_external_purchase(self):
         newContext = self.env.context.copy()
