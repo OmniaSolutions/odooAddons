@@ -26,6 +26,8 @@ class TmpStockMoveLine(models.TransientModel):
     move_quantity = fields.Float(_('Move Quantity'), )
     merge_quantity = fields.Float(_('Quantity'))
     ref_id = fields.Many2one('stock.tmp_merge_pick')
+    requested_date = fields.Datetime(_('Request date'))
+    date_expected = fields.Datetime(_('Effective date'))
 
 
 class TmpStockMove(models.TransientModel):
@@ -65,7 +67,9 @@ class TmpStockMove(models.TransientModel):
                                                 'product_name': move.product_id.display_name,
                                                 'sale_order_line_id': move.sale_line_id.id,
                                                 'move_quantity': move.product_qty,
-                                                'merge_quantity': move.product_qty})
+                                                'merge_quantity': move.product_qty,
+                                                'requested_date': move.requested_date,
+                                                'date_expected': move.date_expected})
 
     @api.multi
     def button_merge_picking(self):

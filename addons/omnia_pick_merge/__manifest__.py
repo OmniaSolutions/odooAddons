@@ -36,9 +36,10 @@ merge picking
     'author': 'OmniaSolutions.eu',
     'maintainer': 'OmniaSolutions.eu',
     'website': 'http://www.OmniaSolutions.eu',
-    'depends': ['sale', 'stock'],
-    'data': [
-             'views/stock_picking.xml',
+    'depends': ['sale',
+                'stock',
+                'sale_order_line_date_request'],
+    'data': ['views/stock_picking.xml',
              'wizard/wizard.xml',
              # report
              #'report/report_ddt.xml',

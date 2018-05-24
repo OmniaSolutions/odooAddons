@@ -13,6 +13,8 @@
                         <field name="sale_order_line_id"/>
                         <field name="move_quantity"/>
                         <field name="merge_quantity"/>
+                        <field name="requested_date"/>
+                        <field name="date_expected"/>
                     </tree>
                 </field>
             </group>
