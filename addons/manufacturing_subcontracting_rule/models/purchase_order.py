@@ -44,11 +44,6 @@ class PurchaseOrder(models.Model):
     _inherit = ['purchase.order']
 
     production_external_id = fields.Many2one('mrp.production', string=_('External Production'))
-
-    @api.multi
-    def open_external_pickings(self):
-        if self.production_external_id:
-            return self.production_external_id.open_external_pickings()
         
     @api.multi
     def open_external_manufacturing(self):
@@ -70,3 +65,11 @@ class PurchaseOrder(models.Model):
             'context': newContext,
             'domain': [('id', 'in', manufacturingIds)],
         }
+
+    @api.depends('order_line.move_ids')
+    def _compute_picking(self):
+        super(PurchaseOrder, self)._compute_picking()
+        for order in self:
+            pickingsToAppend = order.production_external_id.external_pickings
+            order.picking_ids = order.picking_ids + pickingsToAppend
+            order.picking_count = order.picking_count + len(pickingsToAppend)

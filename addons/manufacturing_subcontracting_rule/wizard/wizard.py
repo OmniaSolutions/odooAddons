@@ -260,7 +260,8 @@ class MrpProductionWizard(models.TransientModel):
         pickOut = self.createStockPickingOut(self.external_partner, productionBrws)
         productionBrws.date_planned_finished = pickIn.max_date
         productionBrws.date_planned_start = pickOut.max_date
-        productionBrws.external_pickings = [(6, 0, [pickIn.id, pickOut.id])]
+        pickingBrwsList = [pickIn.id, pickOut.id]
+        productionBrws.external_pickings = [(6, 0, pickingBrwsList)]
         self.createPurches()
 
     @api.model
@@ -288,6 +289,7 @@ class MrpProductionWizard(models.TransientModel):
             'partner_id': self.external_partner.id,
             'date_planned': self.request_date,
             'production_external_id': self.production_id.id})
+
         obj_product_template = self.getDefaultExternalServiceProduct()
         for lineBrws in self.move_finished_ids:
             values = {'product_id': obj_product_template.id,
@@ -296,7 +298,8 @@ class MrpProductionWizard(models.TransientModel):
                       'product_uom': obj_product_template.uom_po_id.id,
                       'price_unit': obj_product_template.price,
                       'date_planned': self.request_date,
-                      'order_id': obj_po.id}
+                      'order_id': obj_po.id,
+                      }
             new_product_line = self.env['purchase.order.line'].create(values)
             new_product_line.onchange_product_id()
 
