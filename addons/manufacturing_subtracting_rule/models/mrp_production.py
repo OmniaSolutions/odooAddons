@@ -184,17 +184,16 @@ class MrpProduction(models.Model):
         if not location:
             location = self.getSupplierLocation()
         location = self.checkCreatePartnerWarehouse(partner)
-        values['external_partner'] = partner.id
         values['move_raw_ids'] = [(6, 0, self.copyAndCleanLines(self.move_raw_ids, location.id, self.location_src_id.id))]
         values['move_finished_ids'] = [(6, 0, self.copyAndCleanLines(self.move_finished_ids, self.location_src_id.id, location.id))]
         values['consume_product_id'] = self.product_id.id
         values['consume_bom_id'] = self.bom_id.id
         values['external_warehouse_id'] = self.location_src_id.get_warehouse().id
         values['external_location_id'] = location.id
-        values['partner_id'] = self.external_partner
         values['production_id'] = self.id
         values['request_date'] = datetime.datetime.now()
         obj_id = self.env['mrp.production.externally.wizard'].create(values)
+        obj_id.create_vendors()
         self.env.cr.commit()
         return {
             'type': 'ir.actions.act_window',

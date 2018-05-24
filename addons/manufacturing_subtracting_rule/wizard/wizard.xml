@@ -7,7 +7,14 @@
         <field name="arch" type="xml">
         <form>
             <group>
-	        	<field name="external_partner"/>
+	        	<field name="external_partner">
+	        	    <tree>
+                        <field name="partner_id"/>
+                        <field name="price" />
+                        <field name="delay" />
+                        <field name="min_qty" />
+                    </tree>
+	        	</field>
 	        	<field name="operation_type"/>
 	        	<field name="external_warehouse_id"/>
 	        	<field name="external_location_id"/>
