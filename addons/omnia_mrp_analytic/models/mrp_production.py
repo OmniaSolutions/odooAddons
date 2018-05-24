@@ -64,8 +64,9 @@ class MrpProduction(models.Model):
 
     @api.multi
     def button_plan(self):
-        super(MrpProduction, self).button_plan()
+        res = super(MrpProduction, self).button_plan()
         for obj_prj in self:
             if obj_prj.project_id:
                 for workorder_id in obj_prj.workorder_ids:
                     workorder_id.create_task()
+        return res

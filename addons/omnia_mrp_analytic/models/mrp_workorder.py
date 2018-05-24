@@ -12,7 +12,7 @@ import logging
 import datetime
 
 
-class MrpWorkorder(models.Model):
+class MrpWorkOrder(models.Model):
     _inherit = ['mrp.workorder']
     task_id = fields.Many2one('project.task',
                               string=_('Reference Task'))
@@ -35,7 +35,26 @@ class MrpWorkorder(models.Model):
             values = {'name': workorder_id.name,
                       'project_id': workorder_id.production_id.project_id.id,
                       'user_id': workorder_id.user_id.id,
-                      'planned_hours': workorder_id.duration_expected
+                      'planned_hours': workorder_id.duration_expected,
+                      'user_time_percentage': workorder_id.operation_id.user_time_percentage
                       }
             task_id = task_obj.create(values)
             workorder_id.task_id = task_id.id
+
+    @api.multi
+    def button_finish(self):
+        res = super(MrpWorkOrder, self).button_finish()
+        for workorder_id in self:
+            workorder_id.create_timesheet()
+        return res
+
+    @api.model
+    def create_timesheet(self):
+        task_duration = self.duration * self.task_id.user_time_percentage
+        if task_duration > 0:
+            vals = {'project_id': self.task_id.project_id.id,
+                    'task_id': self.task_id.id,
+                    'employee_id': self.task_id.user_id.employee_ids.id,
+                    'unit_amount': task_duration,
+                    }
+            self.env['account.analytic.line'].create(vals)
