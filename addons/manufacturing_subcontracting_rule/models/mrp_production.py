@@ -96,10 +96,11 @@ class MrpProduction(models.Model):
         if self.purchase_external_id:
             manufacturingIds = [self.purchase_external_id.id]
         else:
-            manObjs = self.env['purchase.order'].search([('production_external_id', '=', self.id)])
-            if manObjs:
-                manufacturingIds = manObjs.ids
-        newContext['default_production_external_id'] = self.id
+            purchaseLines = self.env['purchase.order.line'].search([('production_external_id', '=', self.id)])
+            purchaseList = self.env['purchase.order'].browse()
+            for purchaseLineBrws in purchaseLines:
+                purchaseList = purchaseList + purchaseLineBrws.order_id
+            manufacturingIds = purchaseList.ids
         return {
             'name': _("Purchase External"),
             'view_type': 'form',

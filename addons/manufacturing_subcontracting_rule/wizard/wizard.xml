@@ -13,6 +13,7 @@
 	        	<field name="external_location_id"/>
 	        	<field name="request_date"/>
 	        	<field name="create_purchese_order"/>
+	        	<field name="merge_purchese_order"/>
 	        	<field name="consume_product_id" attrs="{'invisible': [('operation_type', '!=', 'consume')], 'required': [('operation_type', '=', 'consume')]}"/>
 	        	<field name="consume_bom_id" attrs="{'invisible': [('operation_type', '!=', 'consume')], 'required': [('operation_type', '=', 'consume')]}"
 	        			domain="[('product_tmpl_id', '=', consume_product_id.product_tmpl_id)]"/>

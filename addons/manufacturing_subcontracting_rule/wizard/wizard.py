@@ -124,6 +124,7 @@ class MrpProductionWizard(models.TransientModel):
     request_date = fields.Datetime(string=_("Request date for the product"),
                                    default=lambda self: fields.datetime.now())
     create_purchese_order = fields.Boolean(_('Automatic create Purchase'))
+    merge_purchese_order = fields.Boolean(_('Merge Purchase'), default=True)
 
     @api.onchange('consume_product_id')
     def _consume_product_id(self):
@@ -285,10 +286,17 @@ class MrpProductionWizard(models.TransientModel):
     def createPurches(self):
         if not self.create_purchese_order:
             return
-        obj_po = self.env['purchase.order'].create({
-            'partner_id': self.external_partner.id,
-            'date_planned': self.request_date,
-            'production_external_id': self.production_id.id})
+        purchaseOrderObj = self.env['purchase.order']
+        purchaseBrws = None
+        if self.merge_purchese_order:
+            purchaseBrws = purchaseOrderObj.search([('partner_id', '=', self.external_partner.id),
+                                                    ('state', 'in', ['draft', 'sent'])
+                                                    ], limit=1)
+        if not purchaseBrws:
+            purchaseBrws = purchaseOrderObj.create({
+                'partner_id': self.external_partner.id,
+                'date_planned': self.request_date,
+                })
 
         obj_product_template = self.getDefaultExternalServiceProduct()
         for lineBrws in self.move_finished_ids:
@@ -298,7 +306,8 @@ class MrpProductionWizard(models.TransientModel):
                       'product_uom': obj_product_template.uom_po_id.id,
                       'price_unit': obj_product_template.price,
                       'date_planned': self.request_date,
-                      'order_id': obj_po.id,
+                      'order_id': purchaseBrws.id,
+                      'production_external_id': self.production_id.id,
                       }
             new_product_line = self.env['purchase.order.line'].create(values)
             new_product_line.onchange_product_id()
