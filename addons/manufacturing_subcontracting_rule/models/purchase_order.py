@@ -8,7 +8,7 @@
 #
 #    Author : Smerghetto Daniel  (Omniasolutions)
 #    mail:daniel.smerghetto@omniasolutions.eu
-#    Copyright (c) 2014 Omniasolutions (http://www.omniasolutions.eu)
+#    Copyright (c) 2014 Omniasolutions (http://www.omniasolutions.eu) 
 #    All Right Reserved
 #
 #    This program is free software: you can redistribute it and/or modify
@@ -39,11 +39,9 @@ import logging
 
 
 class PurchaseOrder(models.Model):
-
     _name = "purchase.order"
     _inherit = ['purchase.order']
 
-        
     @api.multi
     def open_external_manufacturing(self):
         newContext = self.env.context.copy()

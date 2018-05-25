@@ -8,7 +8,7 @@
 #
 #    Author : Smerghetto Daniel  (Omniasolutions)
 #    mail:daniel.smerghetto@omniasolutions.eu
-#    Copyright (c) 2014 Omniasolutions (http://www.omniasolutions.eu) 
+#    Copyright (c) 2014 Omniasolutions (http://www.omniasolutions.eu)
 #    All Right Reserved
 #
 #    This program is free software: you can redistribute it and/or modify
@@ -31,6 +31,7 @@ Created on Dec 18, 2017
 
 @author: daniel
 '''
+
 from odoo import models
 from odoo import fields
 from odoo import api
@@ -44,7 +45,4 @@ class StockMove(models.Model):
     _name = "stock.move"
     _inherit = ['stock.move']
 
-#     external_prod_workorder_raw = fields.Many2one(comodel_name="mrp.workorder.externally.wizard", string="Raw Workorder")
-#     external_prod_workorder_finish = fields.Many2one(comodel_name="mrp.workorder.externally.wizard", string="Finished Workorder")
-    mrp_original_move = fields.Char('Is genereted from orignin MO')
-        
+    mrp_original_move = fields.Char(_('Is genereted from orignin MO'))

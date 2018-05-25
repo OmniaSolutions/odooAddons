@@ -7,8 +7,15 @@
         <field name="arch" type="xml">
         <form>
             <group>
-	        	<field name="external_partner"/>
-	        	<field name="operation_type" invisible="True"/><!-- the functionality is not ready at the moment-->
+	        	<field name="external_partner">
+	        	    <tree>
+                        <field name="partner_id"/>
+                        <field name="price" />
+                        <field name="delay" />
+                        <field name="min_qty" />
+                    </tree>
+	        	</field>
+	        	<field name="operation_type"/>
 	        	<field name="external_warehouse_id"/>
 	        	<field name="external_location_id"/>
 	        	<field name="request_date"/>
@@ -53,8 +60,6 @@
         </field>
     </record>
 
-
-
     <record id="mrp_workorder_externally_view_wizard" model="ir.ui.view">
         <field name="name">mrp.workorder.externally.view.wizard</field>
         <field name="model">mrp.workorder.externally.wizard</field>
@@ -62,7 +67,7 @@
         <form>
             <group>
                 <field name="external_partner"/>
-	        	<field name="operation_type" invisible="True"/><!-- the functionality is not ready at the moment-->
+	        	<field name="operation_type"/>
 	        	<field name="request_date"/>
 	        	<field name="create_purchese_order"/>
 	        	<field name="consume_product_id" attrs="{'invisible': [('operation_type', '!=', 'consume')], 'required': [('operation_type', '=', 'consume')]}"/>
@@ -78,7 +83,4 @@
         </form>
         </field>
     </record>
-
-
-
 </odoo>

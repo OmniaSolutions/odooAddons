@@ -62,9 +62,20 @@ class TmpStockMove(models.TransientModel):
     origin = fields.Char("Source Document", readonly=True)
     warehouse_id = fields.Many2one('stock.warehouse', 'Warehouse', help="Technical field depicting the warehouse to consider for the route selection on the next procurement (if any).")
     production_id = fields.Many2one(comodel_name='mrp.production', string='Production Id', readonly=True)
-    external_prod_raw = fields.Many2one(comodel_name="mrp.production.externally.wizard", string="Raw", readonly=True)
-    external_prod_finish = fields.Many2one(comodel_name="mrp.production.externally.wizard", string="Finished", readonly=True)
-
+    # production filed
+    external_prod_raw = fields.Many2one(comodel_name="mrp.production.externally.wizard",
+                                        string="Raw",
+                                        readonly=True)
+    external_prod_finish = fields.Many2one(comodel_name="mrp.production.externally.wizard",
+                                           string="Finished",
+                                           readonly=True)
+    # workorder field
+    external_prod_workorder_raw = fields.Many2one(comodel_name="mrp.workorder.externally.wizard",
+                                                  string="Raw",
+                                                  readonly=True)
+    external_prod_workorder_finish = fields.Many2one(comodel_name="mrp.workorder.externally.wizard",
+                                                     string="Finished",
+                                                     readonly=True)
     scrapped = fields.Boolean('Scrapped', related='location_dest_id.scrap_location', readonly=True, store=True)
     product_uom = fields.Many2one(
         'product.uom', 'Unit of Measure', required=True, states={'done': [('readonly', True)]}, default=lambda self: self.env['product.uom'].search([], limit=1, order='id'))
@@ -89,13 +100,36 @@ class TmpStockMove(models.TransientModel):
         return super(TmpStockMove, self).create(vals)
 
 
+class externalProductionPartner(models.TransientModel):
+    _name = 'external.production.partner'
+    partner_id = fields.Many2one('res.partner',
+                                 string=_('External Partner'),
+                                 required=True)
+    default = fields.Boolean(_('Default'))
+    price = fields.Float('Price',
+                         default=0.0,
+                         digits=dp.get_precision('Product Price'),
+                         required=True,
+                         help="The price to purchase a product")
+    delay = fields.Integer('Delivery Lead Time',
+                           default=1,
+                           required=True,
+                           help="Lead time in days between the confirmation of the purchase order and the receipt of the products in your warehouse. Used by the scheduler for automatic computation of the purchase order planning.")
+    min_qty = fields.Float('Minimal Quantity',
+                           default=0.0,
+                           required=True,
+                           help="The minimal quantity to purchase from this vendor, expressed in the vendor Product Unit of Measure if not any, in the default unit of measure of the product otherwise.")
+    wizard_id = fields.Many2one('mrp.production.externally.wizard',
+                                string="Vendors")
+
+
 class MrpProductionWizard(models.TransientModel):
 
     _name = "mrp.production.externally.wizard"
 
-    external_partner = fields.Many2one('res.partner',
-                                       string=_('External Partner'),
-                                       required=True)
+    external_partner = fields.One2many('external.production.partner',
+                                       inverse_name='wizard_id',
+                                       string=_('External Partner'))
     move_raw_ids = fields.One2many('stock.tmp_move',
                                    string=_('Raw Materials'),
                                    inverse_name='external_prod_raw',
@@ -104,22 +138,19 @@ class MrpProductionWizard(models.TransientModel):
                                         string=_('Finished Products'),
                                         inverse_name='external_prod_finish',
                                         domain=[('scrapped', '=', False)])
-
     operation_type = fields.Selection(selection=[('normal', _('Normal')), ('consume', _('Consume'))],
                                       string=_('Operation'),
                                       default='normal')
-
     consume_product_id = fields.Many2one(comodel_name='product.product',
                                          string=_('Product To Consume'))
     consume_bom_id = fields.Many2one(comodel_name='mrp.bom',
                                      string=_('BOM To Consume'))
-
     external_warehouse_id = fields.Many2one('stock.warehouse',
-                                            string='External Warehouse')
+                                            string=_('External Warehouse'))
     external_location_id = fields.Many2one('stock.location',
-                                           string='External Location')
+                                           string=_('External Location'))
     production_id = fields.Many2one('mrp.production',
-                                    string='Production',
+                                    string=_('Production'),
                                     readonly=True)
     request_date = fields.Datetime(string=_("Request date for the product"),
                                    default=lambda self: fields.datetime.now())
@@ -203,51 +234,52 @@ class MrpProductionWizard(models.TransientModel):
         move_raw_ids = []
         move_finished_ids = []
         productsToCheck = []
-        for lineBrws in self.move_raw_ids:
-            productsToCheck.append(lineBrws.product_id.id)
-            vals = {
-                'name': lineBrws.name,
-                'company_id': lineBrws.company_id.id,
-                'product_id': lineBrws.product_id.id,
-                'product_uom_qty': lineBrws.product_uom_qty,
-                'location_id': lineBrws.location_id.id,
-                'location_dest_id': lineBrws.location_dest_id.id,
-                'partner_id': self.external_partner.id,
-                'note': lineBrws.note,
-                'state': 'confirmed',
-                'origin': lineBrws.origin,
-                'warehouse_id': lineBrws.warehouse_id.id,
-                'production_id': False,
-                'product_uom': lineBrws.product_uom.id,
-                'date_expected': datetime.datetime.now(),
-            }
-            move_raw_ids.append((0, False, vals))
-        product_delay = 0.0
         for lineBrws in self.move_finished_ids:
             productsToCheck.append(lineBrws.product_id.id)
+            for external_partner in self.external_partner:
+                vals = {
+                    'name': lineBrws.name,
+                    'company_id': lineBrws.company_id.id,
+                    'product_id': lineBrws.product_id.id,
+                    'product_uom_qty': lineBrws.product_uom_qty,
+                    'location_id': lineBrws.location_id.id,
+                    'location_dest_id': lineBrws.location_dest_id.id,
+                    'partner_id': external_partner.id,
+                    'note': lineBrws.note,
+                    'state': 'confirmed',
+                    'origin': lineBrws.origin,
+                    'warehouse_id': lineBrws.warehouse_id.id,
+                    'production_id': productionBrws.id,
+                    'product_uom': lineBrws.product_uom.id,
+                    'date_expected': datetime.datetime.now(),
+                }
+                move_finished_ids.append((0, False, vals))
+        product_delay = 0.0
+        for lineBrws in self.move_raw_ids:
+            productsToCheck.append(lineBrws.product_id.id)
             product_delay = lineBrws.product_id.produce_delay
-            vals = {
-                'name': lineBrws.name,
-                'company_id': lineBrws.company_id.id,
-                'product_id': lineBrws.product_id.id,
-                'product_uom_qty': lineBrws.product_uom_qty,
-                'location_id': lineBrws.location_id.id,
-                'location_dest_id': lineBrws.location_dest_id.id,
-                'partner_id': self.external_partner.id,
-                'note': lineBrws.note,
-                'state': 'confirmed',
-                'origin': lineBrws.origin,
-                'warehouse_id': lineBrws.warehouse_id.id,
-                'production_id': productionBrws.id,
-                'product_uom': lineBrws.product_uom.id,
-                'date_expected': fields.Datetime.from_string(self.request_date) - relativedelta(days=product_delay or 0.0),
-            }
-            move_finished_ids.append((0, False, vals))
-        productionBrws.write({
-            'move_raw_ids': move_raw_ids,
-            'move_finished_ids': move_finished_ids,
-            'state': 'external',
-            'external_partner': self.external_partner.id})
+            for external_partner in self.external_partner:
+                vals = {
+                    'name': lineBrws.name,
+                    'company_id': lineBrws.company_id.id,
+                    'product_id': lineBrws.product_id.id,
+                    'product_uom_qty': lineBrws.product_uom_qty,
+                    'location_id': lineBrws.location_id.id,
+                    'location_dest_id': lineBrws.location_dest_id.id,
+                    'partner_id': external_partner.id,
+                    'note': lineBrws.note,
+                    'state': 'confirmed',
+                    'origin': lineBrws.origin,
+                    'warehouse_id': lineBrws.warehouse_id.id,
+                    'production_id': False,
+                    'product_uom': lineBrws.product_uom.id,
+                    'date_expected': fields.Datetime.from_string(self.request_date) - relativedelta(days=product_delay or 0.0)
+                }
+                move_raw_ids.append((0, False, vals))
+        productionBrws.write({'move_raw_ids': move_raw_ids,
+                              'move_finished_ids': move_finished_ids,
+                              'state': 'external',
+                              'external_partner': (6, 0, [self.external_partner.ids])})
         productsToCheck = list(set(productsToCheck))
         for product in self.env['product.product'].browse(productsToCheck):
             productionBrws.checkCreateReorderRule(product, productionBrws.location_src_id.get_warehouse())
@@ -257,10 +289,17 @@ class MrpProductionWizard(models.TransientModel):
         productionBrws = self.getParentProduction()
         self.cancelProductionRows(productionBrws)
         self.updateMoveLines(productionBrws)
-        pickIn = self.createStockPickingIn(self.external_partner, productionBrws)
-        pickOut = self.createStockPickingOut(self.external_partner, productionBrws)
-        productionBrws.date_planned_finished = pickIn.max_date
-        productionBrws.date_planned_start = pickOut.max_date
+        date_planned_finished_wo = False
+        date_planned_start_wo = False
+        for external_partner in self.external_partner:
+            pickIn = self.createStockPickingIn(external_partner, productionBrws)
+            pickOut = self.createStockPickingOut(external_partner, productionBrws)
+            date_planned_finished_wo = pickIn.max_date
+            date_planned_start_wo = pickOut.max_date
+        productionBrws.date_planned_finished = date_planned_finished_wo
+        productionBrws.date_planned_start = date_planned_start_wo
+        #productionBrws.date_planned_finished_wo = date_planned_finished_wo
+        #productionBrws.date_planned_start_wo = date_planned_start_wo
         pickingBrwsList = [pickIn.id, pickOut.id]
         productionBrws.external_pickings = [(6, 0, pickingBrwsList)]
         self.createPurches()
@@ -279,38 +318,49 @@ class MrpProductionWizard(models.TransientModel):
         val = {'default_code': 'external_service',  # TODO: use a configuration variable for this
                'type': 'service',
                'purchase_ok': True,
-               'name': _('Servizio')}
+               'name': _('Service')}
         return self.env['product.product'].create(val)
+
+    @api.model
+    def getPurcheseName(self, product_product):
+        """
+        this method could be overloaded as per customer needs
+        """
+        if product_product.default_code:
+            return product_product.default_code + " - " + product_product.name
+        else:
+            return product_product.name
 
     @api.multi
     def createPurches(self):
         if not self.create_purchese_order:
             return
         purchaseOrderObj = self.env['purchase.order']
-        purchaseBrws = None
-        if self.merge_purchese_order:
-            purchaseBrws = purchaseOrderObj.search([('partner_id', '=', self.external_partner.id),
+        obj_product_product = self.getDefaultExternalServiceProduct()
+        for toCreatePurchese in self.external_partner:
+            purchaseBrws = None
+            if self.merge_purchese_order:
+                purchaseBrws = purchaseOrderObj.search([('partner_id', '=', self.external_partner.id),
                                                     ('state', 'in', ['draft', 'sent'])
                                                     ], limit=1)
-        if not purchaseBrws:
-            purchaseBrws = purchaseOrderObj.create({
-                'partner_id': self.external_partner.id,
-                'date_planned': self.request_date,
-                })
+            if not purchaseBrws:
+                purchaseBrws = purchaseOrderObj.create({'partner_id': toCreatePurchese.partner_id.id,
+                                                        'date_planned': self.request_date,
+                                                        'production_external_id': self.production_id.id})
 
-        obj_product_template = self.getDefaultExternalServiceProduct()
-        for lineBrws in self.move_finished_ids:
-            values = {'product_id': obj_product_template.id,
-                      'name': _("Manufacture on product ") + lineBrws.product_id.name,
+            for lineBrws in self.move_finished_ids:
+                values = {
+                      'product_id': obj_product_product.id,
+                      'name': self.getPurcheseName(obj_product_product),
                       'product_qty': lineBrws.product_uom_qty,
-                      'product_uom': obj_product_template.uom_po_id.id,
-                      'price_unit': obj_product_template.price,
+                      'product_uom': obj_product_product.uom_po_id.id,
+                      'price_unit': obj_product_product.price,
                       'date_planned': self.request_date,
                       'order_id': purchaseBrws.id,
                       'production_external_id': self.production_id.id,
                       }
-            new_product_line = self.env['purchase.order.line'].create(values)
-            new_product_line.onchange_product_id()
+                new_product_line = self.env['purchase.order.line'].create(values)
+                new_product_line.onchange_product_id()
 
     @api.multi
     def button_close_wizard(self):
@@ -348,13 +398,14 @@ class MrpProductionWizard(models.TransientModel):
                     'picking_type_id': getPickingType(),
                     'origin': self.getOrigin(productionBrws, originBrw),
                     'move_lines': [],
-                    'state': 'draft'}
+                    'state': 'draft',
+                    'sub_contracting_operation': 'close',
+                    'sub_production_id': self.production_id}
         obj = stockObj.create(toCreate)
         newStockLines = []
         for outMove in incomingMoves:
-            stockMove = outMove.copy(default={
-                'production_id': False,
-                'raw_material_production_id': False})
+            stockMove = outMove.copy(default={'production_id': False,
+                                              'raw_material_production_id': False})
             newStockLines.append(stockMove.id)
         obj.write({'move_lines': [(6, False, newStockLines)]})
         return obj
@@ -385,13 +436,14 @@ class MrpProductionWizard(models.TransientModel):
                     'picking_type_id': getPickingType(),
                     'origin': self.getOrigin(productionBrws, originBrw),
                     'move_lines': [],
-                    'state': 'draft'}
+                    'state': 'draft',
+                    'sub_contracting_operation': 'open',
+                    'sub_production_id': self.production_id}
         obj = stockObj.create(toCreate)
         newStockLines = []
         for outMove in outGoingMoves:
-            stockMove = outMove.copy(default={
-                'production_id': False,
-                'raw_material_production_id': False})
+            stockMove = outMove.copy(default={'production_id': False,
+                                              'raw_material_production_id': False})
             newStockLines.append(stockMove.id)
         obj.write({'move_lines': [(6, False, newStockLines)]})
         return obj
@@ -401,21 +453,31 @@ class MrpProductionWizard(models.TransientModel):
         return super(MrpProductionWizard, self).write(vals)
 #  operation_id e' l'operazione del ruting che vado a fare mi da 'oggetto
 
+    @api.multi
+    def create_vendors(self):
+        external_production_partner = self.env['external.production.partner']
+        for seller in self.consume_bom_id.external_product.seller_ids:
+            vals = {'partner_id': seller.name.id,
+                    'price': seller.price,
+                    'delay': seller.delay,
+                    'min_qty': seller.min_qty,
+                    'wizard_id': self.id}
+            external_production_partner.create(vals)
+
 
 class MrpWorkorderWizard(MrpProductionWizard):
-
     _name = "mrp.workorder.externally.wizard"
     _inherit = ['mrp.production.externally.wizard']
 
-#     move_raw_ids = fields.One2many('stock.move',
-#                                    string='Raw Materials',
-#                                    inverse_name='external_prod_workorder_raw',
-#                                    domain=[('scrapped', '=', False)])
-# 
-#     move_finished_ids = fields.One2many('stock.move',
-#                                         string='Finished Products',
-#                                         inverse_name='external_prod_workorder_finish',
-#                                         domain=[('scrapped', '=', False)])
+    move_raw_ids = fields.One2many('stock.tmp_move',
+                                   string='Raw Materials',
+                                   inverse_name='external_prod_workorder_raw',
+                                   domain=[('scrapped', '=', False)])
+
+    move_finished_ids = fields.One2many('stock.tmp_move',
+                                        string='Finished Products',
+                                        inverse_name='external_prod_workorder_finish',
+                                        domain=[('scrapped', '=', False)])
 
     @api.multi
     def button_produce_externally(self):

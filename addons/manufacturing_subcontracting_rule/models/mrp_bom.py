@@ -47,8 +47,6 @@ class MrpBom(models.Model):
     _name = "mrp.bom"
     _inherit = ['mrp.bom']
     external_partner = fields.Many2one('res.partner',
-                                       related='routing_id.location_id.partner_id',
-                                       string='External Partner',
-                                       help='This is a computed field in order to modifier it go to Routing -> Production Place -> Set Owner of the location')
+                                       string=_('External Partner'))
     external_product = fields.Many2one('product.product',
-                                       string='External Product use for external production')
+                                       string=_('External Product use for external production'))

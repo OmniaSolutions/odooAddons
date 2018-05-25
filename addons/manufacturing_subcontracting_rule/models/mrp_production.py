@@ -74,21 +74,6 @@ class MrpProduction(models.Model):
                                                       states={'done': [('readonly', True)], 'cancel': [('readonly', True)]})
     external_pickings = fields.One2many('stock.picking', 'external_production', string='External Pikings')
 
-
-    @api.multi
-    def open_external_pickings(self):
-        newContext = self.env.context.copy()
-        return {
-            'name': _("External Pickings"),
-            'view_type': 'form',
-            'view_mode': 'tree,form',
-            'res_model': 'stock.picking',
-            'type': 'ir.actions.act_window',
-            'context': newContext,
-            'domain': [('id', 'in', self.external_pickings.ids)],
-        }
-
-        
     @api.multi
     def open_external_purchase(self):
         newContext = self.env.context.copy()
@@ -109,6 +94,19 @@ class MrpProduction(models.Model):
             'type': 'ir.actions.act_window',
             'context': newContext,
             'domain': [('id', 'in', manufacturingIds)],
+        }
+
+    @api.multi
+    def open_external_pickings(self):
+        newContext = self.env.context.copy()
+        return {
+            'name': _("External Pickings"),
+            'view_type': 'form',
+            'view_mode': 'tree,form',
+            'res_model': 'stock.picking',
+            'type': 'ir.actions.act_window',
+            'context': newContext,
+            'domain': [('id', 'in', self.external_pickings.ids)],
         }
 
     @api.model
@@ -133,7 +131,6 @@ class MrpProduction(models.Model):
             location_source_id = sourceMoveObj.location_id.id
         if not location_dest_id:
             location_dest_id = sourceMoveObj.location_dest_id.id
-
         return tmpMoveObj.create({
             'name': sourceMoveObj.name,
             'company_id': sourceMoveObj.company_id.id,
@@ -141,7 +138,7 @@ class MrpProduction(models.Model):
             'product_uom_qty': sourceMoveObj.product_uom_qty,
             'location_id': location_source_id,
             'location_dest_id': location_dest_id,
-            'partner_id': self.routing_id.location_id.partner_id.id,
+            'partner_id': self.external_partner.id,
             'note': sourceMoveObj.note,
             'state': 'draft',
             'origin': sourceMoveObj.origin,
@@ -164,6 +161,7 @@ class MrpProduction(models.Model):
         return self.createProductionLocation(locationName)
 
     def createProductionLocation(self, locationName):
+
         def getParentLocation():
             locations = locationObj.with_context({'lang': 'en_US'}).search([
                 ('usage', '=', 'supplier'),
@@ -173,14 +171,14 @@ class MrpProduction(models.Model):
             raise UserError("No Vendor location defined")
         locationObj = self.env['stock.location']
         parentLoc = getParentLocation()
-        vals = {'name': locationName,
-                'location_id': parentLoc.id,
-                'usage': 'internal'
-                }
-        locBrws = locationObj.search([('name', '=', locationName),
-                                      ('location_id', '=', parentLoc.id),
-                                      ('usage', '=', 'internal')
-                                      ])
+        vals = {
+            'name': locationName,
+            'location_id': parentLoc.id,
+            'usage': 'internal'}
+        locBrws = locationObj.search([
+            ('name', '=', locationName),
+            ('location_id', '=', parentLoc.id),
+            ('usage', '=', 'internal')])
         if not locBrws:
             locBrws = locationObj.create(vals)
         return locBrws
@@ -189,13 +187,12 @@ class MrpProduction(models.Model):
     def button_produce_externally(self):
         values = {}
         location = self.routing_id.location_id.id
-        partner = self.routing_id.location_id.partner_id
+        partner = self.routing_id.location_id.partner_id or self.bom_id.external_partner
         if not partner:
             partner = self.env['res.partner'].search([], limit=1)
         if not location:
             location = self.getSupplierLocation()
         location = self.checkCreatePartnerWarehouse(partner)
-        values['external_partner'] = partner.id
         values['move_raw_ids'] = [(6, 0, self.copyAndCleanLines(self.move_raw_ids, location.id, self.location_src_id.id))]
         values['move_finished_ids'] = [(6, 0, self.copyAndCleanLines(self.move_finished_ids, self.location_src_id.id, location.id))]
         values['consume_product_id'] = self.product_id.id
@@ -203,7 +200,9 @@ class MrpProduction(models.Model):
         values['external_warehouse_id'] = self.location_src_id.get_warehouse().id
         values['external_location_id'] = location.id
         values['production_id'] = self.id
+        values['request_date'] = datetime.datetime.now()
         obj_id = self.env['mrp.production.externally.wizard'].create(values)
+        obj_id.create_vendors()
         self.env.cr.commit()
         return {
             'type': 'ir.actions.act_window',
@@ -252,11 +251,12 @@ class MrpProduction(models.Model):
 
     def createReorderRule(self, prod_brws, warehouse):
         logging.info('Creating reordering rule for product ID %r and warehouse ID %r' % (prod_brws.id, warehouse.id))
-        toCreate = {'product_id': prod_brws.id,
-                    'warehouse_id': warehouse.id,
-                    'product_min_qty': 0,
-                    'product_max_qty': 0,
-                    'qty_multiple': 1,
-                    'location_id': warehouse.lot_stock_id.id}
+        toCreate = {
+            'product_id': prod_brws.id,
+            'warehouse_id': warehouse.id,
+            'product_min_qty': 0,
+            'product_max_qty': 0,
+            'qty_multiple': 1,
+            'location_id': warehouse.lot_stock_id.id}
         wareHouseBrws = self.env['stock.warehouse.orderpoint'].create(toCreate)
         return wareHouseBrws
