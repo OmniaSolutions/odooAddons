@@ -41,19 +41,14 @@ import logging
 class PurchaseOrder(models.Model):
     _name = "purchase.order"
     _inherit = ['purchase.order']
-    production_external_id = fields.Many2one('mrp.production', string=_('External Production'))
 
     @api.multi
     def open_external_manufacturing(self):
         newContext = self.env.context.copy()
-        manufacturingIds = []
-        if self.production_external_id:
-            manufacturingIds = [self.production_external_id.id]
-        else:
-            manObjs = self.env['mrp.production'].search([('purchase_external_id', '=', self.id)])
-            if manObjs:
-                manufacturingIds = manObjs.ids
-        newContext['default_purchase_external_id'] = self.id
+        manufacturingList = self.env['mrp.production'].browse()
+        for purchaseLineBrws in self.order_line:
+            manufacturingList = manufacturingList + purchaseLineBrws.production_external_id
+        manufacturingIds = manufacturingList.ids
         return {
             'name': _("Manufacturing External"),
             'view_type': 'form',
@@ -63,3 +58,22 @@ class PurchaseOrder(models.Model):
             'context': newContext,
             'domain': [('id', 'in', manufacturingIds)],
         }
+
+    @api.depends('order_line.move_ids')
+    def _compute_picking(self):
+        super(PurchaseOrder, self)._compute_picking()
+        for order in self:
+            pickingsToAppend = self.env['stock.picking'].browse()
+            for purchaseLineBrws in order.order_line:
+                if purchaseLineBrws.production_external_id:
+                    pickingsToAppend = pickingsToAppend + purchaseLineBrws.production_external_id.external_pickings
+            order.picking_ids = order.picking_ids + pickingsToAppend
+            order.picking_count = order.picking_count + len(pickingsToAppend)
+
+
+class PurchaseOrderLine(models.Model):
+
+    _name = "purchase.order.line"
+    _inherit = ['purchase.order.line']
+
+    production_external_id = fields.Many2one('mrp.production', string=_('External Production'))

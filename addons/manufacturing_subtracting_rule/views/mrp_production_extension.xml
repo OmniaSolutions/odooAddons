@@ -14,20 +14,27 @@
             </button>
             
             <div name="button_box" position="inside">
-                 <button name="open_external_purchase" type="object" class="oe_stat_button" icon="fa-arrows-v">
+                 <button name="open_external_purchase" type="object" class="oe_stat_button" icon="fa-shopping-cart">
                      <div class="o_form_field o_stat_info">
-                         <span class="o_stat_text">Purchase</span>
+                         <span class="o_stat_text">Ext. Purchase</span>
                      </div>
                  </button>
-                 <button name="open_external_pickings" type="object" class="oe_stat_button" icon="fa-arrows-v">
+                 <button name="open_external_pickings" type="object" class="oe_stat_button" icon="fa-truck">
                      <div class="o_form_field o_stat_info">
-                         <span class="o_stat_text">Picking</span>
+                         <span class="o_stat_text">Ext. Pickings</span>
                      </div>
                  </button>
             </div>
+
             <field name="origin" position="after">
                  <field name="purchase_external_id"/>
+                 <field name="external_partner" readonly="True"/>
             </field>
+
+            <field name="availability" position="after">
+                 <field name="external_pickings" invisible="True"/>
+            </field>
+            
             <button name="action_assign" position="attributes">
                 <attribute name="attrs">{'invisible': ['|', ('availability', 'in', ('assigned', 'none')), ('state', '=', 'external')]}</attribute>
             </button>

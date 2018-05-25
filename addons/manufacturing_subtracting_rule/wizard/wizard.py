@@ -158,6 +158,7 @@ class MrpProductionWizard(models.TransientModel):
     request_date = fields.Datetime(string=_("Request date for the product"),
                                    default=lambda self: fields.datetime.now())
     create_purchese_order = fields.Boolean(_('Automatic create Purchase'))
+    merge_purchese_order = fields.Boolean(_('Merge Purchase'), default=True)
 
     @api.onchange('consume_product_id')
     def _consume_product_id(self):
@@ -278,7 +279,6 @@ class MrpProductionWizard(models.TransientModel):
                     'date_expected': fields.Datetime.from_string(self.request_date) - relativedelta(days=product_delay or 0.0)
                 }
                 move_raw_ids.append((0, False, vals))
-
         productionBrws.write({'move_raw_ids': move_raw_ids,
                               'move_finished_ids': move_finished_ids,
                               'state': 'external',
@@ -301,6 +301,8 @@ class MrpProductionWizard(models.TransientModel):
             date_planned_start_wo = pickOut.scheduled_date
         productionBrws.date_planned_finished_wo = date_planned_finished_wo
         productionBrws.date_planned_start_wo = date_planned_start_wo
+        pickingBrwsList = [pickIn.id, pickOut.id]
+        productionBrws.external_pickings = [(6, 0, pickingBrwsList)]
         self.createPurches()
         #  WARNING RDS odoo.models: stock.picking.create() includes unknown fields: location_src_id, min_date
 
@@ -315,7 +317,7 @@ class MrpProductionWizard(models.TransientModel):
         product_brw = self.env['product.product'].search([('default_code', '=', 'external_service')])
         if product_brw:
             return product_brw
-        val = {'default_code': 'esellerxternal_service',  # TODO: use a configuration variable for this
+        val = {'default_code': 'external_service',  # TODO: use a configuration variable for this
                'type': 'service',
                'purchase_ok': True,
                'name': _('Service')}
@@ -347,7 +349,9 @@ class MrpProductionWizard(models.TransientModel):
                           'product_uom': obj_product_product.uom_po_id.id,
                           'price_unit': obj_product_product.price,
                           'date_planned': self.request_date,
-                          'order_id': obj_po.id}
+                          'order_id': obj_po.id,
+                          'production_external_id': self.production_id.id,
+                          }
                 new_product_line = self.env['purchase.order.line'].create(values)
                 new_product_line.onchange_product_id()
 

@@ -72,6 +72,7 @@ class MrpProduction(models.Model):
                                                       'Finished Products External Production',
                                                       copy=False,
                                                       states={'done': [('readonly', True)], 'cancel': [('readonly', True)]})
+    external_pickings = fields.One2many('stock.picking', 'external_production', string='External Pikings')
 
     @api.multi
     def open_external_purchase(self):
@@ -80,10 +81,11 @@ class MrpProduction(models.Model):
         if self.purchase_external_id:
             manufacturingIds = [self.purchase_external_id.id]
         else:
-            manObjs = self.env['purchase.order'].search([('production_external_id', '=', self.id)])
-            if manObjs:
-                manufacturingIds = manObjs.ids
-        newContext['default_manu_external_id'] = self.id
+            purchaseLines = self.env['purchase.order.line'].search([('production_external_id', '=', self.id)])
+            purchaseList = self.env['purchase.order'].browse()
+            for purchaseLineBrws in purchaseLines:
+                purchaseList = purchaseList + purchaseLineBrws.order_id
+            manufacturingIds = purchaseList.ids
         return {
             'name': _("Purchase External"),
             'view_type': 'form',
@@ -96,14 +98,15 @@ class MrpProduction(models.Model):
 
     @api.multi
     def open_external_pickings(self):
-        picking_ids = self.env['stock.picking'].search([('sub_production_id', '=', self.id)])
+        newContext = self.env.context.copy()
         return {
-            'name': _("Purchase External"),
+            'name': _("External Pickings"),
             'view_type': 'form',
             'view_mode': 'tree,form',
             'res_model': 'stock.picking',
             'type': 'ir.actions.act_window',
-            'domain': [('id', 'in', picking_ids.ids)],
+            'context': newContext,
+            'domain': [('id', 'in', self.external_pickings.ids)],
         }
 
     @api.model
@@ -122,8 +125,12 @@ class MrpProduction(models.Model):
             return lock.id
         return False
 
-    def createTmpStockMove(self, sourceMoveObj, location_source_id, location_dest_id):
+    def createTmpStockMove(self, sourceMoveObj, location_source_id=None, location_dest_id=None):
         tmpMoveObj = self.env["stock.tmp_move"]
+        if not location_source_id:
+            location_source_id = sourceMoveObj.location_id.id
+        if not location_dest_id:
+            location_dest_id = sourceMoveObj.location_dest_id.id
         return tmpMoveObj.create({
             'name': sourceMoveObj.name,
             'company_id': sourceMoveObj.company_id.id,
@@ -141,7 +148,7 @@ class MrpProduction(models.Model):
             'date_expected': sourceMoveObj.date_expected,
             'mrp_original_move': False})
 
-    def copyAndCleanLines(self, brwsList, location_dest_id, location_source_id):
+    def copyAndCleanLines(self, brwsList, location_dest_id=None, location_source_id=None):
         outElems = []
         for elem in brwsList:
             outElems.append(self.createTmpStockMove(elem, location_source_id, location_dest_id).id)
@@ -156,10 +163,12 @@ class MrpProduction(models.Model):
     def createProductionLocation(self, locationName):
 
         def getParentLocation():
-            return locationObj.with_context({'lang': 'en_US'}).search([
+            locations = locationObj.with_context({'lang': 'en_US'}).search([
                 ('usage', '=', 'supplier'),
                 ('name', '=', 'Vendors')])
-
+            if locations:
+                return locations[-1]
+            raise UserError("No Vendor location defined")
         locationObj = self.env['stock.location']
         parentLoc = getParentLocation()
         vals = {
