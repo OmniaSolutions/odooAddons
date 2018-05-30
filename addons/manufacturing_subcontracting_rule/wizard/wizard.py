@@ -344,7 +344,7 @@ class MrpProductionWizard(models.TransientModel):
                                                         'production_external_id': self.production_id.id})
             for lineBrws in self.move_finished_ids:
                 values = {'product_id': obj_product_product.id,
-                          'name': self.getPurcheseName(obj_product_product),
+                          'name': self.getPurcheseName(obj_product_product), 
                           'product_qty': lineBrws.product_uom_qty,
                           'product_uom': obj_product_product.uom_po_id.id,
                           'price_unit': obj_product_product.price,
@@ -489,9 +489,3 @@ class MrpWorkorderWizard(MrpProductionWizard):
 
     def getOrigin(self, productionBrws, originBrw):
         return "%s - %s - %s" % (productionBrws.name, originBrw.name, originBrw.external_partner.name)
-
-
-#WARNING RDS odoo.models: stock.tmp_move.create() includes unknown fields: mrp_original_move
-#WARNING RDS odoo.models: stock.tmp_move.create() includes unknown fields: mrp_original_move
-#WARNING RDS odoo.models: mrp.production.externally.wizard.create() includes unknown fields: partner_id
-#WARNING RDS odoo.fields: Field stock.tmp_move.external_prod_workorder_raw with unknown comodel_name 'mrp.workorder.externally.wizar'
