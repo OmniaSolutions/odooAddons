@@ -42,6 +42,8 @@ class PurchaseOrder(models.Model):
     _name = "purchase.order"
     _inherit = ['purchase.order']
 
+    production_external_id = fields.Many2one('mrp.production', string=_('External Production'))
+
     @api.multi
     def open_external_manufacturing(self):
         newContext = self.env.context.copy()
