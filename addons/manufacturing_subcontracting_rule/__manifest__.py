@@ -47,6 +47,7 @@
                 'views/mrp_routing_workcenter.xml',
                 'views/purchase_extension.xml',
                 'views/mrp_bom.xml',
+                'views/res_partner.xml',
     ],
     'installable': True,
     'application': False,

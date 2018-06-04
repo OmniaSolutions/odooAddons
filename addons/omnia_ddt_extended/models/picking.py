@@ -27,7 +27,6 @@ from odoo import fields
 from odoo import models
 from odoo import _
 from odoo import api
-import logging
 
 
 class Stock_picking(models.Model):
@@ -49,7 +48,7 @@ class Stock_picking(models.Model):
         raise UserError(_('No sequence is provided!'))
 
     @api.multi
-    def button_ddt_number(self, vals):
+    def button_ddt_number(self):
         for brwsPick in self:
             brwseId = brwsPick.ddt_sequence.id
             if brwseId is None:
@@ -73,11 +72,7 @@ class Stock_picking(models.Model):
                 brwsPick.write({'ddt_number': number})
         return True
 
-Stock_picking()
-
 
 class Stock_picking_out_omnia(models.Model):
     _inherit = "ir.sequence"
     use_for_ddt = fields.Boolean(string="Use for DDT")
-
-Stock_picking_out_omnia()
