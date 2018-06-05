@@ -24,7 +24,7 @@ class TmpStockMoveLine(models.TransientModel):
     product_name = fields.Char(_('Product'))
     sale_order_line_id = fields.Integer(_('Reference Sale Order Line'))
     move_quantity = fields.Float(_('Move Quantity'), )
-    merge_quantity = fields.Float(_('Quantity'))
+    product_uom_qty = fields.Float(_('Requested Quantity'), readonly=True)
     ref_id = fields.Many2one('stock.tmp_merge_pick')
     requested_date = fields.Datetime(_('Request date'))
     date_expected = fields.Datetime(_('Effective date'))
@@ -66,8 +66,8 @@ class TmpStockMove(models.TransientModel):
                                                 'ref_stock_move_id': move.id,
                                                 'product_name': move.product_id.display_name,
                                                 'sale_order_line_id': move.sale_line_id.id,
+                                                'product_uom_qty': move.product_uom_qty,
                                                 'move_quantity': move.product_qty,
-                                                'merge_quantity': move.product_qty,
                                                 'requested_date': move.requested_date,
                                                 'date_expected': move.date_expected})
 
@@ -84,11 +84,11 @@ class TmpStockMove(models.TransientModel):
         for pick_line in self.ref_stock_move:
             old_move_id = tmpl_move.search([('id', '=', pick_line.ref_stock_move_id)])
             old_move_id.copy({'picking_id': out_pick.id,
-                              'product_uom_qty': pick_line.merge_quantity})
-            if old_move_id.product_qty != pick_line.merge_quantity:
-                if old_move_id.product_qty < pick_line.merge_quantity:
+                              'product_uom_qty': pick_line.move_quantity})
+            if old_move_id.product_qty != pick_line.move_quantity:
+                if old_move_id.product_qty < pick_line.move_quantity:
                     raise UserError(_('Unable to set quantity less then 0'))
-                old_move_id.copy({'product_uom_qty': old_move_id.product_qty - pick_line.merge_quantity})
+                old_move_id.copy({'product_uom_qty': old_move_id.product_qty - pick_line.move_quantity})
             old_move_id._action_cancel()
             if old_move_id.picking_id not in out_pick.merged_pick_ids:
                 out_pick.merged_pick_ids = [(4, old_move_id.picking_id.id)]
