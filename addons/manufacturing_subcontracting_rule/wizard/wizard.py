@@ -243,7 +243,8 @@ class MrpProductionWizard(models.TransientModel):
                         'warehouse_id': lineBrws.warehouse_id.id,
                         'production_id': productionBrws.id,
                         'product_uom': lineBrws.product_uom.id,
-                        'date_expected': datetime.datetime.now()}
+                        'date_expected': datetime.datetime.now(),
+                        'mrp_production_id': productionBrws.id}
                 move_finished_ids.append((0, False, vals))
         product_delay = 0.0
         for lineBrws in self.move_raw_ids:
@@ -263,7 +264,8 @@ class MrpProductionWizard(models.TransientModel):
                 'warehouse_id': lineBrws.warehouse_id.id,
                 'production_id': False,
                 'product_uom': lineBrws.product_uom.id,
-                'date_expected': fields.Datetime.from_string(self.request_date) - relativedelta(days=product_delay or 0.0)
+                'date_expected': fields.Datetime.from_string(self.request_date) - relativedelta(days=product_delay or 0.0),
+                'mrp_production_id': productionBrws.id
             }
             move_raw_ids.append((0, False, vals))
         productionBrws.write({'move_raw_ids': move_raw_ids,

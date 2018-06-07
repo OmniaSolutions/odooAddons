@@ -46,3 +46,4 @@ class StockMove(models.Model):
     _inherit = ['stock.move']
 
     mrp_original_move = fields.Char(_('Is genereted from orignin MO'))
+    mrp_production_id = fields.Integer(_('Original mrp id'))
