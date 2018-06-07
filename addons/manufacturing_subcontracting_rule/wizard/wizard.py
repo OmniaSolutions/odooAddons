@@ -388,6 +388,9 @@ class MrpProductionWizard(models.TransientModel):
         for outMove in incomingMoves:
             stockMove = outMove.copy(default={'production_id': False,
                                               'raw_material_production_id': False})
+            stockMove.location_id = customerProductionLocation.id
+            stockMove.location_dest_id = localStockLocation.id
+            stockMove.sale_line_id = outMove.sale_line_id
             newStockLines.append(stockMove.id)
         obj.write({'move_lines': [(6, False, newStockLines)]})
         return obj
@@ -426,6 +429,9 @@ class MrpProductionWizard(models.TransientModel):
         for outMove in outGoingMoves:
             stockMove = outMove.copy(default={'production_id': False,
                                               'raw_material_production_id': False})
+            stockMove.location_id = localStockLocation.id
+            stockMove.location_dest_id = customerProductionLocation.id
+            stockMove.sale_line_id = outMove.sale_line_id
             newStockLines.append(stockMove.id)
         obj.write({'move_lines': [(6, False, newStockLines)]})
         return obj
