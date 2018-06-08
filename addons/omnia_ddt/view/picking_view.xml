@@ -28,13 +28,13 @@
 						</group>
 						<label for="note_ddt"/>
 						<field name="note_ddt"/>
+						<field name="show_ddt_button" invisible="True"/>
 					</page>
 				</page>
-				
             	<xpath expr="/form/header//button[@name='%(stock.act_stock_return_picking)d']" position="after">
 	            	<button name="button_ddt_number" 
 	            			string="Stacca DDT" 
-	            			attrs="{'invisible': [('ddt_number', '!=', False),('ddt_number','!=','')]}" 
+	            			attrs="{'invisible': [('show_ddt_button', '=', False)]}" 
 	            			type="object" 
 	            			class="oe_highlight"
 	            		    />

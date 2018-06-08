@@ -82,6 +82,15 @@ class stock_picking_custom(models.Model):
                                   'Trasporto a Cura di')
     use_for_ddt = fields.Boolean('Use for DDT')
 
+    @api.multi
+    def _show_ddt_button(self):
+        for pick in self:
+            show = False
+            if pick.picking_type_id.allow_ddt and not pick.ddt_number:
+                show = True
+            pick.show_ddt_button = show
+    show_ddt_button = fields.Boolean('Show ddt Button', compute=_show_ddt_button)
+
     @api.model
     def getLastDDtDate(self):
         """

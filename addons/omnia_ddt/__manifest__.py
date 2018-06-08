@@ -50,6 +50,7 @@ Manage DDT documents
              'view/sequence.xml',
              'view/transportation_reason_view.xml',
              'view/acc_invoice_view_ddt.xml',
+             'view/stock_picking_type.xml',
              # report
              'report/report_ddt.xml',
              # menu
