@@ -395,6 +395,12 @@ class MrpProductionWizard(models.TransientModel):
         obj.write({'move_lines': [(6, False, newStockLines)]})
         return obj
 
+    def updatePickOut(self, values, partner_id, localStockLocation, customerProductionLocation):
+        """
+            this function can be overloaded in order to customize the
+        """
+        return values
+
     def createStockPickingOut(self, partner_id, productionBrws, originBrw=None):
         def getPickingType():
             warehouseId = productionBrws.picking_type_id.warehouse_id.id
@@ -424,6 +430,10 @@ class MrpProductionWizard(models.TransientModel):
                     'state': 'draft',
                     'sub_contracting_operation': 'open',
                     'sub_production_id': self.production_id}
+        toCreate = self.updatePickOut(toCreate,
+                                      partner_id,
+                                      localStockLocation,
+                                      customerProductionLocation)
         obj = stockObj.create(toCreate)
         newStockLines = []
         for outMove in outGoingMoves:
