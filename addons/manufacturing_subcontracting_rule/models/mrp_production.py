@@ -198,7 +198,6 @@ class MrpProduction(models.Model):
         values['consume_product_id'] = self.product_id.id
         values['consume_bom_id'] = self.bom_id.id
         values['external_warehouse_id'] = self.location_src_id.get_warehouse().id
-        #values['external_location_id'] = location.id
         values['production_id'] = self.id
         values['request_date'] = datetime.datetime.now()
         obj_id = self.env['mrp.production.externally.wizard'].create(values)
@@ -221,6 +220,10 @@ class MrpProduction(models.Model):
         for manOrderBrws in self:
             stockPickList = stockPickingObj.search([('origin', '=', manOrderBrws.name)])
             for pickBrws in stockPickList:
+                if pickBrws.inventory_id.status == 'done':
+                    raise UserError("Unable to cancel a done Inventory move")
+                pickBrws.inventory_id.action_cancel_draft()
+                pickBrws.inventory_id.unlink()
                 pickBrws.move_lines.unlink()
                 pickBrws.action_cancel()
                 pickBrws.unlink()

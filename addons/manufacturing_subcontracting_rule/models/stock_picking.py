@@ -117,7 +117,11 @@ class StockPicking(models.Model):
             for quantsForProductBrws in quantsForProduct:
                 newQty = quantsForProductBrws.quantity - consumedLineBrws.product_qty
                 quantsForProductBrws.write({'quantity': newQty})
+                self.createConterpart()
                 break
+
+    def createConterpart(self):
+        pass
 
     def getStockQuant(self, stockQuantObj, lineId, prodBrws):
         quantsForProduct = stockQuantObj.search([

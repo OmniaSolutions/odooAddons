@@ -286,8 +286,8 @@ class MrpProductionWizard(models.TransientModel):
         date_planned_start_wo = False
         for external_partner in self.external_partner:
             partner_id = external_partner.partner_id
-            pickIn = self.createStockPickingIn(partner_id, productionBrws)
             pickOut = self.createStockPickingOut(partner_id, productionBrws)
+            pickIn = self.createStockPickingIn(partner_id, productionBrws)
             date_planned_finished_wo = pickIn.scheduled_date
             date_planned_start_wo = pickOut.scheduled_date
             self.createPurches(external_partner, pickOut)
@@ -372,7 +372,7 @@ class MrpProductionWizard(models.TransientModel):
         return values
 
     def createStockPickingIn(self, partner_id, productionBrws, originBrw=None):
-        stockObj = self.env['stock.picking']
+        stock_pikingObj = self.env['stock.picking']
 
         def getPickingType():
             warehouseId = productionBrws.picking_type_id.warehouse_id.id
@@ -404,7 +404,8 @@ class MrpProductionWizard(models.TransientModel):
                                      partner_id,
                                      localStockLocation,
                                      customerProductionLocation)
-        obj = stockObj.create(toCreate)
+        stock_pick = stock_pikingObj.create(toCreate)
+        newStockLines_ids = []
         newStockLines = []
         for outMove in incomingMoves:
             stockMove = outMove.copy(default={'production_id': False,
@@ -412,9 +413,10 @@ class MrpProductionWizard(models.TransientModel):
             stockMove.location_id = customerProductionLocation.id
             stockMove.location_dest_id = localStockLocation.id
             stockMove.sale_line_id = outMove.sale_line_id
-            newStockLines.append(stockMove.id)
-        obj.write({'move_lines': [(6, False, newStockLines)]})
-        return obj
+            newStockLines_ids.append(stockMove.id)
+            newStockLines.append(stockMove)
+        stock_pick.write({'move_lines': [(6, False, newStockLines_ids)]})
+        return stock_pick
 
     def updatePickOUT(self, values, partner_id, localStockLocation, customerProductionLocation):
         """
@@ -431,10 +433,9 @@ class MrpProductionWizard(models.TransientModel):
                                             ('warehouse_id', '=', warehouseId)]):
                 return pick.id
             return False
-
         customerProductionLocation = partner_id.location_id
         localStockLocation = productionBrws.location_src_id  # Taken from manufacturing order
-        stockObj = self.env['stock.picking']
+        stock_pickingOBJ = self.env['stock.picking']
         outGoingMoves = []
         for productionLineBrws in productionBrws.move_raw_ids:
             if not customerProductionLocation:
@@ -451,11 +452,11 @@ class MrpProductionWizard(models.TransientModel):
                     'state': 'draft',
                     'sub_contracting_operation': 'open',
                     'sub_production_id': self.production_id}
-        toCreate = self.updatePickOut(toCreate,
+        toCreate = self.updatePickOUT(toCreate,
                                       partner_id,
                                       localStockLocation,
                                       customerProductionLocation)
-        obj = stockObj.create(toCreate)
+        obj = stock_pickingOBJ.create(toCreate)
         newStockLines = []
         for outMove in outGoingMoves:
             stockMove = outMove.copy(default={'production_id': False,
@@ -508,8 +509,8 @@ class MrpWorkorderWizard(MrpProductionWizard):
                              'state': 'external'})
         productionBrws = workorderBrws.production_id
         for external_partner in self.external_partner:
-            pickIn = self.createStockPickingIn(external_partner, productionBrws, workorderBrws)
             pickOut = self.createStockPickingOut(external_partner, productionBrws, workorderBrws)
+            pickIn = self.createStockPickingIn(external_partner, productionBrws, workorderBrws)
         productionBrws.date_planned_finished_wo = pickIn.scheduled_date
         productionBrws.date_planned_start_wo = pickOut.scheduled_date
         productionBrws.button_unreserve()   # Needed to evaluate picking out move
