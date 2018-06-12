@@ -74,8 +74,7 @@ class PurchaseOrder(models.Model):
 
 
 class PurchaseOrderLine(models.Model):
-
-    _name = "purchase.order.line"
-    _inherit = ['purchase.order.line']
+    _inherit = 'purchase.order.line'
 
     production_external_id = fields.Many2one('mrp.production', string=_('External Production'))
+    sub_move_line = fields.Many2one('stock.move', string=_('Subcontracting move ref'))

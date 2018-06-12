@@ -290,11 +290,41 @@ class MrpProductionWizard(models.TransientModel):
             pickOut = self.createStockPickingOut(partner_id, productionBrws)
             date_planned_finished_wo = pickIn.scheduled_date
             date_planned_start_wo = pickOut.scheduled_date
+            self.createPurches(external_partner, pickOut)
         productionBrws.date_planned_finished_wo = date_planned_finished_wo
         productionBrws.date_planned_start_wo = date_planned_start_wo
         pickingBrwsList = [pickIn.id, pickOut.id]
         productionBrws.external_pickings = [(6, 0, pickingBrwsList)]
-        self.createPurches()
+
+    @api.multi
+    def createPurches(self, toCreatePurchese, picking):
+        if not self.create_purchese_order:
+            return
+        obj_product_product = self.getDefaultExternalServiceProduct()
+        obj_po = self.env['purchase.order'].create({'partner_id': toCreatePurchese.partner_id.id,
+                                                    'date_planned': self.request_date,
+                                                    'production_external_id': self.production_id.id})
+        for lineBrws in picking.move_lines:
+            values = {'product_id': obj_product_product.id,
+                      'name': self.getPurcheseName(obj_product_product),
+                      'product_qty': lineBrws.product_uom_qty,
+                      'product_uom': obj_product_product.uom_po_id.id,
+                      'price_unit': obj_product_product.price,
+                      'date_planned': self.request_date,
+                      'order_id': obj_po.id,
+                      'production_external_id': self.production_id.id,
+                      'sub_move_line': lineBrws.id,
+                      }
+            new_product_line = self.env['purchase.order.line'].create(values)
+            new_product_line.onchange_product_id()
+
+    @api.model
+    def getNewExternalProductInfo(self):
+        val = {'default_code': "S-" + self.production_id.product_id.default_code,
+               'type': 'service',
+               'purchase_ok': True,
+               'name': "[%s] %s" % (self.production_id.product_id.default_code, self.production_id.product_id.name)}
+        return val
 
     @api.model
     def getDefaultExternalServiceProduct(self):
@@ -307,11 +337,7 @@ class MrpProductionWizard(models.TransientModel):
         product_brw = self.env['product.product'].search([('default_code', '=', 'external_service')])
         if product_brw:
             return product_brw
-        val = {'default_code': 'external_service',  # TODO: use a configuration variable for this
-               'type': 'service',
-               'purchase_ok': True,
-               'name': _('Service')}
-        return self.env['product.product'].create(val)
+        return self.env['product.product'].create(self.getNewExternalProductInfo())
 
     @api.model
     def getPurcheseName(self, product_product):
@@ -323,27 +349,7 @@ class MrpProductionWizard(models.TransientModel):
         else:
             return product_product.name
 
-    @api.multi
-    def createPurches(self):
-        if not self.create_purchese_order:
-            return
-        obj_product_product = self.getDefaultExternalServiceProduct()
-        for toCreatePurchese in self.external_partner:
-            obj_po = self.env['purchase.order'].create({'partner_id': toCreatePurchese.partner_id.id,
-                                                        'date_planned': self.request_date,
-                                                        'production_external_id': self.production_id.id})
-            for lineBrws in self.move_finished_ids:
-                values = {'product_id': obj_product_product.id,
-                          'name': self.getPurcheseName(obj_product_product),
-                          'product_qty': lineBrws.product_uom_qty,
-                          'product_uom': obj_product_product.uom_po_id.id,
-                          'price_unit': obj_product_product.price,
-                          'date_planned': self.request_date,
-                          'order_id': obj_po.id,
-                          'production_external_id': self.production_id.id,
-                          }
-                new_product_line = self.env['purchase.order.line'].create(values)
-                new_product_line.onchange_product_id()
+
 
     @api.multi
     def button_close_wizard(self):
