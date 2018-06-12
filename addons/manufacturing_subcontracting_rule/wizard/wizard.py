@@ -305,6 +305,14 @@ class MrpProductionWizard(models.TransientModel):
         self.createPurches()
 
     @api.model
+    def getNewExternalProductInfo(self):
+        val = {'default_code': "S-" + self.production_id.product_id.default_code,
+               'type': 'service',
+               'purchase_ok': True,
+               'name': "[%s] %s" % (self.production_id.product_id.default_code, self.production_id.product_id.name)}
+        return val
+
+    @api.model
     def getDefaultExternalServiceProduct(self):
         """
         get the default external product suitable for the purchase
@@ -319,7 +327,7 @@ class MrpProductionWizard(models.TransientModel):
                'type': 'service',
                'purchase_ok': True,
                'name': _('Service')}
-        return self.env['product.product'].create(val)
+        return self.env['product.product'].create(self.getNewExternalProductInfo())
 
     @api.model
     def getPurcheseName(self, product_product):
