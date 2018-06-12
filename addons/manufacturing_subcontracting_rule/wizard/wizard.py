@@ -320,6 +320,9 @@ class MrpProductionWizard(models.TransientModel):
 
     @api.model
     def getNewExternalProductInfo(self):
+        """
+        this method could be overloaded as per customer needs
+        """
         val = {'default_code': "S-" + self.production_id.product_id.default_code,
                'type': 'service',
                'purchase_ok': True,
@@ -334,10 +337,14 @@ class MrpProductionWizard(models.TransientModel):
         bom_product = self.production_id.bom_id.external_product
         if bom_product:
             return bom_product
-        product_brw = self.env['product.product'].search([('default_code', '=', 'external_service')])
-        if product_brw:
-            return product_brw
-        return self.env['product.product'].create(self.getNewExternalProductInfo())
+        product_vals = self.getNewExternalProductInfo()
+        newProduct = self.env['product.product'].search([('default_code', '=', product_vals.get('default_code'))])
+        if not newProduct:
+            newProduct = self.env['product.product'].create(product_vals)
+            newProduct.message_post(body=_('<div style="background-color:green;color:white;border-radius:5px"><b>Create automatically from subcontracting module</b></div>'),
+                                    message_type='notification')
+        self.production_id.bom_id.external_product = newProduct
+        return newProduct
 
     @api.model
     def getPurcheseName(self, product_product):
@@ -349,8 +356,6 @@ class MrpProductionWizard(models.TransientModel):
         else:
             return product_product.name
 
-
-
     @api.multi
     def button_close_wizard(self):
         self.move_raw_ids.unlink()
@@ -359,6 +364,12 @@ class MrpProductionWizard(models.TransientModel):
 
     def getOrigin(self, productionBrws, originBrw=None):
         return productionBrws.name
+
+    def updatePickIN(self, values, partner_id, localStockLocation, customerProductionLocation):
+        """
+            this function can be overloaded in order to customize the
+        """
+        return values
 
     def createStockPickingIn(self, partner_id, productionBrws, originBrw=None):
         stockObj = self.env['stock.picking']
@@ -389,6 +400,10 @@ class MrpProductionWizard(models.TransientModel):
                     'state': 'draft',
                     'sub_contracting_operation': 'close',
                     'sub_production_id': self.production_id}
+        toCreate = self.updatePickIN(toCreate,
+                                     partner_id,
+                                     localStockLocation,
+                                     customerProductionLocation)
         obj = stockObj.create(toCreate)
         newStockLines = []
         for outMove in incomingMoves:
@@ -401,7 +416,7 @@ class MrpProductionWizard(models.TransientModel):
         obj.write({'move_lines': [(6, False, newStockLines)]})
         return obj
 
-    def updatePickOut(self, values, partner_id, localStockLocation, customerProductionLocation):
+    def updatePickOUT(self, values, partner_id, localStockLocation, customerProductionLocation):
         """
             this function can be overloaded in order to customize the
         """

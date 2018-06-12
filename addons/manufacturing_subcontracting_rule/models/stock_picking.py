@@ -71,20 +71,6 @@ class StockPicking(models.Model):
                                                   ('close', _('Close external Production'))])
     sub_production_id = fields.Integer(string=_('Sub production Id'))
 
-    @api.multi
-    def action_assign(self):
-        """In addition to what the method in the parent class does,
-        Changed batches states to assigned if all picking are assigned.
-        """
-        for objPick in self:
-            if self.isIncoming(objPick):
-                maonOrder = self.getRelatedExternalManOrder(objPick)
-                if not maonOrder:
-                    continue
-                self.createFinishedProducts(maonOrder)
-                break
-        return super(StockPicking, self).action_assign()
-
     def getRelatedExternalManOrder(self, objPick):
         manufacturingObj = self.env['mrp.production']
         filterList = [('name', '=', objPick.origin),
@@ -136,6 +122,22 @@ class StockPicking(models.Model):
     def getStockQuant(self, stockQuantObj, lineId, prodBrws):
         quantsForProduct = stockQuantObj.search([
             ('location_id', '=', lineId),
-            ('product_id', '=', prodBrws.id)
-            ])
+            ('product_id', '=', prodBrws.id)])
         return quantsForProduct
+
+    def action_generate_backorder_wizard(self):
+        res = super(StockPicking, self).action_generate_backorder_wizard()
+        if self.isIncoming(self):
+            objProduction = self.env['mrp.production'].search([('id', '=', self.sub_production_id)])
+            if objProduction.state == 'external':
+                self.removeMaterialFromSupplier(objProduction)
+        return res
+
+    def action_done(self):
+        res = super(StockPicking, self).action_done()
+        if self.isIncoming(self):
+            objProduction = self.env['mrp.production'].search([('id', '=', self.sub_production_id)])
+            if objProduction.state == 'external':
+                objProduction.button_mark_done()
+            self.removeMaterialFromSupplier(objProduction)
+        return res
