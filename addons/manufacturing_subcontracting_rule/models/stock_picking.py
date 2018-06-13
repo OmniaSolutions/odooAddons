@@ -37,30 +37,6 @@ from odoo import fields
 from odoo import _
 
 
-class StockImmediateTransfer(models.TransientModel):
-    _name = 'stock.immediate.transfer'
-    _inherit = ['stock.immediate.transfer']
-
-    @api.multi
-    def process(self):
-        '''
-            Be sure to close the manufacturing order only if finished product is arrived.
-        '''
-        pikingObj = self.env['stock.picking']
-        res = super(StockImmediateTransfer, self).process()
-        for objPick in self.pick_ids:
-            manufactObj = pikingObj.getRelatedExternalManOrder(objPick)
-            if not manufactObj:
-                continue
-            if pikingObj.isOutGoing(objPick):
-                pikingObj.doneManRawMaterials(manufactObj)
-            elif pikingObj.isIncoming(objPick):
-                pikingObj.removeMaterialFromSupplier(manufactObj)
-                manufactObj.button_mark_done()
-            break
-        return res
-
-
 class StockPicking(models.Model):
     _name = 'stock.picking'
     _inherit = ['stock.picking']
@@ -97,31 +73,30 @@ class StockPicking(models.Model):
                     quantsForProductBrws.write({'quantity': newQty})
                     break
 
-    def isIncoming(self, objPick):
-        return objPick.sub_contracting_operation == 'close'
+    def isIncoming(self):
+        return self.sub_contracting_operation == 'close'
 
-    def isOutGoing(self, objPick):
-        return objPick.sub_contracting_operation == 'open'
+    def isOutGoing(self):
+        return self.sub_contracting_operation == 'open'
 
     def doneManRawMaterials(self, manOrder):
         for lineBrws in manOrder.move_raw_ids:
             lineBrws.write({'state': 'done'})
 
-    def removeMaterialFromSupplier(self, manufacturingObj):
+    def removeMaterialFromSupplier(self, line, manufacturingObj, qty_produced):
         stockQuantObj = self.env['stock.quant']
-        for consumedLineBrws in manufacturingObj.move_raw_ids:
-            if consumedLineBrws.state == 'cancel':
-                continue
-            prodBrws = consumedLineBrws.product_id
-            quantsForProduct = self.getStockQuant(stockQuantObj, consumedLineBrws.location_dest_id.id, prodBrws)
-            for quantsForProductBrws in quantsForProduct:
-                newQty = quantsForProductBrws.quantity - consumedLineBrws.product_qty
-                quantsForProductBrws.write({'quantity': newQty})
-                self.createConterpart()
-                break
-
-    def createConterpart(self):
-        pass
+        product_productObj = self.env['product.product']
+        if line.state == 'cancel':
+            return
+        prodBrws = line.product_id
+        for raw_bom in manufacturingObj.stock_bom_ids:
+            if prodBrws.id == raw_bom.source_product_id:
+                for product_id in product_productObj.browse(raw_bom.raw_product_id):
+                    quantsForProduct = self.getStockQuant(stockQuantObj, line.location_id.id, product_id)
+                    for quantsForProductBrws in quantsForProduct:
+                        newQty = quantsForProductBrws.quantity - manufacturingObj.getQuantToRemove(product_id, qty_produced)
+                        quantsForProductBrws.write({'quantity': newQty})
+                        break
 
     def getStockQuant(self, stockQuantObj, lineId, prodBrws):
         quantsForProduct = stockQuantObj.search([
@@ -129,19 +104,32 @@ class StockPicking(models.Model):
             ('product_id', '=', prodBrws.id)])
         return quantsForProduct
 
-    def action_generate_backorder_wizard(self):
-        res = super(StockPicking, self).action_generate_backorder_wizard()
-        if self.isIncoming(self):
-            objProduction = self.env['mrp.production'].search([('id', '=', self.sub_production_id)])
-            if objProduction.state == 'external':
-                self.removeMaterialFromSupplier(objProduction)
-        return res
+    @api.multi
+    def moveMaterialFromLine(self, line, remove=True):
+        stockQuantObj = self.env['stock.quant']
+        if line.state == 'cancel':
+            return
+        prodBrws = line.product_id
+        quantsForProduct = self.getStockQuant(stockQuantObj, line.location_id.id, prodBrws)
+        for quantsForProductBrws in quantsForProduct:
+            out_qty = line.product_qty
+            if remove:
+                newQty = quantsForProductBrws.quantity - out_qty
+            else:
+                newQty = quantsForProductBrws.quantity + out_qty
+            quantsForProductBrws.write({'quantity': newQty})
+            return out_qty
+        return 0.0
 
     def action_done(self):
         res = super(StockPicking, self).action_done()
-        if self.isIncoming(self):
+        if self.isIncoming():
             objProduction = self.env['mrp.production'].search([('id', '=', self.sub_production_id)])
-            if objProduction.state == 'external':
+            for line in self.move_lines:
+                if objProduction and objProduction.state == 'external':
+                    if line.mrp_production_id == objProduction.id:
+                        qty_managed = self.moveMaterialFromLine(line, remove=False)
+                        self.removeMaterialFromSupplier(line, objProduction, qty_managed)
+            if objProduction.state == 'external' and objProduction.isPicksInDone():
                 objProduction.button_mark_done()
-            self.removeMaterialFromSupplier(objProduction)
         return res

@@ -43,12 +43,43 @@ from datetime import timedelta
 from odoo.tools import DEFAULT_SERVER_DATETIME_FORMAT
 
 
-class MrpProduction(models.Model):
+class StockBom(models.Model):
+    _name = 'stock.bom'
+    source_product_id = fields.Integer("Source Product id")
+    raw_product_id = fields.Integer("Source Product id")
+    quantity = fields.Float("Product Quantity")
+    mrp_production_id = fields.Many2one('mrp.production',
+                                        'Related Production')
 
-    _name = "mrp.production"
-    _inherit = ['mrp.production']
+
+class MrpProduction(models.Model):
+    _inherit = 'mrp.production'
 
     state = fields.Selection(selection_add=[('external', 'External Production')])
+    stock_bom_ids = fields.One2many('stock.bom',
+                                    'mrp_production_id',
+                                    string='Stock Boms',
+                                    ondelete="cascade")
+
+    @api.model
+    def createStockMoveBom(self):
+        """
+            create line for the bom
+        """
+        stock_move_bomObj = self.env['stock.bom']
+        for bom_line in self.bom_id.bom_line_ids:
+            vals = {'source_product_id': self.product_id.id,
+                    'raw_product_id': bom_line.product_id.id,
+                    'quantity': bom_line.product_qty,
+                    'mrp_production_id': self.id}
+            stock_move_bomObj.create(vals)
+
+    @api.model
+    def getQuantToRemove(self, product_id, qty):
+        product_id_id = product_id.id
+        for stock_move in self.stock_bom_ids:
+            if stock_move.raw_product_id == product_id_id:
+                return stock_move.quantity * qty
 
     @api.multi
     def _getDefaultPartner(self):
@@ -108,6 +139,17 @@ class MrpProduction(models.Model):
             'context': newContext,
             'domain': [('id', 'in', self.external_pickings.ids)],
         }
+
+    @api.model
+    def isPicksInDone(self):
+        isOut = False
+        for stock_picking in self.external_pickings:
+            if stock_picking.isIncoming():
+                if stock_picking.state != 'done':
+                    return False
+                else:
+                    isOut = True
+        return isOut
 
     @api.model
     @api.returns('self', lambda value: value.id)

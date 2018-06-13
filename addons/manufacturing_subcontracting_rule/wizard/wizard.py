@@ -415,6 +415,7 @@ class MrpProductionWizard(models.TransientModel):
             stockMove.sale_line_id = outMove.sale_line_id
             newStockLines_ids.append(stockMove.id)
             newStockLines.append(stockMove)
+        productionBrws.createStockMoveBom()
         stock_pick.write({'move_lines': [(6, False, newStockLines_ids)]})
         return stock_pick
 
