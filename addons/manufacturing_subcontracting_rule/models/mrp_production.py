@@ -151,15 +151,6 @@ class MrpProduction(models.Model):
                     isOut = True
         return isOut
 
-    @api.model
-    @api.returns('self', lambda value: value.id)
-    def create(self, vals):
-        return super(MrpProduction, self).create(vals)
-
-    @api.multi
-    def write(self, vals):
-        return super(MrpProduction, self).write(vals)
-
     def getSupplierLocation(self):
         for lock in self.env['stock.location'].search([('usage', '=', 'supplier'),
                                                        ('active', '=', True),
@@ -203,7 +194,6 @@ class MrpProduction(models.Model):
         return self.createProductionLocation(locationName)
 
     def createProductionLocation(self, locationName):
-
         def getParentLocation():
             locations = locationObj.with_context({'lang': 'en_US'}).search([
                 ('usage', '=', 'supplier'),
@@ -262,10 +252,6 @@ class MrpProduction(models.Model):
         for manOrderBrws in self:
             stockPickList = stockPickingObj.search([('origin', '=', manOrderBrws.name)])
             for pickBrws in stockPickList:
-                if pickBrws.inventory_id.status == 'done':
-                    raise UserError("Unable to cancel a done Inventory move")
-                pickBrws.inventory_id.action_cancel_draft()
-                pickBrws.inventory_id.unlink()
                 pickBrws.move_lines.unlink()
                 pickBrws.action_cancel()
                 pickBrws.unlink()
