@@ -11,7 +11,7 @@ from odoo import fields
 from odoo import models
 
 
-class SaleOrderLine(models.Model):
+class SaleMove(models.Model):
     _inherit = 'stock.move'
     #
     requested_date = fields.Datetime(string="Customer Request",

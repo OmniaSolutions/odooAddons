@@ -9,10 +9,27 @@
 
 from odoo import api
 from odoo import models
+from odoo import fields
 
 
 class SaleOrder(models.Model):
     _inherit = 'sale.order'
+
+    @api.multi
+    def _is_out_of_request_date(self):
+        outMsg = []
+        for line in self.order_line:
+            if line.lineIsOutRequestDate():
+                outMsg.append("""<div style="background-color:red;font-size: 20px;color:white">Product <b>[%r]</b> in late</div><br/>""" % line.name)
+        htmlBody = ""
+        found = False
+        for line in outMsg:
+            htmlBody += line
+            found = True
+        if found:
+            self.is_out_of_request_date = htmlBody
+    is_out_of_request_date = fields.Html(string="Check if the move line request date is different from expected date",
+                                         compute=_is_out_of_request_date)
 
     @api.multi
     @api.onchange('requested_date')

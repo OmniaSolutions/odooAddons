@@ -7,9 +7,11 @@
 # Copyright 2018 OmniaSolutions S.N.C di Boscolo Matteo & C info@omniasolutions.eu
 # License AGPL-3.0 or later (https://www.gnu.org/licenses/agpl.html).
 
+from datetime import datetime
 from odoo import api
 from odoo import fields
 from odoo import models
+from odoo.tools import DEFAULT_SERVER_DATETIME_FORMAT
 
 
 class SaleOrderLine(models.Model):
@@ -33,3 +35,13 @@ class SaleOrderLine(models.Model):
         if res.order_id.requested_date and not res.requested_date:
             res.write({'requested_date': res.order_id.requested_date})
         return res
+
+    @api.model
+    def lineIsOutRequestDate(self):
+        for stock_move in self.env['stock.move'].search([('sale_line_id', '=', self.id)]):
+            if stock_move.requested_date and stock_move.date_expected:
+                rDate = datetime.strptime(stock_move.requested_date, DEFAULT_SERVER_DATETIME_FORMAT)
+                aDate = datetime.strptime(stock_move.date_expected, DEFAULT_SERVER_DATETIME_FORMAT)
+                if rDate < aDate:
+                    return True
+        return False
