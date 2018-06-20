@@ -19,25 +19,21 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 ##############################################################################
-
 '''
-Created on Jul 21, 2017
+Created on Sep 1, 2017
 
 @author: daniel
 '''
-from openerp.tools import DEFAULT_SERVER_DATETIME_FORMAT
-import datetime
+from openerp.exceptions import UserError
 from openerp import models
-from openerp import api
 from openerp import fields
 from openerp import _
+from openerp import api
 
 
-class ManufacturingOrderOmnia(models.Model):
-    _inherit = 'mrp.production'
+class ProductTemplate(models.Model):
+    _name = "product.template"
+    _inherit = "product.template"
+    
+    parent_product = fields.Many2one('product.template', string=_('Parent product'))
 
-    @api.multi
-    def auto_reordering_rules_calculation(self):
-        self.env['procurement.order.omnia'].auto_reordering_rules_calculation(forceMrpBrws=self)
-
-# vim:expandtab:smartindent:tabstop=4:softtabstop=4:shiftwidth=4:

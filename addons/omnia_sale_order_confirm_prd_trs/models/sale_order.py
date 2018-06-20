@@ -52,7 +52,7 @@ class SaleOrder(models.Model):
             if machinePresent or machineNoProdPresent:
                 if not order.project_id:
                     newBaseName = self.getNextAnalyticNumber()
-                    newAnalyticAccount = order.createRelatedAnalyticAccount(newBaseName)
+                    newAnalyticAccount = order.createRelatedAnalyticAccount(newBaseName, order.partner_id)
                     if not newAnalyticAccount:
                         raise UserError(_('Unable to create analytic account!'))
                     newWarehouse = order.createRelatedWarehouse(newBaseName)
@@ -62,22 +62,38 @@ class SaleOrder(models.Model):
                     order.warehouse_id = newWarehouse.id
                 else:
                     newBaseName = order.project_id.name
-                    order.warehouse_id = self.getRelatedWarehouse(newBaseName)
+                    if not order.warehouse_id:
+                        order.warehouse_id = self.getRelatedWarehouse(newBaseName)
                 if machinePresent:
                     order.setupAnalyticLines(newBaseName)
         res = super(SaleOrder, self).action_confirm()
         return res
 
     @api.multi
+    def _create_analytic_account(self, prefix=None):
+        '''
+            Used to create account analytic account for service products and set as task
+        '''
+        orderName = self.getNextAnalyticNumber()
+        for order in self:
+            analytic = self.env['account.analytic.account'].create({
+                'name': orderName,
+                'code': order.client_order_ref,
+                'company_id': order.company_id.id,
+                'partner_id': order.partner_id.id
+            })
+            order.project_id = analytic
+
+    @api.multi
     def getNextAnalyticNumber(self):
         newSequenceNumber = self.env['ir.sequence'].next_by_code('MATRICOLA')
-        return unicode(newSequenceNumber) + '/' + unicode(date.today().year)
-        
+        return unicode(date.today().year) + '/' + unicode(newSequenceNumber)
+
     @api.multi
-    def createRelatedAnalyticAccount(self, newBaseName):
+    def createRelatedAnalyticAccount(self, newBaseName, partner_id):
         toCreate = {
             'name': newBaseName,
-            'code': newBaseName,
+            'partner_id': partner_id.id,
             }
         return self.env['account.analytic.account'].create(toCreate)
 
@@ -120,21 +136,37 @@ class SaleOrder(models.Model):
         for line in self.order_line:
             if self.getProductCategoryName(line) == 'MACHINE':
                 for _elem in range(int(line.product_uom_qty)):
-                    newProdBrws = self.createNewCodedProduct(newBaseName, count, line.product_id)
+                    oldProdBrws = line.product_id
+                    newProdBrws = self.createNewCodedProduct(newBaseName, count, oldProdBrws)
                     newSaleOrderLine = line.copy(default={'order_id': line.order_id.id})
                     newSaleOrderLine.product_id = newProdBrws.id
+                    newSaleOrderLine.name = newSaleOrderLine.product_id.description_sale
+                    self.moveOldBoms(oldProdBrws, newProdBrws)
                     newSaleOrderLine.product_uom_qty = 1.0
                     count = count + 1
                 line.unlink()
+
+    @api.multi
+    def moveOldBoms(self, oldProdBrws, newProdBrws):
+        for bomBrws in oldProdBrws.bom_ids:
+            newBomBrws = bomBrws.copy()
+            newBomBrws.product_tmpl_id = newProdBrws.product_tmpl_id
+            newBomBrws.product_id = newProdBrws.id
         
     @api.multi
     def createNewCodedProduct(self, newBaseName, count, oldProdBrws):
-        newProductName = unicode('{:03.0f}'.format(count)) + '/' + unicode(newBaseName)
+        newProductName = unicode(newBaseName) + '/' + unicode('{:03.0f}'.format(count))
         toCreate = {
             'name': newProductName,
-            'route_ids': [(6, False, self.getRoutesToSet())]
+            'route_ids': [(6, False, self.getRoutesToSet())],
+            'parent_product': oldProdBrws.product_tmpl_id.id,
+            'description': '[%s] %s' % (oldProdBrws.name, oldProdBrws.description_sale or '-'),
+            'description_sale': '[%s] %s' % (oldProdBrws.name, oldProdBrws.description_sale or '-')
             }
-        return oldProdBrws.copy(default=toCreate)
+        try:
+            return oldProdBrws.copy(oldProdBrws.id, toCreate)
+        except:
+            return oldProdBrws.copy(toCreate)
     
     @api.multi
     def getRoutesToSet(self):

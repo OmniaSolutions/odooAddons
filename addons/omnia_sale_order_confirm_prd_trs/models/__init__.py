@@ -21,3 +21,4 @@
 ##############################################################################
 import sale_order
 import stock_warehouse
+import product_product
