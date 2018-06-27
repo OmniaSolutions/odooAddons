@@ -1,0 +1,2 @@
+id,perm_create,perm_unlink,group_id/id,name,model_id/id,perm_read,perm_write
+msr_omnia1,True,True,mrp.group_mrp_user,msr_stock_bom,manufacturing_subcontracting_rule.model_stock_bom,True,True
