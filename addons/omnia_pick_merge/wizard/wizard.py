@@ -41,6 +41,8 @@ class TmpStockMove(models.TransientModel):
     partner_id = fields.Integer(string=_('Partner id'))
     picking_type_id = fields.Integer(string=_('Picking id'))
     pick_origin = fields.Text(_('Source'))
+    validate = fields.Boolean(_('auto validate'),
+                              default=True)
 
     @api.model
     def populateFromPick(self, pick_ids):
@@ -83,15 +85,21 @@ class TmpStockMove(models.TransientModel):
         tmpl_move = self.env['stock.move']
         for pick_line in self.ref_stock_move:
             old_move_id = tmpl_move.search([('id', '=', pick_line.ref_stock_move_id)])
-            old_move_id.copy({'picking_id': out_pick.id,
-                              'product_uom_qty': pick_line.move_quantity,
-                              'from_move_id': old_move_id.id})
             if old_move_id.product_qty != pick_line.move_quantity:
                 if old_move_id.product_qty < pick_line.move_quantity:
                     raise UserError(_('Unable to set quantity less then 0'))
-                old_move_id.write({'product_uom_qty': old_move_id.product_qty - pick_line.move_quantity})
+            old_move_id.copy({'picking_id': out_pick.id,
+                              'product_uom_qty': pick_line.move_quantity,
+                              'from_move_id': old_move_id.id,
+                              'quantity_done': pick_line.move_quantity})
             if old_move_id.picking_id not in out_pick.merged_pick_ids:
                 out_pick.merged_pick_ids = [(4, old_move_id.picking_id.id)]
+            if old_move_id.product_qty - pick_line.move_quantity == 0:
+                old_move_id._action_cancel()
+            else:
+                old_move_id.write({'product_uom_qty': old_move_id.product_qty - pick_line.move_quantity})
+        if self.validate:
+            out_pick.button_validate()
 
         return {
             'name': _("New Move"),

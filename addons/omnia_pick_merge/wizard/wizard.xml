@@ -23,6 +23,7 @@
                         <field name="date_expected"  readonly="True"/>
                     </form>
                 </field>
+                <field name="validate"/>
             </group>
             <separator string=""/>
             <footer>
