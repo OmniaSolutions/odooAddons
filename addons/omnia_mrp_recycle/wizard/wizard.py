@@ -98,5 +98,8 @@ class StockRecicleProduct(models.Model):
             'propagate': False,
             'recycle_id': self.id
         })
+        moveBrowe._action_confirm()
+        moveBrowe.quantity_done = prodQty
         moveBrowe._action_done()
+        return moveBrowe
 
