@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+	<data >
+        <record id="location_to_recycle" model="stock.location">
+            <field name="name">Recycles</field>
+            <field name="location_id" ref="stock.stock_location_locations_virtual"/>
+            <field name="usage">production</field>
+            <field name="company_id"></field>
+        </record>
+	</data>
+
+	<data noupdate="1"> 
+	    <record id="recicle_numbering" model="ir.sequence">
+	        <field name="name">RECICLE_NUMBERING</field> 
+	        <field name="code">RECICLE_NUMBERING</field>
+	        <field name="prefix">R/</field>
+	        <field name="active">True</field>
+	        <field name="padding">5</field>
+	        <field name="number_increment">1</field>
+	    </record>
+	</data>
+
+</odoo>
