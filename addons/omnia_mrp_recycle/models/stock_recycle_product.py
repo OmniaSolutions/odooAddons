@@ -13,17 +13,17 @@ from odoo.exceptions import UserError
 
 
 class StockRecicleProduct(models.Model):
-    _name = "stock.recicle_product"
+    _name = "stock.recycle_product"
 
     @api.model
     def _compute_default_from_location(self):
         scrappedLoc = False
         try:
             scrappedLoc = self.env.ref('stock.stock_location_scrapped')
-        except:
-            pass
+        except Exception as ex:
+            logging.error("stock.stock_location_scrapped not found !! %r " % ex)
         return scrappedLoc
-    
+
     @api.model
     def _compute_default_to_location(self):
         stockLoc = False
@@ -31,12 +31,25 @@ class StockRecicleProduct(models.Model):
             company = self.env.user.company_id
             partner = company.partner_id
             stockLoc = partner.property_stock_customer
-        except:
-            pass
+        except Exception as ex:
+            logging.warning("Unable to _compute_default_to_location %r " % ex)
         return stockLoc
 
-    # For multi-company create company from and company to?
-    # And recycle location has to change?
+    @api.model
+    def create(self, vals):
+        if not vals.get('name', False):
+            vals['name'] = self.env['ir.sequence'].next_by_code("RECICLE_NUMBERING")
+        return super(StockRecicleProduct, self).create(vals)
+
+    @api.multi
+    def unlink(self):
+        for move in self.env['stock.move'].search([('recycle_id', 'in', self.ids)]):
+            move._action_cancel()
+            move.sudo().unlink()
+        return super(StockRecicleProduct, self).unlink()
+
+    #  For multi-company create company from and company to?
+    #  And recycle location has to change?
     name = fields.Char(_('name'), readonly=True)
     description = fields.Text(_('Notes'))
     from_product_id = fields.Many2one('product.product', _('Product'), required=True)
@@ -47,14 +60,28 @@ class StockRecicleProduct(models.Model):
     to_location = fields.Many2one('stock.location', _('To Location'), required=True, default=_compute_default_to_location)
     from_product_uom = fields.Many2one('product.uom', _('Unit of measure'), related='from_product_id.uom_id')
     to_product_uom = fields.Many2one('product.uom', _('Unit of measure'), related='to_product_id.uom_id')
+    state = fields.Selection([('draft', 'Draft'),
+                              ('confirmed', 'Confirmed')],
+                             default='draft')
 
     @api.multi
-    def button_recicle(self):
+    def action_confirm(self):
+        for recycle_product_id in self:
+            recycle_product_id.state = 'confirmed'
+            recycle_product_id.button_recycle()
+
+    @api.multi
+    def action_reset(self):
+        for recycle_product_id in self:
+            recycle_product_id.state = 'draft'
+            recycle_product_id.button_reset()
+
+    @api.one
+    def button_recycle(self):
         recycleLoc = self.env.ref('omnia_mrp_recycle.location_to_recycle')
         moveObj = self.env['stock.move']
         self.createMove(moveObj, self.from_product_id, self.from_qty, self.from_location, recycleLoc)
         self.createMove(moveObj, self.to_product_id, self.to_qty, recycleLoc, self.to_location)
-        self.setupNewName()
         return {
             'name': _("Recycle Moves"),
             'view_type': 'form',
@@ -62,10 +89,6 @@ class StockRecicleProduct(models.Model):
             'res_model': self._name,
             'type': 'ir.actions.act_window',
         }
-
-    @api.multi
-    def setupNewName(self):
-        self.name = unicode(self.env['ir.sequence'].next_by_code("RECICLE_NUMBERING"))
 
     @api.multi
     def button_open_moves(self):
@@ -78,7 +101,7 @@ class StockRecicleProduct(models.Model):
             'type': 'ir.actions.act_window',
             'domain': [('id', 'in', moves.ids)],
         }
-        
+
     @api.one
     def createMove(self, moveObj, prodBrws, prodQty, location_from, location_dest):
         dateNow = datetime.datetime.now()
@@ -102,4 +125,3 @@ class StockRecicleProduct(models.Model):
         moveBrowe.quantity_done = prodQty
         moveBrowe._action_done()
         return moveBrowe
-

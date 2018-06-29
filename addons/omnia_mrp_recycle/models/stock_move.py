@@ -3,7 +3,8 @@ Created on 5 Jun 2018
 
 @author: dsmerghetto
 '''
-from odoo import api, fields, models, _
+from odoo import fields
+from odoo import models
 
 
 class StockMove(models.Model):
