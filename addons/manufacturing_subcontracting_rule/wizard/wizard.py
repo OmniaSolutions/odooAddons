@@ -405,18 +405,14 @@ class MrpProductionWizard(models.TransientModel):
                                      localStockLocation,
                                      customerProductionLocation)
         stock_pick = stock_pikingObj.create(toCreate)
-        newStockLines_ids = []
-        newStockLines = []
         for outMove in incomingMoves:
-            stockMove = outMove.copy(default={'production_id': False,
-                                              'raw_material_production_id': False})
-            stockMove.location_id = customerProductionLocation.id
-            stockMove.location_dest_id = localStockLocation.id
-            stockMove.sale_line_id = outMove.sale_line_id
-            newStockLines_ids.append(stockMove.id)
-            newStockLines.append(stockMove)
+            outMove.copy(default={'location_id': customerProductionLocation.id,
+                                  'location_dest_id': localStockLocation.id,
+                                  'sale_line_id': outMove.sale_line_id,
+                                  'production_id': False,
+                                  'raw_material_production_id': False,
+                                  'picking_id': stock_pick.id})
         productionBrws.createStockMoveBom()
-        stock_pick.write({'move_lines': [(6, False, newStockLines_ids)]})
         return stock_pick
 
     def updatePickOUT(self, values, partner_id, localStockLocation, customerProductionLocation):
