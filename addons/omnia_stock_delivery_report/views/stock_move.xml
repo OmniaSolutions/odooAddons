@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<openerp>
+    <data>
+        <report id="report_stock_move"
+                string="Moves"
+                model="stock.move"
+                name="omnia_stock_delivery_report.stock_move"
+                report_type="qweb-html"
+                file=""
+                />
+                
+        <record id="omnia_stock_delivery_report.stock_move_action" model="ir.actions.act_window">
+            <field name="name">Stock</field>
+            <field name="res_model">stock.move</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="view_type">form</field>
+            <field name="view_id" ref="stock.view_move_tree"/>
+            <field name="search_view_id" ref="stock.view_move_search"/>
+            <field name="domain"><![CDATA[['&','&','&',['state','in',['assigned','confirmed','waiting']],['sale_line_id','!=',False],['location_id.usage','in',['internal','transit']],['location_dest_id.usage','not in',['internal','transit']]]]]></field>
+            <field name="context">{}</field>
+        </record>
+        
+        <menuitem 
+            name="Undone Move"
+            action="stock_move_action" 
+            id="report_stock_move_menu" 
+            parent="stock.menu_warehouse_report"
+            sequence="130"/>
+	</data>
+</openerp>   

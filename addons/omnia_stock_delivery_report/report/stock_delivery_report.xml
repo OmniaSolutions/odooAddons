@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="omnia_stock_delivery_report.stock_move">
+	    <t t-call="web.html_container">
+	        <t t-set="data_report_dpi" t-value="110"/>
+	        <t t-set="orientation" t-value="Landscape"/>
+	        <t t-call="web.external_layout">
+	            <div style="border-bottom: 1px solid black;"></div>
+	            <div class="page" align="center">
+			        <t t-foreach="docs.sorted(key=lambda a:(a.sale_line_id.order_id.partner_id))" t-as="o">
+			            <table class="table table-bordered">
+				            <thead>
+				                <tr>
+				                    <th id="tr1h">Partner</th>
+				                    <th id="tr2h">Product</th>
+				                    <th id="tr3h">Barcode</th>
+				                    <th id="tr4h">Stock Qty</th>
+									<th id="tr5h">Missing Qty</th>
+									<th id="tr6h">Delivery date</th>
+				                </tr>
+				            </thead>
+			                <tbody>
+			                    <tr>
+			                        <td id="tr1" t-esc="o.sale_line_id.order_id.partner_id.name"/>
+			                        <td id="tr2" t-esc="o.product_id.display_name"/>
+			                        <td id="tr3"><img t-if="o.product_id.default_code" t-att-src="'/report/barcode/?type=%s&amp;value=%s&amp;width=%s&amp;height=%s' % ('Code128', o.product_id.default_code, 300, 50)" style="width:100%;height:35%;"/></td>
+			                        <td id="tr4" t-esc="o.ordered_qty"/>
+			                        <td id="tr5" t-esc="o.ordered_qty - o.quantity_done"/>
+			                        <td id="tr6" t-esc="o.date_expected"/>                
+			                    </tr>
+			                </tbody>
+			            </table>
+			        </t>
+			      </div>
+			 </t>
+	   </t>
+    </template>
+</odoo>
