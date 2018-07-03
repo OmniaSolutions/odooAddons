@@ -25,6 +25,7 @@
             action="stock_move_action" 
             id="report_stock_move_menu" 
             parent="stock.menu_warehouse_report"
+            groups="stock.group_stock_user"
             sequence="130"/>
 	</data>
 </openerp>   
