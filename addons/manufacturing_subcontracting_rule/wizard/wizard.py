@@ -244,7 +244,7 @@ class MrpProductionWizard(models.TransientModel):
                         'warehouse_id': lineBrws.warehouse_id.id,
                         'production_id': productionBrws.id,
                         'product_uom': lineBrws.product_uom.id,
-                        'date_expected': datetime.datetime.now(),
+                        'date_expected': fields.Datetime.from_string(self.request_date),
                         'mrp_production_id': productionBrws.id}
                 move_finished_ids.append((0, False, vals))
         product_delay = 0.0
