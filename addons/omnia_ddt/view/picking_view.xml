@@ -26,12 +26,13 @@
 							<field name="carriage_condition_id"/>
 							<field name="ddt_reason"/>							
 						</group>
+                        <label for="show_ddt_button"/>
+                        <field name="show_ddt_button" groups="base.group_no_one"/>
 						<label for="note_ddt"/>
 						<field name="note_ddt"/>
-						<field name="show_ddt_button" invisible="True"/>
 					</page>
 				</page>
-            	<xpath expr="/form/header//button[@name='%(stock.act_stock_return_picking)d']" position="after">
+            	<xpath expr="/form/header//button[last()]" position="after">
 	            	<button name="button_ddt_number" 
 	            			string="Stacca DDT" 
 	            			attrs="{'invisible': [('show_ddt_button', '=', False)]}" 
