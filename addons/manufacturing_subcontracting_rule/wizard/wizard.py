@@ -154,8 +154,9 @@ class MrpProductionWizard(models.TransientModel):
                                     readonly=True)
     request_date = fields.Datetime(string=_("Request date for the product"),
                                    default=lambda self: fields.datetime.now())
-    create_purchese_order = fields.Boolean(_('Automatic create Purchase'))
+    create_purchese_order = fields.Boolean(_('Automatic create Purchase'), default=True)
     merge_purchese_order = fields.Boolean(_('Merge Purchase'), default=True)
+    confirm_purchese_order = fields.Boolean(_('Confirm Purchase'), default=True)
 
     @api.onchange('consume_product_id')
     def _consume_product_id(self):
@@ -317,6 +318,8 @@ class MrpProductionWizard(models.TransientModel):
                       }
             new_product_line = self.env['purchase.order.line'].create(values)
             new_product_line.onchange_product_id()
+        if self.confirm_purchese_order:
+            obj_po.button_confirm()
 
     @api.model
     def getNewExternalProductInfo(self):

@@ -17,8 +17,11 @@
 	        	</field>
 	        	<field name="operation_type"/>
 	        	<field name="request_date"/>
-	        	<field name="create_purchese_order"/>
-	        	<field name="merge_purchese_order"/>
+	        	<group col="6">
+    	        	<field name="create_purchese_order"/>
+    	        	<field name="merge_purchese_order"/>
+    	        	<field name="confirm_purchese_order"/>
+	        	</group>
 	        	<field name="consume_product_id" attrs="{'invisible': [('operation_type', '!=', 'consume')], 'required': [('operation_type', '=', 'consume')]}"/>
 	        	<field name="consume_bom_id" attrs="{'invisible': [('operation_type', '!=', 'consume')], 'required': [('operation_type', '=', 'consume')]}"
 	        			domain="[('product_tmpl_id', '=', consume_product_id.product_tmpl_id)]"/>
