@@ -38,7 +38,10 @@
     'website': 'http://www.OmniaSolutions.eu',
     'depends': ['mrp',
                 'stock'],
-    'data': ['views/data.xml',
+    'data': [# security
+             'security/ir.model.access.csv',
+             # views
+             'views/data.xml',
              'views/stock_recycle_product.xml'],
     'installable': True,
     'application': False,
