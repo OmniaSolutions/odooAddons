@@ -247,28 +247,27 @@ class MrpProductionWizard(models.TransientModel):
                         'date_expected': fields.Datetime.from_string(self.request_date),
                         'mrp_production_id': productionBrws.id}
                 move_finished_ids.append((0, False, vals))
-        product_delay = 0.0
-        for lineBrws in self.move_raw_ids:
-            productsToCheck.append(lineBrws.product_id.id)
-            product_delay = lineBrws.product_id.produce_delay
-            vals = {
-                'name': lineBrws.name,
-                'company_id': lineBrws.company_id.id,
-                'product_id': lineBrws.product_id.id,
-                'product_uom_qty': lineBrws.product_uom_qty,
-                'location_id': lineBrws.location_id.id,
-                'location_dest_id': lineBrws.location_dest_id.id,
-                'partner_id': external_partner.partner_id.id,
-                'note': lineBrws.note,
-                'state': 'confirmed',
-                'origin': lineBrws.origin,
-                'warehouse_id': lineBrws.warehouse_id.id,
-                'production_id': False,
-                'product_uom': lineBrws.product_uom.id,
-                'date_expected': fields.Datetime.from_string(self.request_date) - relativedelta(days=product_delay or 0.0),
-                'mrp_production_id': productionBrws.id
-            }
-            move_raw_ids.append((0, False, vals))
+            product_delay = external_partner.delay
+            for lineBrws in self.move_raw_ids:
+                productsToCheck.append(lineBrws.product_id.id)
+                vals = {
+                    'name': lineBrws.name,
+                    'company_id': lineBrws.company_id.id,
+                    'product_id': lineBrws.product_id.id,
+                    'product_uom_qty': lineBrws.product_uom_qty,
+                    'location_id': lineBrws.location_id.id,
+                    'location_dest_id': lineBrws.location_dest_id.id,
+                    'partner_id': external_partner.partner_id.id,
+                    'note': lineBrws.note,
+                    'state': 'confirmed',
+                    'origin': lineBrws.origin,
+                    'warehouse_id': lineBrws.warehouse_id.id,
+                    'production_id': False,
+                    'product_uom': lineBrws.product_uom.id,
+                    'date_expected': fields.Datetime.from_string(self.request_date) - relativedelta(days=product_delay or 0.0),
+                    'mrp_production_id': productionBrws.id
+                }
+                move_raw_ids.append((0, False, vals))
         productionBrws.write({'move_raw_ids': move_raw_ids,
                               'move_finished_ids': move_finished_ids,
                               'state': 'external',
