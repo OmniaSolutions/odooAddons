@@ -218,15 +218,8 @@ class MrpProduction(models.Model):
     @api.multi
     def button_produce_externally(self):
         values = {}
-        location = self.routing_id.location_id.id
-        partner = self.routing_id.location_id.partner_id or self.bom_id.external_partner
-        if not partner:
-            partner = self.env['res.partner'].search([], limit=1)
-        if not location:
-            location = self.getSupplierLocation()
-        location = self.checkCreatePartnerWarehouse(partner)
-        values['move_raw_ids'] = [(6, 0, self.copyAndCleanLines(self.move_raw_ids, location.id, self.location_src_id.id))]
-        values['move_finished_ids'] = [(6, 0, self.copyAndCleanLines(self.move_finished_ids, self.location_src_id.id, location.id))]
+        values['move_raw_ids'] = [(6, 0, self.copyAndCleanLines(self.move_raw_ids))]
+        values['move_finished_ids'] = [(6, 0, self.copyAndCleanLines(self.move_finished_ids))]
         values['consume_product_id'] = self.product_id.id
         values['consume_bom_id'] = self.bom_id.id
         values['external_warehouse_id'] = self.location_src_id.get_warehouse().id

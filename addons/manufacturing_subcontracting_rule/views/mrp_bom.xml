@@ -6,7 +6,6 @@
 	        <field name="inherit_id" ref="mrp.mrp_bom_form_view"/>
 	        <field name="arch" type="xml">
                 <field name="type" position="after">
-                    <field name="external_partner"/>
                     <field name="external_product"/>
                 </field>
 	        </field>
