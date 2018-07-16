@@ -40,7 +40,7 @@ Manage DDT documents
     'author': 'OmniaSolutions.eu',
     'maintainer': 'OmniaSolutions.eu',
     'website': 'http://www.OmniaSolutions.eu',
-    'depends': ['sale', 'stock'],
+    'depends': ['sale', 'stock', 'delivery'],
     'data': ['data/carriage_condition_data.xml',
              'data/goods_description_data.xml',
              'data/transportation_reason_data.xml',
