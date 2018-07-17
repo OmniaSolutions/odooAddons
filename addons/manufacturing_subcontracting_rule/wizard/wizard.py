@@ -318,6 +318,7 @@ class MrpProductionWizard(models.TransientModel):
             new_product_line = self.env['purchase.order.line'].create(values)
             new_product_line.onchange_product_id()
             new_product_line.date_planned = self.request_date
+            new_product_line.product_qty = lineBrws.product_uom_qty
         if self.confirm_purchese_order:
             obj_po.button_confirm()
 
