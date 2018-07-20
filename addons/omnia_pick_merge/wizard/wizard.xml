@@ -7,15 +7,19 @@
             <group>
                 <field name="ref_stock_move">
                     <tree editable="bottom">
-                        <field name="ref_stock_move_id" readonly="True"/>
+                        <field name="sale_order_name" readonly="True"/>
+                        <field name="sale_order_customer_name" readonly="True"/>
+                        <field name="ref_stock_move_id" readonly="True" invisible="True"/>
                         <field name="product_name" readonly="True"/>
                         <field name="sale_order_line_id" invisible="True"/>
-                        <field name="product_uom_qty" readonly="True"/>
+                        <field name="product_uom_qty" invisible="True"/>
                         <field name="move_quantity"/>
                         <field name="requested_date" readonly="True"/>
                         <field name="date_expected"  readonly="True"/>
                     </tree>
                     <form>
+                        <field name="sale_order_name" readonly="True"/>
+                        <field name="sale_order_customer_name" readonly="True"/>
                         <field name="product_name" readonly="True"/>
                         <field name="product_uom_qty" readonly="True"/>
                         <field name="move_quantity"/>
