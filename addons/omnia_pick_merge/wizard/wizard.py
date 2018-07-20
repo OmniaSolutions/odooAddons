@@ -43,8 +43,8 @@ class TmpStockMove(models.TransientModel):
     partner_id = fields.Integer(string=_('Partner id'))
     picking_type_id = fields.Integer(string=_('Picking id'))
     pick_origin = fields.Text(_('Source'))
-    validate = fields.Boolean(_('auto validate'),
-                              default=True)
+    validate = fields.Boolean(_('Auto validate'),
+                              default=False)
 
     @api.model
     def populateFromPick(self, pick_ids):
