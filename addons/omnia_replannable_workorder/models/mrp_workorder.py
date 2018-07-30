@@ -37,7 +37,7 @@ class MrpWorkorderExtension(models.Model):
     _inherit = 'mrp.workorder'
 
     @api.multi
-    @api.depends('move_raw_ids.name')
+    @api.depends('move_raw_ids', 'production_id')
     def get_raw_material(self):
         for mrp_workorder in self:
             out_raw = ""
@@ -50,3 +50,10 @@ class MrpWorkorderExtension(models.Model):
     raw_material_name = fields.Char("Row material",
                                     compute="get_raw_material",
                                     store=True)
+
+    @api.multi
+    def write(self, vals):
+        ret = super(MrpWorkorderExtension, self).write(vals)
+        if not vals.get('raw_material_name', False):
+            self.get_raw_material()
+        return ret
