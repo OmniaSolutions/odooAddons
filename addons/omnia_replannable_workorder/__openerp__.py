@@ -1,7 +1,7 @@
 # -*- encoding: utf-8 -*-
 ##############################################################################
 #
-#    OmniaSolutions, Open Source Management Solution    
+#    OmniaSolutions, Open Source Management Solution
 #    Copyright (C) 2010-2011 OmniaSolutions (<http://www.omniasolutions.eu>). All Rights Reserved
 #    $Id$
 #
@@ -30,15 +30,13 @@
     'images': [],
     'depends': ['mrp'],
     'description': """""",
-    'data': [
-        'views/routing_operation_extension.xml',
-        'views/mrp_workorder_extension.xml',
-        'views/manufacturing_order_extension.xml',
-       ],
-    'demo': [
-        ],
-    'test': [
-        ],
+    'data': ['views/mrp_workorder.xml',
+             'views/mrp_production.xml',
+             #
+             'wizard/wizard.xml',
+             ],
+    'demo': [],
+    'test': [],
     'installable': True,
     'application': False,
     'auto_install': False,

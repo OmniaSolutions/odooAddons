@@ -28,11 +28,21 @@ Created on May 16, 2018
 
 from odoo import models
 from odoo import fields
+from odoo import api
 from odoo import _
 
 
-class Routing_operation_extension(models.Model):
-    _name = 'mrp.routing.workcenter'
-    _inherit = 'mrp.routing.workcenter'
+class StockMoveExtension(models.Model):
+    _name = 'stock.move'
+    _inherit = 'stock.move'
 
-    replannable = fields.Boolean(_('Replannable'))
+    @api.multi
+    def open_related_workorder(self):
+        self.ensure_one()
+        if self.workorder_id:
+            return {
+                "type": "ir.actions.act_window",
+                "res_model": "mrp.workorder",
+                "views": [[False, "form"]],
+                "res_id": self.workorder_id.id,
+            }

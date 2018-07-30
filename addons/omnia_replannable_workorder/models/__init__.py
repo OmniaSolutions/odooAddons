@@ -1,7 +1,7 @@
 # -*- encoding: utf-8 -*-
 ##############################################################################
 #
-#    OmniaSolutions, Open Source Management Solution    
+#    OmniaSolutions, Open Source Management Solution
 #    Copyright (C) 2010-2011 OmniaSolutions (<http://www.omniasolutions.eu>). All Rights Reserved
 #    $Id$
 #
@@ -25,8 +25,7 @@ Created on May 16, 2018
 @author: daniel
 '''
 
-from . import routing_operation_extension
-from . import mrp_workorder_extension
-from . import stock_move_extension
+from . import mrp_workorder
+from . import stock_move
 
 # vim:expandtab:smartindent:tabstop=4:softtabstop=4:shiftwidth=4:

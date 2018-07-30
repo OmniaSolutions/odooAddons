@@ -36,35 +36,17 @@ class MrpWorkorderExtension(models.Model):
     _name = 'mrp.workorder'
     _inherit = 'mrp.workorder'
 
-    @api.one
-    def checkMovesState(self):
-        operationReplannable = self.operation_id.replannable
-        if not operationReplannable:
-            return
-        for line in self.raw_prod_ids:
-            if line.state != 'assigned':
-                self.has_to_be_checked = True
-                return
-        self.has_to_be_checked = False
-
-    raw_prod_ids = fields.One2many('stock.move', inverse_name='replanning_raw_moves', string=_('Raw Moves'), track_visibility='onchange')
-    has_to_be_checked = fields.Boolean(compute='checkMovesState', string="Check move states")
-
-    def _generate_lot_ids(self):
-        self.ensure_one()
-        self.setupRawMaterials()
-        return super(MrpWorkorderExtension, self)._generate_lot_ids()
-
-    @api.one
-    def setupRawMaterials(self):
-        if not self.operation_id.replannable:
-            return
-        self.move_raw_ids.write({'replanning_raw_moves': self.id,
-                                 'state': 'draft',
-                                 })
-
     @api.multi
-    def button_check_availability(self):
-        for workOrderBrws in self:
-            workOrderBrws.raw_prod_ids.action_confirm()
-            workOrderBrws.raw_prod_ids.action_assign()
+    @api.depends('move_raw_ids.name')
+    def get_raw_material(self):
+        for mrp_workorder in self:
+            out_raw = ""
+            for stock_move in mrp_workorder.production_id.move_raw_ids:
+                if len(out_raw) > 0:
+                    out_raw += ","
+                out_raw += stock_move.product_id.display_name
+            mrp_workorder.raw_material_name = out_raw
+
+    raw_material_name = fields.Char("Row material",
+                                    compute="get_raw_material",
+                                    store=True)
