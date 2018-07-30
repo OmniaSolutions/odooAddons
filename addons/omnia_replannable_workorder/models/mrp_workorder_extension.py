@@ -1,7 +1,7 @@
 # -*- encoding: utf-8 -*-
 ##############################################################################
 #
-#    OmniaSolutions, Open Source Management Solution    
+#    OmniaSolutions, Open Source Management Solution
 #    Copyright (C) 2010-2011 OmniaSolutions (<http://www.omniasolutions.eu>). All Rights Reserved
 #    $Id$
 #
@@ -40,7 +40,7 @@ class MrpWorkorderExtension(models.Model):
     def checkMovesState(self):
         operationReplannable = self.operation_id.replannable
         if not operationReplannable:
-            return 
+            return
         for line in self.raw_prod_ids:
             if line.state != 'assigned':
                 self.has_to_be_checked = True
@@ -54,7 +54,7 @@ class MrpWorkorderExtension(models.Model):
         self.ensure_one()
         self.setupRawMaterials()
         return super(MrpWorkorderExtension, self)._generate_lot_ids()
-        
+
     @api.one
     def setupRawMaterials(self):
         if not self.operation_id.replannable:
@@ -62,18 +62,9 @@ class MrpWorkorderExtension(models.Model):
         self.move_raw_ids.write({'replanning_raw_moves': self.id,
                                  'state': 'draft',
                                  })
-#         rawRows = []
-#         for moveBrws in self.move_raw_ids:
-#             moveId = moveBrws.copy({'workorder_id': False}).id
-#             if moveId:
-#                 rawRows.append(moveId)
-#         self.raw_prod_ids = [(6, 0, rawRows)]
-#         self.move_raw_ids.action_cancel()
-#         self.raw_prod_ids.write({'workorder_id': self.id})
-        
+
     @api.multi
     def button_check_availability(self):
         for workOrderBrws in self:
             workOrderBrws.raw_prod_ids.action_confirm()
             workOrderBrws.raw_prod_ids.action_assign()
-        

@@ -1,7 +1,7 @@
 # -*- encoding: utf-8 -*-
 ##############################################################################
 #
-#    OmniaSolutions, Open Source Management Solution    
+#    OmniaSolutions, Open Source Management Solution
 #    Copyright (C) 2010-2011 OmniaSolutions (<http://www.omniasolutions.eu>). All Rights Reserved
 #    $Id$
 #
@@ -39,24 +39,23 @@ class StockMoveExtension(models.Model):
     replanning_raw_moves = fields.Many2one('mrp.workorder', string=_('Replanning Raw Moves'))
 
     @api.model
-    @api.returns('self', lambda value:value.id)
+    @api.returns('self', lambda value: value.id)
     def create(self, vals):
         createdMove = super(StockMoveExtension, self).create(vals)
         if createdMove.replanning_raw_moves:
-            createdMove.workorder_id = createdMove.replanning_raw_moves # To link to raw_moves
-            createdMove.raw_material_production_id = createdMove.replanning_raw_moves.production_id # To link to production order
+            createdMove.workorder_id = createdMove.replanning_raw_moves  # To link to raw_moves
+            createdMove.raw_material_production_id = createdMove.replanning_raw_moves.production_id  # To link to production order
         return createdMove
 
     @api.multi
     def write(self, vals):
         for move in self:
             msg = ''
-            if move.replanning_raw_moves: # Replanning change
+            if move.replanning_raw_moves:  # Replanning change
                 product_id = vals.get('product_id', None)
                 if product_id:
                     newProdBrws = self.env['product.product'].browse(product_id)
                     msg = 'Changed product %s --> %s' % (self.product_id.name, newProdBrws.name)
-                
                 productUomQty = vals.get('product_uom_qty', None)
                 if productUomQty:
                     prodBrws = self.product_id
@@ -88,4 +87,3 @@ class StockMoveExtension(models.Model):
                 "views": [[False, "form"]],
                 "res_id": self.replanning_raw_moves.id,
             }
-
