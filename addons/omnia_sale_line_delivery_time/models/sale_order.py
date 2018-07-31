@@ -36,17 +36,18 @@ from openerp import _
 class SaleOrderLine(models.Model):
     _inherit = 'sale.order.line'
 
-    @api.one
     @api.depends('customer_lead')
     def _get_default_product_datetime_value(self):
-        order_datetime = datetime.datetime.strptime(self.order_id.date_order, DEFAULT_SERVER_DATETIME_FORMAT)
-        dt = order_datetime + datetime.timedelta(days=self.customer_lead or 0.0)
-        self.product_delivery_date = dt.strftime(DEFAULT_SERVER_DATETIME_FORMAT)
+        for sale_order_line in self:
+            if sale_order_line.product_id:
+                order_datetime = datetime.datetime.strptime(sale_order_line.order_id.date_order, DEFAULT_SERVER_DATETIME_FORMAT)
+                dt = order_datetime + datetime.timedelta(days=sale_order_line.customer_lead or 0.0)
+                sale_order_line.product_delivery_date = dt.strftime(DEFAULT_SERVER_DATETIME_FORMAT)
 
-    @api.one
     @api.onchange('customer_lead')
     def changed_customer_lead(self):
-        return self._get_default_product_datetime_value()
+        for sale_order_line in self:
+            sale_order_line._get_default_product_datetime_value()
 
     product_delivery_date = fields.Datetime(string=_('Delivery Date'), compute='_get_default_product_datetime_value')
 
