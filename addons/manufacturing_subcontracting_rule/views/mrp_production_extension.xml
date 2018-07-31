@@ -60,19 +60,5 @@
             </filter>
         </field>
     </record>
-        
-    
-<!-- 
-    <record id="mrp_workorder_form_view_omnia_subtracting_rule" model="ir.ui.view">
-        <field name="model">mrp.workorder</field>
-        <field name="inherit_id" ref="mrp.mrp_production_workcenter_form_view_inherit"/>
-        <field name="arch" type="xml">
-            <button name="button_start" position="after">
-                <button name="button_produce_externally"  string="Produce Externally" type="object" attrs="{'invisible': ['|', ('state', '=', 'external'), ('state', '=', 'done')]}"/>
-                <button name="button_cancel_produce_externally"  string="Cancel Produce Externally" type="object" attrs="{'invisible': [('state', '!=', 'external')]}"/>
-            </button>
-        </field>
-    </record> 
-  -->
  	</data>
 </odoo>

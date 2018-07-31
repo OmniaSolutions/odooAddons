@@ -10,4 +10,4 @@ from odoo import models
 class StockMove(models.Model):
     _inherit = "stock.move"
 
-    recycle_id = fields.Many2one('stock.recicle_product')
+    recycle_id = fields.Many2one('stock.recycle_product')
