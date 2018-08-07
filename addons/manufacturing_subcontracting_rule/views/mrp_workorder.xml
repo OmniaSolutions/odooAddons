@@ -1,0 +1,16 @@
+<odoo>
+    <data>
+	    <record id="manufacturing_subcontracting_rule_mrp_workorder" model="ir.ui.view">
+	        <field name="name">manufacturing.subcontracting.rule.mrp.workorder</field>
+	        <field name="model">mrp.workorder</field>
+	        <field name="inherit_id" ref="mrp.mrp_production_workcenter_form_view_inherit"/>
+	        <field name="arch" type="xml">
+	           <xpath expr="//header//button[last()]" position="after">
+	                <button name="button_produce_externally"  string="Produce Externally" type="object" attrs="{'invisible': ['|', ('state', '=', 'external'), ('state', '=', 'done')]}"/>
+	                <button name="button_cancel_produce_externally"  string="Cancel Produce Externally" type="object" attrs="{'invisible': [('state', '!=', 'external')]}"/>
+                </xpath>
+	        </field>
+	    </record>
+    </data>
+</odoo>
+     
