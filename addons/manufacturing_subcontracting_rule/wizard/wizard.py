@@ -147,13 +147,6 @@ class MrpProductionWizard(models.TransientModel):
     merge_purchese_order = fields.Boolean(_('Merge Purchase'), default=False)
     confirm_purchese_order = fields.Boolean(_('Confirm Purchase'), default=True)
 
-    @api.onchange('consume_product_id')
-    def _consume_product_id(self):
-        # check if the product have bom in case not error
-        # update the bom with the first one
-        # create new in move in order to get the the corrisponding out object
-        pass
-
     @api.onchange('request_date')
     def _request_date(self):
         for move in self.move_raw_ids:
@@ -247,15 +240,13 @@ class MrpProductionWizard(models.TransientModel):
             date_planned_start_wo = pickOut.max_date
         productionBrws.date_planned_finished = date_planned_finished_wo
         productionBrws.date_planned_start = date_planned_start_wo
-        #  productionBrws.date_planned_finished_wo = date_planned_finished_wo
-        #  productionBrws.date_planned_start_wo = date_planned_start_wo
         pickingBrwsList = [pickIn.id, pickOut.id]
         productionBrws.external_pickings = [(6, 0, pickingBrwsList)]
         self.createPurches()
 
     @api.model
     def getNewExternalProductInfo(self):
-        val = {'default_code': "S-" + self.production_id.product_id.default_code,
+        val = {'default_code': "S-" + self.production_id.product_id.default_code or self.production_id.product_id.name,
                'type': 'service',
                'purchase_ok': True,
                'name': "[%s] %s" % (self.production_id.product_id.default_code, self.production_id.product_id.name)}
@@ -266,13 +257,13 @@ class MrpProductionWizard(models.TransientModel):
         """
         get the default external product suitable for the purchase
         """
-        bom_product = self.production_id.bom_id.external_product
-        if bom_product:
-            return bom_product
-        product_brw = self.env['product.product'].search([('default_code', '=', 'external_service')])
-        if product_brw:
-            return product_brw
-        return self.env['product.product'].create(self.getNewExternalProductInfo())
+        product_brw = self.production_id.bom_id.external_product
+        if not product_brw:
+            product_brw = self.env['product.product'].search([('default_code', '=', 'external_service')])
+            if not product_brw:
+                product_brw = self.env['product.product'].create(self.getNewExternalProductInfo())
+            self.production_id.bom_id.external_product = product_brw
+        return product_brw
 
     @api.model
     def getPurcheseName(self, product_product):
@@ -284,6 +275,20 @@ class MrpProductionWizard(models.TransientModel):
         else:
             return product_product.name
 
+    @api.model
+    def createSeller(self, external_production_partner, product_id):
+        for seller in product_id.seller_ids:
+            if seller.name.id == external_production_partner.partner_id.id:
+                return
+        supplierinfo = {'name': external_production_partner.partner_id.id,
+                        'sequence': max(product_id.seller_ids.mapped('sequence')) + 1 if product_id.seller_ids else 1,
+                        'product_uom': product_id.uom_po_id.id,
+                        'min_qty': external_production_partner.min_qty,
+                        'price': external_production_partner.price,
+                        'delay': external_production_partner.delay}
+        vals = {'seller_ids': [(0, 0, supplierinfo)]}
+        product_id.write(vals)
+
     @api.multi
     def createPurches(self):
         if not self.create_purchese_order:
@@ -291,12 +296,13 @@ class MrpProductionWizard(models.TransientModel):
         purchaseOrderObj = self.env['purchase.order']
         obj_product_product = self.getDefaultExternalServiceProduct()
         for toCreatePurchese in self.external_partner:
+            self.createSeller(toCreatePurchese, obj_product_product)
             purchaseBrws = None
             if self.merge_purchese_order:
-                purchaseBrws = purchaseOrderObj.search([('partner_id', '=', self.external_partner.id),
+                purchaseBrws = purchaseOrderObj.search([('partner_id', '=', toCreatePurchese.partner_id.id),
                                                         ('state', 'in', ['draft', 'sent'])
                                                         ], limit=1)
-            if not purchaseBrws:
+            else:
                 purchaseBrws = purchaseOrderObj.create({'partner_id': toCreatePurchese.partner_id.id,
                                                         'date_planned': self.request_date,
                                                         'production_external_id': self.production_id.id})
