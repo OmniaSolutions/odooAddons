@@ -8,7 +8,7 @@
 #
 #    Author : Smerghetto Daniel  (Omniasolutions)
 #    mail:daniel.smerghetto@omniasolutions.eu
-#    Copyright (c) 2014 Omniasolutions (http://www.omniasolutions.eu) 
+#    Copyright (c) 2014 Omniasolutions (http://www.omniasolutions.eu)
 #    All Right Reserved
 #
 #    This program is free software: you can redistribute it and/or modify
@@ -38,18 +38,19 @@
     'author': 'OmniaSolutions.eu',
     'maintainer': 'OmniaSolutions.eu',
     'website': 'http://www.OmniaSolutions.eu',
-    'depends': ['stock', 'delivery', 'mrp'],
+    'depends': ['stock',
+                'delivery',
+                'mrp'],
     'data': [
-                #wizard
-                'wizard/wizard.xml',
-                #view
-                'views/mrp_production_extension.xml',
-                'views/mrp_routing_workcenter.xml',
-                'views/purchase_extension.xml',
-                'views/mrp_bom.xml',
+            #  wizard
+            'wizard/wizard.xml',
+            #  view
+            'views/mrp_production.xml',
+            'views/mrp_routing_workcenter.xml',
+            'views/purchase_extension.xml',
+            'views/mrp_bom.xml',
     ],
     'installable': True,
     'application': False,
     'auto_install': False,
 }
-
