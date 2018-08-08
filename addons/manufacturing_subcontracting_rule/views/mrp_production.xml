@@ -27,11 +27,6 @@
                  </button>
             </div>
 
-            <field name="origin" position="after">
-                 <field name="purchase_external_id"/>
-                 <field name="external_partner" readonly="True"/>
-            </field>
-
             <field name="availability" position="after">
                  <field name="external_pickings" invisible="True"/>
             </field>

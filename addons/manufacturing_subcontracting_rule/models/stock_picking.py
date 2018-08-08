@@ -55,16 +55,14 @@ class StockImmediateTransfer(models.TransientModel):
             if pikingObj.isOutGoing(objPick):
                 pikingObj.doneManRawMaterials(manufactObj)
             elif pikingObj.isIncoming(objPick):
-                pikingObj.removeMaterialFromSupplier(manufactObj)
                 manufactObj.button_mark_done()
             break
         return res
 
 
 class StockPicking(models.Model):
-    _name = 'stock.picking'
-    _inherit = ['stock.picking']
-    
+    _inherit = 'stock.picking'
+
     external_production = fields.Many2one('mrp.production')
 
     sub_contracting_operation = fields.Selection([('open', _('Open external Production')),
@@ -104,8 +102,7 @@ class StockPicking(models.Model):
                 stockQuantObj.create({
                     'qty': finishedLineBrws.product_qty,
                     'location_id': finishedLineBrws.location_id.id,
-                    'product_id': prodBrws.id
-                    })
+                    'product_id': prodBrws.id})
             else:
                 for quantsForProductBrws in quantsForProduct:
                     newQty = quantsForProductBrws.qty + finishedLineBrws.product_qty
@@ -122,21 +119,8 @@ class StockPicking(models.Model):
         for lineBrws in manOrder.move_raw_ids:
             lineBrws.write({'state': 'done'})
 
-    def removeMaterialFromSupplier(self, manufacturingObj):
-        stockQuantObj = self.env['stock.quant']
-        for consumedLineBrws in manufacturingObj.move_raw_ids:
-            if consumedLineBrws.state == 'cancel':
-                continue
-            prodBrws = consumedLineBrws.product_id
-            quantsForProduct = self.getStockQuant(stockQuantObj, consumedLineBrws.location_dest_id.id, prodBrws)
-            for quantsForProductBrws in quantsForProduct:
-                newQty = quantsForProductBrws.qty - consumedLineBrws.product_qty
-                quantsForProductBrws.write({'qty': newQty})
-                break
-
     def getStockQuant(self, stockQuantObj, lineId, prodBrws):
         quantsForProduct = stockQuantObj.search([
             ('location_id', '=', lineId),
-            ('product_id', '=', prodBrws.id)
-            ])
+            ('product_id', '=', prodBrws.id)])
         return quantsForProduct

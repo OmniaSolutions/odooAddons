@@ -46,7 +46,5 @@ class MrpBom(models.Model):
 
     _name = "mrp.bom"
     _inherit = ['mrp.bom']
-    external_partner = fields.Many2one('res.partner',
-                                       string=_('External Partner'))
     external_product = fields.Many2one('product.product',
                                        string=_('External Product use for external production'))

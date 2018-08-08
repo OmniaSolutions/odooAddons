@@ -40,6 +40,7 @@
     'website': 'http://www.OmniaSolutions.eu',
     'depends': ['stock',
                 'delivery',
+                'purchase',
                 'mrp'],
     'data': [
             #  wizard

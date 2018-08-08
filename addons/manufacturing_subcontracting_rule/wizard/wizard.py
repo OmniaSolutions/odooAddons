@@ -8,6 +8,7 @@ from odoo import models
 from odoo import fields
 from odoo import api
 from odoo import _
+from odoo.exceptions import UserError
 import logging
 import datetime
 from dateutil.relativedelta import relativedelta
@@ -15,7 +16,6 @@ from dateutil.relativedelta import relativedelta
 
 class TmpStockMove(models.TransientModel):
     _name = "stock.tmp_move"
-    _table = "stock_tmp_move"
 
     name = fields.Char('Description', index=True, required=True)
     company_id = fields.Many2one(
@@ -138,37 +138,20 @@ class MrpProductionWizard(models.TransientModel):
                                         string=_('Finished Products'),
                                         inverse_name='external_prod_finish',
                                         domain=[('scrapped', '=', False)])
-    operation_type = fields.Selection(selection=[('normal', _('Normal')), ('consume', _('Consume'))],
-                                      string=_('Operation'),
-                                      default='normal')
-    consume_product_id = fields.Many2one(comodel_name='product.product',
-                                         string=_('Product To Consume'))
-    consume_bom_id = fields.Many2one(comodel_name='mrp.bom',
-                                     string=_('BOM To Consume'))
-    external_warehouse_id = fields.Many2one('stock.warehouse',
-                                            string=_('External Warehouse'))
-    external_location_id = fields.Many2one('stock.location',
-                                           string=_('External Location'))
     production_id = fields.Many2one('mrp.production',
                                     string=_('Production'),
                                     readonly=True)
     request_date = fields.Datetime(string=_("Request date for the product"),
                                    default=lambda self: fields.datetime.now())
-    create_purchese_order = fields.Boolean(_('Automatic create Purchase'))
-    merge_purchese_order = fields.Boolean(_('Merge Purchase'), default=True)
+    create_purchese_order = fields.Boolean(_('Automatic create Purchase'), default=True)
+    merge_purchese_order = fields.Boolean(_('Merge Purchase'), default=False)
+    confirm_purchese_order = fields.Boolean(_('Confirm Purchase'), default=True)
 
     @api.onchange('consume_product_id')
     def _consume_product_id(self):
         # check if the product have bom in case not error
         # update the bom with the first one
         # create new in move in order to get the the corrisponding out object
-        pass
-
-    @api.onchange('consume_product_id')
-    def _consume_bom_id(self):
-        # create the row material related to the bom chosen
-        # if the @api.onchange('consume_product_id') may the @api.onchange('consume_product_id') should be fired to
-        # so we can be sure that the raw material is updated for the wizar
         pass
 
     @api.onchange('request_date')
@@ -179,44 +162,9 @@ class MrpProductionWizard(models.TransientModel):
         for move in self.move_finished_ids:
             move.date_expected = self.request_date
 
-    @api.onchange('external_location_id')
-    def _external_location_id(self):
-        for line in self.move_finished_ids:
-            line.location_id = self.external_location_id.id
-        for line in self.move_raw_ids:
-            line.location_dest_id = self.external_location_id.id
-
-    @api.onchange('consume_bom_id')
-    def changeBOMId(self):
-        self.operationTypeChanged()
-
     @api.multi
     def getWizardBrws(self):
         return self.browse(self._context.get('wizard_id', False))
-
-    @api.onchange('operation_type')
-    def operationTypeChanged(self):
-        prodObj = self.getParentProduction()
-        wBrws = self.getWizardBrws()
-        cleanRelInfos = {'raw_material_production_id': False,
-                         'origin': ''}
-        manOrderRawLines = prodObj.copyAndCleanLines(prodObj.move_raw_ids)
-        manOrderFinishedLines = prodObj.copyAndCleanLines(prodObj.move_finished_ids)
-        if self.operation_type == 'normal':
-            wBrws.write({'move_raw_ids': [(6, 0, manOrderRawLines)],
-                         'move_finished_ids': [(6, 0, manOrderFinishedLines)]
-                         })
-            self.move_raw_ids = [(6, 0, manOrderRawLines)]
-            self.move_finished_ids = [(6, 0, manOrderFinishedLines)]
-        elif self.operation_type == 'consume':
-            _boms, lines = self.consume_bom_id.explode(self.consume_product_id, 1, picking_type=self.consume_bom_id.picking_type_id)
-            moves = prodObj._generate_raw_moves(lines)
-            moves.write(cleanRelInfos)
-            wBrws.write({'move_raw_ids': [(6, 0, moves.ids)],
-                         'move_finished_ids': [(6, 0, manOrderFinishedLines)]
-                         })
-            self.move_raw_ids = [(6, 0, moves.ids)]
-            self.move_finished_ids = [(6, 0, manOrderFinishedLines)]
 
     @api.multi
     def getParentProduction(self):
@@ -244,7 +192,7 @@ class MrpProductionWizard(models.TransientModel):
                     'product_uom_qty': lineBrws.product_uom_qty,
                     'location_id': lineBrws.location_id.id,
                     'location_dest_id': lineBrws.location_dest_id.id,
-                    'partner_id': external_partner.id,
+                    'partner_id': external_partner.partner_id.id,
                     'note': lineBrws.note,
                     'state': 'confirmed',
                     'origin': lineBrws.origin,
@@ -266,7 +214,7 @@ class MrpProductionWizard(models.TransientModel):
                     'product_uom_qty': lineBrws.product_uom_qty,
                     'location_id': lineBrws.location_id.id,
                     'location_dest_id': lineBrws.location_dest_id.id,
-                    'partner_id': external_partner.id,
+                    'partner_id': external_partner.partner_id.id,
                     'note': lineBrws.note,
                     'state': 'confirmed',
                     'origin': lineBrws.origin,
@@ -278,14 +226,15 @@ class MrpProductionWizard(models.TransientModel):
                 move_raw_ids.append((0, False, vals))
         productionBrws.write({'move_raw_ids': move_raw_ids,
                               'move_finished_ids': move_finished_ids,
-                              'state': 'external',
-                              'external_partner': (6, 0, [self.external_partner.ids])})
+                              'state': 'external'})
         productsToCheck = list(set(productsToCheck))
         for product in self.env['product.product'].browse(productsToCheck):
             productionBrws.checkCreateReorderRule(product, productionBrws.location_src_id.get_warehouse())
 
     @api.multi
     def button_produce_externally(self):
+        if not self.external_partner:
+            raise UserError(_("No external partner set. Please provide one !!"))
         productionBrws = self.getParentProduction()
         self.cancelProductionRows(productionBrws)
         self.updateMoveLines(productionBrws)
@@ -363,6 +312,8 @@ class MrpProductionWizard(models.TransientModel):
                           'production_external_id': self.production_id.id}
                 new_product_line = self.env['purchase.order.line'].create(values)
                 new_product_line.onchange_product_id()
+                new_product_line.date_planned = self.request_date
+                new_product_line.product_qty = lineBrws.product_uom_qty
 
     @api.multi
     def button_close_wizard(self):
@@ -385,15 +336,13 @@ class MrpProductionWizard(models.TransientModel):
             return False
 
         stockObj = self.env['stock.picking']
-        customerProductionLocation = self.external_location_id
         localStockLocation = productionBrws.location_src_id  # Taken from manufacturing order
         incomingMoves = []
         for productionLineBrws in productionBrws.move_finished_ids:
             if productionLineBrws.state == 'confirmed':
                 incomingMoves.append(productionLineBrws)
-        toCreate = {'partner_id': partner.id,
-                    'location_id': customerProductionLocation.id,
-                    'location_src_id': customerProductionLocation.id,
+        toCreate = {'partner_id': partner.partner_id.id,
+                    'location_id': partner.partner_id.property_stock_supplier.id,
                     'location_dest_id': localStockLocation.id,
                     'min_date': productionBrws.date_planned_start,
                     'move_type': 'direct',
@@ -402,7 +351,7 @@ class MrpProductionWizard(models.TransientModel):
                     'move_lines': [],
                     'state': 'draft',
                     'sub_contracting_operation': 'close',
-                    'sub_production_id': self.production_id}
+                    'sub_production_id': self.production_id.id}
         obj = stockObj.create(toCreate)
         newStockLines = []
         for outMove in incomingMoves:
@@ -422,17 +371,15 @@ class MrpProductionWizard(models.TransientModel):
                 return pick.id
             return False
 
-        customerProductionLocation = self.external_location_id
         localStockLocation = productionBrws.location_src_id  # Taken from manufacturing order
         stockObj = self.env['stock.picking']
         outGoingMoves = []
         for productionLineBrws in productionBrws.move_raw_ids:
             if productionLineBrws.state == 'confirmed':
                 outGoingMoves.append(productionLineBrws)
-        toCreate = {'partner_id': partner.id,
+        toCreate = {'partner_id': partner.partner_id.id,
                     'location_id': localStockLocation.id,
-                    'location_dest_id': customerProductionLocation.id,
-                    'location_src_id': localStockLocation.id,
+                    'location_dest_id': partner.partner_id.property_stock_supplier.id,
                     'min_date': datetime.datetime.now(),
                     'move_type': 'direct',
                     'picking_type_id': getPickingType(),
@@ -440,7 +387,7 @@ class MrpProductionWizard(models.TransientModel):
                     'move_lines': [],
                     'state': 'draft',
                     'sub_contracting_operation': 'open',
-                    'sub_production_id': self.production_id}
+                    'sub_production_id': self.production_id.id}
         obj = stockObj.create(toCreate)
         newStockLines = []
         for outMove in outGoingMoves:
@@ -458,7 +405,7 @@ class MrpProductionWizard(models.TransientModel):
     @api.multi
     def create_vendors(self):
         external_production_partner = self.env['external.production.partner']
-        for seller in self.consume_bom_id.external_product.seller_ids:
+        for seller in self.production_id.bom_id.external_product.seller_ids:
             vals = {'partner_id': seller.name.id,
                     'price': seller.price,
                     'delay': seller.delay,

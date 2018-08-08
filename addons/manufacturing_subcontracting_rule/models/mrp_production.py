@@ -49,18 +49,6 @@ class MrpProduction(models.Model):
     _inherit = ['mrp.production']
 
     state = fields.Selection(selection_add=[('external', 'External Production')])
-
-    @api.multi
-    def _getDefaultPartner(self):
-        for mrp_production in self:
-            if mrp_production.routing_id.location_id.partner_id:
-                mrp_production.external_partner = mrp_production.routing_id.location_id.partner_id.id
-
-    external_partner = fields.Many2one('res.partner',
-                                       compute='_getDefaultPartner',
-                                       string='Default External Partner',
-                                       help='This is a computed field in order to modifier it go to Routing -> Production Place -> Set Owner of the location')
-    purchase_external_id = fields.Many2one('purchase.order', string='External Purchase')
     move_raw_ids_external_prod = fields.One2many('stock.move',
                                                  'raw_material_production_id',
                                                  'Raw Materials External Production',
@@ -78,14 +66,11 @@ class MrpProduction(models.Model):
     def open_external_purchase(self):
         newContext = self.env.context.copy()
         manufacturingIds = []
-        if self.purchase_external_id:
-            manufacturingIds = [self.purchase_external_id.id]
-        else:
-            purchaseLines = self.env['purchase.order.line'].search([('production_external_id', '=', self.id)])
-            purchaseList = self.env['purchase.order'].browse()
-            for purchaseLineBrws in purchaseLines:
-                purchaseList = purchaseList + purchaseLineBrws.order_id
-            manufacturingIds = purchaseList.ids
+        purchaseLines = self.env['purchase.order.line'].search([('production_external_id', '=', self.id)])
+        purchaseList = self.env['purchase.order'].browse()
+        for purchaseLineBrws in purchaseLines:
+            purchaseList = purchaseList + purchaseLineBrws.order_id
+        manufacturingIds = purchaseList.ids
         return {
             'name': _("Purchase External"),
             'view_type': 'form',
@@ -138,7 +123,6 @@ class MrpProduction(models.Model):
             'product_uom_qty': sourceMoveObj.product_uom_qty,
             'location_id': location_source_id,
             'location_dest_id': location_dest_id,
-            'partner_id': self.external_partner.id,
             'note': sourceMoveObj.note,
             'state': 'draft',
             'origin': sourceMoveObj.origin,
@@ -186,19 +170,10 @@ class MrpProduction(models.Model):
     @api.multi
     def button_produce_externally(self):
         values = {}
-        location = self.routing_id.location_id.id
-        partner = self.routing_id.location_id.partner_id or self.bom_id.external_partner
-        if not partner:
-            partner = self.env['res.partner'].search([], limit=1)
-        if not location:
-            location = self.getSupplierLocation()
-        location = self.checkCreatePartnerWarehouse(partner)
-        values['move_raw_ids'] = [(6, 0, self.copyAndCleanLines(self.move_raw_ids, location.id, self.location_src_id.id))]
-        values['move_finished_ids'] = [(6, 0, self.copyAndCleanLines(self.move_finished_ids, self.location_src_id.id, location.id))]
-        values['consume_product_id'] = self.product_id.id
-        values['consume_bom_id'] = self.bom_id.id
-        values['external_warehouse_id'] = self.location_src_id.get_warehouse().id
-        values['external_location_id'] = location.id
+        values['move_raw_ids'] = [(6, 0, self.copyAndCleanLines(self.move_raw_ids,
+                                                                location_source_id=self.location_src_id.id))]
+        values['move_finished_ids'] = [(6, 0, self.copyAndCleanLines(self.move_finished_ids,
+                                                                     location_dest_id=self.location_src_id.id))]
         values['production_id'] = self.id
         values['request_date'] = datetime.datetime.now()
         obj_id = self.env['mrp.production.externally.wizard'].create(values)
@@ -238,8 +213,11 @@ class MrpProduction(models.Model):
                 purchese.unlink()
 
     def checkCreateReorderRule(self, prodBrws, warehouse):
-        if not self.checkExistingReorderRule(prodBrws, warehouse):
-            self.createReorderRule(prodBrws, warehouse)
+        if warehouse:
+            if not self.checkExistingReorderRule(prodBrws, warehouse):
+                self.createReorderRule(prodBrws, warehouse)
+        else:
+            logging.warning("unable to create whrehouse")
 
     def checkExistingReorderRule(self, prod_brws, warehouse):
         reorderRules = self.env['stock.warehouse.orderpoint'].search([
