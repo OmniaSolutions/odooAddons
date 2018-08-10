@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+        <record id="metel_temporary_wizard" model="ir.ui.view">
+            <field name='name'>tmp.supplier_info_wizard.form</field>
+            <field name='model'>tmp.supplier_info_wizard</field>
+            <field name='arch' type='xml'>
+                <form>
+                    <sheet>
+                    	<div name="button_box" class="oe_button_box">
+	                        <button name='action_test_import' string='Test Import'
+	                        	class="oe_stat_button"
+	                            type='object'/>
+	                        <button name='action_import' string='Import'
+	                        	class="oe_stat_button"
+	                            attrs="{'invisible': [('identificazione', '=', '')]}"
+	                            type='object'/>
+	                    </div>
+                    	<group>
+                    		<field name="error_message" readonly="1"/>
+                    		<field name="fileData"/>
+                    	</group>
+                    	<group col="4">
+			                <field name="data_decorrenza_pubblico"/>
+			                <field name="data_decorrenza_grossista"/>
+			                <field name="data_variazione"/>
+			                <field name="verifica"/>
+			                <field name="partita_iva"/>
+			                <field name="listino"/>
+			                <field name="identificazione"/>
+			                <field name="azienda"/>
+			                <field name="descrizione"/>
+			                <field name="isopartita"/>
+			                <field name="filler1"/>
+			                <field name="filler2"/>
+                    	</group>
+                    	<group>
+                    		<field name="supplier_infos" nolabel="1" colspan="2" />
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+    <record id="action_import_metel_pricelists" model="ir.actions.act_window">
+        <field name="name">Import Metel Pricelists</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">tmp.supplier_info_wizard</field>
+        <field name="view_type">form</field>
+        <field name="view_mode">form</field>
+        <field name="target">main</field>
+    </record>
+
+    <menuitem 
+	    name="Import Metel Pricelists" 
+	    action="action_import_metel_pricelists" 
+	    id="menu_import_metel_pricelist" 
+	    parent="purchase.menu_procurement_management"
+	    sequence="17" />
+
+    <record model="ir.ui.view" id="tmp_suppliers_tree">
+        <field name="name">tmp.suppliers.tree</field>
+        <field name="model">tmp.supplier_info</field>
+        <field name="type">tree</field>
+        <field name="priority" eval="1"/>
+        <field name="arch" type="xml">
+            <tree >
+            	<field name="id"/>
+                <field name="prezzo_al_grossista"/>
+                <field name="ean13"/>
+                <field name="famiglia_statistica"/>
+                <field name="stato_prodotto"/>
+                <field name="codice_prodotto"/>
+                <field name="lead_time"/>
+                <field name="prezzo_al_pubblico"/>
+                <field name="marchio_produttore"/>
+                <field name="codice_valuta"/>
+                <field name="data_ultima_variazione_var"/>
+                <field name="qta_multipla_ordine"/>
+                <field name="famiglia_di_sconto"/>
+                <field name="qta_minima_ordine"/>
+                <field name="prodotto_composto"/>
+                <field name="moltiplicatore_prezzo"/>
+                <field name="qta_massima_ordine"/>
+                <field name="descrizione"/>
+                <field name="qta_in_cartone"/>
+                <field name="unita_misura"/>
+            </tree>
+        </field>
+    </record>
+
+    </data>
+</odoo>
