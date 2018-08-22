@@ -8,7 +8,18 @@
                 report_type="qweb-html"
                 file=""
                 />
-                
+
+        <record id="omnia_stock_delivery_report_view_move_search" model="ir.ui.view">
+            <field name="name">omnia_stock_delivery_report.stock.move.search</field>
+            <field name="model">stock.move</field>
+            <field name="inherit_id" ref="stock.view_move_search"/>
+            <field name="arch" type="xml">
+                <filter name="done" position="after">
+                    <filter string="Last Month" domain="[('date', '&lt;=', (context_today()-datetime.timedelta(days=31)).strftime('%Y-%m-01'))]"/>
+                </filter>
+            </field>
+        </record>
+
         <record id="omnia_stock_delivery_report.stock_move_action" model="ir.actions.act_window">
             <field name="name">Stock</field>
             <field name="res_model">stock.move</field>
