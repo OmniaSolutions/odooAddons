@@ -26,6 +26,7 @@ Created on Jul 30, 2018
 @author: daniel
 '''
 
+from odoo.exceptions import UserError
 import logging
 import datetime
 from odoo import models
@@ -354,10 +355,10 @@ class ProductSupplierinfoWizard(models.TransientModel):
         if not products:
             supplInfo = self.env['product.supplierinfo'].search([('product_code', '=', lineBrws.codice_prodotto)])
             if len(supplInfo) > 1:
-                raise UserWarning(_('Product with default code %r has been coded more than once' % (lineBrws.codice_prodotto)))
-            if supplInfo == 1:
+                return [], 'Product with default code %r has been coded more than once' % (lineBrws.codice_prodotto)
+            if len(supplInfo) == 1:
                 products = [supplInfo.product_id]
-        return products
+        return products, ''
 
     @api.multi
     def checkSupplierInfoExists(self, lineBrws, partnerBrws, productBrws):
@@ -374,14 +375,18 @@ class ProductSupplierinfoWizard(models.TransientModel):
     def action_import(self):
         partner = self.getPartner(self.partita_iva)
         if not partner:
-            raise UserWarning(_('Unable to find related partner using VAT %r' % (self.partita_iva)))
+            raise UserError(_('Unable to find related partner using VAT %r' % (self.partita_iva)))
         
         supplierInfoObj = self.env['product.supplierinfo']
         
+        errors = []
         for lineBrws in self.supplier_infos:
-            products = self.getProducts(lineBrws)
+            products, tmperrors = self.getProducts(lineBrws)
+            if tmperrors:
+                errors.append(tmperrors)
+                continue
 #             if not products:
-#                 raise UserWarning(_('Unable to find product with ID %r' % (lineBrws.id)))
+#                 raise UserError(_('Unable to find product with ID %r' % (lineBrws.id)))
             for product in products:
                 if not self.checkSupplierInfoExists(lineBrws, partner, product):
                     vals = {
@@ -394,11 +399,16 @@ class ProductSupplierinfoWizard(models.TransientModel):
                         'price': lineBrws.prezzo_al_pubblico,
                         'date_start': lineBrws.data_ultima_variazione_var,
                         'date_end': self.data_decorrenza_pubblico,
-                        'product_tmplt_id': product.product_tmpl_id.id,
+                        'product_tmpl_id': product.product_tmpl_id.id,
                         'currency_id': lineBrws.codice_valuta.id,
                         'product_id': product.id,
                         }
                     supplierInfoObj.create(vals)
+        if errors:
+            msg = ''
+            for err in errors:
+                msg = msg + err + '\n'
+            raise UserError(msg)
         
 
 
