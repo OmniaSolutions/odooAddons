@@ -7,8 +7,8 @@
 			<field name="inherit_id" ref="stock.view_picking_form"/>
 			<field name="arch" type="xml">
 				<field name="origin" position="after">
-					<field name="ddt_number" readonly="1"/>
-					<field name="ddt_date" attrs="{'readonly':[('ddt_number','!=',False)]}"/>
+					<field name="ddt_number" attrs="{'readonly':[('show_ddt_in','!=',True)]}"/>
+					<field name="ddt_date" attrs="{'readonly':[('show_ddt_in','!=',True)]}"/>
 					<field name="invoice_id" domain="[('partner_id','=',partner_id)]"/>
 				</field>
 				<field name="partner_id" position="after">
@@ -28,6 +28,8 @@
 						</group>
                         <label for="show_ddt_button"/>
                         <field name="show_ddt_button" groups="base.group_no_one"/>
+                        <label for="show_ddt_in"/>
+                        <field name="show_ddt_in" groups="base.group_no_one"/>
 						<label for="note_ddt"/>
 						<field name="note_ddt"/>
 					</page>
