@@ -91,6 +91,15 @@ class stock_picking_custom(models.Model):
             pick.show_ddt_button = show
     show_ddt_button = fields.Boolean('Show ddt Button', compute=_show_ddt_button)
 
+    @api.multi
+    def _show_ddt_in(self):
+        for pick in self:
+            show = False
+            if pick.picking_type_id.allow_in_ddt:
+                show = True
+            pick.show_ddt_in = show
+    show_ddt_in = fields.Boolean('Show ddt in Field', compute=_show_ddt_in)
+
     @api.model
     def getLastDDtDate(self):
         """

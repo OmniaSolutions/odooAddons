@@ -13,4 +13,5 @@ import logging
 
 class StockPickingType(models.Model):
     _inherit = 'stock.picking.type'
-    allow_ddt = fields.Boolean(string=_("Allow ddt Number"))
+    allow_ddt = fields.Boolean(string=_("Allow ddt Number Out"))
+    allow_in_ddt = fields.Boolean(string=_("Allow ddt Number In"))
