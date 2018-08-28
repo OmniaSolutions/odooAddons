@@ -410,7 +410,8 @@ class MrpProductionWizard(models.TransientModel):
                                      customerProductionLocation)
         stock_pick = stock_pikingObj.create(toCreate)
         for outMove in incomingMoves:
-            outMove.copy(default={'location_id': customerProductionLocation.id,
+            outMove.copy(default={'name': outMove.product_id.display_name,
+                                  'location_id': customerProductionLocation.id,
                                   'location_dest_id': localStockLocation.id,
                                   'sale_line_id': outMove.sale_line_id,
                                   'production_id': False,
@@ -460,7 +461,8 @@ class MrpProductionWizard(models.TransientModel):
         obj = stock_pickingOBJ.create(toCreate)
         newStockLines = []
         for outMove in outGoingMoves:
-            stockMove = outMove.copy(default={'production_id': False,
+            stockMove = outMove.copy(default={'name': outMove.product_id.display_name,
+                                              'production_id': False,
                                               'raw_material_production_id': False})
             stockMove.location_id = localStockLocation.id
             stockMove.location_dest_id = customerProductionLocation.id
