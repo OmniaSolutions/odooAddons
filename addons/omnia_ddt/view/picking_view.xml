@@ -42,6 +42,9 @@
 	            			class="oe_highlight"
 	            		    />
 	            </xpath>
+	            <xpath expr="//tree//field[@name='name']" position="attributes">
+	               <attribute name="invisible">False</attribute>
+	            </xpath>
 			</field>
 		</record>
 
