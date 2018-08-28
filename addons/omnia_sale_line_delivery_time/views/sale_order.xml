@@ -11,6 +11,9 @@
                 <xpath expr="//field[@name='order_line']//tree//field[@name='price_unit']" position="after">
                     <field name="product_delivery_date"></field>
                 </xpath>
+                <xpath expr="//field[@name='order_line']//tree//field[@name='customer_lead']" position="attributes">
+                    <attribute name="invisible">False</attribute>
+                </xpath>
 			</field>
 		</record>
 
