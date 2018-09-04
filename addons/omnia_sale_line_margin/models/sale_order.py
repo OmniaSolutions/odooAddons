@@ -37,8 +37,9 @@ class SaleOrderLine(models.Model):
 
     @api.depends('price_unit', 'discount')
     def _compute_line_margin(self):
-        margin = (self.price_unit / 100) * (100 - self.discount)
-        self.sale_order_line_margin = margin - self.purchase_price
+        for lineBrws in self:
+            margin = (lineBrws.price_unit / 100) * (100 - lineBrws.discount)
+            lineBrws.sale_order_line_margin = margin - lineBrws.purchase_price
 
     sale_order_line_margin = fields.Float(_('Margin'), compute="_compute_line_margin")
 
