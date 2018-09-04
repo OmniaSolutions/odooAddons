@@ -30,7 +30,7 @@
 			                        <td id="tr5" t-esc="o.ordered_qty"/>
 			                        <td id="tr6" t-esc="o.product_id.qty_available"/>
 			                        <td id="tr7" t-esc="o.ordered_qty - o.quantity_done"/>
-			                        <td id="tr8" t-esc="o.date_expected"/>                
+			                        <td id="tr8" t-esc="o.sale_line_id.requested_date"/>                
 			                    </tr>
 			                </tbody>
 			            </table>

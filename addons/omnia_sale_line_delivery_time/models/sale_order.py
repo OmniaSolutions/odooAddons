@@ -20,13 +20,15 @@
 #
 ##############################################################################
 
+
 '''
 Created on Jul 21, 2017
 
 @author: daniel
 '''
-from openerp.tools import DEFAULT_SERVER_DATETIME_FORMAT
 import datetime
+from datetime import timedelta
+from openerp.tools import DEFAULT_SERVER_DATETIME_FORMAT
 from openerp import models
 from openerp import fields
 from openerp import api
@@ -40,9 +42,9 @@ class SaleOrderLine(models.Model):
     def _get_default_product_datetime_value(self):
         for sale_order_line in self:
             if sale_order_line.product_id:
-                order_datetime = datetime.datetime.strptime(sale_order_line.order_id.date_order, DEFAULT_SERVER_DATETIME_FORMAT)
-                dt = order_datetime + datetime.timedelta(days=sale_order_line.customer_lead or 0.0)
-                sale_order_line.product_delivery_date = dt.strftime(DEFAULT_SERVER_DATETIME_FORMAT)
+                order_date = datetime.datetime.strptime(sale_order_line.order_id.date_order, DEFAULT_SERVER_DATETIME_FORMAT)
+                newDate = order_date + timedelta(days=sale_order_line.customer_lead)
+                sale_order_line.product_delivery_date = newDate.strftime(DEFAULT_SERVER_DATETIME_FORMAT)
 
     @api.onchange('customer_lead')
     def changed_customer_lead(self):

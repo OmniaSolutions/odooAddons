@@ -9,6 +9,17 @@
                 file=""
                 />
 
+        <record id="omnia_stock_delivery_report_view_move_tree" model="ir.ui.view">
+            <field name="name">omnia_stock_delivery_report.stock.view.move.tree</field>
+            <field name="model">stock.move</field>
+            <field name="inherit_id" ref="stock.view_move_tree"/>
+            <field name="arch" type="xml">
+                <field name="date" position="after">
+                    <field name="partner_id"/>
+                </field>
+            </field>
+        </record>
+
         <record id="omnia_stock_delivery_report_view_move_search" model="ir.ui.view">
             <field name="name">omnia_stock_delivery_report.stock.move.search</field>
             <field name="model">stock.move</field>
@@ -27,7 +38,7 @@
             <field name="view_type">form</field>
             <field name="view_id" ref="stock.view_move_tree"/>
             <field name="search_view_id" ref="stock.view_move_search"/>
-            <field name="domain"><![CDATA[['&','&','&',['state','in',['assigned','confirmed','waiting']],['sale_line_id','!=',False],['location_id.usage','in',['internal','transit']],['location_dest_id.usage','not in',['internal','transit']]]]]></field>
+            <field name="domain"><![CDATA[['&','&','&',['state','in',['assigned','confirmed','waiting','partially_available']],['sale_line_id','!=',False],['location_id.usage','in',['internal','transit']],['location_dest_id.usage','not in',['internal','transit']]]]]></field>
             <field name="context">{}</field>
         </record>
         
