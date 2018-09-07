@@ -5,7 +5,7 @@
 
 import json
 import logging
-from urllib2 import urlopen
+import urllib.request
 from openerp import api, fields, models
 from openerp.tools import DEFAULT_SERVER_DATETIME_FORMAT
 import smtplib
@@ -85,7 +85,7 @@ class ResAuthenticationAttempt(models.Model):
         for item in self:
             url = GEOLOCALISATION_URL.format(item.remote)
             try:
-                res = json.loads(urlopen(url, timeout=5).read())
+                res = json.loads(urllib.request.urlopen(url, timeout=5).read())
             except Exception:
                 _logger.warning(
                     "Couldn't fetch details from %s",
