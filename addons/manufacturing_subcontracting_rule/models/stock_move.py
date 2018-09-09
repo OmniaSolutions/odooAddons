@@ -50,3 +50,55 @@ class StockMove(models.Model):
     purchese_order_line_id = fields.One2many('purchase.order.line',
                                              'sub_move_line',
                                              string=_('Subcontracting move ref'))
+
+    @api.model
+    def moveQty(self, qty):
+        if self.move_line_ids.qty_done == qty:
+            self._action_done()
+        else:
+            if self.move_line_ids:
+                total_qty = self.move_line_ids.qty_done - qty
+                self.move_line_ids.qty_done = qty
+                self._action_done()
+                newMove = self.copy()
+                newMove.quantity_done += total_qty
+                newMove._action_confirm()
+            else:
+                self.quantity_done = qty
+                if self.move_line_ids.qty_done == qty:
+                    self._action_done()
+
+    @api.model
+    def subcontractingMove(self, from_location, to_location):
+        return self.copy(default={'name': 'SUB: ' + self.display_name,
+                                  'location_id': from_location.id,
+                                  'location_dest_id': to_location.id,
+                                  'sale_line_id': False,
+                                  'production_id': False,
+                                  'raw_material_production_id': False,
+                                  'picking_id': False})
+
+    @api.multi
+    def subContractingProduce(self, objProduction):
+        subcontracting_location = self.env['stock.location'].getSubcontractiongLocation()
+        production_move = self.subcontractingMove(subcontracting_location, self.location_id)
+        production_move.moveQty(production_move.product_qty)
+        #
+        # manage raw material
+        #
+        qty = self.quantity_done
+        if self.state == 'cancel':
+            return
+        pick_out = self.picking_id.pick_out
+        # ++ back work compatibility
+        if not pick_out:
+            for pick in objProduction.external_pickings:
+                if pick.isOutGoing():
+                    pick_out = pick
+        # --
+        if pick_out:
+            # upload row material to production directory
+            for move in pick_out.move_lines:
+                moveQty = qty * move.unit_factor
+                raw_move = move.subcontractingMove(move.location_dest_id, subcontracting_location)
+                raw_move.moveQty(moveQty)

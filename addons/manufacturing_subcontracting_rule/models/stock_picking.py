@@ -42,7 +42,7 @@ class StockPicking(models.Model):
     _inherit = ['stock.picking']
 
     external_production = fields.Many2one('mrp.production')
-
+    pick_out = fields.Many2one('stock.picking', string=_('Reference Stock pick out'))
     sub_contracting_operation = fields.Selection([('open', _('Open external Production')),
                                                   ('close', _('Close external Production'))])
     sub_production_id = fields.Integer(string=_('Sub production Id'))
@@ -125,13 +125,12 @@ class StockPicking(models.Model):
         res = super(StockPicking, self).action_done()
         if self.isIncoming():
             objProduction = self.env['mrp.production'].search([('id', '=', self.sub_production_id)])
-            for line in self.move_lines:
-                if objProduction and objProduction.state == 'external':
+            if objProduction and objProduction.state == 'external':
+                for line in self.move_lines:
                     if line.mrp_production_id == objProduction.id:
-                        qty_managed = self.moveMaterialFromLine(line, remove=False)
-                        self.removeMaterialFromSupplier(line, objProduction, qty_managed)
-            if objProduction.state == 'external' and objProduction.isPicksInDone():
-                objProduction.button_mark_done()
+                        line.subContractingProduce(objProduction)
+                if objProduction.isPicksInDone():
+                    objProduction.button_mark_done()
         return res
 
     def action_cancel(self):

@@ -40,6 +40,7 @@ class TmpStockMove(models.TransientModel):
                                         "be moved. Lowering this quantity does not generate a "
                                         "backorder. Changing this quantity on assigned moves affects "
                                         "the product reservation, and should be done with care.")
+    unit_factor = fields.Float('Unit Factor')
     location_id = fields.Many2one(
         'stock.location', 'Source Location',
         auto_join=True, index=True, required=True, states={'done': [('readonly', True)]},
@@ -245,7 +246,8 @@ class MrpProductionWizard(models.TransientModel):
                         'production_id': productionBrws.id,
                         'product_uom': lineBrws.product_uom.id,
                         'date_expected': fields.Datetime.from_string(self.request_date),
-                        'mrp_production_id': productionBrws.id}
+                        'mrp_production_id': productionBrws.id,
+                        'unit_factor': lineBrws.unit_factor}
                 move_finished_ids.append((0, False, vals))
             product_delay = external_partner.delay
             for lineBrws in self.move_raw_ids:
@@ -265,7 +267,8 @@ class MrpProductionWizard(models.TransientModel):
                     'production_id': False,
                     'product_uom': lineBrws.product_uom.id,
                     'date_expected': fields.Datetime.from_string(self.request_date) - relativedelta(days=product_delay or 0.0),
-                    'mrp_production_id': productionBrws.id
+                    'mrp_production_id': productionBrws.id,
+                    'unit_factor': lineBrws.unit_factor
                 }
                 move_raw_ids.append((0, False, vals))
         productionBrws.write({'move_raw_ids': move_raw_ids,
@@ -287,7 +290,7 @@ class MrpProductionWizard(models.TransientModel):
         for external_partner in self.external_partner:
             partner_id = external_partner.partner_id
             pickOut = self.createStockPickingOut(partner_id, productionBrws)
-            pickIn = self.createStockPickingIn(partner_id, productionBrws)
+            pickIn = self.createStockPickingIn(partner_id, productionBrws, pick_out=pickOut)
             date_planned_finished_wo = pickIn.scheduled_date
             date_planned_start_wo = pickOut.scheduled_date
             self.createPurches(external_partner, pickOut)
@@ -375,7 +378,7 @@ class MrpProductionWizard(models.TransientModel):
         """
         return values
 
-    def createStockPickingIn(self, partner_id, productionBrws, originBrw=None):
+    def createStockPickingIn(self, partner_id, productionBrws, originBrw=None, pick_out=None):
         stock_pikingObj = self.env['stock.picking']
 
         def getPickingType():
@@ -403,7 +406,8 @@ class MrpProductionWizard(models.TransientModel):
                     'move_lines': [],
                     'state': 'draft',
                     'sub_contracting_operation': 'close',
-                    'sub_production_id': self.production_id}
+                    'sub_production_id': self.production_id,
+                    'pick_out': pick_out.id}
         toCreate = self.updatePickIN(toCreate,
                                      partner_id,
                                      localStockLocation,
@@ -463,7 +467,8 @@ class MrpProductionWizard(models.TransientModel):
         for outMove in outGoingMoves:
             stockMove = outMove.copy(default={'name': outMove.product_id.display_name,
                                               'production_id': False,
-                                              'raw_material_production_id': False})
+                                              'raw_material_production_id': False,
+                                              'unit_factor': outMove.unit_factor})
             stockMove.location_id = localStockLocation.id
             stockMove.location_dest_id = customerProductionLocation.id
             stockMove.sale_line_id = outMove.sale_line_id
