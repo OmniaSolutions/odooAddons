@@ -68,6 +68,8 @@ class ResAuthenticationAttempt(models.Model):
             SMTP_PORT = configParamObj.get_param('BRUTAL_FORCE_MAIL_SERVER_PORT')
             EMAIL_TO = eval(configParamObj.get_param('BRUTAL_FORCE_MAIL_TO'))
             
+            if EMAIL_PASS == ' ':
+                EMAIL_PASS = ''
             conn = smtplib.SMTP_SSL(SMPT_ADDRESS + ':' + unicode(SMTP_PORT))
             #conn.starttls()
             conn.login(EMAIL_FROM, EMAIL_PASS)
