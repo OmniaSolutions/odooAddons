@@ -47,9 +47,6 @@ class StockMove(models.Model):
 
     mrp_original_move = fields.Char(_('Is genereted from orignin MO'))
     mrp_production_id = fields.Integer(_('Original mrp id'))
-    purchese_order_line_id = fields.One2many('purchase.order.line',
-                                             'sub_move_line',
-                                             string=_('Subcontracting move ref'))
 
     @api.model
     def moveQty(self, qty):
