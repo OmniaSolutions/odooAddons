@@ -29,7 +29,7 @@
 			                        <td id="tr4"><img t-if="o.product_id.default_code" t-att-src="'/report/barcode/?type=%s&amp;value=%s&amp;width=%s&amp;height=%s' % ('Code128', o.product_id.default_code, 300, 50)" style="width:100%;height:35%;"/></td>
 			                        <td id="tr5" t-esc="o.ordered_qty"/>
 			                        <td id="tr6" t-esc="o.product_id.qty_available"/>
-			                        <td id="tr7" t-esc="o.ordered_qty - o.quantity_done"/>
+			                        <td id="tr7" t-esc="o.product_uom_qty"/>
 			                        <td id="tr8" t-esc="o.sale_line_id.requested_date"/>                
 			                    </tr>
 			                </tbody>
