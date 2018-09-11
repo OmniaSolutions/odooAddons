@@ -20,7 +20,7 @@ class MrpWorkorder(models.Model):
     # date_planned_start
     # gestire gli scrap
 
-    def createTmpStockMove(self, sourceMoveObj, location_source_id=None, location_dest_id=None):
+    def createTmpStockMove(self, sourceMoveObj, location_source_id=None, location_dest_id=None, unit_factor=1.0):
         tmpMoveObj = self.env["stock.tmp_move"]
         if not location_source_id:
             location_source_id = sourceMoveObj.location_id.id
@@ -41,7 +41,8 @@ class MrpWorkorder(models.Model):
             'production_id': self.id,
             'product_uom': sourceMoveObj.product_uom.id,
             'date_expected': sourceMoveObj.date_expected,
-            'mrp_original_move': False})
+            'mrp_original_move': False,
+            'unit_factor': unit_factor})
 
     def copyAndCleanLines(self, brwsList, location_dest_id=None, location_source_id=None):
         outElems = []
