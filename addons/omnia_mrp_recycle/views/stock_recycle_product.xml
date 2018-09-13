@@ -54,6 +54,7 @@
                    <field name="from_location"/>
                    <field name="to_product_id"/>
                    <field name="to_location"/>
+                   <field name="state"/>
             </tree>
         </field>
     </record>
