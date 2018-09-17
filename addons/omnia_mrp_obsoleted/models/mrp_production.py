@@ -44,7 +44,8 @@ class MrpProduction(models.Model):
 
     @api.model
     def _compute_obsoleted(self):
-        self.obsolete_presents =  self.bom_id.obsolete_presents or self.bom_id.obsolete_presents_recursive
+        for productionBrws in self:
+            productionBrws.obsolete_presents =  productionBrws.bom_id.obsolete_presents or productionBrws.bom_id.obsolete_presents_recursive
 
     obsolete_presents = fields.Boolean(_("Obsolete presents"), compute='_compute_obsoleted')
 
