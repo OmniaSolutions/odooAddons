@@ -30,6 +30,7 @@ class TmpStockMoveLine(models.TransientModel):
     ref_id = fields.Many2one('stock.tmp_merge_pick')
     requested_date = fields.Datetime(_('Request date'))
     date_expected = fields.Datetime(_('Effective date'))
+    identificated = fields.Boolean(_('Identificato'))
 
 
 class TmpStockMove(models.TransientModel):
