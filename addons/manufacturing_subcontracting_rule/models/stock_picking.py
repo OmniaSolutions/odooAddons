@@ -121,6 +121,7 @@ class StockPicking(models.Model):
             return out_qty
         return 0.0
 
+    @api.multi
     def action_done(self):
         res = super(StockPicking, self).action_done()
         if self.isIncoming():

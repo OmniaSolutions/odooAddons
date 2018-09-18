@@ -1,0 +1,190 @@
+# Translation of Odoo Server.
+# This file contains the translation of the following modules:
+# 	* omnia_mrp_recycle
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 11.0+e\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2018-09-13 21:14+0000\n"
+"PO-Revision-Date: 2018-09-13 23:21+0200\n"
+"Last-Translator: <>\n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"Language: it_IT\n"
+"X-Generator: Poedit 1.8.7.1\n"
+
+#. module: omnia_mrp_recycle
+#: model:ir.ui.view,arch_db:omnia_mrp_recycle.view_recycle_form
+msgid "Confirm"
+msgstr "Conferma"
+
+#. module: omnia_mrp_recycle
+#: selection:stock.recycle_product,state:0
+msgid "Confirmed"
+msgstr "Confermato"
+
+#. module: omnia_mrp_recycle
+#: model:ir.model.fields,field_description:omnia_mrp_recycle.field_stock_recycle_product_create_uid
+msgid "Created by"
+msgstr "Creato da"
+
+#. module: omnia_mrp_recycle
+#: model:ir.model.fields,field_description:omnia_mrp_recycle.field_stock_recycle_product_create_date
+msgid "Created on"
+msgstr "Creato il"
+
+#. module: omnia_mrp_recycle
+#: model:ir.model.fields,help:omnia_mrp_recycle.field_stock_recycle_product_from_product_uom
+#: model:ir.model.fields,help:omnia_mrp_recycle.field_stock_recycle_product_to_product_uom
+msgid "Default Unit of Measure used for all stock operation."
+msgstr "Unita' di misura di base usata per tutte le operazioni di magazzino"
+
+#. module: omnia_mrp_recycle
+#: model:ir.model.fields,field_description:omnia_mrp_recycle.field_stock_recycle_product_display_name
+msgid "Display Name"
+msgstr "Visualizza Nome"
+
+#. module: omnia_mrp_recycle
+#: selection:stock.recycle_product,state:0
+msgid "Draft"
+msgstr "Bozza"
+
+#. module: omnia_mrp_recycle
+#: code:addons/omnia_mrp_recycle/models/stock_recycle_product.py:59
+#: model:ir.model.fields,field_description:omnia_mrp_recycle.field_stock_recycle_product_from_location
+#, python-format
+msgid "From Location"
+msgstr "Da Locazione Magazzino"
+
+#. module: omnia_mrp_recycle
+#: code:addons/omnia_mrp_recycle/models/stock_recycle_product.py:55
+#: model:ir.model.fields,field_description:omnia_mrp_recycle.field_stock_recycle_product_from_product_id
+#, python-format
+msgid "From Product"
+msgstr "Da Prodotto"
+
+#. module: omnia_mrp_recycle
+#: code:addons/omnia_mrp_recycle/models/stock_recycle_product.py:57
+#: model:ir.model.fields,field_description:omnia_mrp_recycle.field_stock_recycle_product_from_qty
+#, python-format
+msgid "From Quantity"
+msgstr "Da Quantita'"
+
+#. module: omnia_mrp_recycle
+#: code:addons/omnia_mrp_recycle/models/stock_recycle_product.py:61
+#: model:ir.model.fields,field_description:omnia_mrp_recycle.field_stock_recycle_product_from_product_uom
+#, python-format
+msgid "From Unit of measure"
+msgstr "Da unita' di misura"
+
+#. module: omnia_mrp_recycle
+#: model:ir.model.fields,field_description:omnia_mrp_recycle.field_stock_recycle_product_id
+msgid "ID"
+msgstr "ID"
+
+#. module: omnia_mrp_recycle
+#: model:ir.model.fields,field_description:omnia_mrp_recycle.field_stock_recycle_product___last_update
+msgid "Last Modified on"
+msgstr "Data di ultima modifica"
+
+#. module: omnia_mrp_recycle
+#: model:ir.model.fields,field_description:omnia_mrp_recycle.field_stock_recycle_product_write_uid
+msgid "Last Updated by"
+msgstr "Ultima modifica di"
+
+#. module: omnia_mrp_recycle
+#: model:ir.model.fields,field_description:omnia_mrp_recycle.field_stock_recycle_product_write_date
+msgid "Last Updated on"
+msgstr "Ultima modifica il"
+
+#. module: omnia_mrp_recycle
+#: code:addons/omnia_mrp_recycle/models/stock_recycle_product.py:97
+#, python-format
+msgid "Moves"
+msgstr "Movimenti"
+
+#. module: omnia_mrp_recycle
+#: code:addons/omnia_mrp_recycle/models/stock_recycle_product.py:54
+#: model:ir.model.fields,field_description:omnia_mrp_recycle.field_stock_recycle_product_description
+#, python-format
+msgid "Notes"
+msgstr "Note"
+
+#. module: omnia_mrp_recycle
+#: model:ir.actions.act_window,name:omnia_mrp_recycle.action_mrp_recycle_moves
+#: model:ir.model.fields,field_description:omnia_mrp_recycle.field_stock_move_recycle_id
+#: model:ir.ui.menu,name:omnia_mrp_recycle.menu_mrp_recycle_moves
+#: model:ir.ui.view,arch_db:omnia_mrp_recycle.view_recycle_form
+#: model:ir.ui.view,arch_db:omnia_mrp_recycle.view_recycle_tree
+msgid "Recycle"
+msgstr "Reciclo"
+
+#. module: omnia_mrp_recycle
+#: code:addons/omnia_mrp_recycle/models/stock_recycle_product.py:86
+#, python-format
+msgid "Recycle Moves"
+msgstr "Movimenti "
+
+#. module: omnia_mrp_recycle
+#: model:stock.location,name:omnia_mrp_recycle.location_to_recycle
+msgid "Recycles"
+msgstr "Recicla"
+
+#. module: omnia_mrp_recycle
+#: model:ir.model.fields,field_description:omnia_mrp_recycle.field_stock_recycle_product_state
+msgid "State"
+msgstr "Stato"
+
+#. module: omnia_mrp_recycle
+#: model:ir.model,name:omnia_mrp_recycle.model_stock_move
+msgid "Stock Move"
+msgstr "Movimenti di magazzino"
+
+#. module: omnia_mrp_recycle
+#: model:ir.ui.view,arch_db:omnia_mrp_recycle.view_recycle_form
+msgid "Stock Operation"
+msgstr "Operazioni di magazzino"
+
+#. module: omnia_mrp_recycle
+#: code:addons/omnia_mrp_recycle/models/stock_recycle_product.py:60
+#: model:ir.model.fields,field_description:omnia_mrp_recycle.field_stock_recycle_product_to_location
+#, python-format
+msgid "To Location"
+msgstr "A Locazione"
+
+#. module: omnia_mrp_recycle
+#: code:addons/omnia_mrp_recycle/models/stock_recycle_product.py:56
+#: model:ir.model.fields,field_description:omnia_mrp_recycle.field_stock_recycle_product_to_product_id
+#, python-format
+msgid "To Product"
+msgstr "A Prodotto"
+
+#. module: omnia_mrp_recycle
+#: code:addons/omnia_mrp_recycle/models/stock_recycle_product.py:58
+#: model:ir.model.fields,field_description:omnia_mrp_recycle.field_stock_recycle_product_to_qty
+#, python-format
+msgid "To Quantity"
+msgstr "A Quantita'"
+
+#. module: omnia_mrp_recycle
+#: code:addons/omnia_mrp_recycle/models/stock_recycle_product.py:62
+#: model:ir.model.fields,field_description:omnia_mrp_recycle.field_stock_recycle_product_to_product_uom
+#, python-format
+msgid "To Unit of measure"
+msgstr "A Unita' di misura"
+
+#. module: omnia_mrp_recycle
+#: code:addons/omnia_mrp_recycle/models/stock_recycle_product.py:53
+#: model:ir.model.fields,field_description:omnia_mrp_recycle.field_stock_recycle_product_name
+#, python-format
+msgid "name"
+msgstr "Nome"
+
+#. module: omnia_mrp_recycle
+#: model:ir.model,name:omnia_mrp_recycle.model_stock_recycle_product
+msgid "stock.recycle_product"
+msgstr "stock.recycle_product"

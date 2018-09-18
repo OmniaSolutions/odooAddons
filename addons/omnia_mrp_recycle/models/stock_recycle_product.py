@@ -52,14 +52,14 @@ class StockRecicleProduct(models.Model):
     #  And recycle location has to change?
     name = fields.Char(_('name'), readonly=True)
     description = fields.Text(_('Notes'))
-    from_product_id = fields.Many2one('product.product', _('Product'), required=True)
-    to_product_id = fields.Many2one('product.product', _('Product'), required=True)
-    from_qty = fields.Float(_('Quantity'), required=True)
+    from_product_id = fields.Many2one('product.product', _('From Product'), required=True)
+    to_product_id = fields.Many2one('product.product', _('To Product'), required=True)
+    from_qty = fields.Float(_('From Quantity'), required=True)
     to_qty = fields.Float(_('To Quantity'), required=True)
     from_location = fields.Many2one('stock.location', _('From Location'), required=True, default=_compute_default_from_location)
     to_location = fields.Many2one('stock.location', _('To Location'), required=True, default=_compute_default_to_location)
-    from_product_uom = fields.Many2one('product.uom', _('Unit of measure'), related='from_product_id.uom_id')
-    to_product_uom = fields.Many2one('product.uom', _('Unit of measure'), related='to_product_id.uom_id')
+    from_product_uom = fields.Many2one('product.uom', _('From Unit of measure'), related='from_product_id.uom_id')
+    to_product_uom = fields.Many2one('product.uom', _('To Unit of measure'), related='to_product_id.uom_id')
     state = fields.Selection([('draft', 'Draft'),
                               ('confirmed', 'Confirmed')],
                              default='draft')
