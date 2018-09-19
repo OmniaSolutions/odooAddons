@@ -8,8 +8,8 @@
             <field name="inherit_id" ref="base.view_partner_form"/>
             <field name="arch" type="xml">
                 <group name="purchase" position="inside">
-                	<field name="min_lead_time"/>
-                    <field name="max_lead_time"/>
+                	<field name="min_lead_time" widget="float_time"/>
+                    <field name="max_lead_time" widget="float_time"/>
                     <field name="average_lead_time" widget="float_time"/>
                 </group>
                 
