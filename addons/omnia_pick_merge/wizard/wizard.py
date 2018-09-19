@@ -30,6 +30,7 @@ class TmpStockMoveLine(models.TransientModel):
     ref_id = fields.Many2one('stock.tmp_merge_pick')
     requested_date = fields.Datetime(_('Request date'))
     date_expected = fields.Datetime(_('Effective date'))
+    identificated = fields.Boolean(_('Identificato'))
 
 
 class TmpStockMove(models.TransientModel):
@@ -64,7 +65,11 @@ class TmpStockMove(models.TransientModel):
                 raise UserError(_("Partner are not equal"))
             self.pick_origin = str(self.pick_origin) + "," + str(pick_id.origin)
         for pick_id in pick_ids:
+            if pick_id.state in ['done', 'cancel']:
+                continue
             for move in pick_id.move_lines:
+                if move.state in ['done', 'cancel']:
+                    continue
                 if move.product_id:
                     TmpStockMoveLineObj.create({'ref_id': self.id,
                                                 'ref_stock_move_id': move.id,
