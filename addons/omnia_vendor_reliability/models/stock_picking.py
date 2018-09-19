@@ -33,4 +33,4 @@ class StockPicking(models.Model):
                 pickBrws.lead_delivery_time = delay
             
     lead_delivery_time = fields.Float(_('Lead Delivery Time'), compute=_computeLeadDeliveryTime)
-
+    delay_color = fields.Html(string='', related='partner_id.delay_color')

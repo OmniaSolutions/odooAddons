@@ -11,6 +11,9 @@
                 	<field name="date_done" readonly="1"/>
                     <field name="lead_delivery_time" widget="float_time"/>
                 </field>
+                <field name="partner_id" position="before">
+                	<field name="delay_color" nolabel="1"/>
+                </field>
             </field>
         </record>
 
