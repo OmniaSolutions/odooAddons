@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+	<record id="view_omnia_crm_lead_analytic_form" model="ir.ui.view">
+		<field name="name">crm.lead.analytic.form</field>
+		<field name="model">crm.lead</field>
+		<field name="priority">1</field>
+		<field name="inherit_id" ref="sale_crm.crm_case_form_view_oppor"/>
+		<field name="arch" type="xml">
+            <field name="referred" position="after">
+                <field name="project_id" />
+            </field>
+            <xpath expr="//button[@name='%(sale_crm.sale_action_quotations)d'][1]" position="attributes">
+                <attribute name="context">{'default_partner_id': partner_id, 'search_default_draft': 1, 'default_project_id': project_id}</attribute>
+            </xpath>
+        </field>
+	</record>  
+</odoo>
