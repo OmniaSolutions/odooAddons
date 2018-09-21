@@ -57,6 +57,8 @@ class WarehouseJournal(models.TransientModel):
             addQty = resQty
         elif operationType == 'outgoing':
             minusQty = resQty
+        else:
+            return []
         return self.getRowVals(counter, moveLine, addQty, minusQty)
             
     @api.model
@@ -72,12 +74,14 @@ class WarehouseJournal(models.TransientModel):
             moveLine.product_uom_id.name or '',   # UM
             str(addQty), # CARICO
             str(minusQty),   # SCARICO
+            moveLine.location_id.name,
+            moveLine.location_dest_id.name
             ]
 
     @api.model
     def getExportHeaders(self):
         return ['N.RIGA', 'DATA REG.', 'N.DOC.', 'DATA DOC.', 'DESCRIZ. DEL MOV.',
-                  'ARTICOLO', 'DESCRIZIONE', 'UM', 'CARICO', 'SCARICO']
+                  'ARTICOLO', 'DESCRIZIONE', 'UM', 'CARICO', 'SCARICO', 'LOCATION FROM', 'LOCATION TO']
         
     @api.multi
     def generate_report(self):
@@ -101,6 +105,8 @@ class WarehouseJournal(models.TransientModel):
             spamwriter.writerow(header)
             for moveLine in moveLines:
                 listRow = self.getExportRow(counter, moveLine)
+                if not listRow:
+                    continue
                 spamwriter.writerow(listRow)
                 counter = counter + 1
         with open(filePath, 'rb') as outFileObjr:
@@ -112,7 +118,4 @@ class WarehouseJournal(models.TransientModel):
                 'target': 'new',    
                 'res_id': self.id,
                 }
-        
-        
-            
-            
+
