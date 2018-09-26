@@ -1,5 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo> 
+
+    <record id="omnia_tmp_stock_location_quant_tree" model="ir.ui.view">
+        <field name="name">Show quant at date</field>
+        <field name="model">tmp.stock.location.quant</field>
+        <field name="arch" type="xml">
+	        <tree>
+	                <field name="product_id"/>
+	                <field name="quant_qty"/>
+	                <field name="location_id"/>
+	        </tree>
+        </field>
+    </record>
+
     <record id="wiz_omnia_stock_location_quant_tmp_choose_date" model="ir.ui.view">
         <field name="name">Show quant at date</field>
         <field name="model">tmp.choose.date</field>
