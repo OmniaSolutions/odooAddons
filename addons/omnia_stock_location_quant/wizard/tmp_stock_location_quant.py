@@ -19,7 +19,7 @@ class TmpChooseDate(models.TransientModel):
     _name = "tmp.choose.date"
     date = fields.Date("Inventoty Date")
 
-    @api.one
+    @api.multi
     def action_show_quant(self):
         res = self.env['tmp.stock.location.quant'].populate(self.date)
         return res
@@ -46,12 +46,11 @@ class TmpStockLocationQuant(models.TransientModel):
             self.create({'product_id': row[0],
                          'location_id': row[1],
                          'quant_qty': row[2]})
-            break
         return {
             'name': _('Stock quant'),
             'view_type': 'form',
-            "view_mode": 'tree',
+            "view_mode": 'tree,form',
             'res_model': 'tmp.stock.location.quant',
-            'target': 'current',
+            'target': 'main',    # current / new / inline / fullscreen / main
             'type': 'ir.actions.act_window',
             'domain': "[]"}
