@@ -293,7 +293,7 @@ class MrpProductionWizard(models.TransientModel):
             pickIn = self.createStockPickingIn(partner_id, productionBrws, pick_out=pickOut)
             date_planned_finished_wo = pickIn.scheduled_date
             date_planned_start_wo = pickOut.scheduled_date
-            self.createPurches(external_partner, pickOut)
+            self.createPurches(external_partner, pickIn)
         productionBrws.date_planned_finished_wo = date_planned_finished_wo
         productionBrws.date_planned_start_wo = date_planned_start_wo
         pickingBrwsList = [pickIn.id, pickOut.id]
