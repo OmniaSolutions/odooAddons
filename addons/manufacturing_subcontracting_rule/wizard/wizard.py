@@ -318,10 +318,11 @@ class MrpProductionWizard(models.TransientModel):
                       'production_external_id': self.production_id.id,
                       'sub_move_line': lineBrws.id,
                       }
-            new_product_line = self.env['purchase.order.line'].create(values)
-            new_product_line.onchange_product_id()
-            new_product_line.date_planned = self.request_date
-            new_product_line.product_qty = lineBrws.product_uom_qty
+            new_purchase_order_line = self.env['purchase.order.line'].create(values)
+            new_purchase_order_line.onchange_product_id()
+            new_purchase_order_line.date_planned = self.request_date
+            new_purchase_order_line.product_qty = lineBrws.product_uom_qty
+            lineBrws.purchase_order_line_subcontracting_id = new_purchase_order_line.id
         if self.confirm_purchese_order:
             obj_po.button_confirm()
 
