@@ -18,12 +18,13 @@ class stock_picking_custom(models.Model):
 
     @api.multi
     def action_cancel(self):
-        for move_line in self.move_lines:
-            old_move = self.env['stock.move'].search([('id', '=', move_line.from_move_id)])
-            if old_move:
-                old_move.product_uom_qty = old_move.product_uom_qty + move_line.product_uom_qty
-        self.mapped('move_lines')._action_cancel()
-        self.write({'is_locked': True})
+        for pickBrws in self:
+            for move_line in pickBrws.move_lines:
+                old_move = self.env['stock.move'].search([('id', '=', move_line.from_move_id)])
+                if old_move:
+                    old_move.product_uom_qty = old_move.product_uom_qty + move_line.product_uom_qty
+            pickBrws.mapped('move_lines')._action_cancel()
+            pickBrws.write({'is_locked': True})
         return True
 
 #     @api.multi
