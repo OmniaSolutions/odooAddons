@@ -99,4 +99,6 @@ class StockMove(models.Model):
             for move in pick_out.move_lines:
                 moveQty = qty * move.unit_factor
                 raw_move = move.subcontractingMove(move.location_dest_id, subcontracting_location)
+                raw_move.ordered_qty = moveQty
+                raw_move.product_uom_qty = moveQty
                 raw_move.moveQty(moveQty)
