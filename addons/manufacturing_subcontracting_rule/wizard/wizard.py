@@ -396,7 +396,7 @@ class MrpProductionWizard(models.TransientModel):
         for productionLineBrws in productionBrws.move_finished_ids:
             if not customerProductionLocation:
                 customerProductionLocation = productionLineBrws.location_id
-            if productionLineBrws.state == 'confirmed':
+            if productionLineBrws.state == 'confirmed' and productionLineBrws.partner_id == partner_id:
                 incomingMoves.append(productionLineBrws)
         toCreate = {'partner_id': partner_id.id,
                     'location_id': customerProductionLocation.id,
@@ -447,7 +447,7 @@ class MrpProductionWizard(models.TransientModel):
         for productionLineBrws in productionBrws.move_raw_ids:
             if not customerProductionLocation:
                 customerProductionLocation = productionLineBrws.location_dest_id
-            if productionLineBrws.state == 'confirmed':
+            if productionLineBrws.state == 'confirmed' and productionLineBrws.partner_id == partner_id:
                 outGoingMoves.append(productionLineBrws)
         toCreate = {'partner_id': partner_id.id,
                     'location_id': localStockLocation.id,

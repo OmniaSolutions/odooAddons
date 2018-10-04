@@ -95,7 +95,7 @@ class StockMove(models.Model):
                     pick_out = pick
         # --
         if pick_out:
-            # upload row material to production directory
+            # upload raw material to production directory
             for move in pick_out.move_lines:
                 moveQty = qty * move.unit_factor
                 raw_move = move.subcontractingMove(move.location_dest_id, subcontracting_location)
