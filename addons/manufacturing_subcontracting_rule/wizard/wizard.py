@@ -282,6 +282,8 @@ class MrpProductionWizard(models.TransientModel):
 
     @api.multi
     def button_produce_externally(self):
+        if not self.create_purchese_order and len(self.external_partner.ids) != 1:
+            raise UserError(_("If you don't want to create purchase order you have to select only one partner."))
         productionBrws = self.getParentProduction()
         self.cancelProductionRows(productionBrws)
         self.updateMoveLines(productionBrws)
