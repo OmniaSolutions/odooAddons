@@ -53,6 +53,8 @@ class TmpStockMove(models.TransientModel):
         pick_ids = self.env['stock.picking'].browse(pick_ids)
         first_partner_id = -1
         for pick_id in pick_ids:
+            if pick_id.picking_type_id.code == 'incoming':
+                raise UserError(_("Merge incoming pickings is not allowed."))
             if first_partner_id == -1:
                 first_partner_id = pick_id.partner_id.id
                 self.location_id = pick_id.location_id.id
