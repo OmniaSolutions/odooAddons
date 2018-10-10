@@ -83,21 +83,6 @@ class StockPicking(models.Model):
         for lineBrws in manOrder.move_raw_ids:
             lineBrws.write({'state': 'done'})
 
-    def removeMaterialFromSupplier(self, line, manufacturingObj, qty_produced):
-        stockQuantObj = self.env['stock.quant']
-        product_productObj = self.env['product.product']
-        if line.state == 'cancel':
-            return
-        prodBrws = line.product_id
-        for raw_bom in manufacturingObj.stock_bom_ids:
-            if prodBrws.id == raw_bom.source_product_id:
-                for product_id in product_productObj.browse(raw_bom.raw_product_id):
-                    quantsForProduct = self.getStockQuant(stockQuantObj, line.location_id.id, product_id)
-                    for quantsForProductBrws in quantsForProduct:
-                        newQty = quantsForProductBrws.quantity - manufacturingObj.getQuantToRemove(product_id, qty_produced)
-                        quantsForProductBrws.write({'quantity': newQty})
-                        break
-
     def getStockQuant(self, stockQuantObj, lineId, prodBrws):
         quantsForProduct = stockQuantObj.search([
             ('location_id', '=', lineId),
