@@ -47,64 +47,11 @@ class StockPicking(models.Model):
                                                   ('close', _('Close external Production'))])
     sub_production_id = fields.Integer(string=_('Sub production Id'))
 
-    def getRelatedExternalManOrder(self, objPick):
-        manufacturingObj = self.env['mrp.production']
-        filterList = [('name', '=', objPick.origin),
-                      ('state', '=', 'external')]
-        for manufactObj in manufacturingObj.search(filterList):
-            return manufactObj
-        return None
-
-    def createFinishedProducts(self, manufacturingObj):
-        stockQuantObj = self.env['stock.quant']
-        for finishedLineBrws in manufacturingObj.move_finished_ids:
-            if finishedLineBrws.state == 'cancel':  # Skip old lines
-                continue
-            prodBrws = finishedLineBrws.product_id
-            quantsForProduct = self.getStockQuant(stockQuantObj, finishedLineBrws.location_id.id, prodBrws)
-            if not quantsForProduct:
-                stockQuantObj.create({
-                    'quantity': finishedLineBrws.product_qty,
-                    'location_id': finishedLineBrws.location_id.id,
-                    'product_id': prodBrws.id})
-            else:
-                for quantsForProductBrws in quantsForProduct:
-                    newQty = quantsForProductBrws.quantity + finishedLineBrws.product_qty
-                    quantsForProductBrws.write({'quantity': newQty})
-                    break
-
     def isIncoming(self):
         return self.sub_contracting_operation == 'close'
 
     def isOutGoing(self):
         return self.sub_contracting_operation == 'open'
-
-    def doneManRawMaterials(self, manOrder):
-        for lineBrws in manOrder.move_raw_ids:
-            lineBrws.write({'state': 'done'})
-
-    def getStockQuant(self, stockQuantObj, lineId, prodBrws):
-        quantsForProduct = stockQuantObj.search([
-            ('location_id', '=', lineId),
-            ('product_id', '=', prodBrws.id)])
-        return quantsForProduct
-
-    @api.multi
-    def moveMaterialFromLine(self, line, remove=True):
-        stockQuantObj = self.env['stock.quant']
-        if line.state == 'cancel':
-            return
-        prodBrws = line.product_id
-        quantsForProduct = self.getStockQuant(stockQuantObj, line.location_id.id, prodBrws)
-        for quantsForProductBrws in quantsForProduct:
-            out_qty = line.product_qty
-            if remove:
-                newQty = quantsForProductBrws.quantity - out_qty
-            else:
-                newQty = quantsForProductBrws.quantity + out_qty
-            quantsForProductBrws.write({'quantity': newQty})
-            return out_qty
-        return 0.0
 
     @api.multi
     def action_done(self):
