@@ -301,6 +301,11 @@ class MrpProductionWizard(models.TransientModel):
         productionBrws.date_planned_finished_wo = date_planned_finished_wo
         productionBrws.date_planned_start_wo = date_planned_start_wo
         productionBrws.external_pickings = [(6, 0, pickingBrwsList)]
+        movesToCancel = productionBrws.move_raw_ids.filtered(lambda m:m.mrp_original_move == False)
+        movesToCancel2 = productionBrws.move_finished_ids.filtered(lambda m:m.mrp_original_move == False)
+        movesToCancel += movesToCancel2
+        movesToCancel._do_unreserve()
+        movesToCancel._action_cancel()
 
     @api.multi
     def createPurches(self, toCreatePurchese, picking):
