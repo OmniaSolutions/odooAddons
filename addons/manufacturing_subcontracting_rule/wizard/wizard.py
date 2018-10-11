@@ -334,6 +334,8 @@ class MrpProductionWizard(models.TransientModel):
         """
         this method could be overloaded as per customer needs
         """
+        if not self.production_id.product_id.default_code:
+            raise UserError(_("Missing default code on product %r" % self.product_id.display_name))
         val = {'default_code': "S-" + self.production_id.product_id.default_code,
                'type': 'service',
                'purchase_ok': True,
