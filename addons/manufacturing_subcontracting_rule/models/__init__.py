@@ -41,3 +41,4 @@ from . import purchase_order
 from . import mrp_bom
 from . import res_partner
 from . import stock_location
+from . import change_production_qty

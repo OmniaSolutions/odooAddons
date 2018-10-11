@@ -145,6 +145,9 @@ class MrpProduction(models.Model):
         isOut = False
         for stock_picking in self.external_pickings:
             if stock_picking.isIncoming():
+                if stock_picking.state == 'cancel':
+                    isOut = True
+                    continue
                 if stock_picking.state != 'done':
                     return False
                 else:

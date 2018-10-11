@@ -25,10 +25,4 @@ class stock_picking_custom(models.Model):
                     old_move.product_uom_qty = old_move.product_uom_qty + move_line.product_uom_qty
             pickBrws.mapped('move_lines')._action_cancel()
             pickBrws.write({'is_locked': True})
-        return True
-
-#     @api.multi
-#     def unlink(self):
-#         self.mapped('move_lines')._action_cancel()
-#         self.mapped('move_lines').unlink() # Checks if moves are not done
-#         return super(Picking, self).unlink()
+        return super(stock_picking_custom, self).action_cancel()
