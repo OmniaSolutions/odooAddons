@@ -49,6 +49,6 @@ class ProductSupplierinfo(models.Model):
     _inherit = ['product.supplierinfo']
 
     routing_id = fields.Many2one('mrp.routing',
-                                 string=_('Routung'))
+                                 string=_('Routing'))
     operation_id = fields.Many2one('mrp.routing.workcenter',
                                    string=_('Phase'))
