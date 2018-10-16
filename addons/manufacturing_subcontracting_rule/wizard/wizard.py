@@ -162,18 +162,18 @@ class MrpProductionWizard(models.TransientModel):
         relObj = self.env[model]
         return relObj.browse(objIds)
 
-    def cancelProductionRows(self, prodObj, workorder_id=False):
+    def cancelProductionRows(self, prodObj, workorder_brws=False):
         for lineBrws in prodObj.move_finished_ids:
             lineBrws.mrp_original_move = lineBrws.state
             lineBrws.action_cancel()
         for lineBrws in prodObj.move_raw_ids:
-            if workorder_id:
-                if lineBrws.workorder_id.id != workorder_id:
+            if workorder_brws:
+                if lineBrws.workorder_id.id != workorder_brws.id:
                     continue
             lineBrws.mrp_original_move = lineBrws.state
             lineBrws.action_cancel()
 
-    def updateMoveLines(self, productionBrws, workOrderBrw):
+    def updateMoveLines(self, productionBrws, workOrderBrw=False):
         move_raw_ids = []
         move_finished_ids = []
         productsToCheck = []
@@ -199,7 +199,7 @@ class MrpProductionWizard(models.TransientModel):
                 move_finished_ids.append((0, False, vals))
         product_delay = 0.0
         for lineBrws in self.move_raw_ids:
-            if workOrderBrw.id != lineBrws.workorder_id.id:
+            if workOrderBrw and (workOrderBrw.id != lineBrws.workorder_id.id):
                 continue
             productsToCheck.append(lineBrws.product_id.id)
             product_delay = lineBrws.product_id.produce_delay
@@ -269,7 +269,8 @@ class MrpProductionWizard(models.TransientModel):
         workorderBrw.date_planned_start = date_planned_start_wo
         pickingBrwsList = [pickIn.id, pickOut.id]
         productionBrws.external_pickings = [(6, 0, pickingBrwsList)]
-        self.createPurches()  # mettere a posto questa
+        self.createPurches(workorderBrw)  # mettere a posto questa
+        workorderBrw.state = 'external'
 
     @api.model
     def getNewExternalProductInfo(self):
@@ -310,7 +311,7 @@ class MrpProductionWizard(models.TransientModel):
             return product_product.name
 
     @api.model
-    def createSeller(self, external_production_partner, product_id):
+    def createSeller(self, external_production_partner, product_id, workorderBrws=False):
         for seller in product_id.seller_ids:
             if seller.name.id == external_production_partner.partner_id.id:
                 return
@@ -320,17 +321,20 @@ class MrpProductionWizard(models.TransientModel):
                         'min_qty': external_production_partner.min_qty,
                         'price': external_production_partner.price,
                         'delay': external_production_partner.delay}
+        if workorderBrws:
+            supplierinfo['routing_id'] = workorderBrws.production_id.routing_id.id
+            supplierinfo['operation_id'] = workorderBrws.operation_id.id
         vals = {'seller_ids': [(0, 0, supplierinfo)]}
         product_id.write(vals)
 
     @api.multi
-    def createPurches(self):
+    def createPurches(self, workorderBrws=False):
         if not self.create_purchese_order:
             return
         purchaseOrderObj = self.env['purchase.order']
         obj_product_product = self.getDefaultExternalServiceProduct()
         for toCreatePurchese in self.external_partner:
-            self.createSeller(toCreatePurchese, obj_product_product)
+            self.createSeller(toCreatePurchese, obj_product_product, workorderBrws)
             purchaseBrws = None
             if self.merge_purchese_order:
                 purchaseBrws = purchaseOrderObj.search([('partner_id', '=', toCreatePurchese.partner_id.id),
