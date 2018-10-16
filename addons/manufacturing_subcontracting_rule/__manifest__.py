@@ -51,7 +51,8 @@
             'views/purchase_order.xml',
             'views/mrp_bom.xml',
             'views/mrp_workorder.xml',
-            'views/product_supplierinfo.xml'
+            'views/product_supplierinfo.xml',
+            'views/res_partner.xml',
     ],
     'installable': True,
     'application': False,
