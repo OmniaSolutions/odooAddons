@@ -48,6 +48,7 @@ class StockMove(models.Model):
     mrp_original_move = fields.Char(_('Is genereted from orignin MO'))
     mrp_production_id = fields.Integer(_('Original mrp id'))
     purchase_order_line_subcontracting_id = fields.Integer(_('Original Purchase line Id'))
+    subcontracting_move_id = fields.Integer(_('Original move id'))
 
     @api.model
     def moveQty(self, qty):
@@ -67,20 +68,24 @@ class StockMove(models.Model):
                     self._action_done()
 
     @api.model
-    def subcontractingMove(self, from_location, to_location):
+    def subcontractingMove(self, from_location, to_location, source_id=False):
         return self.copy(default={'name': 'SUB: ' + self.display_name,
                                   'location_id': from_location.id,
                                   'location_dest_id': to_location.id,
                                   'sale_line_id': False,
                                   'production_id': False,
                                   'raw_material_production_id': False,
-                                  'picking_id': False})
+                                  'picking_id': False,
+                                  'subcontracting_move_id': source_id})
 
     @api.multi
     def subContractingProduce(self, objProduction):
+        move_date = self.date
         subcontracting_location = self.env['stock.location'].getSubcontractiongLocation()
-        production_move = self.subcontractingMove(subcontracting_location, self.location_id)
+        production_move = self.subcontractingMove(subcontracting_location, self.location_id, self.id)
         production_move.moveQty(production_move.product_qty)
+        production_move.date = move_date
+        production_move.move_line_ids.date = move_date
         #
         # manage raw material
         #
@@ -98,7 +103,17 @@ class StockMove(models.Model):
             # upload raw material to production directory
             for move in pick_out.move_lines:
                 moveQty = qty * move.unit_factor
-                raw_move = move.subcontractingMove(move.location_dest_id, subcontracting_location)
+                raw_move = move.subcontractingMove(move.location_dest_id, subcontracting_location, self.id)
                 raw_move.ordered_qty = moveQty
                 raw_move.product_uom_qty = moveQty
                 raw_move.moveQty(moveQty)
+                raw_move.date = self.date
+                raw_move.move_line_ids.date = move_date
+
+    @api.multi
+    def write(self, value):
+        for move in self:
+            if 'quantity_done' in list(value.keys()):
+                for subMove in self.search([('subcontracting_move_id', '=', move.id)]):
+                    subMove.quantity_done = value['quantity_done']
+        return super(StockMove, self).write(value)
