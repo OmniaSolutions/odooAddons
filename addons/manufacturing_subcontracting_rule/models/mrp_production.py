@@ -182,7 +182,7 @@ class MrpProduction(models.Model):
     def button_produce_externally(self):
         values = self.get_wizard_value()
         obj_id = self.env['mrp.externally.wizard'].create(values)
-        obj_id.create_vendors(self.bom_id.external_product.seller_ids)
+        obj_id.create_vendors(self)
         self.env.cr.commit()
         return {
             'type': 'ir.actions.act_window',
