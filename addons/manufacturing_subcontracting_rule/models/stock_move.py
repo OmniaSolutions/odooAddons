@@ -46,3 +46,39 @@ class StockMove(models.Model):
     _inherit = ['stock.move']
 
     mrp_original_move = fields.Char(_('Is genereted from orignin MO'))
+    mrp_production_id = fields.Integer(_('Original mrp id'))
+    purchase_order_line_subcontracting_id = fields.Integer(_('Original Purchase line Id'))
+    subcontracting_move_id = fields.Integer(_('Original move id'))
+    
+    @api.multi
+    def subContractingProduce(self, objProduction):
+        move_date = self.date
+        subcontracting_location = self.env['stock.location'].getSubcontractiongLocation()
+        production_move = self.subcontractingMove(subcontracting_location, self.location_id, self.id)
+        production_move.moveQty(production_move.product_qty)
+        production_move.date = move_date
+        production_move.move_line_ids.date = move_date
+        #
+        # manage raw material
+        #
+        qty = self.quantity_done
+        if self.state == 'cancel':
+            return
+        pick_out = self.picking_id.pick_out
+        # ++ back work compatibility
+        if not pick_out:
+            for pick in objProduction.external_pickings:
+                if pick.isOutGoing():
+                    pick_out = pick
+        # --
+        if pick_out:
+            # upload raw material to production directory
+            for move in pick_out.move_lines:
+                moveQty = qty * move.unit_factor
+                raw_move = move.subcontractingMove(move.location_dest_id, subcontracting_location, self.id)
+                raw_move.ordered_qty = moveQty
+                raw_move.product_uom_qty = moveQty
+                raw_move.moveQty(moveQty)
+                raw_move.date = self.date
+                raw_move.move_line_ids.date = move_date
+

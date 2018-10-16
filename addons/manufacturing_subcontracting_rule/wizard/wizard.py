@@ -74,6 +74,7 @@ class TmpStockMove(models.TransientModel):
     product_uom = fields.Many2one(
         'product.uom', 'Unit of Measure', required=True, states={'done': [('readonly', True)]}, default=lambda self: self.env['product.uom'].search([], limit=1, order='id'))
     date_expected = fields.Datetime('Scheduled date')
+    workorder_id = fields.Many2one(comodel_name='mrp.workorder', string='Workorder Id', readonly=True)
 
     @api.model
     def default_get(self, fields_list):
@@ -143,6 +144,7 @@ class MrpProductionWizard(models.TransientModel):
     work_order_id = fields.Many2one('mrp.workorder',
                                     string=_('Workorder'),
                                     readonly=True)
+    same_product_in_out = fields.Boolean(_('Same Product In and Out'), default=False)
 
     @api.onchange('request_date')
     def _request_date(self):
@@ -274,6 +276,7 @@ class MrpProductionWizard(models.TransientModel):
         workorderBrw = self.getParentObjectBrowse()
         productionBrws = workorderBrw.production_id
         self.cancelProductionRows(productionBrws, workorderBrw)
+        self.updateMoveLines(productionBrws, workorderBrw)
         for external_partner in self.external_partner:
             partner_id = external_partner.partner_id
             pickIn = self.createStockPickingIn(partner_id, productionBrws)
@@ -399,12 +402,7 @@ class MrpProductionWizard(models.TransientModel):
         stockObj = self.env['stock.picking']
         customerProductionLocation = partnerBrws.location_id
         localStockLocation = productionBrws.location_src_id  # Taken from manufacturing order
-        incomingMoves = []
-        for productionLineBrws in productionBrws.move_finished_ids:
-            if not customerProductionLocation:
-                customerProductionLocation = productionLineBrws.location_id
-            if productionLineBrws.state == 'confirmed' and productionLineBrws.partner_id == partnerBrws:
-                incomingMoves.append(productionLineBrws)
+        incomingMoves = self.getIncomingTmpMoves(productionBrws, customerProductionLocation, partnerBrws)
         toCreate = {'partner_id': partnerBrws.id,
                     'location_id': customerProductionLocation.id,
                     'location_dest_id': localStockLocation.id,
@@ -431,6 +429,15 @@ class MrpProductionWizard(models.TransientModel):
         obj.write({'move_lines': [(6, False, newStockLines)]})
         return obj
 
+    def getIncomingTmpMoves(self, productionBrws, customerProductionLocation, partnerBrws):
+        incomingMoves = []
+        for productionLineBrws in productionBrws.move_finished_ids:
+            if not customerProductionLocation:
+                customerProductionLocation = productionLineBrws.location_id
+            if productionLineBrws.state == 'confirmed' and productionLineBrws.partner_id == partnerBrws:
+                incomingMoves.append(productionLineBrws)
+        return incomingMoves
+        
     def createStockPickingOut(self, partnerBrws, productionBrws, originBrw=None):
         def getPickingType():
             warehouseId = productionBrws.picking_type_id.warehouse_id.id
@@ -463,16 +470,25 @@ class MrpProductionWizard(models.TransientModel):
                     'sub_production_id': self.production_id.id}
         obj = stockObj.create(toCreate)
         newStockLines = []
-        for outMove in outGoingMoves:
-            stockMove = outMove.copy(default={
-                                              'name': outMove.product_id.display_name,
-                                              'production_id': False,
-                                              'raw_material_production_id': False,
-                                              'unit_factor': outMove.unit_factor})
-            stockMove.location_id = localStockLocation.id
-            stockMove.location_dest_id = customerProductionLocation.id
-            #stockMove.sale_line_id = outMove.sale_line_id
-            newStockLines.append(stockMove.id)
+        if self.same_product_in_out:
+            for incomingTmpMove in self.getIncomingTmpMoves(productionBrws, customerProductionLocation, partnerBrws):
+                stockMove = incomingTmpMove.copy(default={
+                                                  'name': incomingTmpMove.product_id.display_name,
+                                                  'production_id': False,
+                                                  'raw_material_production_id': False,
+                                                  'unit_factor': incomingTmpMove.unit_factor})
+                newStockLines.append(stockMove.id)
+        else:
+            for outMove in outGoingMoves:
+                stockMove = outMove.copy(default={
+                                                  'name': outMove.product_id.display_name,
+                                                  'production_id': False,
+                                                  'raw_material_production_id': False,
+                                                  'unit_factor': outMove.unit_factor})
+                stockMove.location_id = localStockLocation.id
+                stockMove.location_dest_id = customerProductionLocation.id
+                #stockMove.sale_line_id = outMove.sale_line_id
+                newStockLines.append(stockMove.id)
         obj.write({'move_lines': [(6, False, newStockLines)]})
         return obj
 

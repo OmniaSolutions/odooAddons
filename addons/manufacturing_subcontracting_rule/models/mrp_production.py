@@ -130,7 +130,8 @@ class MrpProduction(models.Model):
             'production_id': self.id,
             'product_uom': sourceMoveObj.product_uom.id,
             'date_expected': sourceMoveObj.date_expected,
-            'mrp_original_move': False})
+            'mrp_original_move': False,
+            'workorder_id': sourceMoveObj.workorder_id.id})
 
     def copyAndCleanLines(self, brwsList, location_dest_id=None, location_source_id=None):
         outElems = []

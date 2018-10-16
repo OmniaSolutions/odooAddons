@@ -19,15 +19,17 @@
                             <field string="Partner" name="partner_id"/>
                             <field string="Unit Price" name="price" />
                             <field string="Delay" name="delay" />
-                            <field string="Min. Quantity" name="min_qty" />                        
+                            <field string="Min. Quantity" name="min_qty" /> 
                         </group>
                     </form>
 	        	</field>
 	        	<field name="request_date"/>
+	        	<field name="work_order_id" readonly="1"/>
 	        	<group col="6">
     	        	<field name="create_purchese_order"/>
     	        	<field name="merge_purchese_order"/>
     	        	<field name="confirm_purchese_order"/>
+    	        	<field name="same_product_in_out" attrs="{'invisible': [('work_order_id', '=', False)]}"/>
 	        	</group>
 	            <field name="move_raw_ids" context="{'wizard_obj_id': id}">
 	                <tree>

@@ -41,23 +41,39 @@ class StockImmediateTransfer(models.TransientModel):
     _name = 'stock.immediate.transfer'
     _inherit = ['stock.immediate.transfer']
 
+#     @api.multi
+#     def process(self):
+#         '''
+#             Be sure to close the manufacturing order only if finished product is arrived.
+#         '''
+#         pikingObj = self.env['stock.picking']
+#         res = super(StockImmediateTransfer, self).process()
+#         for objPick in self.pick_id:
+#             manufactObj = pikingObj.getRelatedExternalManOrder(objPick)
+#             if not manufactObj:
+#                 continue
+#             if pikingObj.isOutGoing(objPick):
+#                 pikingObj.doneManRawMaterials(manufactObj)
+#             elif pikingObj.isIncoming(objPick):
+#                 manufactObj.button_mark_done()
+#             break
+#         return res
+
+
     @api.multi
     def process(self):
-        '''
-            Be sure to close the manufacturing order only if finished product is arrived.
-        '''
-        pikingObj = self.env['stock.picking']
         res = super(StockImmediateTransfer, self).process()
         for objPick in self.pick_id:
-            manufactObj = pikingObj.getRelatedExternalManOrder(objPick)
-            if not manufactObj:
-                continue
-            if pikingObj.isOutGoing(objPick):
-                pikingObj.doneManRawMaterials(manufactObj)
-            elif pikingObj.isIncoming(objPick):
-                manufactObj.button_mark_done()
-            break
+            if objPick.isIncoming(objPick):
+                objProduction = objPick.env['mrp.production'].search([('id', '=', objPick.sub_production_id)])
+                if objProduction and objProduction.state == 'external':
+                    for line in objPick.move_lines:
+                        if line.mrp_production_id == objProduction.id:
+                            line.subContractingProduce(objProduction)
+                    if objProduction.isPicksInDone():
+                        objProduction.button_mark_done()
         return res
+
 
 
 class StockPicking(models.Model):
@@ -69,19 +85,19 @@ class StockPicking(models.Model):
                                                   ('close', _('Close external Production'))])
     sub_production_id = fields.Integer(string=_('Sub production Id'))
 
-    @api.multi
-    def action_assign(self):
-        """In addition to what the method in the parent class does,
-        Changed batches states to assigned if all picking are assigned.
-        """
-        for objPick in self:
-            if self.isIncoming(objPick):
-                maonOrder = self.getRelatedExternalManOrder(objPick)
-                if not maonOrder:
-                    continue
-                self.createFinishedProducts(maonOrder)
-                break
-        return super(StockPicking, self).action_assign()
+#     @api.multi
+#     def action_assign(self):
+#         """In addition to what the method in the parent class does,
+#         Changed batches states to assigned if all picking are assigned.
+#         """
+#         for objPick in self:
+#             if self.isIncoming(objPick):
+#                 maonOrder = self.getRelatedExternalManOrder(objPick)
+#                 if not maonOrder:
+#                     continue
+#                 self.createFinishedProducts(maonOrder)
+#                 break
+#         return super(StockPicking, self).action_assign()
 
     def getRelatedExternalManOrder(self, objPick):
         manufacturingObj = self.env['mrp.production']
