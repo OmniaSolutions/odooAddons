@@ -3,7 +3,7 @@
 
     <record id="mrp_production_externally_view_wizard" model="ir.ui.view">
         <field name="name">Produce Externally</field>
-        <field name="model">mrp.production.externally.wizard</field>
+        <field name="model">mrp.externally.wizard</field>
         <field name="arch" type="xml">
         <form>
             <group>
@@ -53,27 +53,6 @@
             <footer>
             	<button string="Cancel" name="button_close_wizard" type="object"/>
             	<button string="Produce Externally" name="button_produce_externally" type="object"/>
-            </footer>
-        </form>
-        </field>
-    </record>
-
-    <record id="mrp_workorder_externally_view_wizard" model="ir.ui.view">
-        <field name="name">mrp.workorder.externally.view.wizard</field>
-        <field name="model">mrp.workorder.externally.wizard</field>
-        <field name="arch" type="xml">
-        <form>
-            <group>
-                <field name="external_partner"/>
-	        	<field name="request_date"/>
-	        	<field name="create_purchese_order"/>
-                <field name="move_raw_ids"/>
-                <field name="move_finished_ids"/>
-            </group>
-            <separator string=""/>
-            <footer>
-                <button special="cancel" string="Cancel"/>
-                <button string="Produce Externally" name="button_produce_externally" type="object"/>
             </footer>
         </form>
         </field>

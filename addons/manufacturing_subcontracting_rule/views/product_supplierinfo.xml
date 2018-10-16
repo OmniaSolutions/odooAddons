@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <data>
+    
+        <record id="manufacturing_subcontracting_rule.product_supplierinfo_form_view" model="ir.ui.view">
+            <field name="model">product.supplierinfo</field>
+            <field name="inherit_id" ref="product.product_supplierinfo_form_view"/>
+            <field name="arch" type="xml">
+                <field name="product_id" position="after">
+                    <field name="routing_id"/>
+                    <field name="operation_id"/>
+                </field>
+            </field>
+        </record>
+    
+        <record id="manufacturing_subcontracting_rule.product_supplierinfo_tree_view" model="ir.ui.view">
+            <field name="model">product.supplierinfo</field>
+            <field name="inherit_id" ref="product.product_supplierinfo_tree_view"/>
+            <field name="arch" type="xml">
+	            <field name="date_end" position="after">
+	               <field name="routing_id"/>
+	               <field name="operation_id" domain="[('routing_id','=' routing_id)]"/>
+	            </field>
+            </field>
+        </record>    
+    </data>
+</odoo>

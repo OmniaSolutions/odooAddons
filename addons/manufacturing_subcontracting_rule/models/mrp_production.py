@@ -168,7 +168,7 @@ class MrpProduction(models.Model):
         return locBrws
 
     @api.multi
-    def button_produce_externally(self):
+    def get_wizard_value(self):
         values = {}
         values['move_raw_ids'] = [(6, 0, self.copyAndCleanLines(self.move_raw_ids,
                                                                 location_source_id=self.location_src_id.id))]
@@ -176,12 +176,17 @@ class MrpProduction(models.Model):
                                                                      location_dest_id=self.location_src_id.id))]
         values['production_id'] = self.id
         values['request_date'] = datetime.datetime.now()
-        obj_id = self.env['mrp.production.externally.wizard'].create(values)
-        obj_id.create_vendors()
+        return values
+
+    @api.multi
+    def button_produce_externally(self):
+        values = self.get_wizard_value()
+        obj_id = self.env['mrp.externally.wizard'].create(values)
+        obj_id.create_vendors(self.bom_id.external_product.seller_ids)
         self.env.cr.commit()
         return {
             'type': 'ir.actions.act_window',
-            'res_model': 'mrp.production.externally.wizard',
+            'res_model': 'mrp.externally.wizard',
             'view_mode': 'form,tree',
             'view_type': 'form',
             'res_id': obj_id.id,

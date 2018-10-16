@@ -9,6 +9,7 @@
 #    Author : Smerghetto Daniel  (Omniasolutions)
 #    mail:daniel.smerghetto@omniasolutions.eu
 #    Copyright (c) 2014 Omniasolutions (http://www.omniasolutions.eu)
+#    Copyright (c) 2018 Omniasolutions (http://www.omniasolutions.eu)
 #    All Right Reserved
 #
 #    This program is free software: you can redistribute it and/or modify
@@ -26,34 +27,28 @@
 #
 ##############################################################################
 
+'''
+Created on Dec 18, 2017
 
-{
-    'name': 'Omnia Manufacturing Subcontracting Rule',
-    'version': '1.1',
-    'sequence': 1,
-    'category': 'Custom',
-    'description': """
-====================
-""",
-    'author': 'OmniaSolutions.eu',
-    'maintainer': 'OmniaSolutions.eu',
-    'website': 'http://www.OmniaSolutions.eu',
-    'depends': ['stock',
-                'delivery',
-                'purchase',
-                'mrp'],
-    'data': [
-            #  wizard
-            'wizard/wizard.xml',
-            #  view
-            'views/mrp_production.xml',
-            'views/mrp_routing_workcenter.xml',
-            'views/purchase_order.xml',
-            'views/mrp_bom.xml',
-            'views/mrp_workorder.xml',
-            'views/product_supplierinfo.xml'
-    ],
-    'installable': True,
-    'application': False,
-    'auto_install': False,
-}
+@author: daniel
+'''
+from odoo import models
+from odoo import fields
+from odoo import api
+from odoo import _
+from odoo.exceptions import UserError
+import logging
+import datetime
+from datetime import timedelta
+from odoo.tools import DEFAULT_SERVER_DATETIME_FORMAT
+
+
+class ProductSupplierinfo(models.Model):
+
+    _name = "product.supplierinfo"
+    _inherit = ['product.supplierinfo']
+
+    routing_id = fields.Many2one('mrp.routing',
+                                 string=_('Routung'))
+    operation_id = fields.Many2one('mrp.routing.workcenter',
+                                   string=_('Phase'))
