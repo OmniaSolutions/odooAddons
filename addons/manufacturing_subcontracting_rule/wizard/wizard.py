@@ -297,7 +297,9 @@ class MrpProductionWizard(models.TransientModel):
 
     @api.model
     def getNewExternalProductInfo(self):
-        val = {'default_code': "S-" + self.production_id.product_id.default_code or self.production_id.product_id.name,
+        if not self.production_id.product_id.default_code:
+            raise UserError("No default code Assigned to product %r " % self.production_id.product_id.name)
+        val = {'default_code': "S-" + self.production_id.product_id.default_code,
                'type': 'service',
                'purchase_ok': True,
                'name': "[%s] %s" % (self.production_id.product_id.default_code, self.production_id.product_id.name)}
