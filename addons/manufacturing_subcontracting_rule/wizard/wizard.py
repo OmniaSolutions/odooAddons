@@ -170,6 +170,7 @@ class MrpProductionWizard(models.TransientModel):
             lineBrws.mrp_original_move = lineBrws.state
             lineBrws.action_cancel()
         for lineBrws in prodObj.move_raw_ids:
+            # Cancel raw lines in production linked to this workorder
             if workorder_brws:
                 if lineBrws.workorder_id.id != workorder_brws.id:
                     continue
@@ -205,6 +206,7 @@ class MrpProductionWizard(models.TransientModel):
         product_delay = 0.0
         for lineBrws in self.move_raw_ids:
             if workOrderBrw and (workOrderBrw.id != lineBrws.workorder_id.id):
+                # Skip raw generation if not linked to this workorder
                 continue
             productsToCheck.append(lineBrws.product_id.id)
             product_delay = lineBrws.product_id.produce_delay
@@ -228,9 +230,12 @@ class MrpProductionWizard(models.TransientModel):
                     'unit_factor': lineBrws.unit_factor
                 }
                 move_raw_ids.append((0, False, vals))
-        productionBrws.write({'move_raw_ids': move_raw_ids,
+        productionVals = {'move_raw_ids': move_raw_ids,
                               'move_finished_ids': move_finished_ids,
-                              'state': 'external'})
+                              'state': 'external'}
+        if workOrderBrw:
+            del productionVals['state']
+        productionBrws.write(productionVals)
         productsToCheck = list(set(productsToCheck))
         for product in self.env['product.product'].browse(productsToCheck):
             productionBrws.checkCreateReorderRule(product, productionBrws.location_src_id.get_warehouse())
@@ -245,8 +250,8 @@ class MrpProductionWizard(models.TransientModel):
         pickingBrwsList = []
         for external_partner in self.external_partner:
             partner_id = external_partner.partner_id
-            pickOut = self.createStockPickingOut(partner_id, productionBrws)
-            pickIn = self.createStockPickingIn(partner_id, productionBrws, pick_out=pickOut)
+            pickOut = self.createStockPickingOut(partner_id, productionBrws, productionBrws)
+            pickIn = self.createStockPickingIn(partner_id, productionBrws, productionBrws, pick_out=pickOut)
             date_planned_finished_wo = pickIn.max_date
             date_planned_start_wo = pickOut.max_date
             pickingBrwsList.extend((pickIn.id, pickOut.id))
@@ -279,8 +284,8 @@ class MrpProductionWizard(models.TransientModel):
         self.updateMoveLines(productionBrws, workorderBrw)
         for external_partner in self.external_partner:
             partner_id = external_partner.partner_id
-            pickOut = self.createStockPickingOut(partner_id, productionBrws)  # mettere a posto questa che non metta i pick della roba che non fa parte dell'external production
-            pickIn = self.createStockPickingIn(partner_id, productionBrws, pick_out=pickOut)
+            pickOut = self.createStockPickingOut(partner_id, productionBrws, workorderBrw)  # mettere a posto questa che non metta i pick della roba che non fa parte dell'external production
+            pickIn = self.createStockPickingIn(partner_id, productionBrws, workorderBrw, pick_out=pickOut)
             date_planned_finished_wo = pickIn.max_date
             date_planned_start_wo = pickOut.max_date
         workorderBrw.date_planned_finished = date_planned_finished_wo
@@ -415,6 +420,8 @@ class MrpProductionWizard(models.TransientModel):
                     'sub_contracting_operation': 'close',
                     'sub_production_id': self.production_id.id,
                     'pick_out': pick_out.id}
+        if originBrw and originBrw._table == 'mrp_workorder': # Link picking with this workorder
+            toCreate['sub_workorder_id'] = originBrw.id
         obj = stockObj.create(toCreate)
         newStockLines = []
         for outMove in incomingMoves:
@@ -471,7 +478,7 @@ class MrpProductionWizard(models.TransientModel):
                     'sub_production_id': self.production_id.id}
         obj = stockObj.create(toCreate)
         newStockLines = []
-        if self.same_product_in_out:
+        if self.same_product_in_out and originBrw._table == 'mrp_workorder':
             for incomingTmpMove in self.getIncomingTmpMoves(productionBrws, customerProductionLocation, partnerBrws):
                 stockMove = incomingTmpMove.copy(default={
                                                   'name': incomingTmpMove.product_id.display_name,

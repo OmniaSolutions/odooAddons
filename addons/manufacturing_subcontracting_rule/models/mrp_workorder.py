@@ -68,3 +68,17 @@ class MrpWorkorder(models.Model):
             for pickBrws in stockPickList:
                 pickBrws.action_cancel()
             workOrderBrws.write({'state': 'pending'})
+
+    @api.multi
+    def updateProducedQty(self, newQty):
+        for woBrws in self:
+            alreadyProduced = woBrws.qty_produced
+            #FIXME: Se ne produco piu' del dovuto?
+            woBrws.qty_produced = alreadyProduced + newQty
+    
+    @api.multi
+    def checkRecordProduction(self):
+        for woBrws in self:
+            if woBrws.qty_produced >= woBrws.qty_production:
+                woBrws.button_finish()
+        
