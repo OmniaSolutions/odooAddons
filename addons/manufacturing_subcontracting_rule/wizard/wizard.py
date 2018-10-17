@@ -487,6 +487,7 @@ class MrpProductionWizard(models.TransientModel):
                                                   'raw_material_production_id': False,
                                                   'unit_factor': incomingTmpMove.unit_factor})
                 newStockLines.append(stockMove.id)
+                incomingTmpMove.action_cancel()
         else:
             for outMove in outGoingMoves:
                 stockMove = outMove.copy(default={
