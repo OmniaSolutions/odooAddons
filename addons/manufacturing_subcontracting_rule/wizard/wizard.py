@@ -245,8 +245,8 @@ class MrpProductionWizard(models.TransientModel):
         pickingBrwsList = []
         for external_partner in self.external_partner:
             partner_id = external_partner.partner_id
-            pickIn = self.createStockPickingIn(partner_id, productionBrws)
             pickOut = self.createStockPickingOut(partner_id, productionBrws)
+            pickIn = self.createStockPickingIn(partner_id, productionBrws, pick_out=pickOut)
             date_planned_finished_wo = pickIn.max_date
             date_planned_start_wo = pickOut.max_date
             pickingBrwsList.extend((pickIn.id, pickOut.id))
@@ -279,8 +279,8 @@ class MrpProductionWizard(models.TransientModel):
         self.updateMoveLines(productionBrws, workorderBrw)
         for external_partner in self.external_partner:
             partner_id = external_partner.partner_id
-            pickIn = self.createStockPickingIn(partner_id, productionBrws)
             pickOut = self.createStockPickingOut(partner_id, productionBrws)  # mettere a posto questa che non metta i pick della roba che non fa parte dell'external production
+            pickIn = self.createStockPickingIn(partner_id, productionBrws, pick_out=pickOut)
             date_planned_finished_wo = pickIn.max_date
             date_planned_start_wo = pickOut.max_date
         workorderBrw.date_planned_finished = date_planned_finished_wo
@@ -388,7 +388,7 @@ class MrpProductionWizard(models.TransientModel):
     def getOrigin(self, productionBrws, originBrw=None):
         return productionBrws.name
 
-    def createStockPickingIn(self, partnerBrws, productionBrws, originBrw=None):
+    def createStockPickingIn(self, partnerBrws, productionBrws, originBrw=None, pick_out=None):
 
         def getPickingType():
             warehouseId = productionBrws.picking_type_id.warehouse_id.id
@@ -413,7 +413,8 @@ class MrpProductionWizard(models.TransientModel):
                     'move_lines': [],
                     'state': 'draft',
                     'sub_contracting_operation': 'close',
-                    'sub_production_id': self.production_id.id}
+                    'sub_production_id': self.production_id.id,
+                    'pick_out': pick_out.id}
         obj = stockObj.create(toCreate)
         newStockLines = []
         for outMove in incomingMoves:

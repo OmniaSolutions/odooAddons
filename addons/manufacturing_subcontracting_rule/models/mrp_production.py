@@ -110,7 +110,7 @@ class MrpProduction(models.Model):
             return lock.id
         return False
 
-    def createTmpStockMove(self, sourceMoveObj, location_source_id=None, location_dest_id=None):
+    def createTmpStockMove(self, sourceMoveObj, location_source_id=None, location_dest_id=None, unit_factor=1.0):
         tmpMoveObj = self.env["stock.tmp_move"]
         if not location_source_id:
             location_source_id = sourceMoveObj.location_id.id
@@ -131,7 +131,8 @@ class MrpProduction(models.Model):
             'product_uom': sourceMoveObj.product_uom.id,
             'date_expected': sourceMoveObj.date_expected,
             'mrp_original_move': False,
-            'workorder_id': sourceMoveObj.workorder_id.id})
+            'workorder_id': sourceMoveObj.workorder_id.id,
+            'unit_factor': sourceMoveObj.unit_factor})
 
     def copyAndCleanLines(self, brwsList, location_dest_id=None, location_source_id=None):
         outElems = []
@@ -244,3 +245,17 @@ class MrpProduction(models.Model):
             'location_id': warehouse.lot_stock_id.id}
         wareHouseBrws = self.env['stock.warehouse.orderpoint'].create(toCreate)
         return wareHouseBrws
+
+    @api.model
+    def isPicksInDone(self):
+        isOut = False
+        for stock_picking in self.external_pickings:
+            if stock_picking.isIncoming(stock_picking):
+                if stock_picking.state == 'cancel':
+                    isOut = True
+                    continue
+                if stock_picking.state != 'done':
+                    return False
+                else:
+                    isOut = True
+        return isOut

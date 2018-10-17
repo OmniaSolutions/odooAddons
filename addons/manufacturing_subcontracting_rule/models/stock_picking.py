@@ -68,7 +68,7 @@ class StockImmediateTransfer(models.TransientModel):
                 objProduction = objPick.env['mrp.production'].search([('id', '=', objPick.sub_production_id)])
                 if objProduction and objProduction.state == 'external':
                     for line in objPick.move_lines:
-                        if line.mrp_production_id == objProduction.id:
+                        if line.mrp_production_id == objProduction.id and line.state == 'done':
                             line.subContractingProduce(objProduction)
                     if objProduction.isPicksInDone():
                         objProduction.button_mark_done()
@@ -84,6 +84,23 @@ class StockPicking(models.Model):
     sub_contracting_operation = fields.Selection([('open', _('Open external Production')),
                                                   ('close', _('Close external Production'))])
     sub_production_id = fields.Integer(string=_('Sub production Id'))
+    pick_out = fields.Many2one('stock.picking', string=_('Reference Stock pick out'))
+
+    @api.multi
+    def do_new_transfer(self):
+        res = super(StockPicking, self).do_new_transfer()
+        if isinstance(res, dict) and 'view_mode' in res:    # In this case will be returned a wizard
+            return res
+        for objPick in self:
+            if objPick.isIncoming(objPick):
+                objProduction = objPick.env['mrp.production'].search([('id', '=', objPick.sub_production_id)])
+                if objProduction and objProduction.state == 'external':
+                    for line in objPick.move_lines:
+                        if line.mrp_production_id == objProduction.id:
+                            line.subContractingProduce(objProduction)
+                    if objProduction.isPicksInDone():
+                        objProduction.button_mark_done()
+        return res
 
 #     @api.multi
 #     def action_assign(self):

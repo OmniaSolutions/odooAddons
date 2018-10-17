@@ -20,6 +20,30 @@ class MrpWorkorder(models.Model):
     # date_planned_start
     # gestire gli scrap
 
+    def createTmpStockMove(self, sourceMoveObj, location_source_id=None, location_dest_id=None, unit_factor=1.0):
+        tmpMoveObj = self.env["stock.tmp_move"]
+        if not location_source_id:
+            location_source_id = sourceMoveObj.location_id.id
+        if not location_dest_id:
+            location_dest_id = sourceMoveObj.location_dest_id.id
+        return tmpMoveObj.create({
+            'name': sourceMoveObj.name,
+            'company_id': sourceMoveObj.company_id.id,
+            'product_id': sourceMoveObj.product_id.id,
+            'product_uom_qty': sourceMoveObj.product_uom_qty,
+            'location_id': location_source_id,
+            'location_dest_id': location_dest_id,
+            'partner_id': self.external_partner.id,
+            'note': sourceMoveObj.note,
+            'state': 'draft',
+            'origin': sourceMoveObj.origin,
+            'warehouse_id': self.location_src_id.get_warehouse().id,
+            'production_id': self.id,
+            'product_uom': sourceMoveObj.product_uom.id,
+            'date_expected': sourceMoveObj.date_expected,
+            'mrp_original_move': False,
+            'unit_factor': unit_factor})
+
     @api.multi
     def button_produce_externally(self):
         values = self.production_id.get_wizard_value()
