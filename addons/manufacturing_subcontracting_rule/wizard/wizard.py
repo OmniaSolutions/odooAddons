@@ -498,6 +498,7 @@ class MrpProductionWizard(models.TransientModel):
                 stockMove.location_dest_id = customerProductionLocation.id
                 #stockMove.sale_line_id = outMove.sale_line_id
                 newStockLines.append(stockMove.id)
+                outMove.action_cancel()
         obj.write({'move_lines': [(6, False, newStockLines)]})
         return obj
 
