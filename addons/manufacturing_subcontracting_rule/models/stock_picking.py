@@ -102,56 +102,12 @@ class StockPicking(models.Model):
                             line.subContractingProduce(objProduction)
                     if objProduction.isPicksInDone():
                         objProduction.button_mark_done()
-        
-#     @api.multi
-#     def action_assign(self):
-#         """In addition to what the method in the parent class does,
-#         Changed batches states to assigned if all picking are assigned.
-#         """
-#         for objPick in self:
-#             if self.isIncoming(objPick):
-#                 maonOrder = self.getRelatedExternalManOrder(objPick)
-#                 if not maonOrder:
-#                     continue
-#                 self.createFinishedProducts(maonOrder)
-#                 break
-#         return super(StockPicking, self).action_assign()
-
-    def getRelatedExternalManOrder(self, objPick):
-        manufacturingObj = self.env['mrp.production']
-        filterList = [('name', '=', objPick.origin),
-                      ('state', '=', 'external')]
-        for manufactObj in manufacturingObj.search(filterList):
-            return manufactObj
-        return None
-
-    def createFinishedProducts(self, manufacturingObj):
-        stockQuantObj = self.env['stock.quant']
-        for finishedLineBrws in manufacturingObj.move_finished_ids:
-            if finishedLineBrws.state == 'cancel':  # Skip old lines
-                continue
-            prodBrws = finishedLineBrws.product_id
-            quantsForProduct = self.getStockQuant(stockQuantObj, finishedLineBrws.location_id.id, prodBrws)
-            if not quantsForProduct:
-                stockQuantObj.create({
-                    'qty': finishedLineBrws.product_qty,
-                    'location_id': finishedLineBrws.location_id.id,
-                    'product_id': prodBrws.id})
-            else:
-                for quantsForProductBrws in quantsForProduct:
-                    newQty = quantsForProductBrws.qty + finishedLineBrws.product_qty
-                    quantsForProductBrws.write({'qty': newQty})
-                    break
 
     def isIncoming(self, objPick):
         return objPick.sub_contracting_operation == 'close'
 
     def isOutGoing(self, objPick):
         return objPick.sub_contracting_operation == 'open'
-
-    def doneManRawMaterials(self, manOrder):
-        for lineBrws in manOrder.move_raw_ids:
-            lineBrws.write({'state': 'done'})
 
     def getStockQuant(self, stockQuantObj, lineId, prodBrws):
         quantsForProduct = stockQuantObj.search([
