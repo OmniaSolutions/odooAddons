@@ -37,28 +37,28 @@ from odoo import fields
 from odoo import _
 
 
+class StockBackorderConfirmation(models.TransientModel):
+    _name = 'stock.backorder.confirmation'
+    _inherit = ['stock.backorder.confirmation']
+    
+    @api.multi
+    def process(self):
+        res = super(StockBackorderConfirmation, self).process()
+        for objPick in self.pick_id:
+            if objPick.isIncoming(objPick):
+                objProduction = objPick.env['mrp.production'].search([('id', '=', objPick.sub_production_id)])
+                if objProduction and objProduction.state == 'external':
+                    for line in objPick.move_lines:
+                        if line.mrp_production_id == objProduction.id and line.state == 'done':
+                            line.subContractingProduce(objProduction)
+                    if objProduction.isPicksInDone():
+                        objProduction.button_mark_done()
+        return res
+
+    
 class StockImmediateTransfer(models.TransientModel):
     _name = 'stock.immediate.transfer'
     _inherit = ['stock.immediate.transfer']
-
-#     @api.multi
-#     def process(self):
-#         '''
-#             Be sure to close the manufacturing order only if finished product is arrived.
-#         '''
-#         pikingObj = self.env['stock.picking']
-#         res = super(StockImmediateTransfer, self).process()
-#         for objPick in self.pick_id:
-#             manufactObj = pikingObj.getRelatedExternalManOrder(objPick)
-#             if not manufactObj:
-#                 continue
-#             if pikingObj.isOutGoing(objPick):
-#                 pikingObj.doneManRawMaterials(manufactObj)
-#             elif pikingObj.isIncoming(objPick):
-#                 manufactObj.button_mark_done()
-#             break
-#         return res
-
 
     @api.multi
     def process(self):
