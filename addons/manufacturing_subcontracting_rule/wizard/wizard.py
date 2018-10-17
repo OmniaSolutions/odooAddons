@@ -434,6 +434,7 @@ class MrpProductionWizard(models.TransientModel):
                 'raw_material_production_id': False,
                 'picking_id': obj.id})
             newStockLines.append(stockMove.id)
+            outMove.action_cancel()
         obj.write({'move_lines': [(6, False, newStockLines)]})
         return obj
 
