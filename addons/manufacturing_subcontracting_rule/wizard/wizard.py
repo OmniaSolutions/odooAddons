@@ -406,6 +406,8 @@ class MrpProductionWizard(models.TransientModel):
 
         stockObj = self.env['stock.picking']
         customerProductionLocation = partnerBrws.location_id
+        if not customerProductionLocation:
+            raise UserError(_('Partner %s has not location setup.' % (partnerBrws.name)))
         localStockLocation = productionBrws.location_src_id  # Taken from manufacturing order
         incomingMoves = self.getIncomingTmpMoves(productionBrws, customerProductionLocation, partnerBrws)
         toCreate = {'partner_id': partnerBrws.id,
@@ -458,6 +460,8 @@ class MrpProductionWizard(models.TransientModel):
             return False
 
         customerProductionLocation = partnerBrws.location_id
+        if not customerProductionLocation:
+            raise UserError(_('Partner %s has not location setup.' % (partnerBrws.name)))
         localStockLocation = productionBrws.location_src_id  # Taken from manufacturing order
         stockObj = self.env['stock.picking']
         outGoingMoves = []
