@@ -82,3 +82,38 @@ class MrpWorkorder(models.Model):
             if woBrws.qty_produced >= woBrws.qty_production:
                 woBrws.button_finish()
         
+    @api.multi
+    def button_finish(self):
+        res = super(MrpWorkorder, self).button_finish()
+        production_id = self.production_id
+        isExternal = False
+        for relatedWO in self.search([('production_id', '=', production_id.id)]):
+            # Check if external workorder
+            if relatedWO.getExternalPickings():
+                isExternal = True
+                break
+        if not self.next_work_order_id and isExternal:
+            # Close manufacturing order
+            production_id.write({'state': 'done', 'date_finished': fields.Datetime.now()})
+        return res
+
+    @api.multi
+    def getExternalPickings(self):
+        pickObj = self.env['stock.picking']
+        for woBrws in self:
+            return pickObj.search([('sub_workorder_id', '=', woBrws.id)])
+        return pickObj
+
+    @api.multi
+    def open_external_pickings(self):
+        newContext = self.env.context.copy()
+        picks = self.getExternalPickings()
+        return {
+            'name': _("External Pickings"),
+            'view_type': 'form',
+            'view_mode': 'tree,form',
+            'res_model': 'stock.picking',
+            'type': 'ir.actions.act_window',
+            'context': newContext,
+            'domain': [('id', 'in', picks.ids)],
+        }

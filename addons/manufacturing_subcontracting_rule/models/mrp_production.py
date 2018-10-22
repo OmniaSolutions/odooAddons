@@ -134,10 +134,31 @@ class MrpProduction(models.Model):
             'workorder_id': sourceMoveObj.workorder_id.id,
             'unit_factor': sourceMoveObj.unit_factor})
 
-    def copyAndCleanLines(self, brwsList, location_dest_id=None, location_source_id=None):
+    def copyAndCleanLines(self, brwsList, location_dest_id=None, location_source_id=None, isRawMove=False):
         outElems = []
+        foundRawMoves = False
+        evaluated = []
         for elem in brwsList:
+            if isRawMove:   # Look for raw moves
+                if elem.state == 'cancel':
+                    continue
+            prodId = elem.product_id.id
+            
+            if not isRawMove and prodId in evaluated:
+                # Skip multiple finished lines if more than one workorder because are created too many lines
+                continue
+            foundRawMoves = True
             outElems.append(self.createTmpStockMove(elem, location_source_id, location_dest_id).id)
+            evaluated.append(prodId)
+        if not foundRawMoves and isRawMove:
+            # Create automatically raw stock move containing finished product
+            newMove = self.createTmpStockMove(elem, location_source_id, location_dest_id)
+            newMove.product_id = self.product_id.id
+            newMove.product_uom_qty = self.product_qty
+            newMove.name = self.product_id.display_name
+            newMove.note = ''
+            newMove.product_uom = self.product_uom_id.id
+            outElems.append(newMove.id)
         return outElems
 
     def checkCreatePartnerWarehouse(self, partnerBrws):
@@ -173,9 +194,12 @@ class MrpProduction(models.Model):
     def get_wizard_value(self):
         values = {}
         values['move_raw_ids'] = [(6, 0, self.copyAndCleanLines(self.move_raw_ids,
-                                                                location_source_id=self.location_src_id.id))]
+                                                                location_source_id=self.location_src_id.id, 
+                                                                isRawMove=True
+                                                                ))]
         values['move_finished_ids'] = [(6, 0, self.copyAndCleanLines(self.move_finished_ids,
-                                                                     location_dest_id=self.location_src_id.id))]
+                                                                     location_dest_id=self.location_src_id.id,
+                                                                     isRawMove=False))]
         values['production_id'] = self.id
         values['request_date'] = datetime.datetime.now()
         return values

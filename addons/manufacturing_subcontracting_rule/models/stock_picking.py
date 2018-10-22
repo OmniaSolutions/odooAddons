@@ -66,7 +66,6 @@ class StockPicking(models.Model):
     _inherit = 'stock.picking'
 
     external_production = fields.Many2one('mrp.production')
-
     sub_contracting_operation = fields.Selection([('open', _('Open external Production')),
                                                   ('close', _('Close external Production'))])
     sub_production_id = fields.Integer(string=_('Sub production Id'))
