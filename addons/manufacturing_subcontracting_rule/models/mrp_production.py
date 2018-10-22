@@ -225,13 +225,16 @@ class MrpProduction(models.Model):
         stockPickingObj = self.env['stock.picking']
         purchaseOrderObj = self.env['purchase.order']
         for manOrderBrws in self:
+            moves = self.env['stock.move']
             stockPickList = stockPickingObj.search([('origin', '=', manOrderBrws.name)])
-            for pickBrws in stockPickList:
-                pickBrws.move_lines.unlink()
+            stockPickList += stockPickingObj.search([('sub_production_id', '=', manOrderBrws.id)])
+            for pickBrws in list(set(stockPickList)):
                 pickBrws.action_cancel()
-                pickBrws.unlink()
+                moves += pickBrws.move_lines
             manOrderBrws.write({'state': 'confirmed'})
-            for move_line in manOrderBrws.move_raw_ids + manOrderBrws.move_finished_ids:
+            movesToCancel = self.env['stock.move'].search([('subcontracting_move_id', 'in', moves.ids)])
+            movesToCancel += manOrderBrws.move_raw_ids + manOrderBrws.move_finished_ids
+            for move_line in movesToCancel:
                 if move_line.mrp_original_move is False:
                     move_line.action_cancel()
                 if move_line.state in ('draft', 'cancel'):
