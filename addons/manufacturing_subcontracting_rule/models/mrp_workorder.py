@@ -65,6 +65,7 @@ class MrpWorkorder(models.Model):
         for workOrderBrws in self:
             # qui e da sistemare per il work order
             stockPickList = stockPickingObj.search([('origin', '=', workOrderBrws.name)])
+            stockPickList += workOrderBrws.getExternalPickings()
             for pickBrws in stockPickList:
                 pickBrws.action_cancel()
             workOrderBrws.write({'state': 'pending'})
