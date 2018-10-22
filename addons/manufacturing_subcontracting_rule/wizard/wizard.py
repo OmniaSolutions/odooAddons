@@ -262,7 +262,7 @@ class MrpProductionWizard(models.TransientModel):
         movesToCancel = productionBrws.move_raw_ids.filtered(lambda m:m.mrp_original_move == False)
         movesToCancel2 = productionBrws.move_finished_ids.filtered(lambda m:m.mrp_original_move == False)
         movesToCancel += movesToCancel2
-        movesToCancel.do_unreserve()
+        #movesToCancel.do_unreserve()
         movesToCancel.action_cancel()
 
     @api.multi
