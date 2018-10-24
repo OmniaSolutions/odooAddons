@@ -69,9 +69,10 @@ class StockPicking(models.Model):
     @api.multi
     def action_cancel(self):
         ref = super(StockPicking, self).action_cancel()
-        if self.isIncoming():
-            objProduction = self.env['mrp.production'].search([('id', '=', self.sub_production_id)])
-            if objProduction.state == 'external':
-                if objProduction.isPicksInDone():
-                    objProduction.button_mark_done()
+        for stock_picking in self:
+            if stock_picking.isIncoming():
+                objProduction = self.env['mrp.production'].search([('id', '=', stock_picking.sub_production_id)])
+                if objProduction.state == 'external':
+                    if objProduction.isPicksInDone():
+                        objProduction.button_mark_done()
         return ref
