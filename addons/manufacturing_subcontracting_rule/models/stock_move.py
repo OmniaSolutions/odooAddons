@@ -78,14 +78,23 @@ class StockMove(models.Model):
                                   'picking_id': False,
                                   'subcontracting_move_id': source_id})
 
+    @api.model
+    def subContractingFilterRow(self, production_id, move_from_id, move_to, qty):
+        # This Function must be overloaded in order to perform custom behaviour
+        if not move_to.mrp_production_id:
+            return 0, True
+        moveQty = qty * (move_to.unit_factor or 1)
+        return moveQty, False
+
     @api.multi
     def subContractingProduce(self, objProduction):
         move_date = self.date
         subcontracting_location = self.env['stock.location'].getSubcontractiongLocation()
         production_move = self.subcontractingMove(subcontracting_location, self.location_id, self.id)
-        production_move.moveQty(production_move.product_qty)
+        production_move.moveQty(production_move.product_qty)  # Implicit call done action
         production_move.date = move_date
-        production_move.move_line_ids.date = move_date
+        if production_move.move_line_ids:
+            production_move.move_line_ids.date = move_date
         #
         # manage raw material
         #
@@ -102,13 +111,16 @@ class StockMove(models.Model):
         if pick_out:
             # upload raw material to production directory
             for move in pick_out.move_lines:
-                moveQty = qty * move.unit_factor
+                moveQty, stop = self.subContractingFilterRow(objProduction, production_move, move, qty)
+                if stop:
+                    continue
                 raw_move = move.subcontractingMove(move.location_dest_id, subcontracting_location, self.id)
                 raw_move.ordered_qty = moveQty
                 raw_move.product_uom_qty = moveQty
-                raw_move.moveQty(moveQty)
+                raw_move.moveQty(moveQty)  # Implicit call done action
                 raw_move.date = self.date
-                raw_move.move_line_ids.date = move_date
+                if raw_move.move_line_ids:
+                    raw_move.move_line_ids.date = move_date
 
     @api.multi
     def write(self, value):
