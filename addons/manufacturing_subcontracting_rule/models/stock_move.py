@@ -119,8 +119,8 @@ class StockMove(models.Model):
                 raw_move.product_uom_qty = moveQty
                 raw_move.moveQty(moveQty)  # Implicit call done action
                 raw_move.date = self.date
-                if raw_move.move_line_ids:
-                    raw_move.move_line_ids.date = move_date
+                for lineBrws in raw_move.move_line_ids:
+                    lineBrws.date = move_date
 
     @api.multi
     def write(self, value):
