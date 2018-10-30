@@ -288,3 +288,42 @@ class MrpProduction(models.Model):
             'location_id': warehouse.lot_stock_id.id}
         wareHouseBrws = self.env['stock.warehouse.orderpoint'].create(toCreate)
         return wareHouseBrws
+
+    @api.multi
+    def do_unreserve(self):
+        for production in self:
+            production.move_raw_ids.filtered(lambda x: x.state not in ('done', 'cancel'))._do_unreserve()
+            if production.state == 'external':
+                production.do_cancel_external_move()
+        return True
+
+    @api.multi
+    def do_cancel_external_move(self):
+        for mrp_production in self:
+            for move in mrp_production.move_raw_ids:
+                if move.state not in ['done', 'cancel']:
+                    logging.info("Unreserve Move %r" % move.name)
+                    move._action_cancel()
+            for move in mrp_production.finished_move_line_ids:
+                if move.state not in ['done', 'cancel']:
+                    move.unlink()
+
+    @api.model
+    def unreservePlanned(self):
+        error = []
+        for mrp_production in self.search([('state', 'in', ['external'])]):
+            try:
+                logging.info("Unreserve from production %r in state %r" % (mrp_production.name, mrp_production.state))
+                mrp_production.button_unreserve()
+                if mrp_production.state == 'external':
+                    mrp_production.do_cancel_external_move()
+            except Exception as ex:
+                error.append("Manufactory %r Error %r " % (mrp_production.id, ex))
+        for pick in self.env['stock.picking'].search([('external_production', '!=', False),
+                                                      ('state', 'not in', ['cancel', 'done'])]):
+            logging.info("Unreserve Pick %r" % pick.name)
+            try:
+                pick.do_unreserve()
+            except Exception as ex:
+                error.append("Unreserve pick %r Error %r " % (mrp_production.id, ex))
+        return error
