@@ -61,4 +61,3 @@ class StockMoveLine(models.Model):
             else:
                 out[key_positive] = quant_qty
         return out
-
