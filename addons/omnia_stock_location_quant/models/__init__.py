@@ -21,5 +21,4 @@
 ##############################################################################
 
 # vim:expandtab:smartindent:tabstop=4:softtabstop=4:shiftwidth=4:
-from . import wizard
-from . import models
+from . import stock_move_line

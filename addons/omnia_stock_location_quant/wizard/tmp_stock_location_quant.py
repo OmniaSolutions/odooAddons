@@ -57,27 +57,10 @@ class TmpStockLocationQuant(models.TransientModel):
 
     @api.model
     def populate(self, date):
+        stock_move_line_obj = self.env['stock.move.line']
         self.search([]).unlink()
-        query = """select sum(qty_done) qty , product_id, location_id, location_dest_id  from stock_move_line  where date < %r and state='done' group by product_id, location_id,location_dest_id
-                """ % (date)
-        self.env.cr.execute(query)
-        out = {}
-        for row in self._cr.fetchall():
-            quant_qty = row[0]
-            product_id = row[1]
-            location_id = row[2]
-            location_dest_id = row[3]
-            key_negative = "%d_%d" % (location_id, product_id)
-            if key_negative in out:
-                out[key_negative] = out[key_negative] - quant_qty
-            else:
-                out[key_negative] = quant_qty * -1.0
-            key_positive = "%d_%d" % (location_dest_id, product_id)
-            if key_positive in out:
-                out[key_positive] = out[key_positive] + quant_qty
-            else:
-                out[key_positive] = quant_qty
-        for key, qty in out.items():
+        all_stock_quants = stock_move_line_obj.getAllQuantAtDate(date)
+        for key, qty in all_stock_quants.items():
             key_split = key.split('_')
             location_id = key_split[0]
             product_id = key_split[1]
