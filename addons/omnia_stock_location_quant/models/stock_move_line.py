@@ -42,7 +42,7 @@ class StockMoveLine(models.Model):
     @api.model
     def getAllQuantAtDate(self, date_to):
         out = {}
-        query = """select sum(qty_done) qty , product_id, location_id, location_dest_id  from stock_move_line  where date < %r and state='done' group by product_id, location_id,location_dest_id
+        query = """select sum(qty_done) qty , product_id, location_id, location_dest_id  from stock_move_line  where date <= %r and state='done' group by product_id, location_id,location_dest_id
                 """ % (date_to)
         self.env.cr.execute(query)
         for row in self._cr.fetchall():
