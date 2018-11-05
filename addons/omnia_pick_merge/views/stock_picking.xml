@@ -1,0 +1,45 @@
+<odoo>     
+  <record id="action_server_merge_pick" model="ir.actions.server">
+     <field name="name">Merge</field>
+     <field name="type">ir.actions.server</field>
+     <field name="model_id" ref="stock.model_stock_picking" />
+     <field name="binding_model_id" ref="stock.model_stock_picking" />
+     <field name="state">code</field>
+     <field name="code">
+tmp_item = env['stock.tmp_merge_pick']
+obj_merge_tmp = tmp_item.create({})
+obj_merge_tmp.populateFromPick(env.context.get('active_ids'))
+action = {'name': 'Merge Picking',
+          'view_type': 'form',
+          'view_mode': 'form',
+          'res_id': obj_merge_tmp.id,
+          'target': 'new',
+          'res_model': 'stock.tmp_merge_pick',
+          'type': 'ir.actions.act_window',
+          'domain': "[]"}    
+     </field>
+ </record>
+ 
+        <record id="value_action_server_merge_pick" model="ir.values">
+            <field name="model_id" ref="stock.model_stock_picking" />
+            <field name="name">Merge</field>
+            <field name="key2">client_action_multi</field>
+            <field name="key">action</field>
+            <field name="model">stock.picking</field>
+            <field name="value" eval="'ir.actions.server,' + str(ref('action_server_merge_pick'))" />
+        </record>
+
+    <data>
+        <record id="omnia_pick_merge_form" model="ir.ui.view">
+            <field name="name">omnia.pick.merge.form</field>
+            <field name="model">stock.picking</field>
+            <field name="inherit_id" ref="stock.view_picking_form"/>
+            <field name="arch" type="xml">
+                <field name="group_id" position="after">
+                    <field name="from_stock_id"/>
+                    <field name="merged_pick_ids"/>
+                </field>
+            </field>
+        </record>
+    </data>
+</odoo>
