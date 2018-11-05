@@ -1,0 +1,11 @@
+*.pyc
+.project
+.pydevproject
+.settings
+addons/web_sheet_full_width
+addons/omnia_workorder_machine
+addons/base_optional_quick_create
+addons/bom_cost_price_update
+addons/mass_editing
+addons/mass_editing_old
+password_security
