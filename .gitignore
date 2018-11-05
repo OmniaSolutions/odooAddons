@@ -21,6 +21,10 @@ parts/
 sdist/
 var/
 wheels/
+addons/web_sheet_full_width
+.project
+.pydevproject
+.settings
 *.egg-info/
 .installed.cfg
 *.egg
