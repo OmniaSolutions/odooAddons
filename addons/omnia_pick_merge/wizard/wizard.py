@@ -67,7 +67,8 @@ class TmpStockMove(models.TransientModel):
                 continue
             if first_partner_id != pick_id.partner_id.id:
                 raise UserError(_("Partner are not equal"))
-            self.pick_origin = str(self.pick_origin) + "," + str(pick_id.origin)
+            if self.pick_origin or pick_id.origin:
+                self.pick_origin = str(self.pick_origin or '') + "," + str(pick_id.origin or '')
         
         for pick_id in pick_ids:
             if pick_id.state in ['done', 'cancel']:
