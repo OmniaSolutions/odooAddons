@@ -363,7 +363,7 @@ class MrpProductionWizard(models.TransientModel):
                 purchaseBrws = purchaseOrderObj.search([('partner_id', '=', toCreatePurchese.partner_id.id),
                                                         ('state', 'in', ['draft', 'sent'])
                                                         ], limit=1)
-            else:
+            if not purchaseBrws:
                 purchaseBrws = purchaseOrderObj.create({'partner_id': toCreatePurchese.partner_id.id,
                                                         'date_planned': self.request_date,
                                                         'production_external_id': self.production_id.id})
