@@ -1,4 +1,6 @@
 <odoo>     
+
+	<data>
   <record id="action_server_merge_pick" model="ir.actions.server">
      <field name="name">Merge</field>
      <field name="type">ir.actions.server</field>
@@ -29,7 +31,6 @@ action = {'name': 'Merge Picking',
             <field name="value" eval="'ir.actions.server,' + str(ref('action_server_merge_pick'))" />
         </record>
 
-    <data>
         <record id="omnia_pick_merge_form" model="ir.ui.view">
             <field name="name">omnia.pick.merge.form</field>
             <field name="model">stock.picking</field>
@@ -41,5 +42,20 @@ action = {'name': 'Merge Picking',
                 </field>
             </field>
         </record>
-    </data>
+        
+        <record id="pick_merge_move_extension_form" model="ir.ui.view">
+            <field name="name">pick.merge.stock.move.form</field>
+            <field name="model">stock.move</field>
+            <field name="inherit_id" ref="stock.view_move_picking_tree"/>
+            <field name="arch" type="xml">
+              <data>
+
+				<xpath expr="//field[@name='product_id']" position="before">
+					<field name="origin" readonly="True"/>
+				</xpath>
+              </data>
+            </field>
+        </record>
+
+	</data>
 </odoo>
