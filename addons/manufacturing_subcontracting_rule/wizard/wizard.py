@@ -10,6 +10,7 @@ from odoo import api
 from odoo import _
 from odoo.exceptions import UserError
 import logging
+import json
 import datetime
 from dateutil.relativedelta import relativedelta
 
@@ -75,6 +76,9 @@ class TmpStockMove(models.TransientModel):
         'product.uom', 'Unit of Measure', required=True, states={'done': [('readonly', True)]}, default=lambda self: self.env['product.uom'].search([], limit=1, order='id'))
     date_expected = fields.Datetime('Scheduled date')
     workorder_id = fields.Many2one(comodel_name='mrp.workorder', string='Workorder Id', readonly=True)
+
+    qty_available = fields.Float(_('Qty available'))
+    location_available = fields.Many2one('stock.location', string=_('Qty Location'))
 
     @api.model
     def default_get(self, fields_list):
@@ -145,7 +149,70 @@ class MrpProductionWizard(models.TransientModel):
                                     string=_('Workorder'),
                                     readonly=True)
     same_product_in_out = fields.Boolean(_('Same Product In and Out'), default=False)
+    
+    select_external_partner_ids = fields.Char(string=_('Select Partners'),
+                                              compute='_compute_select_external_partner')
+    select_external_partner = fields.Many2one('res.partner',
+                                    string=_('External Partner Stock'))
 
+    @api.multi
+    @api.depends('external_partner')
+    def _compute_select_external_partner(self):
+        for wizardBrws in self:
+            partnerIds = []
+            for external_partner_brws in wizardBrws.external_partner:
+                partnerIds.append(external_partner_brws.partner_id.id)
+            self.select_external_partner_ids = json.dumps(partnerIds)
+            if not partnerIds:
+                self.select_external_partner = False
+
+    @api.multi
+    def compute_stock(self):
+        for wizardObj in self:
+            return wizardObj.updateStockQuant(wizardObj.select_external_partner.location_id)
+
+    @api.multi
+    def updateStockQuant(self, forceLocation=False):
+        stockQuantObj = self.env['stock.quant']
+        for wizardBrws in self:
+            if not forceLocation:
+                stockWarehouseBrws = self.env.ref('stock.warehouse0')
+                forceLocation = stockWarehouseBrws.lot_stock_id
+            # Raw moves
+            for tmpMoveBrws in wizardBrws.move_raw_ids:
+                prodBrws = tmpMoveBrws.product_id
+                quantObjBrwsList = stockQuantObj.search([
+                    ('location_id', '=', forceLocation.id),
+                    ('product_id', '=', prodBrws.id),
+                    ], limit=1)
+                qty = 0
+                for quantBrws in quantObjBrwsList:
+                    qty = quantBrws.qty
+                tmpMoveBrws.location_available = forceLocation.id
+                tmpMoveBrws.qty_available = qty
+            # Finished moves
+            for tmpMoveBrws in wizardBrws.move_finished_ids:
+                prodBrws = tmpMoveBrws.product_id
+                quantObjBrwsList = stockQuantObj.search([
+                    ('location_id', '=', forceLocation.id),
+                    ('product_id', '=', prodBrws.id),
+                    ], limit=1)
+                qty = 0
+                for quantBrws in quantObjBrwsList:
+                    qty = quantBrws.qty
+                tmpMoveBrws.location_available = forceLocation.id
+                tmpMoveBrws.qty_available = qty
+                
+            return {
+                'type': 'ir.actions.act_window',
+                'res_model': 'mrp.externally.wizard',
+                'view_mode': 'form,tree',
+                'view_type': 'form',
+                'res_id': wizardBrws.id,
+                'context': {'wizard_id': wizardBrws.id},
+                'target': 'new',
+            }
+        
     @api.onchange('request_date')
     def _request_date(self):
         for move in self.move_raw_ids:

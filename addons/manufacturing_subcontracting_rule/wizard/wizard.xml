@@ -23,6 +23,11 @@
                         </group>
                     </form>
 	        	</field>
+	        	<field name="select_external_partner_ids" invisible="True"/>
+	        	<group col="4" colspan="4">
+	        		<field name="select_external_partner" domain="[('id', 'in', select_external_partner_ids)]"/>
+	        		<button string="Comp. Stock" type="object" name="compute_stock" attrs="{'invisible': [('select_external_partner', '=', False)]}"></button>
+	        	</group>
 	        	<field name="request_date"/>
 	        	<field name="work_order_id" readonly="1"/>
 	        	<group col="6">
@@ -38,6 +43,8 @@
 	                    <field name="state" />
 	                    <field name="origin" />
 	                    <field name="date_expected" />
+	                    <field name="location_available" />
+	                    <field name="qty_available" />
 	                </tree>
 	            </field>
 	            
@@ -48,6 +55,8 @@
 	                    <field name="state" />
 	                    <field name="origin" />
 	                    <field name="date_expected" />
+	                    <field name="location_available" />
+	                    <field name="qty_available" />
 	                </tree>
 	            </field>
 			</group>

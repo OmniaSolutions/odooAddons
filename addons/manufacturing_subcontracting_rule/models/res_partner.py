@@ -35,6 +35,7 @@ from odoo import fields
 from odoo import api
 from odoo import _
 import logging
+import json
 
 
 class ResPartner(models.Model):
@@ -44,3 +45,19 @@ class ResPartner(models.Model):
                                   'SubContracting Location',
                                   index=True,
                                   help="Sets a location if you produce at a fixed location. This can be a partner location if you subcontract the manufacturing operations.")
+
+    @api.model
+    def name_search(self, name, args=None, operator='ilike', limit=100):
+        outArgs = []
+        for fieldName, operator, val in args:
+            tmpOut = [fieldName, operator, val]
+            if operator == 'in' and isinstance(val, (str, unicode)):
+                try:
+                    newVal = json.loads(val)
+                    tmpOut[2] = newVal
+                    operator = 'ilike'
+                except Exception as ex:
+                    logging.error(ex)
+            outArgs.append(tmpOut)
+        return super(ResPartner, self).name_search(name, outArgs, operator, limit)
+        
