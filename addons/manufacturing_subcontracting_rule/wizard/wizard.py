@@ -202,14 +202,16 @@ class MrpProductionWizard(models.TransientModel):
                     qty = quantBrws.qty
                 tmpMoveBrws.location_available = forceLocation.id
                 tmpMoveBrws.qty_available = qty
-                
+            
+            ctx = self.env.context.copy()
+            ctx['wizard_id'] = wizardBrws.id
             return {
                 'type': 'ir.actions.act_window',
                 'res_model': 'mrp.externally.wizard',
                 'view_mode': 'form,tree',
                 'view_type': 'form',
                 'res_id': wizardBrws.id,
-                'context': {'wizard_id': wizardBrws.id},
+                'context': ctx,
                 'target': 'new',
             }
         
