@@ -323,7 +323,10 @@ class MrpProductionWizard(models.TransientModel):
             pickIn = self.createStockPickingIn(partner_id, productionBrws, productionBrws, pick_out=pickOut)
             date_planned_finished_wo = pickIn.max_date
             date_planned_start_wo = pickOut.max_date
-            pickingBrwsList.extend((pickIn.id, pickOut.id))
+            if pickIn:
+                pickingBrwsList.append(pickIn.id)
+            if pickOut:
+                pickingBrwsList.append(pickOut.id)
         self.createPurches()
         productionBrws.date_planned_finished_wo = date_planned_finished_wo
         productionBrws.date_planned_start_wo = date_planned_start_wo
@@ -343,6 +346,7 @@ class MrpProductionWizard(models.TransientModel):
             self.produce_workorder()
         else:
             self.produce_production()
+        return True
 
     @api.multi
     def produce_workorder(self):
@@ -420,6 +424,8 @@ class MrpProductionWizard(models.TransientModel):
 
     @api.multi
     def createPurches(self, workorderBrws=False):
+        if not self:
+            return
         if not self.create_purchese_order:
             return
         purchaseOrderObj = self.env['purchase.order']
@@ -476,6 +482,8 @@ class MrpProductionWizard(models.TransientModel):
 
         isWorkorder = originBrw._table == 'mrp_workorder'
         stockObj = self.env['stock.picking']
+        if not self.move_finished_ids:
+            return stockObj
         customerProductionLocation = partnerBrws.location_id
         if not customerProductionLocation:
             raise UserError(_('Partner %s has not location setup.' % (partnerBrws.name)))
@@ -555,12 +563,13 @@ class MrpProductionWizard(models.TransientModel):
                                             ('warehouse_id', '=', warehouseId)]):
                 return pick.id
             return False
-
+        stockObj = self.env['stock.picking']
+        if not self.move_raw_ids:
+            return stockObj
         customerProductionLocation = partnerBrws.location_id
         if not customerProductionLocation:
             raise UserError(_('Partner %s has not location setup.' % (partnerBrws.name)))
         localStockLocation = productionBrws.location_src_id  # Taken from manufacturing order
-        stockObj = self.env['stock.picking']
         outGoingMoves = []
         isWorkorder = False
         if originBrw:
@@ -583,6 +592,7 @@ class MrpProductionWizard(models.TransientModel):
                     'sub_production_id': self.production_id.id}
         if isWorkorder:
             toCreate['sub_workorder_id'] = originBrw.id
+
         obj = stockObj.create(toCreate)
         newStockLines = []
         if isWorkorder:
