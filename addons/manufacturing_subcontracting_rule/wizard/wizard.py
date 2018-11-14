@@ -382,7 +382,6 @@ class MrpProductionWizard(models.TransientModel):
         """
         get the default external product suitable for the purchase
         """
-        product_product_obj = self.env['product.product']
         product_brw = self.production_id.bom_id.external_product
         if product_brw:
             return product_brw
