@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>	
+
+	<template id="assets_common" name="Import workorder machine js" inherit_id="web.assets_common">
+        <xpath expr="script[last()]" position="after">
+        	<link rel="stylesheet" href="/omnia_workorder_machine/static/src/css/workorder_machine.css"/>
+            <script type="text/javascript" src="/omnia_workorder_machine/static/src/js/workorder_machine.js"></script>
+        </xpath>
+    </template>
+
+	<template id="template_workorder_machine" name="Workorder Main Form">
+
+		<head>
+			<t t-call-assets="web.assets_common" />
+			<t t-call-assets="web.assets_common" />
+			
+            <t t-call-assets="web.assets_frontend" />
+            <t t-call-assets="web.assets_frontend" />
+            
+            <t t-call-assets="web.assets_backend" />
+            <t t-call-assets="web.assets_backend" />
+            
+            <t t-call-assets="web_editor.summernote" />
+            <t t-call-assets="web_editor.summernote" />
+            
+            <t t-call-assets="web_editor.assets_editor" />
+            <t t-call-assets="web_editor.assets_editor" />
+		</head>
+        <t t-call="web.layout">
+
+
+            
+		    <form action="/make_login" method="post">
+			    <table class="main_table" style="border: 3px solid black;padding: 10px; margin:30px;">
+			    	<tr>
+			    		<td>Scheme: </td>
+			    		<td><input class="scheme" type="text" name="scheme" t-att-value="scheme"/></td>
+			    	</tr>
+			    	<tr>
+			    		<td>Server IP: </td>
+			    		<td><input class="address" type="text" name="address" t-att-value="address"/></td>
+			    	</tr>
+			    	<tr>
+			    		<td>Server Port: </td>
+			    		<td><input class="port" type="text" name="port" t-att-value="port"/></td>
+			    	</tr>
+			    	<tr>
+			    		<td>Database: </td>
+			    		<td><input class="database" type="text" name="database" t-att-value="database"/></td>
+			    	</tr>
+			    	<tr>
+			    		<td>User: </td>
+			    		<td><input class="user" type="text" name="user" t-att-value="user"/></td>
+			    	</tr>
+			    	<tr>
+			    		<td>Password: </td>
+			    		<td><input class="password" type="password" name="password" t-att-value="password"/></td>
+			    	</tr>
+			    </table>
+		    
+		    	<div style="margin:30px;">
+			    	<t t-if="user_logged">
+			    		<div>User Logged</div>
+			    	</t>
+			    	<t t-if="not user_logged">
+			    		<div>User Not Logged</div>
+			    	</t>
+			    	<button class="btn btn-primary btn-lg mt8" type="submit">Login</button>
+				</div>
+				
+		    	<t t-if="user_logged">
+		    		<h1 style="padding: 10px; margin-left:30px;">Register Activity</h1>
+		    		<div style="display: -webkit-box;">
+					    <div style="padding: 10px; margin-left:30px;width: 20%;">
+					    	Workcenter ID
+					    	<input id="input_search_worcenter_id" type="number" class="worcenter_id" t-att-value="worcenter_id"/>
+					    </div>
+					    <div style="padding: 10px; margin-left:30px;width: 20%;">
+					    	Workorder ID
+					    	<input id="input_search_workorder_id" type="number" class="workorder_id"  t-att-value="workorder_id"/>
+					    </div>
+					    <input class="btn btn-primary btn-lg mt8" id="button_search" type="button" value='Filter'></input>
+					</div>
+		    		<table style="padding: 10px; margin:30px; width:90%" id="to_replace"></table>
+		    	</t>
+			
+				
+	        </form>
+    	</t>
+	</template>
+
+	<template id="template_workorder_machine_table" name="Workorder Table">
+
+		<head>
+			<t t-call-assets="web.assets_common" />
+			<t t-call-assets="web.assets_common" />
+			
+            <t t-call-assets="web.assets_frontend" />
+            <t t-call-assets="web.assets_frontend" />
+            
+            <t t-call-assets="web.assets_backend" />
+            <t t-call-assets="web.assets_backend" />
+            
+            <t t-call-assets="web_editor.summernote" />
+            <t t-call-assets="web_editor.summernote" />
+            
+            <t t-call-assets="web_editor.assets_editor" />
+            <t t-call-assets="web_editor.assets_editor" />
+		</head>
+	
+	    <table class="main_table" style="border: 3px solid black; margin:30px; width:90%">
+	        <tr>
+	            <th class="header_table">ID</th>
+	            <th class="header_table">Date Planned</th>
+	            <th class="header_table">Internal Reference</th>
+	            <th class="header_table">Product Name</th>
+	            <th class="header_table">Work Order Name</th>
+	            <th class="header_table">Production Name</th>
+	            <th class="header_table">N To Do</th>
+	            <th class="header_table">N Produced</th>
+	            <th class="header_table">Start</th>
+	            <th class="header_table">Pause</th>
+	            <th class="header_table">Resume</th>
+	            <th class="header_table">Stop</th>
+	            <th class="header_table">Description</th>
+	            <th class="header_table">Work Order State</th>
+	            <th class="header_table">User Working</th>
+	        </tr>
+	        
+	        <t t-foreach="wo_lines" t-as="line">
+	            <tr>
+	                <td class="table_value wo_id"><t t-esc="line[0]"/></td>
+	                <td class="table_value"><t t-esc="line[8]"/></td>
+	                <td class="table_value"><t t-esc="line[2]"/></td>
+	                <td class="table_value"><t t-esc="line[1]"/></td>
+	                <td class="table_value"><t t-esc="line[3]"/></td>
+	                <td class="table_value"><t t-esc="line[4]"/></td>
+	                <td class="table_value n_pieces_to_produce"><t t-esc="line[7]"/></td>
+	                <td class="table_value"><input type="number" name="n_pieces" class="n_pieces" step="0.001" /></td>
+	                <td class="table_value"><input class="start_work" type='button' value='Start' onClick="start_work11(this)"/></td>
+	                <td class="table_value"><input class="pause_work" type='button' value='Pause' onclick="pause_work1(this)"/></td>
+	                <td class="table_value"><input class="resume_work" type='button' value='Resume' onclick="resume_work1(this)"/></td>
+	                <td class="table_value"><input class="stop_work" type='button' value='Stop' onclick="stop_work1(this)"/></td>
+	                <td class="table_value"><t t-esc="line[5]"/></td>
+	                <td class="table_value wo_state" onchange="state_changed(this)"><t t-esc="line[6]"/></td>
+	                <td class="table_value wo_isuserworking"><t t-raw="line[9]"/></td>
+	            </tr>
+	        </t>
+	         
+	    </table>
+	</template>
+</odoo>

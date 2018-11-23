@@ -28,9 +28,10 @@
     'sequence': 15,
     'summary': 'Omnia Workorder Machine',
     'images': [],
-    'depends': ['stock'],
+    'depends': ['base_setup', 'stock', 'web_editor'],
     'description': """ This module allows to update workorder using machine communication.""",
     'data': [
+        'views/templates.xml',
         ],
     'demo': [],
     'test': [],

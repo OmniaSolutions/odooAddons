@@ -19,7 +19,7 @@ class MrpProductionWCLine(models.Model):
     def getWorkorders(self, workcenter, workorder=False):
         out = []
         logging.info('Getting Work Orders with parameters %r, workorder %r' % (workcenter, workorder))
-        searchFilter = [('state', 'in', ['pending', 'ready', 'progress']),
+        searchFilter = [('state', 'in', ['ready', 'progress']),
                         ('workcenter_id', '=', workcenter)
                         ]
         if workorder:

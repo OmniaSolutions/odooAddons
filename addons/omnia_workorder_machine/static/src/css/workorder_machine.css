@@ -1,0 +1,26 @@
+th.header_table {
+    border: 1px solid black;
+    padding: 10px;
+    background-color: #aac4f3;
+    text-align:center;
+}
+
+td.table_checkbox {
+    background-color: #aac4f3;
+    padding:13px;
+}
+
+td.table_value {
+    border-bottom: 1px solid black;
+    padding: 10px;
+}
+
+td.table_button {
+    border-bottom: 1px solid black;
+    padding: 10px;
+    background-color: #aac4f3;
+}
+
+div.main_check_button {
+    padding: 10px; margin:30px;"
+}
