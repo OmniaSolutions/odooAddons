@@ -34,8 +34,8 @@ class WebsiteWorkorderController(http.Controller):
     def workoder_machine_wc_wo(self, workcenter_id, workorder_id, **post):
         logging.info('WorkorderMachine with workcenter %r and workorder %r called' % (workcenter_id, workorder_id))
         values = post
-        lines = request.env['mrp.workorder'].getWorkorders(workcenter_id, workorder_id)
-        values['wo_lines'] = self.listify(lines)
+        lines = request.env['mrp.workorder'].getWorkorders(workcenter_id, workorder_id, listify=True)
+        values['wo_lines'] = lines
         return self.forceRender('omnia_workorder_machine.template_workorder_machine_table', values)
         
     def forceRender(self, templateName, vals):
@@ -43,24 +43,7 @@ class WebsiteWorkorderController(http.Controller):
         tableHtml = resp.render()
         return tableHtml
 
-    def listify(self, woList):
-        lines = []
-        for dictRes in woList:
-            lines.append(
-                [
-                    dictRes.get('wo_id', ''),
-                    dictRes.get('product_name', ''),
-                    dictRes.get('product_default_code', ''),
-                    dictRes.get('wo_name', ''),
-                    dictRes.get('production_name', ''),
-                    dictRes.get('wo_description', ''),
-                    dictRes.get('wo_state', ''),
-                    dictRes.get('qty', 0),
-                    dictRes.get('date_planned', ''),
-                    str(dictRes.get('is_user_working', False)),
-                    ]
-                )
-        return lines
+
         
     @http.route('/make_login', auth='none', methods=['POST'], csrf=False)
     def make_login(self, **post):
@@ -114,7 +97,30 @@ class WebsiteWorkorderController(http.Controller):
             res = request.env['mrp.workorder'].stopWork(wo_id, n_pieces)
         return res
 
-    @http.route('/setcookie', methods = ['POST', 'GET'])
-    def setcookie(self, **post):
-        logging.info('Set Cookie')
+    @http.route('/web/print_label', type='http', auth='user')
+    def print_sale_details(self, internal_ref, **kw):
+        if internal_ref:
+            prodList = request.env['product.product'].search([('default_code', '=', internal_ref)])
+            rep = request.env['ir.actions.report.xml'].search([('report_name', '=', 'product.report_productlabel')])
+            pdfContent, _fileType = rep.render_report(prodList.ids, 'product.report_productlabel', data=None)
+            pdfhttpheaders = [('Content-Type', 'application/pdf'), ('Content-Length', len(pdf))]
+            return request.make_response(pdf, headers=pdfhttpheaders)
+        
+        return None
+#         r = request.env['report.point_of_sale.report_saledetails']
+#         pdf = request.env['report'].with_context(date_start=date_start, date_stop=date_stop).get_pdf(r, 'point_of_sale.report_saledetails')
+#         pdfhttpheaders = [('Content-Type', 'application/pdf'), ('Content-Length', len(pdf))]
+#         return request.make_response(pdf, headers=pdfhttpheaders)
+    
+#     @http.route(['/web/print_label'], auth='public', type='json')
+#     def print_label(self, internal_ref, **post):
+#         logging.info('Print label called internal_ref %r' % (internal_ref))
+#         res = False
+#         if internal_ref:
+#             prodList = request.env['product.product'].search([('default_code', '=', internal_ref)])
+#             rep = request.env['ir.actions.report.xml'].search([('report_name', '=', 'product.report_productlabel')])
+#             pdfContent, _fileType = rep.render_report(prodList.ids, 'product.report_productlabel', data=None)
+#             pdfhttpheaders = [ ('Content-Type', 'application/pdf'), ('Content-Length', len(pdfContent)), ('Content-Disposition', 'attachment; filename="report.pdf"'), ]
+#             return Response(pdfContent, headers=pdfhttpheaders)
+#         return res
 

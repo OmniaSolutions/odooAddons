@@ -5,6 +5,70 @@ odoo.define('omnia_workorder_machine.workorder_machine_list', function (require)
     var utils = require('web.utils');
     var core = require('web.core');
     var config = require('web.config');
+    var report = require('report.report');
+    
+    var ActionManager = require('web.ActionManager');
+    var crash_manager = require('web.crash_manager');
+    var framework = require('web.framework');
+    var session = require('web.session');
+
+    function print_sale_details (button) { 
+    	console.log("Start printing label");
+        var button = button.currentTarget;
+        var closestTr = button.closest('tr');
+        var internal_ref = closestTr.getElementsByClassName('internal_ref');
+        var route = '/web/print_label/';
+        var self = this;
+        new Model('product.product').call('get_sale_details').then(function(result){
+            var env = {
+                widget: new PosBaseWidget(self),
+                company: self.pos.company,
+                pos: self.pos,
+                products: result.products,
+                payments: result.payments,
+                taxes: result.taxes,
+                total_paid: result.total_paid,
+                date: (new Date()).toLocaleString(),
+            };
+            var report = QWeb.render('SaleDetailsReport', env);
+            self.print_receipt(report);
+        })
+    }
+
+    function print_label(button) {
+    	console.log("Start printing label");
+        var button = button.currentTarget;
+        var closestTr = button.closest('tr');
+        var internal_ref = closestTr.getElementsByClassName('internal_ref');
+        var route = '/web/print_label/';
+
+        ajax.rpc('/web/print_label', {'internal_ref':internal_ref}).then(function (result) {
+			return result;
+		   }
+	    );
+//        responce = ["/report/pdf/product.report_producttemplatelabel/8862", "qweb-pdf"]
+//        session.get_file({
+//            url: '/report/download',
+//            data: {data: JSON.stringify(response)},
+//            complete: framework.unblockUI,
+//            error: c.rpc_error.bind(c),
+//            success: function () {
+//                if (action && options && !action.dialog) {
+//                    options.on_close();
+//                }
+//            },
+//        });
+        
+        
+        
+//		ajax.jsonRpc(route, 'call', {
+//			'internal_ref' : internal_ref[0].textContent,
+//		}).then(function (data) {
+//			filter_res(null);
+//		   }
+//	    );
+//        console.log("end")
+    }
 
     function start_work1 (button) {
         console.log("Start working");
@@ -137,6 +201,11 @@ odoo.define('omnia_workorder_machine.workorder_machine_list', function (require)
 		}).then(function (data) {
 			var doc = document.getElementById('to_replace');
 			table_to_replace.innerHTML = data;
+		    var print_label_list = document.getElementsByClassName('print_label');
+		    var i0;
+		    for (i0 = 0; i0 < print_label_list.length; i0++){
+		    	print_label_list[i0].onclick = print_label;
+		   }
 		    var td_list = document.getElementsByClassName('wo_state');
 		    var i;
 		    for (i = 0; i < td_list.length; i++){

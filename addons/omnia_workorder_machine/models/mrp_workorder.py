@@ -16,7 +16,7 @@ class MrpProductionWCLine(models.Model):
     _inherit = 'mrp.workorder'
 
     @api.model
-    def getWorkorders(self, workcenter, workorder=False):
+    def getWorkorders(self, workcenter, workorder=False, listify=False):
         out = []
         logging.info('Getting Work Orders with parameters %r, workorder %r' % (workcenter, workorder))
         searchFilter = [('state', 'in', ['ready', 'progress']),
@@ -41,7 +41,28 @@ class MrpProductionWCLine(models.Model):
                     'is_user_working': woBrws.is_user_working,
                     }
                 out.append(woDict)
+        if listify:
+            out = self.listifyForInterface(out)
         return out
+
+    def listifyForInterface(self, woList):
+        lines = []
+        for dictRes in woList:
+            lines.append(
+                [
+                    dictRes.get('wo_id', ''),
+                    dictRes.get('product_name', ''),
+                    dictRes.get('product_default_code', ''),
+                    dictRes.get('wo_name', ''),
+                    dictRes.get('production_name', ''),
+                    dictRes.get('wo_description', ''),
+                    dictRes.get('wo_state', ''),
+                    dictRes.get('qty', 0),
+                    dictRes.get('date_planned', ''),
+                    str(dictRes.get('is_user_working', False)),
+                    ]
+                )
+        return lines
 
     def listify(self, val):
         if isinstance(val, (list, tuple)):

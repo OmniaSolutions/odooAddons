@@ -125,25 +125,27 @@
 	            <th class="header_table">Description</th>
 	            <th class="header_table">Work Order State</th>
 	            <th class="header_table">User Working</th>
+	            <th class="header_table">Print Label</th>
 	        </tr>
 	        
 	        <t t-foreach="wo_lines" t-as="line">
 	            <tr>
 	                <td class="table_value wo_id"><t t-esc="line[0]"/></td>
 	                <td class="table_value"><t t-esc="line[8]"/></td>
-	                <td class="table_value"><t t-esc="line[2]"/></td>
+	                <td class="table_value internal_ref"><t t-esc="line[2]"/></td>
 	                <td class="table_value"><t t-esc="line[1]"/></td>
 	                <td class="table_value"><t t-esc="line[3]"/></td>
 	                <td class="table_value"><t t-esc="line[4]"/></td>
 	                <td class="table_value n_pieces_to_produce"><t t-esc="line[7]"/></td>
 	                <td class="table_value"><input type="number" name="n_pieces" class="n_pieces" step="0.001" /></td>
-	                <td class="table_value"><input class="start_work" type='button' value='Start' onClick="start_work11(this)"/></td>
-	                <td class="table_value"><input class="pause_work" type='button' value='Pause' onclick="pause_work1(this)"/></td>
-	                <td class="table_value"><input class="resume_work" type='button' value='Resume' onclick="resume_work1(this)"/></td>
-	                <td class="table_value"><input class="stop_work" type='button' value='Stop' onclick="stop_work1(this)"/></td>
+	                <td class="table_value"><input class="start_work" type='button' value='Start'/></td>
+	                <td class="table_value"><input class="pause_work" type='button' value='Pause'/></td>
+	                <td class="table_value"><input class="resume_work" type='button' value='Resume'/></td>
+	                <td class="table_value"><input class="stop_work" type='button' value='Stop'/></td>
 	                <td class="table_value"><t t-esc="line[5]"/></td>
 	                <td class="table_value wo_state" onchange="state_changed(this)"><t t-esc="line[6]"/></td>
 	                <td class="table_value wo_isuserworking"><t t-raw="line[9]"/></td>
+	                <td class="table_value"><input class="print_label" type='button' value='Print'/></td>
 	            </tr>
 	        </t>
 	         
