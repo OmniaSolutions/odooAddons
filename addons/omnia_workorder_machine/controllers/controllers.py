@@ -5,12 +5,14 @@ Created on Oct 14, 2018
 '''
 import logging
 import json
+import os
 from odoo import http
 from odoo import _
 from odoo.http import request
 from odoo.http import Response
 from odoo.addons.website.controllers.main import QueryURL
 from odoo.addons.website_sale.controllers.main import WebsiteSale
+import tempfile
 
 
 class WebsiteWorkorderController(http.Controller):
@@ -42,8 +44,6 @@ class WebsiteWorkorderController(http.Controller):
         resp = Response(template=templateName, qcontext=vals)
         tableHtml = resp.render()
         return tableHtml
-
-
         
     @http.route('/make_login', auth='none', methods=['POST'], csrf=False)
     def make_login(self, **post):
@@ -97,30 +97,17 @@ class WebsiteWorkorderController(http.Controller):
             res = request.env['mrp.workorder'].stopWork(wo_id, n_pieces)
         return res
 
-    @http.route('/web/print_label', type='http', auth='user')
+    @http.route('/web/print_label/<string:internal_ref>', type='http', auth='user')
     def print_sale_details(self, internal_ref, **kw):
         if internal_ref:
             prodList = request.env['product.product'].search([('default_code', '=', internal_ref)])
-            rep = request.env['ir.actions.report.xml'].search([('report_name', '=', 'product.report_productlabel')])
-            pdfContent, _fileType = rep.render_report(prodList.ids, 'product.report_productlabel', data=None)
-            pdfhttpheaders = [('Content-Type', 'application/pdf'), ('Content-Length', len(pdf))]
-            return request.make_response(pdf, headers=pdfhttpheaders)
-        
+            if prodList:
+                rep = request.env['ir.actions.report.xml'].search([('report_name', '=', 'product.report_productlabel')])
+                pdfContent, _fileType = rep.render_report(prodList.ids, 'product.report_productlabel', data=None)
+                tmpDir = tempfile.gettempdir()
+                filePath = os.path.join(tmpDir, 'testtttt.pdf')
+                with open(filePath, 'w') as writeFile:
+                    writeFile.write(pdfContent)
+                return pdfContent
         return None
-#         r = request.env['report.point_of_sale.report_saledetails']
-#         pdf = request.env['report'].with_context(date_start=date_start, date_stop=date_stop).get_pdf(r, 'point_of_sale.report_saledetails')
-#         pdfhttpheaders = [('Content-Type', 'application/pdf'), ('Content-Length', len(pdf))]
-#         return request.make_response(pdf, headers=pdfhttpheaders)
-    
-#     @http.route(['/web/print_label'], auth='public', type='json')
-#     def print_label(self, internal_ref, **post):
-#         logging.info('Print label called internal_ref %r' % (internal_ref))
-#         res = False
-#         if internal_ref:
-#             prodList = request.env['product.product'].search([('default_code', '=', internal_ref)])
-#             rep = request.env['ir.actions.report.xml'].search([('report_name', '=', 'product.report_productlabel')])
-#             pdfContent, _fileType = rep.render_report(prodList.ids, 'product.report_productlabel', data=None)
-#             pdfhttpheaders = [ ('Content-Type', 'application/pdf'), ('Content-Length', len(pdfContent)), ('Content-Disposition', 'attachment; filename="report.pdf"'), ]
-#             return Response(pdfContent, headers=pdfhttpheaders)
-#         return res
 

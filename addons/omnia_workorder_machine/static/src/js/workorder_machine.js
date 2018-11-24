@@ -1,38 +1,25 @@
 odoo.define('omnia_workorder_machine.workorder_machine_list', function (require) {
     "use strict";
-
     var ajax = require('web.ajax');
-    var utils = require('web.utils');
     var core = require('web.core');
     var config = require('web.config');
-    var report = require('report.report');
-    
-    var ActionManager = require('web.ActionManager');
-    var crash_manager = require('web.crash_manager');
-    var framework = require('web.framework');
-    var session = require('web.session');
 
-    function print_sale_details (button) { 
-    	console.log("Start printing label");
-        var button = button.currentTarget;
-        var closestTr = button.closest('tr');
-        var internal_ref = closestTr.getElementsByClassName('internal_ref');
-        var route = '/web/print_label/';
-        var self = this;
-        new Model('product.product').call('get_sale_details').then(function(result){
-            var env = {
-                widget: new PosBaseWidget(self),
-                company: self.pos.company,
-                pos: self.pos,
-                products: result.products,
-                payments: result.payments,
-                taxes: result.taxes,
-                total_paid: result.total_paid,
-                date: (new Date()).toLocaleString(),
-            };
-            var report = QWeb.render('SaleDetailsReport', env);
-            self.print_receipt(report);
-        })
+    function download(data, filename, type) {
+        var file = new Blob([data], {type: type});
+        if (window.navigator.msSaveOrOpenBlob) // IE10+
+            window.navigator.msSaveOrOpenBlob(file, filename);
+        else { // Others
+            var a = document.createElement("a"),
+                    url = URL.createObjectURL(file);
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            setTimeout(function() {
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(url);  
+            }, 0); 
+        }
     }
 
     function print_label(button) {
@@ -40,34 +27,19 @@ odoo.define('omnia_workorder_machine.workorder_machine_list', function (require)
         var button = button.currentTarget;
         var closestTr = button.closest('tr');
         var internal_ref = closestTr.getElementsByClassName('internal_ref');
-        var route = '/web/print_label/';
+        var route = '/web/print_label/' + internal_ref[0].textContent;
 
-        ajax.rpc('/web/print_label', {'internal_ref':internal_ref}).then(function (result) {
-			return result;
-		   }
-	    );
-//        responce = ["/report/pdf/product.report_producttemplatelabel/8862", "qweb-pdf"]
-//        session.get_file({
-//            url: '/report/download',
-//            data: {data: JSON.stringify(response)},
-//            complete: framework.unblockUI,
-//            error: c.rpc_error.bind(c),
-//            success: function () {
-//                if (action && options && !action.dialog) {
-//                    options.on_close();
-//                }
-//            },
-//        });
-        
-        
-        
-//		ajax.jsonRpc(route, 'call', {
-//			'internal_ref' : internal_ref[0].textContent,
-//		}).then(function (data) {
-//			filter_res(null);
-//		   }
-//	    );
-//        console.log("end")
+        var xhr = new XMLHttpRequest();
+        xhr.open('GET', route, true);
+        xhr.responseType = 'blob';
+
+        xhr.onload = function(e) {
+          if (this.status == 200) {
+        	  download(this.response, 'label.pdf', 'application/pdf')  
+          }
+        };
+
+        xhr.send();
     }
 
     function start_work1 (button) {
