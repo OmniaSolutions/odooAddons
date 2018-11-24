@@ -30,42 +30,48 @@
 
 
             
-		    <form action="/make_login" method="post">
-			    <table class="main_table" style="border: 3px solid black;padding: 10px; margin:30px;">
-			    	<tr>
-			    		<td>Scheme: </td>
-			    		<td><input class="scheme" type="text" name="scheme" t-att-value="scheme"/></td>
-			    	</tr>
-			    	<tr>
-			    		<td>Server IP: </td>
-			    		<td><input class="address" type="text" name="address" t-att-value="address"/></td>
-			    	</tr>
-			    	<tr>
-			    		<td>Server Port: </td>
-			    		<td><input class="port" type="text" name="port" t-att-value="port"/></td>
-			    	</tr>
-			    	<tr>
-			    		<td>Database: </td>
-			    		<td><input class="database" type="text" name="database" t-att-value="database"/></td>
-			    	</tr>
-			    	<tr>
-			    		<td>User: </td>
-			    		<td><input class="user" type="text" name="user" t-att-value="user"/></td>
-			    	</tr>
-			    	<tr>
-			    		<td>Password: </td>
-			    		<td><input class="password" type="password" name="password" t-att-value="password"/></td>
-			    	</tr>
-			    </table>
+		    <form action="/make_login" method="post"> 
+		    	<t t-if="not user_logged">
+				    <table class="main_table" style="border: 3px solid black;padding: 10px; margin:30px;">
+				    	<tr>
+				    		<td>Scheme: </td>
+				    		<td><input class="scheme" type="text" name="scheme" t-att-value="scheme"/></td>
+				    	</tr>
+				    	<tr>
+				    		<td>Server IP: </td>
+				    		<td><input class="address" type="text" name="address" t-att-value="address"/></td>
+				    	</tr>
+				    	<tr>
+				    		<td>Server Port: </td>
+				    		<td><input class="port" type="text" name="port" t-att-value="port"/></td>
+				    	</tr>
+				    	<tr>
+				    		<td>Database: </td>
+				    		<td><input class="database" type="text" name="database" t-att-value="database"/></td>
+				    	</tr>
+				    	<tr>
+				    		<td>User: </td>
+				    		<td><input class="user" type="text" name="user" t-att-value="user"/></td>
+				    	</tr>
+				    	<tr>
+				    		<td>Password: </td>
+				    		<td><input class="password" type="password" name="password" t-att-value="password"/></td>
+				    	</tr>
+				    </table>
 		    
-		    	<div style="margin:30px;">
+			    </t>
+			    
+			    
+		    	<div style="margin:30px;display: -webkit-box;">
 			    	<t t-if="user_logged">
-			    		<div>User Logged</div>
+			    		<div class="user_logged">User Logged</div>
+			    		<button class="btn btn-primary btn-lg mt8" style="margin-left: 30px;" type="submit">New Login</button>
 			    	</t>
 			    	<t t-if="not user_logged">
-			    		<div>User Not Logged</div>
+			    		<div class="user_not_logged">User Not Logged</div>
+			    		<button class="btn btn-primary btn-lg mt8"  style="margin-left: 30px;" type="submit">Login</button>
 			    	</t>
-			    	<button class="btn btn-primary btn-lg mt8" type="submit">Login</button>
+			    	
 				</div>
 				
 		    	<t t-if="user_logged">
@@ -83,9 +89,9 @@
 					</div>
 		    		<table style="padding: 10px; margin:30px; width:90%" id="to_replace"></table>
 		    	</t>
-			
-				
 	        </form>
+	        
+
     	</t>
 	</template>
 

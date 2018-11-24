@@ -54,11 +54,14 @@ class WebsiteWorkorderController(http.Controller):
         post['csrf_token'] = ''
         post['user_logged'] = False
         if database and user and pwd:
-            uid = request.session.authenticate(database, user, pwd)
-            if uid:
-                csrf_token = request.csrf_token()
-                post['csrf_token'] = csrf_token
-                post['user_logged'] = True
+            try:
+                uid = request.session.authenticate(database, user, pwd)
+                if uid:
+                    csrf_token = request.csrf_token()
+                    post['csrf_token'] = csrf_token
+                    post['user_logged'] = True
+            except Exception as ex:
+                logging.error(ex)
         return self.renderTemplate('omnia_workorder_machine.template_workorder_machine', post)
     
     @http.route(['/web/workorder_start'], auth='public', type='json')

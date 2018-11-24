@@ -22,5 +22,19 @@ td.table_button {
 }
 
 div.main_check_button {
-    padding: 10px; margin:30px;"
+    padding: 10px; margin:30px;
+}
+div.user_logged {
+	font-weight: bold;
+    font-size: large;
+    background-color: chartreuse;
+    padding: 10;
+    width: 20%;
+}
+div.user_not_logged {
+	font-weight: bold;
+    font-size: large;
+    background-color: orange;
+    padding: 10;
+    width: 20%;
 }
