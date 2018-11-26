@@ -105,6 +105,7 @@ class MrpProductionWCLine(models.Model):
         woLine = self.browse(self.listify(workorder))
         for woBrws in woLine:
             if n_pieces == woBrws.qty_production:
+                woBrws.qty_producing = n_pieces
                 woBrws.record_production()
                 return woBrws.button_finish()
         return False
