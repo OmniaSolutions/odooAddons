@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+        <record id="sale_order_form_extension_bom" model="ir.ui.view">
+            <field name="name">sale.order.form.bom.extension</field>
+            <field name="model">sale.order</field>
+            <field name="inherit_id" ref="sale.view_order_form"/>
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='order_line']/tree/field[@name='price_total']" position="after">
+					<button name="explode_bom" type="object" string="Explode BOM"/> <!-- attrs="{'invisible':[('related_bom_ids', '=', [])]}" -->
+                </xpath>
+            </field>
+        </record>
+        
+    </data>
+</odoo>
