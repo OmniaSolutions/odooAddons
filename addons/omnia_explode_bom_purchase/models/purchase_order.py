@@ -9,20 +9,20 @@ from odoo import api
 from odoo import _
 
 
-class SaleOrderLineExtension(models.Model):
-    _inherit = 'sale.order.line'
+class PurchaseOrderLineExtension(models.Model):
+    _inherit = 'purchase.order.line'
 
     @api.multi
     def explode_bom(self):
-        for saleLineBrws in self:
-            order_id = saleLineBrws.order_id.id
-            normalBOMs = saleLineBrws.product_id.bom_ids.filtered(lambda x: x.type == 'normal')
+        for lineBrws in self:
+            order_id = lineBrws.order_id.id
+            normalBOMs = lineBrws.product_id.bom_ids.filtered(lambda x: x.type == 'normal')
             for nBomBrws in normalBOMs:
                 for bomLineBrws in nBomBrws.bom_line_ids:
                     self.copy({'product_id': bomLineBrws.product_id.id,
-                               'product_uom_qty': bomLineBrws.product_qty,
-                               'price_unit': bomLineBrws.product_id.lst_price,
-                               'name': '[%s] %s' % (saleLineBrws.product_id.engineering_code, bomLineBrws.product_id.name),
+                               'product_qty': bomLineBrws.product_qty,
+                               'price_unit': bomLineBrws.product_id.standard_price,
+                               'name': '[%s] %s' % (lineBrws.product_id.engineering_code, bomLineBrws.product_id.name),
                                'order_id': order_id,
                                })
                 break
@@ -31,7 +31,7 @@ class SaleOrderLineExtension(models.Model):
             'res_id': order_id,
             'view_type': 'form',
             'view_mode': 'form',
-            'res_model': 'sale.order',
+            'res_model': 'purchase.order',
             'type': 'ir.actions.act_window',
             'target': 'current',
         }
