@@ -5,7 +5,7 @@
         <field name="arch" type="xml">
         <form>
             <group>
-                <field name="ref_stock_move">
+                <field name="ref_stock_move" nolabel="1" colspan="4">
                     <tree editable="bottom">
                         <field name="sale_order_name" readonly="True"/>
                         <field name="sale_order_customer_name" readonly="True"/>
