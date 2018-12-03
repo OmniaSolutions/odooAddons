@@ -13,7 +13,6 @@
                         <field name="product_name" readonly="True"/>
                         <!-- <field name="sale_order_line_id" invisible="True"/>  -->
                         <field name="product_uom_qty" invisible="True"/>
-                        <field name="identificated"/>
                         <field name="move_quantity"/>
                         <field name="qty_on_hand"/>
                         <field name="requested_date" readonly="True"/>
@@ -24,7 +23,6 @@
                         <field name="sale_order_customer_name" readonly="True"/>
                         <field name="product_name" readonly="True"/>
                         <field name="product_uom_qty" readonly="True"/>
-                        <field name="identificated"/>
                         <field name="move_quantity"/>
                         <field name="qty_on_hand"/>
                         <field name="requested_date" readonly="True"/>
