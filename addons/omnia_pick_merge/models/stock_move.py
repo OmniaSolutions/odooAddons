@@ -44,3 +44,11 @@ class StockMove(models.Model):
     _inherit = ['stock.move']
 
     from_move_id = fields.Integer(_('From Stock Move'))
+
+    def getSaleOrder(self, moveBrws):
+        saleObj = self.env['sale.order']
+        if moveBrws.group_id:
+            saleBrwsList = saleObj.search([('procurement_group_id', '=', moveBrws.group_id.id)])
+            for saleBrws in saleBrwsList:
+                return saleBrws
+        return saleObj
