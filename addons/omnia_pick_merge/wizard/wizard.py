@@ -79,14 +79,16 @@ class TmpStockMove(models.TransientModel):
                 raise UserError(_('You cannot merge picking not in Done or Cancel states.'))
                 continue
             for move in pick_id.move_lines:
-                if move.state in ['done', 'cancel']:
+                if move.state in ['done', 'cancel', 'confirmed']:
                     continue
                 product_id = move.product_id
                 if product_id:
                     used_qty = 0
+                    qty_already_done = move.quantity_done
+                    needed_qty = move.product_qty - qty_already_done
                     if product_id.id not in product_qty_assigned:
                         product_qty_assigned[product_id.id] = product_id.qty_available
-                    residual_qty = product_qty_assigned[product_id.id] - move.product_qty
+                    residual_qty = product_qty_assigned[product_id.id] - needed_qty
                     if residual_qty >= 0:
                         product_qty_assigned[product_id.id] = residual_qty
                         used_qty = move.product_qty
@@ -96,7 +98,7 @@ class TmpStockMove(models.TransientModel):
                                                 'product_name': move.product_id.display_name,
                                                 #'sale_order_line_id': move.sale_line_id.id,
                                                 'product_uom_qty': move.product_uom_qty,
-                                                'move_quantity': move.product_qty,
+                                                'move_quantity': needed_qty,
                                                 'requested_date': move.date,
                                                 'date_expected': move.date_expected,
                                                 'sale_order_name': saleOrder.name,

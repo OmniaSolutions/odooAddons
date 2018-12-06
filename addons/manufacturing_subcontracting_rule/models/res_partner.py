@@ -49,14 +49,15 @@ class ResPartner(models.Model):
     @api.model
     def name_search(self, name, args=None, operator='ilike', limit=100):
         outArgs = []
-        for fieldName, inner_operator, val in args:
-            tmpOut = [fieldName, inner_operator, val]
-            if inner_operator == 'in' and isinstance(val, (str, unicode)):
-                try:
-                    newVal = json.loads(val)
-                    tmpOut[2] = newVal
-                    operator = 'ilike'
-                except Exception as ex:
-                    logging.error(ex)
-            outArgs.append(tmpOut)
+        if args:
+            for fieldName, inner_operator, val in args:
+                tmpOut = [fieldName, inner_operator, val]
+                if inner_operator == 'in' and isinstance(val, (str, unicode)):
+                    try:
+                        newVal = json.loads(val)
+                        tmpOut[2] = newVal
+                        operator = 'ilike'
+                    except Exception as ex:
+                        logging.error(ex)
+                outArgs.append(tmpOut)
         return super(ResPartner, self).name_search(name, outArgs, operator, limit)
