@@ -95,7 +95,7 @@ class StockMove(models.Model):
         # ++ back work compatibility
         if not pick_out:
             for pick in objProduction.external_pickings:
-                if pick.isOutGoing():
+                if pick.isOutGoing(pick):
                     pick_out = pick
         # --
         if pick_out:
