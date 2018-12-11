@@ -5,7 +5,7 @@
         <field name="arch" type="xml">
         <form>
             <group>
-                <field name="ref_stock_move">
+                <field name="ref_stock_move" nolabel="1" colspan="4">
                     <tree editable="bottom">
                         <field name="sale_order_name" readonly="True"/>
                         <field name="sale_order_customer_name" readonly="True"/>
@@ -13,8 +13,8 @@
                         <field name="product_name" readonly="True"/>
                         <!-- <field name="sale_order_line_id" invisible="True"/>  -->
                         <field name="product_uom_qty" invisible="True"/>
-                        <field name="identificated"/>
                         <field name="move_quantity"/>
+                        <field name="qty_on_hand"/>
                         <field name="requested_date" readonly="True"/>
                         <field name="date_expected"  readonly="True"/>
                     </tree>
@@ -23,8 +23,8 @@
                         <field name="sale_order_customer_name" readonly="True"/>
                         <field name="product_name" readonly="True"/>
                         <field name="product_uom_qty" readonly="True"/>
-                        <field name="identificated"/>
                         <field name="move_quantity"/>
+                        <field name="qty_on_hand"/>
                         <field name="requested_date" readonly="True"/>
                         <field name="date_expected"  readonly="True"/>
                     </form>
@@ -38,6 +38,9 @@
                         special="cancel"/>
                 <button string="Merge"
                         name="button_merge_picking"
+                        type="object"/>
+                <button string="Merge Only Available"
+                        name="button_merge_picking_available"
                         type="object"/>
             </footer>
         </form>

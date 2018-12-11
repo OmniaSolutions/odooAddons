@@ -23,6 +23,7 @@ class TmpStockMoveLine(models.TransientModel):
     ref_stock_move_id = fields.Integer(string=_('Reference Move'))
     product_name = fields.Char(_('Product'))
     #sale_order_line_id = fields.Integer(_('Reference Sale Order Line'))
+    procurement_id = fields.Integer('Procurement')
     sale_order_name = fields.Char(_('Order Ref'))
     sale_order_customer_name = fields.Char(_('Customer Name'))
     move_quantity = fields.Float(_('Move Quantity'), )
@@ -31,6 +32,7 @@ class TmpStockMoveLine(models.TransientModel):
     requested_date = fields.Datetime(_('Request date'))
     date_expected = fields.Datetime(_('Effective date'))
     identificated = fields.Boolean(_('Identificato'))
+    qty_on_hand = fields.Float(_('Quantity on and '))
 
 
 class TmpStockMove(models.TransientModel):
@@ -52,6 +54,7 @@ class TmpStockMove(models.TransientModel):
         if len(pick_ids) <= 1:
             raise UserError(_('You cannot merge only one picking.'))
         TmpStockMoveLineObj = self.env['stock.tmp_merge_pick_line']
+        pick_ids.sort()
         pick_ids = self.env['stock.picking'].browse(pick_ids)
         first_partner_id = -1
         for pick_id in pick_ids:
@@ -69,29 +72,42 @@ class TmpStockMove(models.TransientModel):
                 raise UserError(_("Partner are not equal"))
             if self.pick_origin or pick_id.origin:
                 self.pick_origin = str(self.pick_origin or '') + "," + str(pick_id.origin or '')
-        
+
+        product_qty_assigned = {}
         for pick_id in pick_ids:
             if pick_id.state in ['done', 'cancel']:
                 raise UserError(_('You cannot merge picking not in Done or Cancel states.'))
                 continue
             for move in pick_id.move_lines:
-                if move.state in ['done', 'cancel']:
+                if move.state in ['done', 'cancel', 'confirmed']:
                     continue
-                if move.product_id:
+                product_id = move.product_id
+                if product_id:
+                    used_qty = 0
+                    qty_already_done = move.quantity_done
+                    needed_qty = move.product_qty - qty_already_done
+                    if product_id.id not in product_qty_assigned:
+                        product_qty_assigned[product_id.id] = product_id.qty_available
+                    residual_qty = product_qty_assigned[product_id.id] - needed_qty
+                    if residual_qty >= 0:
+                        product_qty_assigned[product_id.id] = residual_qty
+                        used_qty = move.product_qty
                     saleOrder = move.getSaleOrder(move)
                     TmpStockMoveLineObj.create({'ref_id': self.id,
                                                 'ref_stock_move_id': move.id,
                                                 'product_name': move.product_id.display_name,
                                                 #'sale_order_line_id': move.sale_line_id.id,
                                                 'product_uom_qty': move.product_uom_qty,
-                                                'move_quantity': move.product_qty,
+                                                'move_quantity': needed_qty,
                                                 'requested_date': move.date,
                                                 'date_expected': move.date_expected,
                                                 'sale_order_name': saleOrder.name,
-                                                'sale_order_customer_name': saleOrder.partner_id.name})
+                                                'sale_order_customer_name': saleOrder.partner_id.name,
+                                                'procurement_id': move.procurement_id.id,
+                                                'qty_on_hand': used_qty})
 
     @api.multi
-    def button_merge_picking(self):
+    def merge_picks(self, only_available=False):
         out_pick = self.env['stock.picking'].create({
             'location_id': self.location_id,
             'location_dest_id': self.location_dest_id,
@@ -101,14 +117,21 @@ class TmpStockMove(models.TransientModel):
         })
         tmpl_move = self.env['stock.move']
         for pick_line in self.ref_stock_move:
+            if only_available:
+                if pick_line.qty_on_hand <= 0:
+                    continue
+                move_quanity = pick_line.qty_on_hand
+            else:
+                move_quanity = pick_line.move_quantity
             old_move_id = tmpl_move.search([('id', '=', pick_line.ref_stock_move_id)])
             if old_move_id.product_qty != pick_line.move_quantity:
                 if old_move_id.product_qty < pick_line.move_quantity:
                     raise UserError(_('Unable to set quantity less then 0'))
             old_move_id.copy({'picking_id': out_pick.id,
-                              'product_uom_qty': pick_line.move_quantity,
+                              'product_uom_qty': move_quanity,
                               'from_move_id': old_move_id.id,
-                              'quantity_done': pick_line.move_quantity})
+                              'quantity_done': move_quanity,
+                              'procure_method': 'make_to_stock'})
             if old_move_id.picking_id not in out_pick.merged_pick_ids:
                 out_pick.merged_pick_ids = [(4, old_move_id.picking_id.id)]
             if old_move_id.product_qty - pick_line.move_quantity == 0:
@@ -119,10 +142,18 @@ class TmpStockMove(models.TransientModel):
             out_pick.action_confirm()
 
         return {
-            'name': _("New Move"),
+            'name': _("New Pick"),
             'view_type': 'form',
             'view_mode': 'tree,form',
             'res_model': 'stock.picking',
             'type': 'ir.actions.act_window',
             'domain': [('id', 'in', out_pick.ids)],
         }
+
+    @api.multi
+    def button_merge_picking(self):
+        return self.merge_picks()
+
+    @api.multi
+    def button_merge_picking_available(self):
+        return self.merge_picks(True)
