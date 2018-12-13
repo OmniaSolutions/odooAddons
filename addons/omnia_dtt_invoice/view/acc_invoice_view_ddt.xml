@@ -1,0 +1,30 @@
+<odoo>
+	<data>
+		<record id="omnia_ddt_invoice_view" model="ir.ui.view">
+            <field name="name">omnia.ddt.invoice.view</field>
+            <field name="model">account.invoice</field>
+            <field name="inherit_id" ref="account.invoice_form"/>
+            <field name="arch" type="xml">
+                <field name="date_invoice" position="before">
+                    <field name="is_accompagnatoria"/>
+                </field>
+            	<xpath expr="//page[@name='other_info']" position="after">
+                    <page string="Accompagnatoria" attrs="{'invisible':[('is_accompagnatoria', '=', False)]}">
+                        <group>
+                            <field name="carrier_id"/>
+						    <field name="carriage_condition_id"/>
+						    <field name="goods_description_id"/>
+						    <field name="transportation_reason_id"/>
+						    <field name="ddt_reason"/>
+						    <field name="peso_lordo"/>
+						    <field name="peso_netto"/>
+						    <field name="volume"/>
+						    <field name="number_of_packages"/>
+                        </group>
+                    </page>
+	            </xpath>
+            </field>
+        </record>
+    </data>
+</odoo>
+	

@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+<template id="ddt_invoice">
+       	<table class="table_title_bottom" id="ddt_info4">
+        	<colgroup>
+       	 		<col width="25%"/>
+             	<col width="25%"/>
+				<col width="25%"/>
+				<col width="25%"/>    
+	        </colgroup>
+	        <tbody>
+	           <tr>
+	           		<td  class="table_rows">Vettore <div t-esc="o.carrier_id.name"/></td>
+	                <td  class="table_rows">Cond. Trasp <div t-esc="o.carriage_condition_id.name"/></td>
+	               	<td  class="table_rows">Desc. Merc<div t-esc="o.goods_description_id.name"/></td>
+	                <td  class="table_rows">Reson <div t-esc="o.transportation_reason_id.name"/></td>
+	           </tr>
+               <tr>
+                    <td  class="table_rows">Motivo Trasporto <div t-esc="o.ddt_reason"/></td>
+                    <td  class="table_rows">Peso Lordo <div t-esc="peso_lordo"/><div t-esc="peso_netto"/></td>
+                    <td  class="table_rows">Peso Netto <div t-esc="o.volume"/></td>
+                    <td  class="table_rows">N. Packages<div t-esc="o.number_of_packages"/></td>
+               </tr>
+	        </tbody>
+      	</table>
+</template>
+
+</odoo>
