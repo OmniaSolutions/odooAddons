@@ -25,17 +25,17 @@ import os
 global cur
 conn = None
 cur = None
-USER_NAME = 'admin'
-USER_PASS = 'cvmpws1!'
-DB_USER = 'odoo'
-DB_PASS = 'odoo'
-DB_NAME = 'civiemme_real'
+USER_NAME = 'odoo_user'
+USER_PASS = 'odoo_pass'
+DB_USER = 'postgres_user'
+DB_PASS = 'postgres_pass'
+DB_NAME = 'database_name'
 SERVER_ADDRESS = '127.0.0.1'
 SERVER_PORT = '8069'
 
 COMMIT = False
 PSYCOPG = False
-test_a_few = 10000000
+test_a_few = False
 logFile = os.path.join(tempfile.gettempdir(), 'fix_workflow_%s.txt' % (datetime.datetime.now()))
 outFileLog = open(logFile, 'w')
 
@@ -59,18 +59,19 @@ def printAndLog(msg):
 def login():
     printAndLog('Start Login')
     cur = None
+    conn = None
     try:
         conn = psycopg2.connect("dbname='%s' user='%s' host='%s' password='%s'" % (DB_NAME, DB_USER, SERVER_ADDRESS, DB_PASS))
         cur = conn.cursor()
         BaseDbIntegration.create(USER_NAME, USER_PASS, DB_NAME, SERVER_ADDRESS, SERVER_PORT, '', 'http')
         if not BaseDbIntegration.isLoggedIn:
             printAndLog('Login Failed')
-            return False, cur
+            return False, cur, conn
         BaseDbIntegration.newStyleCall = False
-        return True, cur
+        return True, cur, conn
     except Exception, ex:
         printAndLog(ex)
-    return False, cur
+    return False, cur, conn
 
 
 def dictify(headers, rows):
@@ -134,7 +135,20 @@ def getWorkflowActivity(wkf_id):
 def getObjectList(model):
     if PSYCOPG:
         if model == 'product.product':
-            cur.execute("""SELECT id, product_tmpl from %s;""" % (model.replace('.', '_')))
+            cur.execute("""SELECT id, product_tmpl_id from %s;""" % (model.replace('.', '_')))
+            rows = cur.fetchall()
+            res = dictify(('id', 'product_tmpl_id'), rows)
+            for elemDict in res:
+                index = res.index(elemDict)
+                product_tmpl_id = elemDict.get('product_tmpl_id')
+                cur.execute("""SELECT state, name from product_template where id=%s;""" % (product_tmpl_id))
+                rows2 = cur.fetchall()
+                res2 = dictify(('state', 'name'), rows2)
+                del res[index]['product_tmpl_id']
+                res[index]['state'] = res2[0]['state']
+                res[index]['name'] = res2[0]['name']
+            printAndLog(res[0:100])
+            return res
         else:
             cur.execute("""SELECT id, state, name from %s;""" % (model.replace('.', '_')))
         rows = cur.fetchall()
@@ -174,9 +188,11 @@ def createWkfInstance(model, wkf_id, obj_id):
         if PSYCOPG:
             keys = ['res_type', 'uid', 'wkf_id', 'res_id', 'state']
             vals = [model, uid, wkf_id, obj_id, state]
-            cur.execute("""INSERT INTO wkf_instance (%s) values (%s);""" % (keys, vals))
+            toExec = """INSERT INTO wkf_instance %s values %s returning id;""" % (str(tuple(keys)).replace("'", '"'), tuple(vals))
+            printAndLog('%s' % (toExec))
+            cur.execute(toExec)
             rows = cur.fetchall()
-            return rows[0]
+            return rows[0][0]
         else:
             res = BaseDbIntegration.Create('workflow.instance', infoValue)
         return res
@@ -193,11 +209,12 @@ def createWkfWorkitem(act_id, inst_id, obj_id):
     printAndLog('[%s] Create Wkf Workitem with values %s' % (obj_id, infoValue))
     if COMMIT:
         if PSYCOPG:
-            keys = ['act_id', 'inst_id', 'state']
-            vals = [act_id, inst_id, state]
-            cur.execute("""INSERT INTO wkf_workitem (%s) values (%s);""" % (keys, vals))
+            keys = ('act_id', 'inst_id', 'state')
+            vals = (act_id, inst_id, state)
+            toExec = """INSERT INTO wkf_workitem %s values %s returning id;""" % (str(keys).replace("'", '"'), str(vals))
+            cur.execute(toExec)
             rows = cur.fetchall()
-            return rows[0]
+            return rows[0][0]
         else:
             res = BaseDbIntegration.Create('workflow.workitem', infoValue)
         return res
@@ -226,8 +243,7 @@ def updateWorkitem(wkf_id, act_id):
     printAndLog('Update Workitem %s with res_id %s' % (wkf_id, act_id))
     if COMMIT:
         if PSYCOPG:
-            cur.execute("""UPDATE wkf_workitem act_id = %s where id = %s;""" % (act_id, wkf_id))
-            rows = cur.fetchall()
+            cur.execute("""UPDATE wkf_workitem set act_id = %s where id = %s;""" % (act_id, wkf_id))
         else:
             BaseDbIntegration.UpdateValue('workflow.workitem', [wkf_id], {'act_id': act_id})
         
@@ -256,7 +272,7 @@ def checkFixSingleObj(model, objDict, wkf_id, activity_dict):
         updateWorkitem(workitem_id, expected_act_id)
 
 printAndLog('COMMIT %s, PSYCOPG %s' % (COMMIT, PSYCOPG))
-res, cur = login()
+res, cur, conn = login()
 if res:
     wkf_dict = getCorrectWorkflow()
     wkf_id = wkf_dict.get('id')
@@ -268,7 +284,8 @@ if res:
         for index, objDict in enumerate(objList):
             checkFixSingleObj(wkf_obj, objDict, wkf_id, activity_dict)
             printAndLog('[%s / %s]' % (index, counter))
-        
+
+conn.commit()
 printAndLog('Done')
 
 outFileLog.close()
