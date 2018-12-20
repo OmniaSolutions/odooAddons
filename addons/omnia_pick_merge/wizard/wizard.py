@@ -49,12 +49,17 @@ class TmpStockMove(models.TransientModel):
 
     @api.model
     def populateFromPick(self, pick_ids):
-        if len(pick_ids) <= 1:
-            raise UserError(_('You cannot merge only one picking.'))
+        pick_ids.sort()
+        tmp_pick_ids = self.env['stock.picking'].browse(pick_ids)
+        good_pick_list = []
+        for pick_brws in tmp_pick_ids:
+            if pick_brws.state not in ['done', 'cancel', 'confirmed']:
+                good_pick_list.append(pick_brws)
+        if len(good_pick_list) <= 1:
+            raise UserError(_('You have only one available picking to merge. Merge operation is aborted'))
         TmpStockMoveLineObj = self.env['stock.tmp_merge_pick_line']
-        pick_ids = self.env['stock.picking'].browse(pick_ids)
         first_partner_id = -1
-        for pick_id in pick_ids:
+        for pick_id in good_pick_list:
             if pick_id.picking_type_id.code == 'incoming':
                 raise UserError(_("Merge incoming pickings is not allowed."))
             if first_partner_id == -1:
@@ -69,7 +74,7 @@ class TmpStockMove(models.TransientModel):
                 raise UserError(_("Partner are not equal"))
             if self.pick_origin or pick_id.origin:
                 self.pick_origin = str(self.pick_origin or '') + "," + str(pick_id.origin or '')
-        for pick_id in pick_ids:
+        for pick_id in good_pick_list:
             if pick_id.state in ['done', 'cancel']:
                 raise UserError(_('You cannot merge picking not in Done or Cancel states.'))
                 continue
