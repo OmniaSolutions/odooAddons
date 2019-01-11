@@ -1,5 +1,15 @@
-<openerp>
-	<data>
+<odoo>
+	<data> 
+	    <record id="stock_picking_search_ddt" model="ir.ui.view">
+	        <field name="name">stock.picking.search.ddt</field>
+	        <field name="model">stock.picking</field>
+	        <field name="inherit_id" ref="stock.view_picking_internal_search"/>
+	        <field name="arch" type="xml">
+	            <xpath expr="//field[@name='name']" position="after">
+	                <field name="ddt_number"/>
+	            </xpath>
+	        </field>
+	    </record>
 
 		<record id="stock_view_picking_form_ddt" model="ir.ui.view">
 			<field name="name">stock.view.picking.form.ddt</field>
@@ -61,4 +71,4 @@
 		</record>
         
     </data>
-</openerp>
+</odoo>
