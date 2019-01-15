@@ -19,13 +19,13 @@ class WebsiteWorkorderController(http.Controller):
 
     def renderTemplate(self, templateName, values):
         return request.render(templateName, values)
-        
+
     @http.route(['/web/workorder_machine'], auth='public')
     def workoder_machine(self, **post):
         logging.info('WorkorderMachine called')
         values = post
         return self.renderTemplate('omnia_workorder_machine.template_workorder_machine', values)
-    
+
     @http.route(['/web/workorder_machine/<int:workcenter_id>'], auth='public')
     def workoder_machine_wc(self, workcenter_id, **post):
         logging.info('WorkorderMachine with workcenter %r called' % (workcenter_id))
@@ -39,12 +39,12 @@ class WebsiteWorkorderController(http.Controller):
         lines = request.env['mrp.workorder'].getWorkorders(workcenter_id, workorder_id, listify=True)
         values['wo_lines'] = lines
         return self.forceRender('omnia_workorder_machine.template_workorder_machine_table', values)
-        
+
     def forceRender(self, templateName, vals):
         resp = Response(template=templateName, qcontext=vals)
         tableHtml = resp.render()
         return tableHtml
-        
+
     @http.route('/make_login', auth='none', methods=['POST'], csrf=False)
     def make_login(self, **post):
         logging.info('Make Login')
@@ -63,7 +63,7 @@ class WebsiteWorkorderController(http.Controller):
             except Exception as ex:
                 logging.error(ex)
         return self.renderTemplate('omnia_workorder_machine.template_workorder_machine', post)
-    
+
     @http.route(['/web/workorder_start'], auth='public', type='json')
     def workoder_start(self, wo_id, **post):
         logging.info('Workorder Start called wo_id %r' % (wo_id))
