@@ -7,6 +7,7 @@
             <field name="arch" type="xml">
               <form string="Change Raw Material">
                   <group>
+                  	<field name="warning_message" nolabel="1" colspan="2" readonly="1"/>
                     <field name="product_id"/>
                   </group>
                  <footer>
