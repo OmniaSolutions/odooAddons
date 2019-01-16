@@ -41,6 +41,7 @@ class ChangeProductMoveWizard(models.TransientModel):
         for move in self.stock_moves:
             if move.state not in ['cancelled', 'done']:
                 move.product_id = self.product_id
+            move.workorder_id.get_raw_material()
         
     @api.multi
     def ShowWizard(self, ids):
