@@ -19,12 +19,30 @@ class ChangeProductMoveWizard(models.TransientModel):
     stock_moves = fields.Many2many('stock.move')
     product_id = fields.Many2one('product.product',
                                  'New Product')
+    warning_message = fields.Html('Warning Message', compute="_product_to_replace")
+    
+    @api.multi
+    @api.depends('stock_moves', 'product_id')
+    def _product_to_replace(self):
+        for wizardBrws in self:
+            outMsg = '<div style="background-color: #ffc97a;">Following raw materials will be replaced:<br></br>'
+            products = []
+            for move in wizardBrws.stock_moves:
+                if move.state not in ['cancelled', 'done']:
+                    prodId = move.product_id.id
+                    if prodId not in products:
+                        products.append(prodId)
+                        outMsg += '[%s] %s<br></br>' % (move.workorder_id.production_id.display_name, move.product_id.display_name)
+            outMsg += '</div>'
+            if len(products) > 1:
+                wizardBrws.warning_message = outMsg
 
     def changeProduct(self):
         for move in self.stock_moves:
             if move.state not in ['cancelled', 'done']:
                 move.product_id = self.product_id
-
+            move.workorder_id.get_raw_material()
+        
     @api.multi
     def ShowWizard(self, ids):
         new_me = self.create({})
