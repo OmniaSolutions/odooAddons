@@ -97,14 +97,13 @@ odoo.define('omnia_workorder_machine.workorder_machine_list', function (require)
         var n_pieces = closestTr.getElementsByClassName('n_pieces');
         var pieces = n_pieces[0].valueAsNumber;
         var pieces_to_produce = parseFloat(n_pieces_to_produce[0].textContent);
-        if (pieces != pieces_to_produce) {
-        	alert("You have to produce the same number of pieces to produce!");
-        	return;
-        }
-        var route = '/web/workorder_stop/';
+        var n_scrap_ui = closestTr.getElementsByClassName('n_scrap');
+        var n_scrap = n_scrap_ui[0].valueAsNumber;
+        var route = '/web/workorder_record/';
 		ajax.jsonRpc(route, 'call', {
 			'wo_id' : wo_id[0].textContent,
 			'n_pieces': pieces,
+			'n_scrap': n_scrap,
 		}).then(function (data) {
 			filter_res(null);
 		   }
@@ -151,83 +150,119 @@ odoo.define('omnia_workorder_machine.workorder_machine_list', function (require)
     	}
     	
     }
-
+    
+    function show_workorders_by_user(){
+    	var user_id = document.getElementById('input_user_id').valueAsNumber;
+		var route = '/web/render_workorder_by_user/' + user_id;
+		ajax.jsonRpc(route, 'call', {}).then(function (data) {
+			updete_workorder(data);
+		});
+    }
+    
     function filter_res (button){
 		console.log("clicked button")
         wo_id = document.getElementById('input_search_workorder_id');
-		var wo_id = wo_id.valueAsNumber;
-        wc_id = document.getElementById('input_search_worcenter_id');
-		var wc_id = wc_id.valueAsNumber;
-		var table_to_replace = document.getElementById('to_replace');
-		console.log("getted value")
-        if (isNaN(wo_id)){
-    		wo_id = 0
-    	}
-        if (isNaN(wc_id)){
-        	wc_id = 0
-    	}
-		var route = '/web/workorder_machine/' + wc_id + '/' + wo_id;
-
-		ajax.jsonRpc(route, 'call', {
+		if(wo_id){
+			var wo_id = wo_id.valueAsNumber;
+	        wc_id = document.getElementById('input_search_worcenter_id');
+			var wc_id = wc_id.valueAsNumber;
+			console.log("getted value")
+	        if (isNaN(wo_id)){
+	    		wo_id = 0
+	    	}
+	        if (isNaN(wc_id)){
+	        	wc_id = 0
+	    	}
+			var route = '/web/workorder_machine/' + wc_id + '/' + wo_id;
+	
+			ajax.jsonRpc(route, 'call', {}).then(function (data) {
+				updete_workorder(data);
+			});
+		}else{
+			show_workorders_by_user();
 			
-		}).then(function (data) {
-			var doc = document.getElementById('to_replace');
-			table_to_replace.innerHTML = data;
-		    var print_label_list = document.getElementsByClassName('print_label');
-		    var i0;
-		    for (i0 = 0; i0 < print_label_list.length; i0++){
-		    	print_label_list[i0].onclick = print_label;
-		   }
-		    var td_list = document.getElementsByClassName('wo_state');
-		    var i;
-		    for (i = 0; i < td_list.length; i++){
-		   		state_changed(td_list[i]);
-		   }
-		    // Start work
-		    var i1;
-		    var start_work_butt_list = document.getElementsByClassName('start_work')
-		    for (i1 = 0; i1 < start_work_butt_list.length; i1++){
-		    	start_work_butt_list[i1].onclick = start_work1
-		   }
-		    // Pause Work
-		    var i2;
-		    var pause_work_butt_list = document.getElementsByClassName('pause_work')
-		    for (i2 = 0; i2 < pause_work_butt_list.length; i2++){
-		    	pause_work_butt_list[i2].onclick = pause_work1
-		   }
-		    // Resume Work
-		    var i3;
-		    var resume_work_butt_list = document.getElementsByClassName('resume_work')
-		    for (i3 = 0; i3 < resume_work_butt_list.length; i3++){
-		    	resume_work_butt_list[i3].onclick = resume_work1
-		   }
-		    // Stop Work
-		    var i4;
-		    var stop_work_butt_list = document.getElementsByClassName('stop_work')
-		    for (i4 = 0; i4 < stop_work_butt_list.length; i4++){
-		    	stop_work_butt_list[i4].onclick = stop_work1
-		   }
-	    });
+		}
 	};
-
+	
+	var updete_workorder = function (data) {
+		var table_to_replace = document.getElementById('to_replace');
+		table_to_replace.innerHTML = data;
+	    var print_label_list = document.getElementsByClassName('print_label');
+	    var i0;
+	    for (i0 = 0; i0 < print_label_list.length; i0++){
+	    	print_label_list[i0].onclick = print_label;
+	    }
+	    var td_list = document.getElementsByClassName('wo_state');
+	    var i;
+	    for (i = 0; i < td_list.length; i++){
+	   		state_changed(td_list[i]);
+	    }
+	    // Start work
+	    var i1;
+	    var start_work_butt_list = document.getElementsByClassName('start_work')
+	    for (i1 = 0; i1 < start_work_butt_list.length; i1++){
+	    	start_work_butt_list[i1].onclick = start_work1
+	    }
+	    // Pause Work
+	    var i2;
+	    var pause_work_butt_list = document.getElementsByClassName('pause_work')
+	    for (i2 = 0; i2 < pause_work_butt_list.length; i2++){
+	    	pause_work_butt_list[i2].onclick = pause_work1
+	    }
+	    // Resume Work
+	    var i3;
+	    var resume_work_butt_list = document.getElementsByClassName('resume_work')
+	    for (i3 = 0; i3 < resume_work_butt_list.length; i3++){
+	    	resume_work_butt_list[i3].onclick = resume_work1
+	    }
+	    // Record Work
+	    var i4;
+	    var stop_work_butt_list = document.getElementsByClassName('stop_work')
+	    for (i4 = 0; i4 < stop_work_butt_list.length; i4++){
+	    	stop_work_butt_list[i4].onclick = stop_work1
+	    }
+    };
+    var update_user_name = function(){
+    	var user_id = document.getElementById('input_user_id')
+    	var user_id_n = user_id.valueAsNumber
+    	var route = '/web/get_user_name/' + user_id_n;
+		ajax.jsonRpc(route, 'call', {}).then(function (data) {
+			var p_user_name = document.getElementById('user_name');
+			p_user_name.innerHTML = data
+		});
+    }
     window.onload = function() {
-    console.log("omnia_workorder_machine.workorder_machine_list loaded")
-    var _t = core._t;
-    console.log("Start getting button")
-    var button_search = document.getElementById('button_search');
-    button_search.addEventListener("click", function() {
-    	filter_res(button_search);
-	}, false)
+	    console.log("omnia_workorder_machine.workorder_machine_list loaded")
+	    var _t = core._t;
+	    console.log("Start getting button")
+	    var button_search = document.getElementById('button_search');
+	    if(button_search){
+		    button_search.addEventListener("click", function() {
+		    	filter_res(button_search);
+			}, false)
+	    };
+		var show_workorders_by_user_id = document.getElementById('show_workorders_by_user');
+	    if(show_workorders_by_user_id){
+			show_workorders_by_user_id.addEventListener("click", function() {
+		    	show_workorders_by_user(show_workorders_by_user_id);
+			}, false)
+	    }
+	    var user_id = document.getElementById('input_user_id');
+	    user_id.onchange = function(){
+	    	show_workorders_by_user();
+	    	update_user_name();
+	    };
     };
 
 	document.addEventListener('DOMContentLoaded', function() {
 		var input = document.getElementById("button_search");
+		if (input){
 			input.addEventListener("keyup", function(event) {
-		    event.preventDefault();
-		    if (event.keyCode === 13) {
-		        document.getElementById("button_search").click();
-		    }
-		});
-		
+			    event.preventDefault();
+			    if (event.keyCode === 13) {
+			        document.getElementById("button_search").click();
+			    }
+			});
+		}
 	}, false);
 });

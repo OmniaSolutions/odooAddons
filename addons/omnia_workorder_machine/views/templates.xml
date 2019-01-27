@@ -7,7 +7,34 @@
             <script type="text/javascript" src="/omnia_workorder_machine/static/src/js/workorder_machine.js"></script>
         </xpath>
     </template>
+    
+    <template id="by_user" name="Workorder by User">
+        <head>
+            <t t-call-assets="web.assets_common" />
+            <t t-call-assets="web.assets_common" />
+            
+            <t t-call-assets="web.assets_frontend" />
+            <t t-call-assets="web.assets_frontend" />
+            
+            <t t-call-assets="web.assets_backend" />
+            <t t-call-assets="web.assets_backend" />
+            
+            <t t-call-assets="web_editor.summernote" />
+            <t t-call-assets="web_editor.summernote" />
+            
+            <t t-call-assets="web_editor.assets_editor" />
+            <t t-call-assets="web_editor.assets_editor" />
+        </head>
+        <t t-call="web.layout">
 
+            <h1 style="padding: 5px; margin-left:30px;">Register WorkOrder Activity</h1>
+            <form style="display: -webkit-inline-box;margin-left: 35px;">
+                <span>User Id: </span><input id="input_user_id" type="number" class="user_id"/><span> User Name :</span><span id="user_name"/>
+            </form>
+            <table style="padding: 10px; margin:30px; width:90%" id="to_replace"></table>
+        </t>        
+    </template>
+	   
 	<template id="template_workorder_machine" name="Workorder Main Form">
 
 		<head>
@@ -124,10 +151,11 @@
 	            <th class="header_table">Production Name</th>
 	            <th class="header_table">N To Do</th>
 	            <th class="header_table">N Produced</th>
+	            <th class="header_table">Scrap</th>
 	            <th class="header_table">Start</th>
 	            <th class="header_table">Pause</th>
 	            <th class="header_table">Resume</th>
-	            <th class="header_table">Stop</th>
+	            <th class="header_table">Record</th>
 	            <th class="header_table">Description</th>
 	            <th class="header_table">Work Order State</th>
 	            <th class="header_table">User Working</th>
@@ -143,11 +171,12 @@
 	                <td class="table_value"><t t-esc="line[3]"/></td>
 	                <td class="table_value"><t t-esc="line[4]"/></td>
 	                <td class="table_value n_pieces_to_produce"><t t-esc="line[7]"/></td>
-	                <td class="table_value"><input type="number" name="n_pieces" class="n_pieces" step="0.001" /></td>
+	                <td class="table_value"><input type="number" name="n_pieces" class="n_pieces" step="0.001" value="0" /></td>
+	                <td class="table_value"><input type="number" name="n_scrap" class="n_scrap" step="0.001" value="0" /></td>
 	                <td class="table_value"><input class="start_work" type='button' value='Start'/></td>
 	                <td class="table_value"><input class="pause_work" type='button' value='Pause'/></td>
 	                <td class="table_value"><input class="resume_work" type='button' value='Resume'/></td>
-	                <td class="table_value"><input class="stop_work" type='button' value='Stop'/></td>
+	                <td class="table_value"><input class="stop_work" type='button' value='Record'/></td>
 	                <td class="table_value"><t t-esc="line[5]"/></td>
 	                <td class="table_value wo_state" onchange="state_changed(this)"><t t-esc="line[6]"/></td>
 	                <td class="table_value wo_isuserworking"><t t-raw="line[9]"/></td>

@@ -91,13 +91,13 @@ class WebsiteWorkorderController(http.Controller):
             res = request.env['mrp.workorder'].resumeWork(wo_id)
         return res
 
-    @http.route(['/web/workorder_stop'], auth='public', type='json')
-    def workorder_stop(self, wo_id, n_pieces, **post):
-        logging.info('Workorder Stop called wo_id %r' % (wo_id))
+    @http.route(['/web/workorder_record'], auth='public', type='json')
+    def workorder_record(self, wo_id, n_pieces, n_scrap, **post):
+        logging.info('Workorder record called wo_id %r' % (wo_id))
         res = False
         if wo_id:
             wo_id = int(wo_id)
-            res = request.env['mrp.workorder'].stopWork(wo_id, n_pieces)
+            res = request.env['mrp.workorder'].recordWork(wo_id, n_pieces, n_scrap)
         return res
 
     @http.route('/web/print_label/<string:internal_ref>', type='http', auth='user')
@@ -114,3 +114,24 @@ class WebsiteWorkorderController(http.Controller):
                 return pdfContent
         return None
 
+    @http.route('/web/workorder_by_user')
+    def workorderByUser(self, **post):
+        logging.info('WorkorderMachine called')
+        values = post
+        return self.renderTemplate('omnia_workorder_machine.by_user', values)
+
+    @http.route(['/web/render_workorder_by_user/<int:user_id>'], type='json')
+    def render_workorder_by_user(self, user_id, **post):
+        values = post
+        lines = request.env['mrp.workorder'].getWorkordersByUser(user_id, listify=True)
+        logging.info("Lines %r" % lines)
+        values['wo_lines'] = lines
+        return self.forceRender('omnia_workorder_machine.template_workorder_machine_table', values)
+ 
+    @http.route(['/web/get_user_name/<int:user_id>'], type='json')
+    def get_user_name(self, user_id):
+        user_id = request.env['res.users'].sudo().browse(user_id)
+        return "<b>%s %s</b>" % (user_id.lastname, user_id.firstname) 
+        
+    
+    
