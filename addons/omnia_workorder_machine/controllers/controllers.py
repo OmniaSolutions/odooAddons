@@ -6,6 +6,7 @@ Created on Oct 14, 2018
 import logging
 import json
 import os
+import base64
 from odoo import http
 from odoo import _
 from odoo.http import request
@@ -136,5 +137,12 @@ class WebsiteWorkorderController(http.Controller):
         else:
             return "<b><h1>No User For id: %r</h1></b>" % user_id
         
-    
-    
+    @http.route('/web/mrp/get_worksheet/<int:mrp_workorder_id>', type='http')
+    def get_worksheet(self, mrp_workorder_id):
+        mrp_workorder_id = request.env['mrp.workorder'].sudo().browse(mrp_workorder_id)
+        pdf = ""
+        if mrp_workorder_id.worksheet:
+            pdf =  pdf + base64.decodestring(mrp_workorder_id.worksheet)
+        pdf = "data:image/pdf;base64," + pdf
+        pdfhttpheaders = [('Content-Type', 'application/pdf'), ('Content-Length', len(pdf))]
+        return request.make_response(pdf, headers=pdfhttpheaders)

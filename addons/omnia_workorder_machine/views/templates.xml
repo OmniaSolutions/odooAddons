@@ -159,7 +159,8 @@
 	            <th class="header_table">Description</th>
 	            <th class="header_table">Work Order State</th>
 	            <th class="header_table">User Working</th>
-	            <th class="header_table">Print Label</th>
+	            <th class="header_table">Label</th>
+	            <th class="header_table">Worksheet</th>
 	        </tr>
 	        
 	        <t t-foreach="wo_lines" t-as="line">
@@ -181,6 +182,7 @@
 	                <td class="table_value wo_state" onchange="state_changed(this)"><t t-esc="line[6]"/></td>
 	                <td class="table_value wo_isuserworking"><t t-raw="line[9]"/></td>
 	                <td class="table_value"><input class="print_label" type='button' value='Print'/></td>
+	                <td class="table_value"><a t-att-href="line[10]"  target="_blank">View</a></td>
 	            </tr>
 	        </t>
 	         

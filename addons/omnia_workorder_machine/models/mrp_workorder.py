@@ -77,8 +77,8 @@ class MrpProductionWCLine(models.Model):
                     dictRes.get('qty', 0),
                     dictRes.get('date_planned', ''),
                     str(dictRes.get('is_user_working', False)),
-                    ]
-                )
+                    str(r"/web/mrp/get_worksheet/" + str(dictRes.get('wo_id', '')))
+                ])
         return lines
 
     def listify(self, val):
