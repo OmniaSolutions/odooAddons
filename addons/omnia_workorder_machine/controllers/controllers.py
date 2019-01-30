@@ -131,7 +131,10 @@ class WebsiteWorkorderController(http.Controller):
     @http.route(['/web/get_user_name/<int:user_id>'], type='json')
     def get_user_name(self, user_id):
         user_id = request.env['res.users'].sudo().browse(user_id)
-        return "<b>%s %s</b>" % (user_id.lastname, user_id.firstname) 
+        if user_id:
+            return "<b>%s %s</b>" % (user_id.lastname, user_id.firstname)
+        else:
+            return "<b><h1>No User For id: %r</h1></b>" % user_id
         
     
     

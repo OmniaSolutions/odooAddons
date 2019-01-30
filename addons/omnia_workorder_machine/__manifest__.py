@@ -32,6 +32,7 @@
     'description': """ This module allows to update workorder using machine communication.""",
     'data': [
         'views/templates.xml',
+        'views/mrp_workorder.xml',
         ],
     'demo': [],
     'test': [],
