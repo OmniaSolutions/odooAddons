@@ -56,7 +56,7 @@ class MrpProductionWCLine(models.Model):
         searchFilter = [('state', 'in', ['ready', 'progress'])]
         logging.info('Getting Work Orders with search %r' % (searchFilter))
         woBrwsList = self.search(searchFilter, order='date_planned_start ASC,id ASC')
-        woBrwsList = woBrwsList.filtered(lambda x: int(user_id) in x.user_ids.ids or x.user_id == int(user_id))
+        woBrwsList = woBrwsList.filtered(lambda x: int(user_id) in x.user_ids.ids or x.user_id.id == int(user_id))
         out = self.getDictWorkorder(woBrwsList)
         if listify:
             out = self.listifyForInterface(out)
