@@ -247,7 +247,7 @@
         report_type="qweb-pdf"
         name="omnia_ddt.stock_picking_ddt_pdf"
         file="omnia_ddt.stock_picking_ddt_pdf"
-        print_report_name="'DDT-%s' % (object.name).replace('/', '')"
+        print_report_name="'DDT-%s' % (object.name or '').replace('/', '')"
     />
     
 </odoo>
