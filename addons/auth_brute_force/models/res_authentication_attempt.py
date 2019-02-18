@@ -70,9 +70,13 @@ class ResAuthenticationAttempt(models.Model):
             
             if EMAIL_PASS == ' ':
                 EMAIL_PASS = ''
-            conn = smtplib.SMTP_SSL(SMPT_ADDRESS + ':' + unicode(SMTP_PORT))
-            #conn.starttls()
-            conn.login(EMAIL_FROM, EMAIL_PASS)
+            try:
+                conn = smtplib.SMTP_SSL(SMPT_ADDRESS + ':' + unicode(SMTP_PORT))
+                #conn.starttls()
+                conn.login(EMAIL_FROM, EMAIL_PASS)
+            except Exception as ex:
+                logging.warning('Unable to connect with smtp_ssl, try without autentication. Error %r' % (ex))
+                conn = smtplib.SMTP(SMPT_ADDRESS, int(SMTP_PORT))
             eee = MIMEMultipart()
             eee['Subject'] = subject
             eee['From'] = EMAIL_FROM
