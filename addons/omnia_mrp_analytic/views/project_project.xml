@@ -1,0 +1,19 @@
+<odoo>
+    <data>
+	    <record id="project_project_form_production_omnia" model="ir.ui.view">
+	        <field name="name">project.project.form.production.omnia</field>
+	        <field name="model">project.project</field>
+	        <field name="inherit_id" ref="project.edit_project"/>
+	        <field name="arch" type="xml">
+	            <button name="toggle_active" position="after">
+                    <button  class="oe_stat_button" name="production_tree_view" type="object" icon="fa-files-o">
+                        <field string="Production Orders" name="man_orders_count" widget="statinfo"/>
+                    </button>
+	            </button>
+	            <field name="partner_id" position="after">
+	            	<field name="man_orders_completed"  widget="progressbar"/>
+	            </field>   
+	        </field>
+	    </record>
+    </data>
+</odoo>

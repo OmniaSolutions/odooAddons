@@ -45,6 +45,7 @@ Add analytics fields to the production order and create task for each work order
         #  view
         'views/mrp_production.xml',
         'views/mrp_workorder.xml',
+        'views/project_project.xml',
     ],
     'installable': True,
     'application': False,
