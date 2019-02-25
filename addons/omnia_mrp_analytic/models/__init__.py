@@ -35,4 +35,5 @@ Created on Dec 18, 2017
 from . import mrp_production
 from . import mrp_workorder
 from . import project_project
-
+from . import mrp_routing_workcenter
+from . import project_task

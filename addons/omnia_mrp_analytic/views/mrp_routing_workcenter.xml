@@ -1,0 +1,14 @@
+<odoo>
+    <data>
+	    <record id="omnia_mrp_analytic_view_form_inherit_routing_workcenter" model="ir.ui.view">
+	        <field name="name">omnia.mrp.analytic.view.form.inherit.routing.workcenter</field>
+	        <field name="model">mrp.routing.workcenter</field>
+	        <field name="inherit_id" ref="mrp.mrp_routing_workcenter_form_view"/>
+	        <field name="arch" type="xml">
+	            <xpath expr="//field[@name='time_mode']" position="before">
+                    <field name="user_time_percentage"/>
+	            </xpath>
+	        </field>
+	    </record>
+    </data>
+</odoo>

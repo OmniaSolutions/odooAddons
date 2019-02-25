@@ -1,0 +1,14 @@
+<odoo>
+    <data>
+	    <record id="omnia_mrp_analytic_mrp_analytic_project_task" model="ir.ui.view">
+	        <field name="name">omnia.mrp.analytic.project.task</field>
+	        <field name="model">project.task</field>
+	        <field name="inherit_id" ref="project.view_task_form2"/>
+	        <field name="arch" type="xml">
+	            <field name="sequence" position="before">
+	                <field name="user_time_percentage"/>
+	            </field>
+	        </field>
+	    </record>
+    </data>
+</odoo>
