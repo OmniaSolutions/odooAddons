@@ -78,12 +78,13 @@ class TmpStockMove(models.TransientModel):
                 self.pick_origin = str(self.pick_origin or '') + "," + str(pick_brws.origin or '')
 
         product_qty_assigned = {}
+        logging.info('good_pick_list: %r' % (good_pick_list))
         for pick_brws in good_pick_list:
             if pick_brws.state in ['done', 'cancel']:
                 raise UserError(_('You cannot merge picking not in Done or Cancel states.'))
                 continue
             for move in pick_brws.move_lines:
-                if move.state in ['done', 'cancel', 'confirmed']:
+                if move.state in ['done', 'cancel']:
                     continue
                 product_id = move.product_id
                 if product_id:
