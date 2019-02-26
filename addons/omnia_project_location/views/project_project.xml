@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+	<data>
+       <record id="omnia_project_location" model="ir.ui.view">
+            <field name="name">omnia.project.location.form</field>
+            <field name="model">project.project</field>
+            <field name="inherit_id" ref="project.edit_project"/>
+            <field name="arch" type="xml">
+                <field name="partner_id" position="after">
+                    <field name="purchase_location"/>
+                </field>
+            </field>
+        </record>
+    </data>
+</odoo>
