@@ -1,8 +1,8 @@
 # -*- encoding: utf-8 -*-
 ##############################################################################
 #
-#    OmniaSolutions, Open Source Management Solution
-#    Copyright (C) 2010-2019 OmniaSolutions (<http://www.omniasolutions.eu>). All Rights Reserved
+#    OmniaSolutions, Open Source Management Solution    
+#    Copyright (C) 2010-2011 OmniaSolutions (<http://www.omniasolutions.eu>). All Rights Reserved
 #    $Id$
 #
 #    This program is free software: you can redistribute it and/or modify
@@ -47,7 +47,7 @@ class SaleOrderLine(models.Model):
     @api.onchange('customer_lead')
     def changed_customer_lead(self):
         return self._get_default_product_datetime_value()
-
+   
     product_delivery_date = fields.Datetime(string=_('Delivery Date'), compute='_get_default_product_datetime_value')
 
 # vim:expandtab:smartindent:tabstop=4:softtabstop=4:shiftwidth=4:
