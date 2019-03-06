@@ -47,7 +47,7 @@ class SaleOrderLine(models.Model):
     @api.onchange('customer_lead')
     def changed_customer_lead(self):
         return self._get_default_product_datetime_value()
-   
+
     product_delivery_date = fields.Datetime(string=_('Delivery Date'), compute='_get_default_product_datetime_value')
 
 # vim:expandtab:smartindent:tabstop=4:softtabstop=4:shiftwidth=4:
