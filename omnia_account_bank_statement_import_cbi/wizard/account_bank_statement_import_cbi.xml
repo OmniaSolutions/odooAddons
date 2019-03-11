@@ -1,0 +1,30 @@
+<?xml version="1.0" ?>
+<odoo>
+        <record id="account_bank_statement_import_cbi" model="ir.ui.view">
+            <field name="name">Import Bank Statements CBI</field>
+            <field name="model">account.bank.statement.import</field>
+            <field name="inherit_id" ref="account_bank_statement_import.account_bank_statement_import_view"/>
+            <field name="arch" type="xml">
+                <xpath expr="//ul[@id='statement_format']" position="inside">
+                    <li>Interbank Corporate Banking (.CBI)</li>
+                </xpath>
+            </field>
+        </record>
+
+        <record id="account_bank_statement_import_view_inherited" model="ir.ui.view">
+            <field name="name">Import Bank Statements Inherited</field>
+            <field name="model">account.bank.statement.import</field>
+            <field name="priority" eval="20"/>
+            <field name="inherit_id" ref="account_bank_statement_import.account_bank_statement_import_view" />
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='data_file']" position="after">
+                    <field name="record_identifier"/>
+                    <field name="hide_journal_field" invisible="1"/>
+                    <group attrs="{'invisible': [('hide_journal_field', '=', True)]}">
+                        <field name="journal_id" domain="[('type', '=', 'bank')]" context="{'default_type':'bank'}"/>
+                    </group>
+                </xpath>
+            </field>
+        </record>
+</odoo>
+
