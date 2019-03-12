@@ -5,6 +5,7 @@ import base64
 import datetime
 import dateutil.parser
 import StringIO
+import logging
 
 from odoo import api, fields, models, _ 
 from odoo.tools import DEFAULT_SERVER_DATE_FORMAT
@@ -37,6 +38,7 @@ class AccountBankStatementImport(models.TransientModel):
         return super(AccountBankStatementImport, self)._find_additional_data(*args)
     
     def _parse_file(self, data_file):
+        BankStatementLine = self.env['account.bank.statement.line']
         vals_bank_statement = {}
         flow = Flow()
         flow.readfile(data_file.split("\n"),
@@ -57,9 +59,17 @@ class AccountBankStatementImport(models.TransientModel):
         for disposal in flow.disposals:
             transactions = []
             total_amount = 0.0
+            unique_ids = []
             index = 1
             for record in mergeColumnRecord(disposal.records, record_index='record_group'):
                 vals_line = {}
+                unique_val = record.get('data', '') + record['credito_debito'] + record['amount'] + record['causale'].strip() + record.get('descrizione', '')
+                if unique_val in unique_ids:
+                    raise UserError("Duplicate value in file %r" % unique_val)
+                unique_ids.append(unique_val)
+                if BankStatementLine.sudo().search_count([('unique_import_id', '=', unique_val)])>0:
+                    logging.warning("Row Already in the database %r" % unique_val)
+                    continue
                 amount = float(record['amount'].replace(',', '.'))
                 if record['credito_debito'] == 'D':
                     amount = -amount
@@ -69,7 +79,7 @@ class AccountBankStatementImport(models.TransientModel):
                     vals_line['date'] = datetime.datetime.strptime(record['data'], "%d%m%y").strftime(DEFAULT_SERVER_DATE_FORMAT)
                     vals_line['amount'] = amount
                     vals_line['ref'] = record['causale']
-                    vals_line['unique_import_id'] = record.get('data', '') + record.get('record_group')
+                    vals_line['unique_import_id'] = unique_val
                     vals_line['name'] = record.get('descrizione', '')
                     index +=1
                 transactions.append(vals_line)
