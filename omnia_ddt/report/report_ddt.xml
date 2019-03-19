@@ -12,15 +12,15 @@
 			         </colgroup>
             		<thead>
             			<tr>
-            				<th><h3>Spettabile:</h3></th>
-            				<th><h3>Destinatario:</h3></th>
+            				<th class="th_title"><h3>Spettabile:</h3></th>
+            				<th class="th_title"><h3>Destinatario:</h3></th>
             			</tr>
             		</thead>
             		<tbody>
             			<tr>
             				<td>
-			                    <b><div t-esc="o.company_id.name"/></b>
 			                    <div class="text_align_left">
+			                    	<b><div t-esc="o.company_id.name"/></b>
 				                    <div t-esc="o.company_id.street"/>
 				                    <span t-esc="o.company_id.street2"/>
 				                    <span t-esc="o.company_id.zip"/>
@@ -37,8 +37,8 @@
 				                </div>
             				</td>
             				<td>
-								<b><div t-esc="o.delivery_address.name"/></b>
 								<div class="text_align_left">
+									<b><div t-esc="o.delivery_address.name"/></b>
 									<div t-esc="o.delivery_address.street"/>
 									<span t-esc="o.delivery_address.street2"/>
 									<span t-esc="o.delivery_address.zip"/>
@@ -247,7 +247,7 @@
         report_type="qweb-pdf"
         name="omnia_ddt.stock_picking_ddt_pdf"
         file="omnia_ddt.stock_picking_ddt_pdf"
-        print_report_name="'DDT-%s' % (object.name).replace('/', '')"
+        print_report_name="'DDT-%s' % (object.name or '').replace('/', '')"
     />
     
 </odoo>
