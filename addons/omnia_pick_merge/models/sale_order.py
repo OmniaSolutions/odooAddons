@@ -14,13 +14,11 @@ class SaleOrder(models.Model):
 
     @api.multi
     def _picking_ids(self):
+        pickings = self.env['stock.picking']
+        move = self.env['stock.move']
         for order in self:
-            pickings = self.env['stock.picking']
-            for line in order.order_line:
-                # We keep a limited scope on purpose. Ideally, we should also use move_orig_ids and
-                # do some recursive search, but that could be prohibitive if not done correctly.
-                moves = line.move_ids | line.move_ids.mapped('returned_move_ids')
-                pickings |= moves.mapped('picking_id')
+            move_ids = move.search([('sale_line_id', 'in', order.order_line.ids)])
+            pickings = move_ids.mapped('picking_id')
             order.picking_ids = pickings
             order.picking_count = len(pickings)
     picking_ids = fields.Many2many('stock.picking', compute=_picking_ids)

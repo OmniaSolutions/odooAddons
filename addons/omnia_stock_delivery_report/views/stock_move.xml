@@ -16,6 +16,7 @@
             <field name="arch" type="xml">
                 <field name="date" position="after">
                     <field name="partner_id"/>
+                    <field name="sale_line_id"/>
                 </field>
             </field>
         </record>

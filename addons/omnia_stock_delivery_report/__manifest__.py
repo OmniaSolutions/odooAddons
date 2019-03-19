@@ -28,7 +28,7 @@
     'sequence': 15,
     'summary': 'Stock Delivery Report',
     'images': [],
-    'depends': ['stock'],
+    'depends': ['sale_stock'],
     'description': """Add a new report to see in details the delivery date of each product""",
     'data': ['views/stock_move.xml',
              'report/stock_delivery_report.xml'],
