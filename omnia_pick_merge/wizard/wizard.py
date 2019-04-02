@@ -32,7 +32,7 @@ class TmpStockMoveLine(models.TransientModel):
     requested_date = fields.Datetime(_('Request date'))
     date_expected = fields.Datetime(_('Effective date'))
     identificated = fields.Boolean(_('Identificato'))
-    qty_on_hand = fields.Float(_('Quantity on and '))
+    qty_on_hand = fields.Float(_('Quantity on hand '))
 
 
 class TmpStockMove(models.TransientModel):
@@ -97,6 +97,9 @@ class TmpStockMove(models.TransientModel):
                     if residual_qty >= 0:
                         product_qty_assigned[product_id.id] = residual_qty
                         used_qty = move.product_qty
+                    else:
+                        used_qty = needed_qty - product_qty_assigned[product_id.id]
+                        product_qty_assigned[product_id.id] = residual_qty
                     saleOrder = move.getSaleOrder(move)
                     TmpStockMoveLineObj.create({'ref_id': self.id,
                                                 'ref_stock_move_id': move.id,
