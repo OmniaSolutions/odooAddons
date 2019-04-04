@@ -44,4 +44,4 @@ class Task(models.Model):
     
     stage_id = fields.Many2one('project.task.type', string='Stage', track_visibility='onchange', index=True,
         default=_get_default_stage_id, group_expand='_read_group_stage_ids',
-        domain="[('project_ids', '=', project_id)]", copy=False)
+        domain="[('project_ids', '=', project_id), ('show_on_task', '=', True)]", copy=False)
