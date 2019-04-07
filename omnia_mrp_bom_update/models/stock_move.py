@@ -1,0 +1,59 @@
+# -*- coding: utf-8 -*-
+##############################################################################
+#
+#    OmniaSolutions, ERP-PLM-CAD Open Source Solution
+#    Copyright (C) 2011-2019 https://wwww.omniasolutions.website
+#
+#    This program is free software: you can redistribute it and/or modify
+#    it under the terms of the GNU Affero General Public License as
+#    published by the Free Software Foundation, either version 3 of the
+#    License, or (at your option) any later version.
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU Affero General Public License for more details.
+#
+#    You should have received a copy of the GNU Affero General Public License
+#    along with this prograIf not, see <http://www.gnu.org/licenses/>.
+#
+##############################################################################
+'''
+Created on Apr 6, 2019
+
+@author: mboscolo
+'''
+
+
+import logging
+import datetime
+from odoo import models
+from odoo import fields
+from odoo import api
+from odoo import _
+from odoo.exceptions import UserError
+from datetime import timedelta
+from odoo.tools import DEFAULT_SERVER_DATETIME_FORMAT
+
+
+class StockMove(models.Model):
+    _name = "stock.move"
+    _inherit = ['stock.move']
+    
+    @api.model
+    def generate_mrp_line(self, mrp_production_id, mrp_bom_line_ids):
+        bom_line_ids = [line.id for line in mrp_bom_line_ids]
+        factor = mrp_production_id.product_uom_id._compute_quantity(mrp_production_id.product_qty, mrp_production_id.bom_id.product_uom_id) / mrp_production_id.bom_id.product_qty
+        boms, exploded_lines = mrp_production_id.bom_id.explode(mrp_production_id.product_id, factor, picking_type=mrp_production_id.bom_id.picking_type_id)
+        for bom_line_id, line_data in exploded_lines:
+            if bom_line_id.id in bom_line_ids:
+                mrp_production_id._generate_raw_move(bom_line_id, line_data)
+        # Check for all draft moves whether they are mto or not
+        mrp_production_id._adjust_procure_method()
+        mrp_production_id.move_raw_ids.action_confirm()
+        
+            
+
+            
+            
+            
