@@ -103,10 +103,10 @@ class StockPicking(models.Model):
                         objProduction.button_mark_done()
 
     def isIncoming(self, objPick):
-        return objPick.sub_contracting_operation == 'close'
+        return objPick.picking_type_code == 'incoming'
 
     def isOutGoing(self, objPick):
-        return objPick.sub_contracting_operation == 'open'
+        return objPick.picking_type_code == 'outgoing'
 
     def getStockQuant(self, stockQuantObj, lineId, prodBrws):
         quantsForProduct = stockQuantObj.search([
