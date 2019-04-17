@@ -52,10 +52,12 @@ class MrpWorkorder(models.Model):
     def create_timesheet(self):
         task_duration = self.duration * self.task_id.user_time_percentage
         if task_duration > 0:
-            vals = {'name': self.task_id.name,
-                    'project_id': self.task_id.project_id.id,
-                    'task_id': self.task_id.id,
-                    'employee_id': self.task_id.user_id.employee_ids.id,
-                    'unit_amount': task_duration,
-                    }
-            self.env['account.analytic.line'].create(vals)
+            for user_id in self.user_ids:
+                vals = {'name': self.task_id.name,
+                        'user_id': user_id.id,
+                        'project_id': self.task_id.project_id.id,
+                        'task_id': self.task_id.id,
+                        'employee_id': user_id.employee_ids.id,
+                        'unit_amount': task_duration,
+                        }
+                self.env['account.analytic.line'].create(vals)

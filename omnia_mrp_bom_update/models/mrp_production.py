@@ -54,7 +54,7 @@ class MrpProduction(models.Model):
                     addLine=True
                     for move_line_id in mrp_production_id.move_raw_ids:
                         if bom_line_id.product_id.id == move_line_id.product_id.id:
-                            if move_line_id.state in ['draft', 'confirmed', 'assigned']:
+                            if move_line_id.state in ['draft', 'waiting', 'confirmed', 'assigned']:
                                 if bom_line_id.product_qty != move_line_id.product_uom_qty:
                                     reserve =False
                                     if move_line_id.state=='assigned':
