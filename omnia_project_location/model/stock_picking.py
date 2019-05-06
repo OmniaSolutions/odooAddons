@@ -35,15 +35,19 @@ class StockMoveOperationLink(models.Model):
 
     @api.model
     def create(self, vals):
-        move_id = vals.get('move_id', False)
-        operation_id = vals.get('operation_id', False)
-        if move_id and operation_id:
-            move_location = self.env['stock.move'].browse(move_id).location_dest_id
-            self.env['stock.pack.operation'].browse(operation_id).location_dest_id = move_location
+        if not self.env.context.get('skip_omnia_project'):
+            move_id = vals.get('move_id', False)
+            operation_id = vals.get('operation_id', False)
+            if move_id and operation_id:
+                move_location = self.env['stock.move'].browse(move_id).location_dest_id
+                self.env['stock.pack.operation'].browse(operation_id).location_dest_id = move_location
         return super(StockMoveOperationLink, self).create(vals)
-#     def _prepare_pack_ops(self, quants, forced_qties):
-#         res = super(StockPicking, self)._prepare_pack_ops(quants, forced_qties)
-#         for pack_op in res:
-#             pass
-#         return res
+
+
+class StockPicking(models.Model):
+    _inherit = 'stock.picking'
+
+    @api.multi
+    def do_new_transfer(self):
+        return super(StockPicking, self.with_context({'skip_omnia_project': True})).do_new_transfer()
         
