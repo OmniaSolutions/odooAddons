@@ -79,3 +79,31 @@ class PurchaseOrderLine(models.Model):
     _inherit = ['purchase.order.line']
 
     production_external_id = fields.Many2one('mrp.production', string=_('External Production'))
+
+    @api.depends('order_id.state', 'move_ids.state')
+    def _compute_qty_received(self):
+        super(PurchaseOrderLine, self)._compute_qty_received()
+        orders = []
+        incoming_picks = []
+        for line in self:
+            orders.append(line.order_id)
+            for pick in line.order_id.picking_ids:
+                if pick.isIncoming(pick):
+                    incoming_picks.append(pick)
+        incoming_picks = list(set(incoming_picks))
+        for line in self:
+            if line.production_external_id and line.production_external_id.bom_id:
+                if line.production_external_id.bom_id.product_id and line.production_external_id.bom_id.external_product: # comes from external production
+                    if line.production_external_id.bom_id.external_product.id == line.product_id.id:
+                        correct_product = line.production_external_id.bom_id.product_id
+                        total = 0
+                        for pick in incoming_picks:
+                            if line.production_external_id.id == pick.external_production.id:
+                                for move in pick.move_lines:
+                                    if move.product_id.id == correct_product.id:
+                                        if move.state == 'done':
+                                            if move.product_uom != line.product_uom:
+                                                total += move.product_uom._compute_quantity(move.product_uom_qty, line.product_uom)
+                                            else:
+                                                total += move.product_uom_qty
+                        line.qty_received = total
