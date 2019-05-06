@@ -93,12 +93,15 @@ class PurchaseOrderLine(models.Model):
         incoming_picks = list(set(incoming_picks))
         logging.info('Incoming pickings %r' % (incoming_picks))
         for line in self:
-            if line.production_external_id and line.production_external_id.bom_id:
+            bom = line.production_external_id.bom_id
+            if line.production_external_id and bom:
                 logging.info('External production + BOM found')
-                if line.production_external_id.bom_id.product_id and line.production_external_id.bom_id.external_product:
+                correct_product = bom.product_id
+                if not correct_product:
+                    correct_product = bom.product_tmpl_id.product_variant_id
+                if correct_product and bom.external_product:
                     logging.info('Extenal product in BOM found')
-                    if line.production_external_id.bom_id.external_product.id == line.product_id.id:
-                        correct_product = line.production_external_id.bom_id.product_id
+                    if bom.external_product.id == line.product_id.id:
                         total = 0
                         for pick in incoming_picks:
                             if line.production_external_id.id == pick.external_production.id:
