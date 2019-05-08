@@ -71,7 +71,8 @@ class StockPicking(models.Model):
             for stock_move_id in self.move_line_ids:
                 if stock_move_id.move_id.mrp_workorder_id:
                     mrp_workorder_id = self.env['mrp.workorder'].search([('id', '=', stock_move_id.move_id.mrp_workorder_id)])
-                    mrp_workorder_id.button_finish()
+                    # TODO: mettere il tempo di lavorazione calcolato fra pick in e pick put
+                    mrp_workorder_id.record_production()
         return res
 
     @api.multi
