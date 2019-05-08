@@ -300,7 +300,7 @@ class MrpProductionWizard(models.TransientModel):
             raise UserError(_("If you don't want to create purchase order you have to select only one partner."))
         workorderBrw = self.getParentObjectBrowse()
         productionBrws = self.getParentProduction()
-        self.cancelProductionRows(productionBrws)
+        #self.cancelProductionRows(productionBrws)
         self.updateMoveLines(productionBrws)
         date_planned_finished_wo = False
         date_planned_start_wo = False
@@ -487,23 +487,23 @@ class MrpProductionWizard(models.TransientModel):
                         'unit_factor': tmpRow.unit_factor,
                         'raw_material_production_id': False}
                 newMove = self.env['stock.move'].create(vals)
-                newMove.location_id = localStockLocation.id
-                newMove.location_dest_id = customerProductionLocation.id
+                newMove.location_id = customerProductionLocation.id
+                newMove.location_dest_id = localStockLocation.id
                 newStockLines.append(newMove.id)
-            for outGoingMove in incomingMoves:
-                outGoingMove._action_cancel()
+#             for outGoingMove in incomingMoves:
+#                 outGoingMove._action_cancel()
         else:
             for stock_move_id in incomingMoves:
                 stockMove = stock_move_id.copy(default={'name': stock_move_id.product_id.display_name,
-                                            'location_id': customerProductionLocation.id,
-                                            'location_dest_id': localStockLocation.id,
-                                            'sale_line_id': stock_move_id.sale_line_id,
-                                            'production_id': False,
-                                            'mrp_workorder_id': originBrw.id if isWorkorder else self.workorder_id.id,
-                                            'raw_material_production_id': False,
-                                            'picking_id': out_stock_picking_id.id})
+                                                        'location_id': customerProductionLocation.id,
+                                                        'location_dest_id': localStockLocation.id,
+                                                        'sale_line_id': stock_move_id.sale_line_id,
+                                                        'production_id': False,
+                                                        'mrp_workorder_id': originBrw.id if isWorkorder else self.workorder_id.id,
+                                                        'raw_material_production_id': False,
+                                                        'picking_id': out_stock_picking_id.id})
                 newStockLines.append(stockMove.id)
-                stock_move_id._action_cancel()
+                # stock_move_id._action_cancel()
         productionBrws.createStockMoveBom()
         out_stock_picking_id.write({'move_lines': [(6, False, newStockLines)]})
         return out_stock_picking_id
@@ -584,8 +584,8 @@ class MrpProductionWizard(models.TransientModel):
                 newMove.location_id = stock_location_id.id
                 newMove.location_dest_id = customerProductionLocation.id
                 new_stock_move_line_ids.append(newMove.id)
-            for outGoingMove in out_stock_move_ids:
-                outGoingMove._action_cancel()
+#             for outGoingMove in out_stock_move_ids:
+#                 outGoingMove._action_cancel()
         else:
             for stock_move_id in out_stock_move_ids:
                 new_stock_move_id = stock_move_id.copy(default={'name': stock_move_id.product_id.display_name,

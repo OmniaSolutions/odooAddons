@@ -43,3 +43,4 @@ from . import res_partner
 from . import stock_location
 from . import change_production_qty
 from . import product_supplierinfo
+from . import purchase_order_line

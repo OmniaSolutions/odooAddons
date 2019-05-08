@@ -61,6 +61,7 @@ class StockPicking(models.Model):
     @api.multi
     def action_done(self):
         res = super(StockPicking, self).action_done()
+        purchase_order_line = self.env['purchase.order.line']
         if self.isIncoming():
             objProduction = self.env['mrp.production'].search([('id', '=', self.sub_production_id)])
             if objProduction and objProduction.state == 'external':
@@ -74,6 +75,9 @@ class StockPicking(models.Model):
                     mrp_workorder_id = self.env['mrp.workorder'].search([('id', '=', stock_move_id.move_id.workorder_id.id)])
                     # TODO: mettere il tempo di lavorazione calcolato fra pick in e pick put
                     mrp_workorder_id.record_production()
+                if stock_move_id.move_id.purchase_order_line_subcontracting_id:
+                    purchase_order_line_id = purchase_order_line.search([('id', '=', stock_move_id.move_id.purchase_order_line_subcontracting_id)])
+                    purchase_order_line_id._compute_qty_received()
         return res
 
     @api.multi
