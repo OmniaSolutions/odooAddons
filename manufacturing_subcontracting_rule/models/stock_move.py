@@ -46,9 +46,12 @@ class StockMove(models.Model):
     _inherit = ['stock.move']
 
     mrp_original_move = fields.Char(_('Is genereted from orignin MO'))
-    mrp_production_id = fields.Integer(_('Original mrp id'))
+    mrp_production_id = fields.Integer(string=_('Original Mrp Production id'),
+                                       help="""source Mrp Production Subcontracting id""")
+    mrp_workorder_id = fields.Integer(string=_('Original Mrp Work Order id'),
+                                      help="""source Mrp Workorder Subcontracting id""")
     purchase_order_line_subcontracting_id = fields.Integer(_('Original Purchase line Id'))
-    subcontracting_move_id = fields.Integer(_('Original move id'))
+    subcontracting_source_stock_move_id = fields.Integer(_('Original Production ID'))
 
     @api.model
     def moveQty(self, qty):
@@ -76,7 +79,7 @@ class StockMove(models.Model):
                                   'production_id': False,
                                   'raw_material_production_id': False,
                                   'picking_id': False,
-                                  'subcontracting_move_id': source_id})
+                                  'subcontracting_source_stock_move_id': source_id})
 
     @api.model
     def subContractingFilterRow(self, production_id, move_from_id, move_to, qty):
@@ -126,6 +129,6 @@ class StockMove(models.Model):
     def write(self, value):
         for move in self:
             if 'quantity_done' in list(value.keys()):
-                for subMove in self.search([('subcontracting_move_id', '=', move.id)]):
+                for subMove in self.search([('subcontracting_source_stock_move_id', '=', move.id)]):
                     subMove.quantity_done = value['quantity_done']
         return super(StockMove, self).write(value)

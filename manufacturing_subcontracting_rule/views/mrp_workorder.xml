@@ -3,6 +3,7 @@
 	    <record id="manufacturing_subcontracting_rule_mrp_workorder" model="ir.ui.view">
 	        <field name="name">manufacturing.subcontracting.rule.mrp.workorder</field>
 	        <field name="model">mrp.workorder</field>
+	        <field name="priority" eval="30"/>
 	        <field name="inherit_id" ref="mrp.mrp_production_workcenter_form_view_inherit"/>
 	        <field name="arch" type="xml">
 	           <xpath expr="//header//button[last()]" position="after">

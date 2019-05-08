@@ -90,7 +90,8 @@ class MrpProduction(models.Model):
     external_partner = fields.Many2one('res.partner',
                                        compute='_getDefaultPartner',
                                        string='Default External Partner',
-                                       help='This is a computed field in order to modifier it go to Routing -> Production Place -> Set Owner of the location')
+                                       help="""This is a computed field in order to modifier it go to Routing -> Production Place -> Set Owner of the location
+                                               if you do not see the Production Place Field, be sure to be part of group stock.group_adv_location""")
     purchase_external_id = fields.Many2one('purchase.order', string='External Purchase')
     move_raw_ids_external_prod = fields.One2many('stock.move',
                                                  'raw_material_production_id',
@@ -185,9 +186,9 @@ class MrpProduction(models.Model):
             'mrp_original_move': False,
             'unit_factor': sourceMoveObj.unit_factor})
 
-    def copyAndCleanLines(self, brwsList, location_dest_id=None, location_source_id=None):
+    def copyAndCleanLines(self, stock_move_ids, location_dest_id=None, location_source_id=None):
         outElems = []
-        for elem in brwsList:
+        for elem in stock_move_ids:
             outElems.append(self.createTmpStockMove(elem, location_source_id, location_dest_id).id)
         return outElems
 

@@ -47,10 +47,14 @@ class StockPicking(models.Model):
                                                   ('close', _('Close external Production'))])
     sub_production_id = fields.Integer(string=_('Sub production Id'))
 
-    def isIncoming(self, objPick):
+    def isIncoming(self, objPick=None):
+        if objPick is None:
+            objPick = self
         return objPick.picking_type_code == 'incoming'
 
-    def isOutGoing(self, objPick):
+    def isOutGoing(self, objPick=None):
+        if objPick is None:
+            objPick = self
         return objPick.picking_type_code == 'outgoing'
 
     @api.multi
@@ -64,6 +68,10 @@ class StockPicking(models.Model):
                         line.subContractingProduce(objProduction)
                 if objProduction.isPicksInDone():
                     objProduction.button_mark_done()
+            for stock_move_id in self.move_line_ids:
+                if stock_move_id.move_id.mrp_workorder_id:
+                    mrp_workorder_id = self.env['mrp.workorder'].search([('id', '=', stock_move_id.move_id.mrp_workorder_id)])
+                    mrp_workorder_id.button_finish()
         return res
 
     @api.multi
