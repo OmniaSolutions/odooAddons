@@ -43,6 +43,7 @@ class PurchaseOrder(models.Model):
     _inherit = ['purchase.order']
 
     production_external_id = fields.Many2one('mrp.production', string=_('External Production'))
+    workorder_external_id = fields.Many2one('mrp.workorder', string=_('External Workorder'))
 
     @api.multi
     def open_external_manufacturing(self):

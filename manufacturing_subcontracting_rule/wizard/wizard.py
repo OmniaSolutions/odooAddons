@@ -312,7 +312,7 @@ class MrpProductionWizard(models.TransientModel):
             pickingBrwsList.extend((pickIn.id, pickOut.id))
             date_planned_finished_wo = pickIn.scheduled_date
             date_planned_start_wo = pickOut.scheduled_date
-            self.createPurches(self.external_partner, pickIn)
+            self.createPurches(self.external_partner, pickIn, workorderBrw.id)
         productionBrws.date_planned_finished_wo = date_planned_finished_wo
         productionBrws.date_planned_start_wo = date_planned_start_wo
         productionBrws.external_pickings = [(6, 0, pickingBrwsList)]
@@ -323,13 +323,15 @@ class MrpProductionWizard(models.TransientModel):
         movesToCancel._action_cancel()
 
     @api.multi
-    def createPurches(self, toCreatePurchese, picking):
+    def createPurches(self, toCreatePurchese, picking, workorder):
         if not self.create_purchese_order:
             return
         obj_product_product = self.getDefaultExternalServiceProduct()
         obj_po = self.env['purchase.order'].create({'partner_id': toCreatePurchese.partner_id.id,
                                                     'date_planned': self.request_date,
-                                                    'production_external_id': self.production_id.id})
+                                                    'production_external_id': self.production_id.id,
+                                                    'workorder_external_id': workorder,
+                                                    })
         for lineBrws in picking.move_lines:
             values = {'product_id': obj_product_product.id,
                       'name': self.getPurcheseName(obj_product_product),
@@ -689,7 +691,7 @@ class MrpWorkorderWizard(MrpProductionWizard):
             pickIn = self.createStockPickingIn(external_partner.partner_id, productionBrws, workorderBrws, pick_out=pickOut)
         if pickIn:
             productionBrws.date_planned_finished_wo = pickIn.scheduled_date
-            self.createPurches(self.external_partner, pickIn)
+            self.createPurches(self.external_partner, pickIn, workorderBrws.id)
         if pickOut:
             productionBrws.date_planned_start_wo = pickOut.scheduled_date
         productionBrws.button_unreserve()   # Needed to evaluate picking out move

@@ -135,3 +135,20 @@ class MrpWorkorder(models.Model):
             'context': newContext,
             'domain': [('id', 'in', picks.ids)],
         }
+
+    @api.multi
+    def open_external_purchase(self):
+        newContext = self.env.context.copy()
+        picks = self.env['purchase.order']
+        for woBrws in self:
+            picks = picks.search([('workorder_external_id', '=', woBrws.id)])
+        return {
+            'name': _("External Pickings"),
+            'view_type': 'form',
+            'view_mode': 'tree,form',
+            'res_model': 'purchase.order',
+            'type': 'ir.actions.act_window',
+            'context': newContext,
+            'domain': [('id', 'in', picks.ids)],
+        }
+        

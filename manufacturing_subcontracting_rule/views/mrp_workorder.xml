@@ -19,6 +19,19 @@
 	                <button name="button_produce_externally"  string="Produce Externally" type="object" attrs="{'invisible': ['|', ('state', '=', 'external'), ('state', '=', 'done')]}"/>
 	                <button name="button_cancel_produce_externally"  string="Cancel Produce Externally" type="object" attrs="{'invisible': [('state', '!=', 'external')]}"/>
                 </xpath>
+                
+	            <div name="button_box" position="inside">
+	                 <button name="open_external_pickings" type="object" class="oe_stat_button" icon="fa-truck">
+	                     <div class="o_form_field o_stat_info">
+	                         <span class="o_stat_text">Ext. Pickings</span>
+	                     </div>
+	                 </button>
+	                 <button name="open_external_purchase" type="object" class="oe_stat_button" icon="fa-shopping-cart">
+	                     <div class="o_form_field o_stat_info">
+	                         <span class="o_stat_text">Ext. Purchase</span>
+	                     </div>
+	                 </button>
+	            </div>
 	        </field>
 	    </record>
     </data>
