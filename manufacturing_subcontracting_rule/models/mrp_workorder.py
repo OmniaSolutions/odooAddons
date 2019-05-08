@@ -16,9 +16,6 @@ class MrpWorkorder(models.Model):
     _inherit = ['mrp.workorder']
     external_partner = fields.Many2one('res.partner', string='External Partner')
     state = fields.Selection(selection_add=[('external', 'External Production')])
-    # date_planned_finished
-    # date_planned_start
-    # gestire gli scrap
 
     def createTmpStockMove(self, sourceMoveObj, location_source_id=None, location_dest_id=None, unit_factor=1.0):
         tmpMoveObj = self.env["stock.tmp_move"]
@@ -44,27 +41,16 @@ class MrpWorkorder(models.Model):
             'mrp_original_move': False,
             'unit_factor': unit_factor})
 
-    def copyAndCleanLines(self, stock_move_ids, location_dest_id=None, location_source_id=None):
-        outElems = []
-        for stock_move_id in stock_move_ids:
-            if stock_move_id.state not in ['done', 'cancel']:
-                outElems.append(self.createTmpStockMove(stock_move_id, location_source_id, location_dest_id).id)
-        return outElems
-
     @api.multi
     def button_produce_externally(self):
-        values = {}
+        values = self.production_id.get_wizard_value()
         partner = self.operation_id.default_supplier
         if not partner:
             partner = self.env['res.partner'].search([], limit=1)
-        values['move_raw_ids'] = [(6, 0, self.copyAndCleanLines(self.production_id.move_raw_ids))]
-        values['move_finished_ids'] = [(6, 0, self.copyAndCleanLines(self.production_id.move_finished_ids))]
         values['consume_product_id'] = self.product_id.id
         values['consume_bom_id'] = self.production_id.bom_id.id
         values['external_warehouse_id'] = self.production_id.location_src_id.get_warehouse().id
-        values['production_id'] = self.production_id.id
         values['workorder_id'] = self.id
-        values['request_date'] = datetime.datetime.now()
         obj_id = self.env['mrp.workorder.externally.wizard'].create(values)
         obj_id.create_vendors_from(partner)
         return {
@@ -93,3 +79,59 @@ class MrpWorkorder(models.Model):
                 stock_picking_id.do_unreserve()
                 stock_picking_id.action_cancel()
             mrp_workorder_id.write({'state': 'pending'})
+
+    def copyAndCleanLines(self, stock_move_ids, location_dest_id=None, location_source_id=None):
+        outElems = []
+        for stock_move_id in stock_move_ids:
+            if stock_move_id.state not in ['done', 'cancel']:
+                outElems.append(self.createTmpStockMove(stock_move_id, location_source_id, location_dest_id).id)
+        return outElems
+
+    @api.multi
+    def updateProducedQty(self, newQty):
+        for woBrws in self:
+            alreadyProduced = woBrws.qty_produced
+            #FIXME: Se ne produco piu' del dovuto?
+            woBrws.qty_produced = alreadyProduced + newQty
+    
+    @api.multi
+    def checkRecordProduction(self):
+        for woBrws in self:
+            if woBrws.qty_produced >= woBrws.qty_production:
+                woBrws.button_finish()
+
+    @api.multi
+    def button_finish(self):
+        res = super(MrpWorkorder, self).button_finish()
+        production_id = self.production_id
+        isExternal = False
+        for relatedWO in self.search([('production_id', '=', production_id.id)]):
+            # Check if external workorder
+            if relatedWO.getExternalPickings():
+                isExternal = True
+                break
+        if not self.next_work_order_id and isExternal:
+            # Close manufacturing order
+            production_id.write({'state': 'done', 'date_finished': fields.Datetime.now()})
+        return res
+
+    @api.multi
+    def getExternalPickings(self):
+        pickObj = self.env['stock.picking']
+        for woBrws in self:
+            return pickObj.search([('sub_workorder_id', '=', woBrws.id)])
+        return pickObj
+
+    @api.multi
+    def open_external_pickings(self):
+        newContext = self.env.context.copy()
+        picks = self.getExternalPickings()
+        return {
+            'name': _("External Pickings"),
+            'view_type': 'form',
+            'view_mode': 'tree,form',
+            'res_model': 'stock.picking',
+            'type': 'ir.actions.act_window',
+            'context': newContext,
+            'domain': [('id', 'in', picks.ids)],
+        }

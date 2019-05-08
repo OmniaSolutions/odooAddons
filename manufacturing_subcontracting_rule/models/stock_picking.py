@@ -46,6 +46,7 @@ class StockPicking(models.Model):
     sub_contracting_operation = fields.Selection([('open', _('Open external Production')),
                                                   ('close', _('Close external Production'))])
     sub_production_id = fields.Integer(string=_('Sub production Id'))
+    sub_workorder_id = fields.Integer(string=_('Sub Workorder Id'))
 
     def isIncoming(self, objPick=None):
         if objPick is None:
@@ -69,8 +70,8 @@ class StockPicking(models.Model):
                 if objProduction.isPicksInDone():
                     objProduction.button_mark_done()
             for stock_move_id in self.move_line_ids:
-                if stock_move_id.move_id.mrp_workorder_id:
-                    mrp_workorder_id = self.env['mrp.workorder'].search([('id', '=', stock_move_id.move_id.mrp_workorder_id)])
+                if stock_move_id.move_id.workorder_id:
+                    mrp_workorder_id = self.env['mrp.workorder'].search([('id', '=', stock_move_id.move_id.workorder_id.id)])
                     # TODO: mettere il tempo di lavorazione calcolato fra pick in e pick put
                     mrp_workorder_id.record_production()
         return res

@@ -43,23 +43,8 @@ from datetime import timedelta
 from odoo.tools import DEFAULT_SERVER_DATETIME_FORMAT
 
 
-class StockBom(models.Model):
-    _name = 'stock.bom'
-    source_product_id = fields.Integer("Source Product id")
-    raw_product_id = fields.Integer("Source Product id")
-    quantity = fields.Float("Product Quantity")
-    mrp_production_id = fields.Many2one('mrp.production',
-                                        'Related Production')
-
-
 class MrpProduction(models.Model):
     _inherit = 'mrp.production'
-
-    state = fields.Selection(selection_add=[('external', 'External Production')])
-    stock_bom_ids = fields.One2many('stock.bom',
-                                    'mrp_production_id',
-                                    string='Stock Boms',
-                                    ondelete="cascade")
 
     @api.model
     def createStockMoveBom(self):
@@ -86,6 +71,12 @@ class MrpProduction(models.Model):
         for mrp_production in self:
             if mrp_production.routing_id.location_id.partner_id:
                 mrp_production.external_partner = mrp_production.routing_id.location_id.partner_id.id
+
+    state = fields.Selection(selection_add=[('external', 'External Production')])
+    stock_bom_ids = fields.One2many('stock.bom',
+                                    'mrp_production_id',
+                                    string='Stock Boms',
+                                    ondelete="cascade")
 
     external_partner = fields.Many2one('res.partner',
                                        compute='_getDefaultPartner',
@@ -184,12 +175,34 @@ class MrpProduction(models.Model):
             'product_uom': sourceMoveObj.product_uom.id,
             'date_expected': sourceMoveObj.date_expected,
             'mrp_original_move': False,
+            'workorder_id': sourceMoveObj.workorder_id.id,
             'unit_factor': sourceMoveObj.unit_factor})
 
-    def copyAndCleanLines(self, stock_move_ids, location_dest_id=None, location_source_id=None):
+    def copyAndCleanLines(self, stock_move_ids, location_dest_id=None, location_source_id=None, isRawMove=False):
         outElems = []
+        foundRawMoves = False
+        evaluated = []
         for elem in stock_move_ids:
+            if isRawMove:   # Look for raw moves
+                if elem.state == 'cancel':
+                    continue
+            prodId = elem.product_id.id
+            
+            if not isRawMove and prodId in evaluated:
+                # Skip multiple finished lines if more than one workorder because are created too many lines
+                continue
+            foundRawMoves = True
             outElems.append(self.createTmpStockMove(elem, location_source_id, location_dest_id).id)
+            evaluated.append(prodId)
+        if not foundRawMoves and isRawMove:
+            # Create automatically raw stock move containing finished product
+            newMove = self.createTmpStockMove(elem, location_source_id, location_dest_id)
+            newMove.product_id = self.product_id.id
+            newMove.product_uom_qty = self.product_qty
+            newMove.name = self.product_id.display_name
+            newMove.note = ''
+            newMove.product_uom = self.product_uom_id.id
+            outElems.append(newMove.id)
         return outElems
 
     def checkCreatePartnerWarehouse(self, partnerBrws):
@@ -221,15 +234,25 @@ class MrpProduction(models.Model):
         return locBrws
 
     @api.multi
-    def button_produce_externally(self):
+    def get_wizard_value(self):
         values = {}
-        values['move_raw_ids'] = [(6, 0, self.copyAndCleanLines(self.move_raw_ids))]
-        values['move_finished_ids'] = [(6, 0, self.copyAndCleanLines(self.move_finished_ids))]
+        values['move_raw_ids'] = [(6, 0, self.copyAndCleanLines(self.move_raw_ids,
+                                                                location_source_id=self.location_src_id.id, 
+                                                                isRawMove=True
+                                                                ))]
+        values['move_finished_ids'] = [(6, 0, self.copyAndCleanLines(self.move_finished_ids,
+                                                                     location_dest_id=self.location_src_id.id,
+                                                                     isRawMove=False))]
+        values['production_id'] = self.id
+        values['request_date'] = datetime.datetime.now()
+        return values
+
+    @api.multi
+    def button_produce_externally(self):
+        values = self.get_wizard_value()
         values['consume_product_id'] = self.product_id.id
         values['consume_bom_id'] = self.bom_id.id
         values['external_warehouse_id'] = self.location_src_id.get_warehouse().id
-        values['production_id'] = self.id
-        values['request_date'] = datetime.datetime.now()
         obj_id = self.env['mrp.production.externally.wizard'].create(values)
         obj_id.create_vendors()
         self.env.cr.commit()
@@ -248,13 +271,16 @@ class MrpProduction(models.Model):
         stockPickingObj = self.env['stock.picking']
         purchaseOrderObj = self.env['purchase.order']
         for manOrderBrws in self:
+            moves = self.env['stock.move']
             stockPickList = stockPickingObj.search([('origin', '=', manOrderBrws.name)])
-            for pickBrws in stockPickList:
-                pickBrws.move_lines.unlink()
-                pickBrws.action_cancel()
-                pickBrws.unlink()
+            stockPickList += stockPickingObj.search([('sub_production_id', '=', manOrderBrws.id)])
+            for pickBrws in list(set(stockPickList)):
+                pickBrws._action_cancel()
+                moves += pickBrws.move_lines
             manOrderBrws.write({'state': 'confirmed'})
-            for move_line in manOrderBrws.move_raw_ids + manOrderBrws.move_finished_ids:
+            movesToCancel = self.env['stock.move'].search([('subcontracting_move_id', 'in', moves.ids)])
+            movesToCancel += manOrderBrws.move_raw_ids + manOrderBrws.move_finished_ids
+            for move_line in movesToCancel:
                 if move_line.mrp_original_move is False:
                     move_line._action_cancel()
                 if move_line.state in ('draft', 'cancel'):
@@ -267,8 +293,11 @@ class MrpProduction(models.Model):
                 purchese.unlink()
 
     def checkCreateReorderRule(self, prodBrws, warehouse):
-        if not self.checkExistingReorderRule(prodBrws, warehouse):
-            self.createReorderRule(prodBrws, warehouse)
+        if warehouse:
+            if not self.checkExistingReorderRule(prodBrws, warehouse):
+                self.createReorderRule(prodBrws, warehouse)
+        else:
+            logging.warning("unable to create whrehouse")
 
     def checkExistingReorderRule(self, prod_brws, warehouse):
         reorderRules = self.env['stock.warehouse.orderpoint'].search([
@@ -328,3 +357,12 @@ class MrpProduction(models.Model):
             except Exception as ex:
                 error.append("Unreserve pick %r Error %r " % (mrp_production.id, ex))
         return error
+
+
+class StockBom(models.Model):
+    _name = 'stock.bom'
+    source_product_id = fields.Integer("Source Product id")
+    raw_product_id = fields.Integer("Source Product id")
+    quantity = fields.Float("Product Quantity")
+    mrp_production_id = fields.Many2one('mrp.production',
+                                        'Related Production')

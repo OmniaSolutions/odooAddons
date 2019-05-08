@@ -52,6 +52,7 @@ class StockMove(models.Model):
                                       help="""source Mrp Workorder Subcontracting id""")
     purchase_order_line_subcontracting_id = fields.Integer(_('Original Purchase line Id'))
     subcontracting_source_stock_move_id = fields.Integer(_('Original Production ID'))
+    subcontracting_move_id = fields.Integer(_('Original move id'))
 
     @api.model
     def moveQty(self, qty):
@@ -72,13 +73,21 @@ class StockMove(models.Model):
 
     @api.model
     def subcontractingMove(self, from_location, to_location, source_id=False):
-        return self.copy(default={'name': 'SUB: ' + self.display_name,
+        name = 'SUB: '
+        if self.picking_id.sub_workorder_id:
+            woBrws = self.env['mrp.workorder'].search([('id', '=', self.picking_id.sub_workorder_id)])
+            routingName = woBrws.production_id.routing_id.name
+            phaseName = woBrws.name
+            name += '[%s - %s] ' % (routingName, phaseName)
+        name += self.display_name
+        return self.copy(default={'name': name,
                                   'location_id': from_location.id,
                                   'location_dest_id': to_location.id,
                                   'sale_line_id': False,
                                   'production_id': False,
                                   'raw_material_production_id': False,
                                   'picking_id': False,
+                                  'subcontracting_move_id': source_id,
                                   'subcontracting_source_stock_move_id': source_id})
 
     @api.model
