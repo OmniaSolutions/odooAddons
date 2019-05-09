@@ -46,6 +46,19 @@ from odoo.tools import DEFAULT_SERVER_DATETIME_FORMAT
 class MrpProduction(models.Model):
     _inherit = 'mrp.production'
 
+    def _workorders_create(self, bom, bom_data):
+        mrp_workorder_ids = super(MrpProduction, self)._workorders_create(bom, bom_data)
+        for mrp_workorder_id in mrp_workorder_ids:
+            if mrp_workorder_id.operation_id.external_product:
+                mrp_workorder_id.external_product = mrp_workorder_id.operation_id.external_product
+            if mrp_workorder_id.operation_id.external:
+                ctx = self.env.context.copy()
+                ctx.update({'active_model': 'mrp.workorder',
+                            'active_ids': [mrp_workorder_id.id]})
+                objWiz = mrp_workorder_id.createWizard()
+                objWiz.with_context(ctx).button_produce_externally()
+        return mrp_workorder_ids
+
     @api.model
     def createStockMoveBom(self):
         """

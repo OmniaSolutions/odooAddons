@@ -326,7 +326,7 @@ class MrpProductionWizard(models.TransientModel):
     def createPurches(self, toCreatePurchese, picking, workorder):
         if not self.create_purchese_order:
             return
-        obj_product_product = self.getDefaultExternalServiceProduct()
+        obj_product_product = self.getDefaultExternalServiceProduct(workorder)
         obj_po = self.env['purchase.order'].create({'partner_id': toCreatePurchese.partner_id.id,
                                                     'date_planned': self.request_date,
                                                     'production_external_id': self.production_id.id,
@@ -352,28 +352,42 @@ class MrpProductionWizard(models.TransientModel):
             obj_po.button_confirm()
 
     @api.model
-    def getNewExternalProductInfo(self):
+    def getNewExternalProductInfo(self, workorder_id=None):
         """
         this method could be overloaded as per customer needs
         """
         default_code = self.production_id.product_id.name
         if self.production_id.product_id.default_code:
             default_code = self.production_id.product_id.default_code
-        new_name = "S-" + default_code
-        val = {'default_code': new_name,
+        new_default_code = "S-" + default_code
+        new_name = self.production_id.product_id.name
+        if workorder_id:
+            new_default_code = new_default_code + "-" + workorder_id.name
+            new_name = new_name + "-" + workorder_id.name
+        val = {'default_code': new_default_code,
                'type': 'service',
                'purchase_ok': True,
-               'name': self.production_id.product_id.name}
+               'name': new_name}
         return val
 
     @api.model
-    def getDefaultExternalServiceProduct(self):
+    def getDefaultExternalServiceProduct(self, mrp_workorder_id=None):
         """
         get the default external product suitable for the purchase
         """
-        bom_product = self.production_id.bom_id.external_product
-        if bom_product:
-            return bom_product
+        if not mrp_workorder_id:
+            return self.getDefaultProductionServiceProduct()
+        else:
+            return self.getDefaultWorkorderServiceProduct(mrp_workorder_id)
+
+    @api.model
+    def getDefaultProductionServiceProduct(self):
+        """
+        get the default external product suitable for the purchase
+        """
+        bom_product_product_id = self.production_id.bom_id.external_product
+        if bom_product_product_id:
+            return bom_product_product_id
         product_vals = self.getNewExternalProductInfo()
         newProduct = self.env['product.product'].search([('default_code', '=', product_vals.get('default_code'))])
         if not newProduct:
@@ -381,6 +395,25 @@ class MrpProductionWizard(models.TransientModel):
             newProduct.message_post(body=_('<div style="background-color:green;color:white;border-radius:5px"><b>Create automatically from subcontracting module</b></div>'),
                                     message_type='notification')
         self.production_id.bom_id.external_product = newProduct
+        return newProduct
+
+    @api.model
+    def getDefaultWorkorderServiceProduct(self, mrp_workorder_id=None):
+        """
+        get the default external product suitable for the purchase
+        """
+        mrp_workorder_id = self.env['mrp.workorder'].browse([mrp_workorder_id])
+        if mrp_workorder_id.external_product:
+            return mrp_workorder_id.external_product
+        product_vals = self.getNewExternalProductInfo(mrp_workorder_id)
+        newProduct = self.env['product.product'].search([('default_code', '=', product_vals.get('default_code'))])
+        if not newProduct:
+            newProduct = self.env['product.product'].create(product_vals)
+            newProduct.message_post(body=_('<div style="background-color:green;color:white;border-radius:5px"><b>Create automatically from subcontracting module</b></div>'),
+                                    message_type='notification')
+
+        mrp_workorder_id.external_product = newProduct
+        mrp_workorder_id.operation_id.external_product = newProduct
         return newProduct
 
     @api.model

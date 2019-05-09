@@ -16,6 +16,8 @@ class MrpWorkorder(models.Model):
     _inherit = ['mrp.workorder']
     external_partner = fields.Many2one('res.partner', string='External Partner')
     state = fields.Selection(selection_add=[('external', 'External Production')])
+    external_product = fields.Many2one('product.product',
+                                       string=_('External Product use for external production'))
 
     def createTmpStockMove(self, sourceMoveObj, location_source_id=None, location_dest_id=None, unit_factor=1.0):
         tmpMoveObj = self.env["stock.tmp_move"]
@@ -41,8 +43,8 @@ class MrpWorkorder(models.Model):
             'mrp_original_move': False,
             'unit_factor': unit_factor})
 
-    @api.multi
-    def button_produce_externally(self):
+    @api.model
+    def createWizard(self):
         values = self.production_id.get_wizard_value()
         partner = self.operation_id.default_supplier
         if not partner:
@@ -53,12 +55,16 @@ class MrpWorkorder(models.Model):
         values['workorder_id'] = self.id
         obj_id = self.env['mrp.workorder.externally.wizard'].create(values)
         obj_id.create_vendors_from(partner)
+        return obj_id
+
+    @api.multi
+    def button_produce_externally(self):
         return {
             'type': 'ir.actions.act_window',
             'res_model': 'mrp.workorder.externally.wizard',
             'view_mode': 'form,tree',
             'view_type': 'form',
-            'res_id': obj_id.id,
+            'res_id': self.createWizard().id,
             'target': 'new',
         }
 
@@ -91,9 +97,9 @@ class MrpWorkorder(models.Model):
     def updateProducedQty(self, newQty):
         for woBrws in self:
             alreadyProduced = woBrws.qty_produced
-            #FIXME: Se ne produco piu' del dovuto?
+            # FIXME: Se ne produco piu' del dovuto?
             woBrws.qty_produced = alreadyProduced + newQty
-    
+
     @api.multi
     def checkRecordProduction(self):
         for woBrws in self:

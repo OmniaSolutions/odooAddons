@@ -32,6 +32,9 @@
 	                     </div>
 	                 </button>
 	            </div>
+	            <field name="production_id" position="after">
+	               <field name="external_product"/>
+	            </field>
 	        </field>
 	    </record>
     </data>
