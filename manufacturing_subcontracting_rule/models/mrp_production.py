@@ -134,11 +134,11 @@ class MrpProduction(models.Model):
             'workorder_id': sourceMoveObj.workorder_id.id,
             'unit_factor': sourceMoveObj.unit_factor})
 
-    def copyAndCleanLines(self, brwsList, location_dest_id=None, location_source_id=None, isRawMove=False):
+    def copyAndCleanLines(self, stock_move_ids, location_dest_id=None, location_source_id=None, isRawMove=False):
         outElems = []
         foundRawMoves = False
         evaluated = []
-        for elem in brwsList:
+        for elem in stock_move_ids:
             if isRawMove:   # Look for raw moves
                 if elem.state == 'cancel':
                     continue

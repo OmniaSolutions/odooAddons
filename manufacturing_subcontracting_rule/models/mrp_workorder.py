@@ -16,9 +16,6 @@ class MrpWorkorder(models.Model):
     _inherit = ['mrp.workorder']
     external_partner = fields.Many2one('res.partner', string='External Partner')
     state = fields.Selection(selection_add=[('external', 'External Production')])
-    # date_planned_finished
-    # date_planned_start
-    # gestire gli scrap
 
     def createTmpStockMove(self, sourceMoveObj, location_source_id=None, location_dest_id=None, unit_factor=1.0):
         tmpMoveObj = self.env["stock.tmp_move"]

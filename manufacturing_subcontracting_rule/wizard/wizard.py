@@ -468,7 +468,7 @@ class MrpProductionWizard(models.TransientModel):
     def getOrigin(self, productionBrws, originBrw=None):
         return productionBrws.name
 
-    def createStockPickingIn(self, partnerBrws, productionBrws, originBrw=None, pick_out=None):
+    def createStockPickingIn(self, partner_id, productionBrws, originBrw=None, pick_out=None):
 
         def getPickingType():
             warehouseId = productionBrws.picking_type_id.warehouse_id.id
@@ -480,15 +480,15 @@ class MrpProductionWizard(models.TransientModel):
             return False
 
         isWorkorder = originBrw._table == 'mrp_workorder'
-        stockObj = self.env['stock.picking']
+        stock_piking = self.env['stock.picking']
         if not self.move_finished_ids:
-            return stockObj
-        customerProductionLocation = partnerBrws.location_id
+            return stock_piking
+        customerProductionLocation = partner_id.location_id
         if not customerProductionLocation:
-            raise UserError(_('Partner %s has not location setup.' % (partnerBrws.name)))
+            raise UserError(_('Partner %s has not location setup.' % (partner_id.name)))
         localStockLocation = productionBrws.location_src_id  # Taken from manufacturing order
-        incomingMoves = self.getIncomingTmpMoves(productionBrws, customerProductionLocation, partnerBrws)
-        toCreate = {'partner_id': partnerBrws.id,
+        incomingMoves = self.getIncomingTmpMoves(productionBrws, customerProductionLocation, partner_id)
+        toCreate = {'partner_id': partner_id.id,
                     'location_id': customerProductionLocation.id,
                     'location_dest_id': localStockLocation.id,
                     'min_date': productionBrws.date_planned_start,
@@ -503,7 +503,7 @@ class MrpProductionWizard(models.TransientModel):
                     }
         if originBrw and originBrw._table == 'mrp_workorder':  # Link picking with this workorder
             toCreate['sub_workorder_id'] = originBrw.id
-        obj = stockObj.create(toCreate)
+        obj = stock_piking.create(toCreate)
         newStockLines = []
         if isWorkorder:
             for tmpRow in self.move_finished_ids:
@@ -531,29 +531,29 @@ class MrpProductionWizard(models.TransientModel):
             for outGoingMove in incomingMoves:
                 outGoingMove.action_cancel()
         else:
-            for outMove in incomingMoves:
-                stockMove = outMove.copy(default={
-                    'name': outMove.product_id.display_name,
+            for stock_move_id in incomingMoves:
+                stockMove = stock_move_id.copy(default={
+                    'name': stock_move_id.product_id.display_name,
                     'location_id': customerProductionLocation.id,
                     'location_dest_id': localStockLocation.id,
                     'production_id': False,
                     'raw_material_production_id': False,
                     'picking_id': obj.id})
                 newStockLines.append(stockMove.id)
-                outMove.action_cancel()
+                stock_move_id.action_cancel()
         obj.write({'move_lines': [(6, False, newStockLines)]})
         return obj
 
-    def getIncomingTmpMoves(self, productionBrws, customerProductionLocation, partnerBrws):
+    def getIncomingTmpMoves(self, productionBrws, customerProductionLocation, partner_id):
         incomingMoves = []
         for productionLineBrws in productionBrws.move_finished_ids:
             if not customerProductionLocation:
                 customerProductionLocation = productionLineBrws.location_id
-            if productionLineBrws.state == 'confirmed' and productionLineBrws.partner_id == partnerBrws:
+            if productionLineBrws.state == 'confirmed' and productionLineBrws.partner_id == partner_id:
                 incomingMoves.append(productionLineBrws)
         return incomingMoves
 
-    def createStockPickingOut(self, partnerBrws, productionBrws, originBrw=None):
+    def createStockPickingOut(self, partner_id, productionBrws, originBrw=None):
         def getPickingType():
             warehouseId = productionBrws.picking_type_id.warehouse_id.id
             pickTypeObj = self.env['stock.picking.type']
@@ -562,12 +562,12 @@ class MrpProductionWizard(models.TransientModel):
                                             ('warehouse_id', '=', warehouseId)]):
                 return pick.id
             return False
-        stockObj = self.env['stock.picking']
+        stock_piking = self.env['stock.picking']
         if not self.move_raw_ids:
-            return stockObj
-        customerProductionLocation = partnerBrws.location_id
+            return stock_piking
+        customerProductionLocation = partner_id.location_id
         if not customerProductionLocation:
-            raise UserError(_('Partner %s has not location setup.' % (partnerBrws.name)))
+            raise UserError(_('Partner %s has not location setup.' % (partner_id.name)))
         localStockLocation = productionBrws.location_src_id  # Taken from manufacturing order
         outGoingMoves = []
         isWorkorder = False
@@ -576,9 +576,9 @@ class MrpProductionWizard(models.TransientModel):
         for productionLineBrws in productionBrws.move_raw_ids:
             if not customerProductionLocation:
                 customerProductionLocation = productionLineBrws.location_dest_id
-            if productionLineBrws.state == 'confirmed' and productionLineBrws.partner_id == partnerBrws:
+            if productionLineBrws.state == 'confirmed' and productionLineBrws.partner_id == partner_id:
                 outGoingMoves.append(productionLineBrws)
-        toCreate = {'partner_id': partnerBrws.id,
+        toCreate = {'partner_id': partner_id.id,
                     'location_id': localStockLocation.id,
                     'location_dest_id': customerProductionLocation.id,
                     'min_date': datetime.datetime.now(),
@@ -592,11 +592,11 @@ class MrpProductionWizard(models.TransientModel):
         if isWorkorder:
             toCreate['sub_workorder_id'] = originBrw.id
 
-        obj = stockObj.create(toCreate)
+        obj = stock_piking.create(toCreate)
         newStockLines = []
         if isWorkorder:
             if self.same_product_in_out:
-                for incomingTmpMove in self.getIncomingTmpMoves(productionBrws, customerProductionLocation, partnerBrws):
+                for incomingTmpMove in self.getIncomingTmpMoves(productionBrws, customerProductionLocation, partner_id):
                     stockMove = incomingTmpMove.copy(default={
                         'name': incomingTmpMove.product_id.display_name,
                         'production_id': False,
@@ -630,15 +630,15 @@ class MrpProductionWizard(models.TransientModel):
             for outGoingMove in outGoingMoves:
                 outGoingMove.action_cancel()
         else:
-            for outMove in outGoingMoves:
-                stockMove = outMove.copy(default={'name': outMove.product_id.display_name,
+            for stock_move_id in outGoingMoves:
+                stockMove = stock_move_id.copy(default={'name': stock_move_id.product_id.display_name,
                                                   'production_id': False,
                                                   'raw_material_production_id': False,
-                                                  'unit_factor': outMove.unit_factor})
+                                                  'unit_factor': stock_move_id.unit_factor})
                 stockMove.location_id = localStockLocation.id
                 stockMove.location_dest_id = customerProductionLocation.id
                 newStockLines.append(stockMove.id)
-                outMove.action_cancel()
+                stock_move_id.action_cancel()
         obj.write({'move_lines': [(6, False, newStockLines)]})
         return obj
 
