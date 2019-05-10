@@ -77,6 +77,7 @@
 	        	<field name="request_date"/>
 	        	<field name="create_purchese_order"/>
 	        	<field name="is_some_product"/>
+	        	<field name="is_by_operation"/>
 	        	<field name="consume_product_id" attrs="{'invisible': [('operation_type', '!=', 'consume')], 'required': [('operation_type', '==', 'consume')]}"/>
 	        	<field name="consume_bom_id" attrs="{'invisible': [('operation_type', '!=', 'consume')], 'required': [('operation_type', '==', 'consume')]}"/>
                 <field name="move_raw_ids"

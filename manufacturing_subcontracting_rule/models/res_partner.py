@@ -46,18 +46,18 @@ class ResPartner(models.Model):
                                   index=True,
                                   help="Sets a location if you produce at a fixed location. This can be a partner location if you subcontract the manufacturing operations.")
 
-    @api.model
-    def name_search(self, name, args=None, operator='ilike', limit=100):
-        outArgs = []
-        if args:
-            for fieldName, inner_operator, val in args:
-                tmpOut = [fieldName, inner_operator, val]
-                if inner_operator == 'in' and isinstance(val, (str)):
-                    try:
-                        newVal = json.loads(val)
-                        tmpOut[2] = newVal
-                        operator = 'ilike'
-                    except Exception as ex:
-                        logging.error(ex)
-                outArgs.append(tmpOut)
-        return super(ResPartner, self).name_search(name, outArgs, operator, limit)
+#     @api.model
+#     def name_search(self, name, args=[], operator='ilike', limit=100):
+#         outArgs = []
+#         if args:
+#             for fieldName, inner_operator, val in args:
+#                 tmpOut = [fieldName, inner_operator, val]
+#                 if inner_operator == 'in' and isinstance(val, (str)):
+#                     try:
+#                         newVal = json.loads(val)
+#                         tmpOut[2] = newVal
+#                         operator = 'ilike'
+#                     except Exception as ex:
+#                         logging.error(ex)
+#                 outArgs.append(tmpOut)
+#         return super(ResPartner, self).name_search(name, outArgs, operator, limit)
