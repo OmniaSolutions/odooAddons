@@ -618,8 +618,9 @@ class MrpProductionWizard(models.TransientModel):
                 new_stock_move_id.location_id = stock_location_id.id
                 new_stock_move_id.location_dest_id = customerProductionLocation.id
                 new_stock_move_line_ids.append(new_stock_move_id.id)
-#             for outGoingMove in out_stock_move_ids:
-#                 outGoingMove._action_cancel()
+            if not is_some_product:
+                for outGoingMove in out_stock_move_ids:
+                    outGoingMove._action_cancel()
         else:
             for stock_move_id in out_stock_move_ids:
                 new_stock_move_id = stock_move_id.copy(default={'name': stock_move_id.product_id.display_name,
@@ -637,7 +638,6 @@ class MrpProductionWizard(models.TransientModel):
     @api.multi
     def write(self, vals):
         return super(MrpProductionWizard, self).write(vals)
-#  operation_id e' l'operazione del ruting che vado a fare mi da 'oggetto
 
     @api.multi
     def create_vendors(self):
@@ -815,22 +815,33 @@ class MrpWorkorderWizard(MrpProductionWizard):
         model = self.env.context.get('active_model', '')
         objIds = self.env.context.get('active_ids', [])
         relObj = self.env[model]
-        workorderBrws = relObj.browse(objIds)
-        workorderBrws.write({'external_partner': self.external_partner.partner_id.id,
-                             'state': 'external'})
-        productionBrws = workorderBrws.production_id
+        mrp_workorder_id = relObj.browse(objIds)
+        mrp_workorder_id.write({'external_partner': self.external_partner.partner_id.id,
+                                'state': 'external'})
+        # this is in case of automatic operation
+        if mrp_workorder_id.operation_id.external_operation == 'parent':
+            self.is_some_product = True
+            self.is_by_operation = False
+        elif mrp_workorder_id.operation_id.external_operation == 'operation':
+            self.is_by_operation = True
+            self.is_some_product = True
+        elif mrp_workorder_id.operation_id.external_operation == 'normal':
+            self.is_by_operation = False
+            self.is_some_product = False
+        #
+        mrp_production_id = mrp_workorder_id.production_id
         for external_partner in self.external_partner:
             if self.is_by_operation:
-                pickOut, pickIn = self.getPicksByOperation(external_partner.partner_id, productionBrws, workorderBrws)
+                pickOut, pickIn = self.getPicksByOperation(external_partner.partner_id, mrp_production_id, mrp_workorder_id)
             else:
-                pickOut = self.createStockPickingOut(external_partner.partner_id, productionBrws, workorderBrws, self.is_some_product)
-                pickIn = self.createStockPickingIn(external_partner.partner_id, productionBrws, workorderBrws, pick_out=pickOut)
+                pickOut = self.createStockPickingOut(external_partner.partner_id, mrp_production_id, mrp_workorder_id, self.is_some_product)
+                pickIn = self.createStockPickingIn(external_partner.partner_id, mrp_production_id, mrp_workorder_id, pick_out=pickOut)
         if pickIn:
-            productionBrws.date_planned_finished_wo = pickIn.scheduled_date
-            self.createPurches(self.external_partner, pickIn, workorderBrws.id)
+            mrp_production_id.date_planned_finished_wo = pickIn.scheduled_date
+            self.createPurches(self.external_partner, pickIn, mrp_workorder_id.id)
         if pickOut:
-            productionBrws.date_planned_start_wo = pickOut.scheduled_date
-        productionBrws.button_unreserve()   # Needed to evaluate picking out move
+            mrp_production_id.date_planned_start_wo = pickOut.scheduled_date
+        mrp_production_id.button_unreserve()   # Needed to evaluate picking out move
 
     def getOrigin(self, productionBrws, originBrw):
         return "%s - %s - %s" % (productionBrws.name, originBrw.name, originBrw.external_partner.name)

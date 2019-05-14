@@ -48,14 +48,14 @@ class MrpWorkorder(models.Model):
         values = self.production_id.get_wizard_value()
         partner = self.operation_id.default_supplier
         if not partner:
-            partner = self.env['res.partner'].search([], limit=1)
+            raise UserWarning("No Partner set to Routing Operation")
         values['consume_product_id'] = self.product_id.id
         values['consume_bom_id'] = self.production_id.bom_id.id
         values['external_warehouse_id'] = self.production_id.location_src_id.get_warehouse().id
         values['workorder_id'] = self.id
-        obj_id = self.env['mrp.workorder.externally.wizard'].create(values)
-        obj_id.create_vendors_from(partner)
-        return obj_id
+        mrp_workorder_externally_wizard_id = self.env['mrp.workorder.externally.wizard'].create(values)
+        mrp_workorder_externally_wizard_id.create_vendors_from(partner)
+        return mrp_workorder_externally_wizard_id
 
     @api.multi
     def button_produce_externally(self):

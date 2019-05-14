@@ -51,7 +51,7 @@ class MrpProduction(models.Model):
         for mrp_workorder_id in mrp_workorder_ids:
             if mrp_workorder_id.operation_id.external_product:
                 mrp_workorder_id.external_product = mrp_workorder_id.operation_id.external_product
-            if mrp_workorder_id.operation_id.external:
+            if mrp_workorder_id.operation_id.external_operation:
                 ctx = self.env.context.copy()
                 ctx.update({'active_model': 'mrp.workorder',
                             'active_ids': [mrp_workorder_id.id]})

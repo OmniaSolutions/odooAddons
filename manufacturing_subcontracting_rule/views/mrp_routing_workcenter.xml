@@ -8,7 +8,7 @@
 	            <field name="company_id" position="after">
 	                <field name="default_supplier" domain="{'search_default_supplier': 1,'default_customer': 0,'default_supplier': 1}"/>
 	                <field name="external_product"/>
-	                <field name="external"/>
+	                <field name="external_operation"/>
 	            </field>
 	        </field>
 	    </record>
@@ -20,7 +20,7 @@
                 <field name="company_id" position="after">
                     <field name="default_supplier"/>
                     <field name="external_product"/>
-                    <field name="external"/>
+                    <field name="external_operation"/>
                 </field>
             </field>
         </record>
