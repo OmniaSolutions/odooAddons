@@ -133,7 +133,11 @@ class WebsiteWorkorderController(http.Controller):
     def get_user_name(self, user_id):
         user_id = request.env['res.users'].sudo().browse(user_id)
         if user_id:
-            return "<b>%s %s</b>" % (user_id.lastname, user_id.firstname)
+            try:
+                return "<b>%s %s</b>" % (user_id.lastname, user_id.firstname)
+            except Exception as ex:
+                logging.error(ex)
+                return "<b>%s</b>" % (user_id.name)
         else:
             return "<b><h1>No User For id: %r</h1></b>" % user_id
         
