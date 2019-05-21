@@ -39,8 +39,12 @@ class StockMoveOperationLink(models.Model):
             move_id = vals.get('move_id', False)
             operation_id = vals.get('operation_id', False)
             if move_id and operation_id:
-                move_location = self.env['stock.move'].browse(move_id).location_dest_id
-                self.env['stock.pack.operation'].browse(operation_id).location_dest_id = move_location
+                move = self.env['stock.move'].browse(move_id)
+                move_location = move.location_dest_id
+                if move.picking_id.isIncoming(move.picking_id):
+                    self.env['stock.pack.operation'].browse(operation_id).location_id = move_location
+                elif move.picking_id.isOutGoing(move.picking_id):
+                    self.env['stock.pack.operation'].browse(operation_id).location_dest_id = move_location
         return super(StockMoveOperationLink, self).create(vals)
 
 
