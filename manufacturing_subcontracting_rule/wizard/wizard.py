@@ -456,6 +456,7 @@ class MrpProductionWizard(models.TransientModel):
                 new_purchase_order_line.date_planned = self.request_date
                 new_purchase_order_line.product_qty = lineBrws.product_uom_qty
                 lineBrws.purchase_order_line_subcontracting_id = new_purchase_order_line.id
+                lineBrws.purchase_line_id = new_purchase_order_line.id
             if self.confirm_purchese_order and purchaseBrws:
                 purchaseBrws.button_confirm()
 
