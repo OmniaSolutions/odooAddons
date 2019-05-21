@@ -327,7 +327,7 @@ class MrpProductionWizard(models.TransientModel):
                 pickingBrwsList.append(pickIn.id)
             if pickOut:
                 pickingBrwsList.append(pickOut.id)
-        self.createPurches()
+        self.createPurches(pickIn)
         productionBrws.date_planned_finished_wo = date_planned_finished_wo
         productionBrws.date_planned_start_wo = date_planned_start_wo
         productionBrws.external_pickings = [(6, 0, pickingBrwsList)]
@@ -364,7 +364,7 @@ class MrpProductionWizard(models.TransientModel):
         workorderBrw.date_planned_start = date_planned_start_wo
         pickingBrwsList = [pickIn.id, pickOut.id]
         productionBrws.external_pickings = [(6, 0, pickingBrwsList)]
-        self.createPurches(workorderBrw)  # mettere a posto questa
+        self.createPurches(pickIn, workorderBrw)
         workorderBrw.state = 'external'
 
     @api.model
@@ -422,7 +422,7 @@ class MrpProductionWizard(models.TransientModel):
         product_id.write(vals)
 
     @api.multi
-    def createPurches(self, workorderBrws=False):
+    def createPurches(self, pickIn, workorderBrws=False):
         if not self:
             return
         if not self.create_purchese_order:
@@ -441,7 +441,7 @@ class MrpProductionWizard(models.TransientModel):
                                                         'date_planned': self.request_date,
                                                         'production_external_id': self.production_id.id})
 
-            for lineBrws in self.move_finished_ids:
+            for lineBrws in pickIn.move_lines:
                 values = {'product_id': obj_product_product.id,
                           'name': self.getPurcheseName(obj_product_product),
                           'product_qty': lineBrws.product_uom_qty,
