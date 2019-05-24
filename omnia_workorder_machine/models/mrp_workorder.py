@@ -148,4 +148,8 @@ class MrpProductionWCLine(models.Model):
                    }
             stock_scrap_id = stock_scrap.create(val)
             stock_scrap_id.do_scrap()
-            
+
+    @api.multi
+    def button_to_ready(self):
+        for wo_id in self:
+            wo_id.state = 'ready'
