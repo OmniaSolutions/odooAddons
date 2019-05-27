@@ -159,12 +159,13 @@
 	            <th class="header_table">Description</th>
 	            <th class="header_table">Work Order State</th>
 	            <th class="header_table">User Working</th>
-	            <th class="header_table">Label</th>
+	            <th class="header_table" id="label">Label</th>
 	            <th class="header_table">Worksheet</th>
 	        </tr>
 	        
 	        <t t-foreach="wo_lines" t-as="line">
-	            <tr>
+	            
+	               <tr>
 	                <td class="table_value wo_id"><t t-esc="line[0]"/></td>
 	                <td class="table_value"><t t-esc="line[8]"/></td>
 	                <td class="table_value internal_ref"><t t-esc="line[2]"/></td>
@@ -180,7 +181,17 @@
 	                <td class="table_value"><input class="stop_work" type='button' value='Record'/></td>
 	                <td class="table_value"><t t-esc="line[5]"/></td>
 	                <td class="table_value wo_state" onchange="state_changed(this)"><t t-esc="line[6]"/></td>
-	                <td class="table_value wo_isuserworking"><t t-raw="line[9]"/></td>
+                    <t t-if="line[9]=='False'">
+                        <td class="table_value">
+                            <div style="color:red">Not Working</div>
+                        </td>
+                    </t>
+                    <t t-if="line[9]=='True'">
+                        <td class="table_value">
+                            <div style="color:green">Working</div>
+                        </td>
+                    </t>
+                    <td class="table_value wo_isuserworking" style="display:none"><t t-raw="line[9]"/></td>
 	                <td class="table_value"><input class="print_label" type='button' value='Print'/></td>
 	                <td class="table_value"><a t-att-href="line[10]"  target="_blank">View</a></td>
 	            </tr>

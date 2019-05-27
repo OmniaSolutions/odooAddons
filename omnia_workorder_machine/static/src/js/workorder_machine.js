@@ -195,9 +195,13 @@ odoo.define('omnia_workorder_machine.workorder_machine_list', function (require)
 	    var td_list = document.getElementsByClassName('wo_state');
 	    var i;
 	    for (i = 0; i < td_list.length; i++){
-	   		state_changed(td_list[i]);
+	    	var td_el = td_list[i];
+	    	console.log(td_el);
+	    	if (td_el != undefined){
+	    		state_changed(td_el);
+	    	}
 	    }
-	    // Start work
+	    // Start workel
 	    var i1;
 	    var start_work_butt_list = document.getElementsByClassName('start_work')
 	    for (i1 = 0; i1 < start_work_butt_list.length; i1++){
