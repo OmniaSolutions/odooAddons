@@ -140,7 +140,7 @@ class WebsiteWorkorderController(http.Controller):
                 msg = "<b>%s</b>" % (user_id.name)
                 return msg
         else:
-            return "<b><h1>No User For id: %r</h1></b>" % user_id
+            return "<b>No User For id: %r</b>" % user_id
         
     @http.route('/web/mrp/get_worksheet/<int:mrp_workorder_id>', type='http')
     def get_worksheet(self, mrp_workorder_id):
