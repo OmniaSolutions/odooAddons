@@ -71,7 +71,7 @@ class WebsiteWorkorderController(http.Controller):
         res = False
         if wo_id:
             wo_id = int(wo_id)
-            res = request.env['mrp.workorder'].startWork(wo_id)
+            res = request.env['mrp.workorder'].sudo().startWork(wo_id)
         return res
 
     @http.route(['/web/workorder_pause'], auth='public', type='json')
@@ -80,7 +80,7 @@ class WebsiteWorkorderController(http.Controller):
         res = False
         if wo_id:
             wo_id = int(wo_id)
-            res = request.env['mrp.workorder'].pauseWork(wo_id)
+            res = request.env['mrp.workorder'].sudo().pauseWork(wo_id)
         return res
 
     @http.route(['/web/workorder_resume'], auth='public', type='json')
@@ -89,7 +89,7 @@ class WebsiteWorkorderController(http.Controller):
         res = False
         if wo_id:
             wo_id = int(wo_id)
-            res = request.env['mrp.workorder'].resumeWork(wo_id)
+            res = request.env['mrp.workorder'].sudo().resumeWork(wo_id)
         return res
 
     @http.route(['/web/workorder_record'], auth='public', type='json')
@@ -98,7 +98,7 @@ class WebsiteWorkorderController(http.Controller):
         res = False
         if wo_id:
             wo_id = int(wo_id)
-            res = request.env['mrp.workorder'].recordWork(wo_id, n_pieces, n_scrap)
+            res = request.env['mrp.workorder'].sudo().recordWork(wo_id, n_pieces, n_scrap)
         return res
 
     @http.route('/web/print_label/<string:internal_ref>', type='http', auth='user')
