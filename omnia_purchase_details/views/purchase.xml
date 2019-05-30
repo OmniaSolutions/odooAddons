@@ -1,28 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-      <record id="purchase_line_form_action" model="ir.actions.act_window">
-          <field name="name">Purchase Order Lines</field>
-          <field name="type">ir.actions.act_window</field>
-          <field name="res_model">purchase.order.line</field>
-          <field name="view_mode">tree,pivot,graph,calendar</field>
-          <field name="context">{'search_default_todo':1, 'show_purchase': True}</field>
-          <field name="domain">[('state','=', 'purchase')]</field> 
-          <field name="view_ids"
-               eval="[(5, 0, 0),
-                      (0, 0, {'view_mode': 'tree', 'view_id': ref('omnia_purchase_details.purchase_order_line_tree')}),
-                      (0, 0, {'view_mode': 'calendar', 'view_id': ref('omnia_purchase_details.purchase_order__line_calendar')}),
-                      (0, 0, {'view_mode': 'pivot', 'view_id': ref('omnia_purchase_details.purchase_order_line_pivot')})
-                      ]"/>
-          <field name="help" type="html">
-            <p class="oe_view_nocontent_create">
-              Click to check the purchase order line 
-            </p><p>
-                 Use this view in order to see the purchase order lines
-            </p>
-          </field>
-      </record>
-      
-      
       
         <record id="omnia_purchase_order_line_filter" model="ir.ui.view">
             <field name="name">omnia.purchase.order.line.filter</field>
@@ -35,12 +12,6 @@
                 </filter>
             </field>
         </record>
-      
-      <menuitem action="purchase_line_form_action"
-                name="Purchase Report"
-                id="menu_purchase_line_form_action"
-                parent="purchase.menu_procurement_management"
-                sequence="100"/>
 
         <record model="ir.ui.view" id="purchase_order__line_calendar">
             <field name="name">purchase.order.line.calendar</field>
@@ -90,4 +61,31 @@
                 </tree>
             </field>
         </record>
+
+      <record id="purchase_line_form_action" model="ir.actions.act_window">
+          <field name="name">Purchase Order Lines</field>
+          <field name="type">ir.actions.act_window</field>
+          <field name="res_model">purchase.order.line</field>
+          <field name="view_mode">tree,pivot,graph,calendar</field>
+          <field name="context">{'search_default_todo':1, 'show_purchase': True}</field>
+          <field name="domain">[('state','=', 'purchase')]</field> 
+          <field name="view_ids"
+               eval="[(5, 0, 0),
+                      (0, 0, {'view_mode': 'tree', 'view_id': ref('omnia_purchase_details.purchase_order_line_tree')}),
+                      (0, 0, {'view_mode': 'calendar', 'view_id': ref('omnia_purchase_details.purchase_order__line_calendar')}),
+                      (0, 0, {'view_mode': 'pivot', 'view_id': ref('omnia_purchase_details.purchase_order_line_pivot')})
+                      ]"/>
+          <field name="help" type="html">
+            <p class="oe_view_nocontent_create">
+              Click to check the purchase order line 
+            </p><p>
+                 Use this view in order to see the purchase order lines
+            </p>
+          </field>
+      </record>
+      <menuitem action="purchase_line_form_action"
+          name="Purchase Report"
+          id="menu_purchase_line_form_action"
+          parent="purchase.menu_procurement_management"
+          sequence="100"/>
 </odoo>
