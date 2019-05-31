@@ -30,6 +30,7 @@ class PurchaseOrderLine(models.Model):
     _inherit = 'purchase.order.line'
     
     @api.multi
+    @api.depends('product_qty','qty_received')
     def compute_delivery_state(self):
         for purcase_order_line_id in self:
             if purcase_order_line_id.product_qty > purcase_order_line_id.qty_received:
