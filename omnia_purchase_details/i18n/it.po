@@ -1,0 +1,60 @@
+# Translation of Odoo Server.
+# This file contains the translation of the following modules:
+# 	* omnia_purchase_details
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 10.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2019-05-31 07:27+0000\n"
+"PO-Revision-Date: 2019-05-31 09:31+0200\n"
+"Last-Translator: <>\n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: \n"
+"Language: en\n"
+"X-Generator: Poedit 1.8.7.1\n"
+
+#. module: omnia_purchase_details
+#: model:ir.ui.view,arch_db:omnia_purchase_details.purchase_order__line_calendar
+msgid "Calendar View"
+msgstr "Visra Calendario"
+
+#. module: omnia_purchase_details
+#: model:ir.actions.act_window,help:omnia_purchase_details.purchase_line_form_action
+msgid "Click to check the purchase order line"
+msgstr "Clicca qui per le righe ordine di vendita"
+
+#. module: omnia_purchase_details
+#: model:ir.model.fields,field_description:omnia_purchase_details.field_purchase_order_line_delivery_state
+msgid "Delivery state"
+msgstr "Stato di spedizione"
+
+#. module: omnia_purchase_details
+#: model:ir.ui.view,arch_db:omnia_purchase_details.omnia_purchase_order_line_filter
+msgid "In late"
+msgstr "In ritardo"
+
+#. module: omnia_purchase_details
+#: model:ir.model,name:omnia_purchase_details.model_purchase_order_line
+#: model:ir.ui.view,arch_db:omnia_purchase_details.purchase_order_line_pivot
+#: model:ir.ui.view,arch_db:omnia_purchase_details.purchase_order_line_tree
+msgid "Purchase Order Line"
+msgstr "Riga Ordine d'Acquisto"
+
+#. module: omnia_purchase_details
+#: model:ir.actions.act_window,name:omnia_purchase_details.purchase_line_form_action
+msgid "Purchase Order Lines"
+msgstr "Righe Ordine d'Acquisto"
+
+#. module: omnia_purchase_details
+#: model:ir.ui.menu,name:omnia_purchase_details.menu_purchase_line_form_action
+msgid "Purchase Report"
+msgstr "Report Acquisti"
+
+#. module: omnia_purchase_details
+#: model:ir.actions.act_window,help:omnia_purchase_details.purchase_line_form_action
+msgid "Use this view in order to see the purchase order lines"
+msgstr "Usa questa vista per visualizzare le righe ordine di acquisto"
