@@ -48,4 +48,3 @@ class MrpBom(models.Model):
     _inherit = ['mrp.bom']
     external_product = fields.Many2one('product.product',
                                        string=_('External Product use for external production'))
-

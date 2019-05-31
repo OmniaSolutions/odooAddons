@@ -7,7 +7,6 @@ import math
 import logging
 import datetime
 from dateutil.relativedelta import relativedelta
-
 from odoo import models
 from odoo import fields
 from odoo import api
@@ -180,13 +179,6 @@ class MrpProductionWizard(models.TransientModel):
         # so we can be sure that the raw material is updated for the wizar
         pass
 
-    @api.multi
-    def getParentObjectBrowse(self):
-        model = self.env.context.get('active_model', '')
-        objIds = self.env.context.get('active_ids', [])
-        relObj = self.env[model]
-        return relObj.browse(objIds)
-
     @api.onchange('request_date')
     def _request_date(self):
         for move in self.move_raw_ids:
@@ -205,7 +197,7 @@ class MrpProductionWizard(models.TransientModel):
 
     @api.onchange('operation_type')
     def operationTypeChanged(self):
-        prodObj = self.getParentProduction()
+        prodObj = self.getParentObjectBrowse()
         wBrws = self.getWizardBrws()
         cleanRelInfos = {'raw_material_production_id': False,
                          'origin': ''}
@@ -229,6 +221,13 @@ class MrpProductionWizard(models.TransientModel):
 
     @api.multi
     def getParentProduction(self):
+        model = self.env.context.get('active_model', '')
+        objIds = self.env.context.get('active_ids', [])
+        relObj = self.env[model]
+        return relObj.browse(objIds)
+
+    @api.multi
+    def getParentObjectBrowse(self):
         model = self.env.context.get('active_model', '')
         objIds = self.env.context.get('active_ids', [])
         relObj = self.env[model]
@@ -299,7 +298,10 @@ class MrpProductionWizard(models.TransientModel):
         if not self.create_purchese_order and len(self.external_partner.ids) != 1:
             raise UserError(_("If you don't want to create purchase order you have to select only one partner."))
         workorderBrw = self.getParentObjectBrowse()
-        productionBrws = self.getParentProduction()
+        if workorderBrw:
+            productionBrws = workorderBrw.production_id
+        else:
+            productionBrws = workorderBrw
         #  self.cancelProductionRows(productionBrws)
         self.updateMoveLines(productionBrws)
         date_planned_finished_wo = False
