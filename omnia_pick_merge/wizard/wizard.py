@@ -55,7 +55,7 @@ class TmpStockMove(models.TransientModel):
         tmp_pick_ids = self.env['stock.picking'].browse(pick_ids)
         good_pick_list = []
         for pick_brws in tmp_pick_ids:
-            if pick_brws.state not in ['done', 'cancel', 'confirmed']:
+            if pick_brws.state not in ['done', 'cancel']:
                 good_pick_list.append(pick_brws)
         if len(good_pick_list) <= 1:
             raise UserError(_('You have only one available picking to merge. Merge operation is aborted'))
@@ -98,8 +98,8 @@ class TmpStockMove(models.TransientModel):
                         product_qty_assigned[product_id.id] = residual_qty
                         used_qty = move.product_qty
                     else:
-                        used_qty = needed_qty - product_qty_assigned[product_id.id]
-                        product_qty_assigned[product_id.id] = residual_qty
+                        used_qty = product_qty_assigned[product_id.id]
+                        product_qty_assigned[product_id.id] = 0
                     saleOrder = move.getSaleOrder(move)
                     TmpStockMoveLineObj.create({'ref_id': self.id,
                                                 'ref_stock_move_id': move.id,
@@ -141,10 +141,9 @@ class TmpStockMove(models.TransientModel):
                               'procure_method': 'make_to_stock'})
             if old_move_id.picking_id not in out_pick.merged_pick_ids:
                 out_pick.merged_pick_ids = [(4, old_move_id.picking_id.id)]
-            if old_move_id.product_qty - pick_line.move_quantity == 0:
+            old_move_id.write({'product_uom_qty': old_move_id.product_qty - move_quanity})
+            if old_move_id.product_qty == 0:
                 old_move_id.action_cancel()
-            else:
-                old_move_id.write({'product_uom_qty': old_move_id.product_qty - pick_line.move_quantity})
         if self.validate:
             out_pick.action_confirm()
 

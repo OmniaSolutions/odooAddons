@@ -8,6 +8,7 @@ from odoo import models
 from odoo import fields
 from odoo import api
 from odoo import _
+from odoo.exceptions import UserError
 
 
 class stock_picking_custom(models.Model):
@@ -19,6 +20,8 @@ class stock_picking_custom(models.Model):
     @api.multi
     def action_cancel(self):
         for pickBrws in self:
+            if pickBrws.state == 'cancel':
+                continue
             for move_line in pickBrws.move_lines:
                 old_move = self.env['stock.move'].search([('id', '=', move_line.from_move_id)])
                 if old_move:
