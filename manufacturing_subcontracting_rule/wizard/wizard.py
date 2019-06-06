@@ -181,6 +181,9 @@ class MrpProductionWizard(models.TransientModel):
         return True
 
     def updateMOLinesWithDifferences(self, productionBrws):
+        '''
+            Update manufacturing order with quantities and products added / removed in the wizard
+        '''
         firstRawMove = False
         for prod_raw_move in productionBrws.move_raw_ids:
             firstRawMove = prod_raw_move
