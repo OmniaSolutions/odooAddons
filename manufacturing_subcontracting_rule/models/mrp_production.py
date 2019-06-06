@@ -73,6 +73,16 @@ class MrpProduction(models.Model):
     external_pickings = fields.One2many('stock.picking', 'external_production', string='External Pikings')
 
     @api.multi
+    def closeMO(self):
+        for production_id in self:
+            for raw_move in production_id.move_raw_ids:
+                raw_move.quantity_done = raw_move.product_uom_qty
+            for finish_move in production_id.move_finished_ids:
+                finish_move.quantity_done = finish_move.product_uom_qty
+            production_id.post_inventory()
+            production_id.button_mark_done()
+
+    @api.multi
     def button_produce_externally(self):
         values = self.get_wizard_value()
         obj_id = self.env['mrp.externally.wizard'].create(values)
@@ -281,3 +291,11 @@ class MrpProduction(models.Model):
     @api.multi
     def write(self, vals):
         return super(MrpProduction, self).write(vals)
+
+
+class MrpProductProduce(models.TransientModel):
+    _inherit = "mrp.product.produce"
+    
+    @api.model
+    def create(self, vals):
+        return super(MrpProductProduce, self).create(vals)
