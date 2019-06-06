@@ -37,6 +37,62 @@ from odoo import fields
 from odoo import _
 
 
+class StockPicking(models.Model):
+    _inherit = 'stock.picking'
+
+    external_production = fields.Many2one('mrp.production')
+    sub_contracting_operation = fields.Selection([('open', _('Open external Production')),
+                                                  ('close', _('Close external Production'))])
+    sub_production_id = fields.Integer(string=_('Sub production Id'))
+    pick_out = fields.Many2one('stock.picking', string=_('Reference Stock pick out'))
+    sub_workorder_id = fields.Integer(string=_('Sub Workorder Id'))
+
+    @api.multi
+    def do_new_transfer(self):
+        res = super(StockPicking, self).do_new_transfer()
+        if isinstance(res, dict) and 'view_mode' in res:    # In this case will be returned a wizard
+            return res
+        for objPick in self:
+            self.commonSubcontracting(objPick)
+        return res
+
+    @api.multi
+    def commonSubcontracting(self, objPick):
+        purchase_order_line = self.env['purchase.order.line']
+        if objPick.isIncoming(objPick):
+            objProduction = objPick.env['mrp.production'].search([('id', '=', objPick.sub_production_id)])
+            if objProduction and objProduction.state == 'external':
+                for line in objPick.move_lines:
+                    if line.mrp_production_id == objProduction.id and line.state == 'done':
+                        line.subContractingProduce(objProduction)
+                if objProduction.isPicksInDone():
+                    objProduction.button_mark_done()
+            if objPick.sub_workorder_id:
+                woBrws = objPick.env['mrp.workorder'].search([('id', '=', objPick.sub_workorder_id)])
+                if woBrws and woBrws.state == 'external':
+                    for line in objPick.move_lines:
+                        if line.mrp_production_id == objProduction.id and line.state == 'done':
+                            line.subContractingProduce(objProduction)
+                        if woBrws.product_id.id == line.product_id.id:
+                            woBrws.updateProducedQty(line.product_qty)
+                        if line.purchase_order_line_subcontracting_id:
+                            purchase_order_line_id = purchase_order_line.search([('id', '=', line.purchase_order_line_subcontracting_id)])
+                            purchase_order_line_id._compute_qty_received()
+                    woBrws.checkRecordProduction()
+
+    def isIncoming(self, objPick):
+        return objPick.picking_type_code == 'incoming'
+
+    def isOutGoing(self, objPick):
+        return objPick.picking_type_code == 'outgoing'
+
+    def getStockQuant(self, stockQuantObj, lineId, prodBrws):
+        quantsForProduct = stockQuantObj.search([
+            ('location_id', '=', lineId),
+            ('product_id', '=', prodBrws.id)])
+        return quantsForProduct
+
+
 class StockBackorderConfirmation(models.TransientModel):
     _name = 'stock.backorder.confirmation'
     _inherit = ['stock.backorder.confirmation']
@@ -61,55 +117,22 @@ class StockImmediateTransfer(models.TransientModel):
         return res
 
 
+class StockPackOperation(models.Model):
+    _inherit = ['stock.pack.operation']
 
-class StockPicking(models.Model):
-    _inherit = 'stock.picking'
-
-    external_production = fields.Many2one('mrp.production')
-    sub_contracting_operation = fields.Selection([('open', _('Open external Production')),
-                                                  ('close', _('Close external Production'))])
-    sub_production_id = fields.Integer(string=_('Sub production Id'))
-    pick_out = fields.Many2one('stock.picking', string=_('Reference Stock pick out'))
-    sub_workorder_id = fields.Integer(string=_('Sub Workorder Id'))
-
-    @api.multi
-    def do_new_transfer(self):
-        res = super(StockPicking, self).do_new_transfer()
-        if isinstance(res, dict) and 'view_mode' in res:    # In this case will be returned a wizard
-            return res
-        for objPick in self:
-            self.commonSubcontracting(objPick)
+    @api.model
+    def create(self, vals):
+        res = super(StockPackOperation, self).create(vals)
+        toWrite = {}
+        if 'location_id' in vals:
+            toWrite['location_id'] = vals['location_id']
+        if 'location_dest_id' in vals:
+            toWrite['location_dest_id'] = vals['location_dest_id']
+        if toWrite:
+            res.write(toWrite)
         return res
 
     @api.multi
-    def commonSubcontracting(self, objPick):
-        if objPick.isIncoming(objPick):
-            objProduction = objPick.env['mrp.production'].search([('id', '=', objPick.sub_production_id)])
-            if objPick.sub_workorder_id:
-                woBrws = objPick.env['mrp.workorder'].search([('id', '=', objPick.sub_workorder_id)])
-                if woBrws and woBrws.state == 'external':
-                    for line in objPick.move_lines:
-                        if line.mrp_production_id == objProduction.id and line.state == 'done':
-                            line.subContractingProduce(objProduction)
-                        if woBrws.product_id.id == line.product_id.id:
-                            woBrws.updateProducedQty(line.product_qty)
-                    woBrws.checkRecordProduction()
-            else:
-                if objProduction and objProduction.state == 'external':
-                    for line in objPick.move_lines:
-                        if line.mrp_production_id == objProduction.id and line.state == 'done':
-                            line.subContractingProduce(objProduction)
-                    if objProduction.isPicksInDone():
-                        objProduction.button_mark_done()
-
-    def isIncoming(self, objPick):
-        return objPick.picking_type_code == 'incoming'
-
-    def isOutGoing(self, objPick):
-        return objPick.picking_type_code == 'outgoing'
-
-    def getStockQuant(self, stockQuantObj, lineId, prodBrws):
-        quantsForProduct = stockQuantObj.search([
-            ('location_id', '=', lineId),
-            ('product_id', '=', prodBrws.id)])
-        return quantsForProduct
+    def write(self, vals):
+        res = super(StockPackOperation, self).write(vals)
+        return res

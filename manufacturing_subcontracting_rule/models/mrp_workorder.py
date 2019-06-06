@@ -10,12 +10,15 @@ from odoo import api
 from odoo import _
 import logging
 import datetime
+from odoo.exceptions import UserError
 
 
 class MrpWorkorder(models.Model):
     _inherit = ['mrp.workorder']
     external_partner = fields.Many2one('res.partner', string='External Partner')
     state = fields.Selection(selection_add=[('external', 'External Production')])
+    external_product = fields.Many2one('product.product',
+                                       string=_('External Product use for external production'))
 
     def createTmpStockMove(self, sourceMoveObj, location_source_id=None, location_dest_id=None, unit_factor=1.0):
         tmpMoveObj = self.env["stock.tmp_move"]
@@ -41,18 +44,28 @@ class MrpWorkorder(models.Model):
             'mrp_original_move': False,
             'unit_factor': unit_factor})
 
-    @api.multi
-    def button_produce_externally(self):
+    @api.model
+    def createWizard(self):
         values = self.production_id.get_wizard_value()
+        partner = self.operation_id.default_supplier
+        if not partner:
+            raise UserError("No Partner set to Routing Operation")
+        values['consume_product_id'] = self.product_id.id
+        values['consume_bom_id'] = self.production_id.bom_id.id
+        values['external_warehouse_id'] = self.production_id.location_src_id.get_warehouse().id
         values['work_order_id'] = self.id
         obj_id = self.env['mrp.externally.wizard'].create(values)
-        obj_id.create_vendors(self.production_id, self)
+        obj_id.create_vendors_from(partner)
+        return obj_id
+
+    @api.multi
+    def button_produce_externally(self):
         return {
             'type': 'ir.actions.act_window',
             'res_model': 'mrp.externally.wizard',
             'view_mode': 'form,tree',
             'view_type': 'form',
-            'res_id': obj_id.id,
+            'res_id': self.createWizard().id,
             'target': 'new',
         }
 

@@ -49,6 +49,8 @@ class StockMove(models.Model):
     mrp_production_id = fields.Integer(_('Original mrp id'))
     purchase_order_line_subcontracting_id = fields.Integer(_('Original Purchase line Id'))
     subcontracting_move_id = fields.Integer(_('Original move id'))
+    mrp_workorder_id = fields.Integer(string=_('Original Mrp Work Order id'),
+                                      help="""source Mrp Workorder Subcontracting id""")
 
     @api.model
     def moveQty(self, qty):
@@ -115,3 +117,7 @@ class StockMove(models.Model):
                 for subMove in self.search([('subcontracting_move_id', '=', move.id)]):
                     subMove.quantity_done = value['quantity_done']
         return super(StockMove, self).write(value)
+
+    @api.model
+    def create(self, vals):
+        return super(StockMove, self).create(vals)

@@ -39,6 +39,8 @@ from . import mrp_routing_workcenter
 from . import stock_move
 from . import purchase_order
 from . import mrp_bom
-from . import product_supplierinfo
 from . import res_partner
 from . import stock_location
+from . import change_production_qty
+from . import product_supplierinfo
+from . import purchase_order_line

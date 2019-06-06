@@ -26,7 +26,6 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 ##############################################################################
-
 '''
 Created on Dec 18, 2017
 
@@ -44,9 +43,20 @@ from odoo.tools import DEFAULT_SERVER_DATETIME_FORMAT
 
 
 class MrpProduction(models.Model):
+    _inherit = 'mrp.production'
 
-    _name = "mrp.production"
-    _inherit = ['mrp.production']
+    def _workorders_create(self, bom, bom_data):
+        mrp_workorder_ids = super(MrpProduction, self)._workorders_create(bom, bom_data)
+        for mrp_workorder_id in mrp_workorder_ids:
+            if mrp_workorder_id.operation_id.external_product:
+                mrp_workorder_id.external_product = mrp_workorder_id.operation_id.external_product
+            if mrp_workorder_id.operation_id.external_operation:
+                ctx = self.env.context.copy()
+                ctx.update({'active_model': 'mrp.workorder',
+                            'active_ids': [mrp_workorder_id.id]})
+                objWiz = mrp_workorder_id.createWizard()
+                objWiz.with_context(ctx).button_produce_externally()
+        return mrp_workorder_ids
 
     state = fields.Selection(selection_add=[('external', 'External Production')])
     move_raw_ids_external_prod = fields.One2many('stock.move',
@@ -63,52 +73,54 @@ class MrpProduction(models.Model):
     external_pickings = fields.One2many('stock.picking', 'external_production', string='External Pikings')
 
     @api.multi
-    def open_external_purchase(self):
-        newContext = self.env.context.copy()
-        manufacturingIds = []
-        purchaseLines = self.env['purchase.order.line'].search([('production_external_id', '=', self.id)])
-        purchaseList = self.env['purchase.order'].browse()
-        for purchaseLineBrws in purchaseLines:
-            purchaseList = purchaseList + purchaseLineBrws.order_id
-        manufacturingIds = purchaseList.ids
+    def button_produce_externally(self):
+        values = self.get_wizard_value()
+        obj_id = self.env['mrp.externally.wizard'].create(values)
+        obj_id.create_vendors(self)
+        self.env.cr.commit()
         return {
-            'name': _("Purchase External"),
-            'view_type': 'form',
-            'view_mode': 'tree,form',
-            'res_model': 'purchase.order',
             'type': 'ir.actions.act_window',
-            'context': newContext,
-            'domain': [('id', 'in', manufacturingIds)],
+            'res_model': 'mrp.externally.wizard',
+            'view_mode': 'form,tree',
+            'view_type': 'form',
+            'res_id': obj_id.id,
+            'context': {'wizard_id': obj_id.id},
+            'target': 'new',
         }
 
     @api.multi
-    def open_external_pickings(self):
-        newContext = self.env.context.copy()
-        return {
-            'name': _("External Pickings"),
-            'view_type': 'form',
-            'view_mode': 'tree,form',
-            'res_model': 'stock.picking',
-            'type': 'ir.actions.act_window',
-            'context': newContext,
-            'domain': [('id', 'in', self.external_pickings.ids)],
-        }
+    def get_wizard_value(self):
+        values = {}
+        values['move_raw_ids'] = [(6, 0, self.generateTmpRawMoves())]
+        values['move_finished_ids'] = [(6, 0, self.generateTmpFinishedMoves())]
+        values['production_id'] = self.id
+        values['request_date'] = datetime.datetime.now()
+        return values
 
-    @api.model
-    @api.returns('self', lambda value: value.id)
-    def create(self, vals):
-        return super(MrpProduction, self).create(vals)
-
-    @api.multi
-    def write(self, vals):
-        return super(MrpProduction, self).write(vals)
-
-    def getSupplierLocation(self):
-        for lock in self.env['stock.location'].search([('usage', '=', 'supplier'),
-                                                       ('active', '=', True),
-                                                       ('company_id', '=', False)]):
-            return lock.id
-        return False
+    def generateTmpFinishedMoves(self, location_source_id=None):
+        outElems = []
+        for stock_move_id in self.move_finished_ids:
+            newMove = self.createTmpStockMove(stock_move_id, location_source_id, self.location_src_id.id)
+            newMove.source_production_move = stock_move_id.id
+            newMove.production_id = False # Remove link with production order
+            newMove.do_unreserve()
+            newMove.state = 'draft'
+            outElems.append(newMove.id)
+        return outElems
+        
+    def generateTmpRawMoves(self, location_dest_id=None):
+        outElems = []
+        location_source_id = self.location_src_id.id
+        for stock_move_id in self.move_raw_ids:
+            if stock_move_id.state == 'cancel':
+                continue
+            newMove = self.createTmpStockMove(stock_move_id, location_source_id, location_dest_id)
+            newMove.source_production_move = stock_move_id.id
+            newMove.do_unreserve()
+            newMove.state = 'draft'
+            newMove.raw_material_production_id = False # Remove link with production order
+            outElems.append(newMove.id)
+        return outElems
 
     def createTmpStockMove(self, sourceMoveObj, location_source_id=None, location_dest_id=None, unit_factor=1.0):
         tmpMoveObj = self.env["stock.tmp_move"]
@@ -116,50 +128,17 @@ class MrpProduction(models.Model):
             location_source_id = sourceMoveObj.location_id.id
         if not location_dest_id:
             location_dest_id = sourceMoveObj.location_dest_id.id
-        return tmpMoveObj.create({
-            'name': sourceMoveObj.name,
-            'company_id': sourceMoveObj.company_id.id,
-            'product_id': sourceMoveObj.product_id.id,
-            'product_uom_qty': sourceMoveObj.product_uom_qty,
-            'location_id': location_source_id,
-            'location_dest_id': location_dest_id,
-            'note': sourceMoveObj.note,
-            'state': 'draft',
-            'origin': sourceMoveObj.origin,
-            'warehouse_id': self.location_src_id.get_warehouse().id,
-            'production_id': self.id,
-            'product_uom': sourceMoveObj.product_uom.id,
-            'date_expected': sourceMoveObj.date_expected,
-            'mrp_original_move': False,
-            'workorder_id': sourceMoveObj.workorder_id.id,
-            'unit_factor': sourceMoveObj.unit_factor})
-
-    def copyAndCleanLines(self, stock_move_ids, location_dest_id=None, location_source_id=None, isRawMove=False):
-        outElems = []
-        foundRawMoves = False
-        evaluated = []
-        for elem in stock_move_ids:
-            if isRawMove:   # Look for raw moves
-                if elem.state == 'cancel':
-                    continue
-            prodId = elem.product_id.id
-            
-            if not isRawMove and prodId in evaluated:
-                # Skip multiple finished lines if more than one workorder because are created too many lines
-                continue
-            foundRawMoves = True
-            outElems.append(self.createTmpStockMove(elem, location_source_id, location_dest_id).id)
-            evaluated.append(prodId)
-        if not foundRawMoves and isRawMove:
-            # Create automatically raw stock move containing finished product
-            newMove = self.createTmpStockMove(elem, location_source_id, location_dest_id)
-            newMove.product_id = self.product_id.id
-            newMove.product_uom_qty = self.product_qty
-            newMove.name = self.product_id.display_name
-            newMove.note = ''
-            newMove.product_uom = self.product_uom_id.id
-            outElems.append(newMove.id)
-        return outElems
+        source_move_vals = sourceMoveObj.read()
+        for vals in source_move_vals:
+            self.cleanReadVals(vals)
+            return tmpMoveObj.create(vals)
+        
+    def cleanReadVals(self, vals):
+        for key, val in vals.items():
+            if isinstance(val, tuple) and len(val) == 2:
+                vals[key] = val[0]
+        if 'product_qty' in vals:
+            del vals['product_qty']
 
     def checkCreatePartnerWarehouse(self, partnerBrws):
         if not partnerBrws:
@@ -191,60 +170,36 @@ class MrpProduction(models.Model):
         return locBrws
 
     @api.multi
-    def get_wizard_value(self):
-        values = {}
-        values['move_raw_ids'] = [(6, 0, self.copyAndCleanLines(self.move_raw_ids,
-                                                                location_source_id=self.location_src_id.id, 
-                                                                isRawMove=True
-                                                                ))]
-        values['move_finished_ids'] = [(6, 0, self.copyAndCleanLines(self.move_finished_ids,
-                                                                     location_dest_id=self.location_src_id.id,
-                                                                     isRawMove=False))]
-        values['production_id'] = self.id
-        values['request_date'] = datetime.datetime.now()
-        return values
+    def cancelPurchaseOrders(self):
+        purchaseOrderObj = self.env['purchase.order']
+        for purchese in purchaseOrderObj.search([('production_external_id', '=', self.id)]):
+            purchese.button_cancel()
+            purchese.unlink()
 
     @api.multi
-    def button_produce_externally(self):
-        values = self.get_wizard_value()
-        obj_id = self.env['mrp.externally.wizard'].create(values)
-        obj_id.create_vendors(self)
-        self.env.cr.commit()
-        return {
-            'type': 'ir.actions.act_window',
-            'res_model': 'mrp.externally.wizard',
-            'view_mode': 'form,tree',
-            'view_type': 'form',
-            'res_id': obj_id.id,
-            'context': {'wizard_id': obj_id.id},
-            'target': 'new',
-        }
+    def cancelPickings(self):
+        stockPickingObj = self.env['stock.picking']
+        stockPickList = stockPickingObj.search([('origin', '=', self.name)])
+        stockPickList += stockPickingObj.search([('sub_production_id', '=', self.id)])
+        for pickBrws in list(set(stockPickList)):
+            pickBrws.action_cancel()
+
+    @api.multi
+    def cancelRestoreMO(self):
+        movesToCancel = self.move_raw_ids + self.move_finished_ids
+        for move_line in movesToCancel:
+            move_line.action_cancel()
+            move_line.unlink()
+        self._generate_moves()
+        self.write({'state': 'confirmed'})
 
     @api.multi
     def button_cancel_produce_externally(self):
-        stockPickingObj = self.env['stock.picking']
-        purchaseOrderObj = self.env['purchase.order']
         for manOrderBrws in self:
-            moves = self.env['stock.move']
-            stockPickList = stockPickingObj.search([('origin', '=', manOrderBrws.name)])
-            stockPickList += stockPickingObj.search([('sub_production_id', '=', manOrderBrws.id)])
-            for pickBrws in list(set(stockPickList)):
-                pickBrws.action_cancel()
-                moves += pickBrws.move_lines
-            manOrderBrws.write({'state': 'confirmed'})
-            movesToCancel = self.env['stock.move'].search([('subcontracting_move_id', 'in', moves.ids)])
-            movesToCancel += manOrderBrws.move_raw_ids + manOrderBrws.move_finished_ids
-            for move_line in movesToCancel:
-                if move_line.mrp_original_move is False:
-                    move_line.action_cancel()
-                if move_line.state in ('draft', 'cancel'):
-                    if move_line.mrp_original_move:
-                        move_line.state = move_line.mrp_original_move
-                    else:
-                        move_line.unlink()
-            for purchese in purchaseOrderObj.search([('production_external_id', '=', self.id)]):
-                purchese.button_cancel()
-                purchese.unlink()
+            manOrderBrws.cancelPickings()
+            manOrderBrws.cancelPurchaseOrders()
+            manOrderBrws.cancelRestoreMO()
+
 
     def checkCreateReorderRule(self, prodBrws, warehouse):
         if warehouse:
@@ -286,3 +241,43 @@ class MrpProduction(models.Model):
                 else:
                     isOut = True
         return isOut
+
+    @api.multi
+    def open_external_purchase(self):
+        newContext = self.env.context.copy()
+        manufacturingIds = []
+        purchaseLines = self.env['purchase.order.line'].search([('production_external_id', '=', self.id)])
+        purchaseList = self.env['purchase.order'].browse()
+        for purchaseLineBrws in purchaseLines:
+            purchaseList = purchaseList + purchaseLineBrws.order_id
+        manufacturingIds = purchaseList.ids
+        return {
+            'name': _("Purchase External"),
+            'view_type': 'form',
+            'view_mode': 'tree,form',
+            'res_model': 'purchase.order',
+            'type': 'ir.actions.act_window',
+            'context': newContext,
+            'domain': [('id', 'in', manufacturingIds)],
+        }
+
+    @api.multi
+    def open_external_pickings(self):
+        newContext = self.env.context.copy()
+        return {
+            'name': _("External Pickings"),
+            'view_type': 'form',
+            'view_mode': 'tree,form',
+            'res_model': 'stock.picking',
+            'type': 'ir.actions.act_window',
+            'context': newContext,
+            'domain': [('id', 'in', self.external_pickings.ids)],
+        }
+
+    @api.model
+    def create(self, vals):
+        return super(MrpProduction, self).create(vals)
+
+    @api.multi
+    def write(self, vals):
+        return super(MrpProduction, self).write(vals)
