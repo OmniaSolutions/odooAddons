@@ -427,12 +427,6 @@ class MrpProductionWizard(models.TransientModel):
             raise UserError(_('Partner %s has not location setup.' % (partner_id.name)))
         return customerProductionLocation
 
-    def isWorkorder(self, originBrw):
-        isWorkorder = False
-        if originBrw:
-            isWorkorder = originBrw._table == 'mrp_workorder'
-        return isWorkorder
-
     def getPickingType(self, productionBrws, pick_type='outgoing'):
         warehouseId = productionBrws.picking_type_id.warehouse_id.id
         pickTypeObj = self.env['stock.picking.type']
@@ -461,8 +455,6 @@ class MrpProductionWizard(models.TransientModel):
             stockMove.state = 'draft'
         return obj
 
-    
-
     def cleanReadVals(self, vals):
         for key, val in vals.items():
             if isinstance(val, tuple) and len(val) == 2:
@@ -489,7 +481,7 @@ class MrpProductionWizard(models.TransientModel):
                 newMove.location_id = localStockLocation.id
                 newMove.location_dest_id = customerProductionLocation.id
                 newMove.picking_id = obj.id
-                # newMove.unit_factor = incomingTmpMove.unit_factor
+                # TODO: newMove.unit_factor = incomingTmpMove.unit_factor
         else:
             for stock_move_id in self.move_raw_ids:
                 vals = stock_move_id.read()[0]

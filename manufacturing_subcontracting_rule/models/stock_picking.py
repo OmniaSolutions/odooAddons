@@ -61,9 +61,8 @@ class StockPicking(models.Model):
         purchase_order_line = self.env['purchase.order.line']
         if objPick.isIncoming(objPick):
             objProduction = objPick.env['mrp.production'].search([('id', '=', objPick.sub_production_id)])
-            if objProduction and objProduction.state == 'external':
-                if objProduction.isPicksInDone():
-                    objProduction.closeMO()
+            if objProduction and objProduction.state == 'external' and objProduction.isPicksInDone():
+                objProduction.closeMO()
             if objPick.sub_workorder_id:
                 woBrws = objPick.env['mrp.workorder'].search([('id', '=', objPick.sub_workorder_id)])
                 if woBrws and woBrws.state == 'external':

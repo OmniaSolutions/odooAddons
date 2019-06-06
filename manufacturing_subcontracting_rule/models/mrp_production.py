@@ -76,9 +76,9 @@ class MrpProduction(models.Model):
     def closeMO(self):
         for production_id in self:
             for raw_move in production_id.move_raw_ids:
-                raw_move.quantity_done = raw_move.product_uom_qty
+                raw_move.quantity_done = raw_move.product_uom_qty   # Do not remove or material is not consumed
             for finish_move in production_id.move_finished_ids:
-                finish_move.quantity_done = finish_move.product_uom_qty
+                finish_move.quantity_done = finish_move.product_uom_qty   # Do not remove or material is not consumed
             production_id.post_inventory()
             production_id.button_mark_done()
 
