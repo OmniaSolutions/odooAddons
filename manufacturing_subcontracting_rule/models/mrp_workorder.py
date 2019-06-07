@@ -48,7 +48,7 @@ class MrpWorkorder(models.Model):
     def createWizard(self):
         values = self.production_id.get_wizard_value()
         partner = self.operation_id.default_supplier
-        if not partner:
+        if self.operation_id.external_operation and not partner:
             raise UserError("No Partner set to Routing Operation")
         values['consume_product_id'] = self.product_id.id
         values['consume_bom_id'] = self.production_id.bom_id.id
@@ -73,7 +73,6 @@ class MrpWorkorder(models.Model):
     def button_cancel_produce_externally(self):
         stockPickingObj = self.env['stock.picking']
         for workOrderBrws in self:
-            # qui e da sistemare per il work order
             stockPickList = stockPickingObj.search([('origin', '=', workOrderBrws.name)])
             stockPickList += workOrderBrws.getExternalPickings()
             for pickBrws in stockPickList:
@@ -90,23 +89,26 @@ class MrpWorkorder(models.Model):
     @api.multi
     def checkRecordProduction(self):
         for woBrws in self:
-            if woBrws.qty_produced >= woBrws.qty_production:
-                woBrws.button_finish()
+            woBrws.qty_produced = woBrws.qty_production
+            woBrws.record_production()
+            if not woBrws.next_work_order_id:
+                woBrws.production_id.post_inventory()
+                woBrws.production_id.button_mark_done()
         
-    @api.multi
-    def button_finish(self):
-        res = super(MrpWorkorder, self).button_finish()
-        production_id = self.production_id
-        isExternal = False
-        for relatedWO in self.search([('production_id', '=', production_id.id)]):
-            # Check if external workorder
-            if relatedWO.getExternalPickings():
-                isExternal = True
-                break
-        if not self.next_work_order_id and isExternal:
-            # Close manufacturing order
-            production_id.write({'state': 'done', 'date_finished': fields.Datetime.now()})
-        return res
+#     @api.multi
+#     def button_finish(self):
+#         res = super(MrpWorkorder, self).button_finish()
+#         production_id = self.production_id
+#         isExternal = False
+#         for relatedWO in self.search([('production_id', '=', production_id.id)]):
+#             # Check if external workorder
+#             if relatedWO.getExternalPickings():
+#                 isExternal = True
+#                 break
+#         if not self.next_work_order_id and isExternal:
+#             # Close manufacturing order
+#             production_id.write({'state': 'done', 'date_finished': fields.Datetime.now()})
+#         return res
 
     @api.multi
     def getExternalPickings(self):

@@ -60,20 +60,21 @@ class StockPicking(models.Model):
     def commonSubcontracting(self, objPick):
         purchase_order_line = self.env['purchase.order.line']
         if objPick.isIncoming(objPick):
-            objProduction = objPick.env['mrp.production'].search([('id', '=', objPick.sub_production_id)])
-            if objProduction and objProduction.state == 'external' and objProduction.isPicksInDone():
-                objProduction.closeMO()
+            if objPick.sub_production_id:
+                objProduction = objPick.env['mrp.production'].search([('id', '=', objPick.sub_production_id)])
+                if objProduction and objProduction.state == 'external' and objProduction.isPicksInDone():
+                    objProduction.closeMO()
             if objPick.sub_workorder_id:
                 woBrws = objPick.env['mrp.workorder'].search([('id', '=', objPick.sub_workorder_id)])
-                if woBrws and woBrws.state == 'external':
-                    for line in objPick.move_lines:
-                        if line.mrp_production_id == objProduction.id and line.state == 'done':
-                            line.subContractingProduce(objProduction)
-                        if woBrws.product_id.id == line.product_id.id:
-                            woBrws.updateProducedQty(line.product_qty)
-                        if line.purchase_order_line_subcontracting_id:
-                            purchase_order_line_id = purchase_order_line.search([('id', '=', line.purchase_order_line_subcontracting_id)])
-                            purchase_order_line_id._compute_qty_received()
+                if woBrws and woBrws.state == 'external' and objPick.state == 'done':
+#                     for line in objPick.move_lines:
+#                         if line.mrp_production_id == objProduction.id and line.state == 'done':
+#                             line.subContractingProduce(objProduction)
+#                         if woBrws.product_id.id == line.product_id.id:
+#                             woBrws.updateProducedQty(line.product_qty)
+#                         if line.purchase_order_line_subcontracting_id:
+#                             purchase_order_line_id = purchase_order_line.search([('id', '=', line.purchase_order_line_subcontracting_id)])
+#                             purchase_order_line_id._compute_qty_received()
                     woBrws.checkRecordProduction()
 
     def isIncoming(self, objPick):
