@@ -10,9 +10,10 @@ from odoo import api
 from odoo import _
 import logging
 import datetime
+from odoo.exceptions import UserError
 
 
-class MrpWorkorder(models.Model):
+class MrpRoutingWorkcenter(models.Model):
     _inherit = 'mrp.routing.workcenter'
     default_supplier = fields.Many2one('res.partner',
                                        string='Default Supplier')
@@ -27,3 +28,14 @@ class MrpWorkorder(models.Model):
                                            help="""Normal: Use the Parent object as Product for the Out Pickings and the raw material for the Out Picking
                                                    Parent: Use the Parent product for the In Out pickings
                                                    Operation: Use the Product that have the Operation assigned for the In Out pickings""")
+
+    @api.model
+    def create(self, vals):
+        if vals.get('external_operation', '') == 'normal':
+            routing = vals.get('routing_id', False)
+            routing_id = self.env['mrp.routing'].browse(routing)
+            for operation_id in routing_id.operation_ids:
+                if operation_id.external_operation == 'normal':
+                    raise UserError("You can set only one Normal operation for each routing")
+        return super(MrpRoutingWorkcenter, self).create(vals)
+
