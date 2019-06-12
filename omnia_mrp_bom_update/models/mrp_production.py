@@ -55,14 +55,14 @@ class MrpProduction(models.Model):
                     for move_line_id in mrp_production_id.move_raw_ids:
                         if bom_line_id.product_id.id == move_line_id.product_id.id:
                             if move_line_id.state in ['draft', 'waiting', 'confirmed', 'assigned']:
-                                if bom_line_id.product_qty != move_line_id.product_uom_qty:
+                                if bom_line_id.product_qty * mrp_production_id.product_qty != move_line_id.product_uom_qty:
                                     reserve =False
                                     if move_line_id.state=='assigned':
                                         move_line_id.do_unreserve()
                                         reserve = True
-                                    move_line_id.product_uom_qty=bom_line_id.product_qty 
-                                    move_line_id.ordered_qty=bom_line_id.product_qty
-                                    move_line_id.unit_factor=bom_line_id.product_qty
+                                    move_line_id.product_uom_qty=bom_line_id.product_qty * mrp_production_id.product_qty
+                                    move_line_id.ordered_qty=bom_line_id.product_qty * mrp_production_id.product_qty
+                                    move_line_id.unit_factor=bom_line_id.product_qty * mrp_production_id.product_qty
                                     if reserve:
                                         move_line_id.action_assign()
                                     
