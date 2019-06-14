@@ -8,7 +8,8 @@
 #
 #    Author : Smerghetto Daniel  (Omniasolutions)
 #    mail:daniel.smerghetto@omniasolutions.eu
-#    Copyright (c) 2014 Omniasolutions (http://www.omniasolutions.eu) 
+#    Copyright (c) 2014 Omniasolutions (http://www.omniasolutions.eu)
+#    Copyright (c) 2018 Omniasolutions (http://www.omniasolutions.eu)
 #    All Right Reserved
 #
 #    This program is free software: you can redistribute it and/or modify
@@ -31,10 +32,21 @@ Created on Dec 18, 2017
 
 @author: daniel
 '''
+from odoo import models
+from odoo import fields
+from odoo import api
+from odoo import _
+from odoo.exceptions import UserError
+import logging
+import datetime
+from datetime import timedelta
+from odoo.tools import DEFAULT_SERVER_DATETIME_FORMAT
 
-from . import mrp_production
-from . import mrp_workorder
-from . import project_project
-from . import mrp_routing_workcenter
-from . import project_task
-from . import account_analytic_line
+
+class AccountAnalyticLine(models.Model):
+    _name = "account.analytic.line"
+    _inherit = ['account.analytic.line']
+
+    workorder_id = fields.Many2one('mrp.workorder',
+                                 string=_('Workorder'))
+
