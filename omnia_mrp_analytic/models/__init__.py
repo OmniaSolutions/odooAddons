@@ -36,3 +36,4 @@ from . import mrp_production
 from . import mrp_workorder
 from . import mrp_routing_workcenter
 from . import project_task
+from . import account_analytic_line
