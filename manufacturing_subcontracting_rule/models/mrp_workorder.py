@@ -19,6 +19,7 @@ class MrpWorkorder(models.Model):
     state = fields.Selection(selection_add=[('external', 'External Production')])
     external_product = fields.Many2one('product.product',
                                        string=_('External Product use for external production'))
+    is_mo_produced = fields.Boolean('Is Manufacturing Produced')
 
     def createTmpStockMove(self, sourceMoveObj, location_source_id=None, location_dest_id=None, unit_factor=1.0):
         tmpMoveObj = self.env["stock.tmp_move"]

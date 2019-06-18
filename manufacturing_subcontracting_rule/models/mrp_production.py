@@ -129,6 +129,7 @@ class MrpProduction(models.Model):
             newMove.do_unreserve()
             newMove.state = 'draft'
             newMove.raw_material_production_id = False # Remove link with production order
+            newMove.operation_type = 'deliver_consume'
             outElems.append(newMove.id)
         return outElems
 
@@ -283,6 +284,61 @@ class MrpProduction(models.Model):
             'context': newContext,
             'domain': [('id', 'in', self.external_pickings.ids)],
         }
+
+#     @api.multi
+#     def createSubcontractingMO(self, partner_location):
+#         subcontracting_location = self.env['stock.location'].getSubcontractiongLocation()
+#         for production in self:
+#             for raw_move in production.move_raw_ids:
+#                 new_sub_move = raw_move.subcontractingMove(partner_location, subcontracting_location, raw_move.id)
+#                 new_sub_move.action_done()
+#             for finish_move in production.move_finished_ids:
+#                 new_sub_move = finish_move.subcontractingMove(subcontracting_location, partner_location, finish_move.id)
+#                 new_sub_move.action_done()
+
+#     @api.multi
+#     def createSubcontractingMO(self):
+#         subcontracting_location = self.env['stock.location'].getSubcontractiongLocation()
+#         for pickIn in self:
+#             finish_moves = pickIn.move_lines
+#             for finish_move in finish_moves:
+#                 new_sub_move = finish_move.subcontractingMove(subcontracting_location, finish_move.location_id, finish_move.id)
+#                 new_sub_move.action_done()
+#                 new_sub_move.date = finish_move.date
+#             pick_out = pickIn.pick_out
+#             if pick_out:
+#                 for raw_line in pick_out.move_lines:
+#                     moveQty = raw_line.quantity_done * raw_line.unit_factor
+#                     raw_move = raw_line.subcontractingMove(raw_line.location_dest_id, subcontracting_location, self.id)
+#                     raw_move.ordered_qty = moveQty
+#                     raw_move.product_uom_qty = moveQty
+#                     raw_move.action_done()
+#                     raw_move.date = raw_line.date
+
+    @api.multi
+    def updateQtytoProduce(self, new_qty):
+        for mo_id in self:
+            product_qty = self.env['change.production.qty'].create({
+                'mo_id': mo_id.id,
+                'product_qty': new_qty,
+            })
+            ctx = self.env.context.copy()
+            ctx['skip_external_check'] = True
+            product_qty.with_context(ctx).change_prod_qty()
+
+    @api.multi
+    def produceQty(self, qty_to_produce):
+        ctx = self.env.context.copy()
+        for mo_id in self:
+            ctx['active_id'] = mo_id.id
+            ctx['active_ids'] = [ctx['active_id']]
+            product_qty = self.env['mrp.product.produce'].with_context(ctx).create({
+                'production_id': mo_id.id,
+                'product_id': mo_id.product_id.id,
+                'product_qty': qty_to_produce,
+                'product_uom_id': mo_id.product_uom_id.id,
+            })
+            product_qty.do_produce()
 
     @api.model
     def create(self, vals):

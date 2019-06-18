@@ -35,7 +35,6 @@
     	        	<field name="merge_purchese_order"/>
     	        	<field name="confirm_purchese_order"/>
     	        	<field name="is_some_product" attrs="{'invisible': [('work_order_id', '=', False)]}"/>
-    	        	
 	        	</group>
 	            <field name="move_raw_ids" context="{'wizard_obj_id': id}" attrs="{'readonly': [('is_some_product', '=', True)]}">
 	                <tree>
@@ -46,6 +45,8 @@
 	                    <field name="date_expected" />
 	                    <field name="location_available" />
 	                    <field name="qty_available" />
+	                    <field name="unit_factor" />
+	                    <field name="operation_type" />
 	                </tree>
 	                <form>
 	                	<group>
@@ -58,6 +59,8 @@
 		                    <field name="state" />
 		                    <field name="origin" />
 		                    <field name="date_expected" />
+		                    <field name="unit_factor" />
+		                    <field name="operation_type" required='True'/>
 		                    <field name="location_available" readonly='True'/>
 		                    <field name="qty_available" readonly='True'/>
 		                </group>
@@ -73,6 +76,7 @@
 	                    <field name="date_expected" />
 	                    <field name="location_available" />
 	                    <field name="qty_available" />
+	                    <field name="unit_factor" />
 	                </tree>
 	                <form>
 	                	<group>
@@ -85,6 +89,7 @@
 		                    <field name="state" />
 		                    <field name="origin" />
 		                    <field name="date_expected" />
+		                    <field name="unit_factor" />
 		                    <field name="location_available" readonly='True'/>
 		                    <field name="qty_available" readonly='True'/>
 		                </group>

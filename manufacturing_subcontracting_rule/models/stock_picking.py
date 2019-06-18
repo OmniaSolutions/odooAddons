@@ -60,23 +60,27 @@ class StockPicking(models.Model):
     def commonSubcontracting(self, objPick):
         purchase_order_line = self.env['purchase.order.line']
         if objPick.isIncoming(objPick):
+            partner_location = objPick.location_id
             if objPick.sub_production_id:
-                objProduction = objPick.env['mrp.production'].search([('id', '=', objPick.sub_production_id)])
-                if objProduction and objProduction.state == 'external' and objProduction.isPicksInDone():
-                    objProduction.closeMO()
-            if objPick.sub_workorder_id:
-                woBrws = objPick.env['mrp.workorder'].search([('id', '=', objPick.sub_workorder_id)])
-                if woBrws and woBrws.state == 'external' and objPick.state == 'done':
+                production_id = objPick.env['mrp.production'].search([('id', '=', objPick.sub_production_id)])
+                objPick.createSubcontractingMO(production_id, partner_location)
+#             if objPick.sub_workorder_id:
+#                 woBrws = objPick.env['mrp.workorder'].search([('id', '=', objPick.sub_workorder_id)])
+#                 if woBrws and woBrws.state == 'external' and objPick.state == 'done':
 #                     for line in objPick.move_lines:
 #                         if line.mrp_production_id == objProduction.id and line.state == 'done':
-#                             line.subContractingProduce(objProduction)
+#                             if woBrws.operation_id.external_operation == '':
+#                                 line.subContractingProduce(objProduction)
 #                         if woBrws.product_id.id == line.product_id.id:
 #                             woBrws.updateProducedQty(line.product_qty)
 #                         if line.purchase_order_line_subcontracting_id:
 #                             purchase_order_line_id = purchase_order_line.search([('id', '=', line.purchase_order_line_subcontracting_id)])
 #                             purchase_order_line_id._compute_qty_received()
-                    woBrws.checkRecordProduction()
-
+#                     if woBrws.operation_id.external_operation == 'normal':
+#                         # Always only one normal operation for manufacturing, I create subcontracting like manufacturing
+#                         woBrws.production_id.createSubcontractingMO(partner_location)
+#                     woBrws.checkRecordProduction()
+        
     def isIncoming(self, objPick):
         return objPick.picking_type_code == 'incoming'
 
@@ -88,6 +92,64 @@ class StockPicking(models.Model):
             ('location_id', '=', lineId),
             ('product_id', '=', prodBrws.id)])
         return quantsForProduct
+
+    @api.multi
+    def getPickRecursiveProductQty(self, target_product_id):
+        out = 0
+        for pick in self:
+            for line in pick.move_lines:
+                if line.product_id == target_product_id:
+                    out += line.product_qty
+            if pick.backorder_id:
+                out += pick.backorder_id.getPickRecursiveProductQty(target_product_id)
+        return out
+
+    @api.multi
+    def getPickProductQty(self, target_product_id):
+        out = 0
+        for pick in self:
+            for line in pick.move_lines:
+                if line.product_id == target_product_id:
+                    out += line.product_qty
+        return out
+
+    def subcontractFinished(self, pick_in, target_product_id, production_id, pick_in_product_qty):
+        for move_id in pick_in.move_lines:
+            if move_id.product_id == target_product_id:
+                new_sub_move = move_id.subContractingProduce(pick_in_product_qty)
+                new_sub_move.action_done()
+                return
+
+    def subcontractRaw(self, production_id, finish_qty, partner_location):
+        subcontracting_location = self.env['stock.location'].getSubcontractiongLocation()
+        for raw_move in production_id.move_raw_ids:
+            if raw_move.state not in ['done', 'cancel']:
+                new_sub_move = raw_move.subcontractingMove(partner_location, subcontracting_location)
+                moveQty = finish_qty * (raw_move.unit_factor or 1)
+                new_sub_move.product_uom_qty = moveQty
+                new_sub_move.ordered_qty = moveQty
+                new_sub_move.action_done()
+
+    @api.multi
+    def createSubcontractingMO(self, production_id, partner_location):
+        target_product_id = production_id.product_id
+        for pick_in in self:
+            if self.isIncoming(pick_in):
+                pick_in_product_qty = pick_in.getPickProductQty(target_product_id)
+                self.subcontractFinished(pick_in, target_product_id, production_id, pick_in_product_qty)
+                self.subcontractRaw(production_id, pick_in_product_qty, partner_location)
+                total_received = pick_in.getPickRecursiveProductQty(target_product_id)
+                target_mo_qty = production_id.product_qty
+                if total_received > target_mo_qty:
+                    production_id.updateQtytoProduce(total_received)
+                    if production_id.isPicksInDone():
+                        production_id.closeMO()
+                elif total_received == target_mo_qty:
+                    if production_id.isPicksInDone():
+                        production_id.closeMO()
+                else:
+                    production_id.produceQty(pick_in_product_qty)
+                    production_id.post_inventory()
 
 
 class StockBackorderConfirmation(models.TransientModel):

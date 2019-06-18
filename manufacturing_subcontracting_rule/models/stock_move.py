@@ -81,34 +81,14 @@ class StockMove(models.Model):
                                   'subcontracting_move_id': source_id})
 
     @api.multi
-    def subContractingProduce(self, objProduction):
+    def subContractingProduce(self, pick_in_product_qty):
         move_date = self.date
         subcontracting_location = self.env['stock.location'].getSubcontractiongLocation()
         production_move = self.subcontractingMove(subcontracting_location, self.location_id, self.id)
-        production_move.moveQty(production_move.product_qty)
+        production_move.product_uom_qty = pick_in_product_qty
+        production_move.ordered_qty = pick_in_product_qty
         production_move.date = move_date
-        #
-        # manage raw material
-        #
-        qty = self.product_qty
-        if self.state == 'cancel':
-            return
-        pick_out = self.picking_id.pick_out
-        # ++ back work compatibility
-        if not pick_out:
-            for pick in objProduction.external_pickings:
-                if pick.isOutGoing(pick):
-                    pick_out = pick
-        # --
-        if pick_out:
-            # upload raw material to production directory
-            for move in pick_out.move_lines:
-                moveQty = qty * move.unit_factor
-                raw_move = move.subcontractingMove(move.location_dest_id, subcontracting_location, self.id)
-                raw_move.ordered_qty = moveQty
-                raw_move.product_uom_qty = moveQty
-                raw_move.moveQty(moveQty)
-                raw_move.date = move_date
+        return production_move
 
     @api.multi
     def write(self, value):
@@ -120,4 +100,9 @@ class StockMove(models.Model):
 
     @api.model
     def create(self, vals):
+        pick_id = vals.get('picking_id', False)
+        if pick_id:
+            pick = self.env['stock.picking'].browse(pick_id)
+            if pick.external_production:
+                vals['origin'] = pick.origin
         return super(StockMove, self).create(vals)

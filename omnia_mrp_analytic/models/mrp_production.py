@@ -51,6 +51,10 @@ class MrpProduction(models.Model):
                                  string=_('Project'),
                                  help=_('Project related to this production, if set the at action plan for each workorder a new task is created'))
 
+    @api.depends()
+    def _is_wo_produced(self):
+        pass
+
     @api.multi
     def _total_progect_time(self):
         for production_id in self:

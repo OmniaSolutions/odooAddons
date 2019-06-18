@@ -23,9 +23,10 @@ class ChangeProductionQty(models.TransientModel):
 
     @api.multi
     def change_prod_qty(self):
+        skip_external_check = self.env.context.get('skip_external_check', False)
         for wizard in self:
             production = wizard.mo_id
-            if production.state == 'external':
+            if production.state == 'external' and not skip_external_check:
                 self.change_prod_qty_external(production)
             else:
                 super(ChangeProductionQty, self).change_prod_qty()
