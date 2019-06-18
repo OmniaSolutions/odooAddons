@@ -95,21 +95,6 @@ class MrpWorkorder(models.Model):
             if not woBrws.next_work_order_id:
                 woBrws.production_id.post_inventory()
                 woBrws.production_id.button_mark_done()
-        
-#     @api.multi
-#     def button_finish(self):
-#         res = super(MrpWorkorder, self).button_finish()
-#         production_id = self.production_id
-#         isExternal = False
-#         for relatedWO in self.search([('production_id', '=', production_id.id)]):
-#             # Check if external workorder
-#             if relatedWO.getExternalPickings():
-#                 isExternal = True
-#                 break
-#         if not self.next_work_order_id and isExternal:
-#             # Close manufacturing order
-#             production_id.write({'state': 'done', 'date_finished': fields.Datetime.now()})
-#         return res
 
     @api.multi
     def getExternalPickings(self):
@@ -131,3 +116,34 @@ class MrpWorkorder(models.Model):
             'context': newContext,
             'domain': [('id', 'in', picks.ids)],
         }
+
+    @api.multi
+    def updateQtytoProduce(self, new_qty):
+        self.qty_production = new_qty
+        self.production_id.updateQtytoProduce(new_qty)
+
+    @api.model
+    def isPicksInDone(self):
+        isOut = False
+        for stock_picking in self.getExternalPickings():
+            if stock_picking.isIncoming(stock_picking):
+                if stock_picking.state == 'cancel':
+                    isOut = True
+                    continue
+                if stock_picking.state != 'done':
+                    return False
+                else:
+                    isOut = True
+        return isOut
+
+    @api.multi
+    def closeWO(self):
+        for wo_id in self:
+            wo_id.qty_produced = wo_id.qty_production
+            wo_id.record_production()
+            
+    @api.multi
+    def produceQty(self, qty_to_produce):
+        for wo_id in self:
+            wo_id.qty_producing = qty_to_produce
+            wo_id.record_production()

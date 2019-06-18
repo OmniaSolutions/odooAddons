@@ -234,7 +234,7 @@ class MrpProductionWizard(models.TransientModel):
         elif workorderBrw.operation_id.external_operation == 'operation':
             self.is_by_operation = True
             self.is_some_product = True
-        elif workorderBrw.operation_id.external_operation == 'normal':
+        elif workorderBrw.operation_id.external_operation in ['normal', '', False]:
             self.is_by_operation = False
             self.is_some_product = False
         # check parent input - output
@@ -248,7 +248,7 @@ class MrpProductionWizard(models.TransientModel):
             for line in self.move_finished_ids:
                 if line.product_id == product_to_produce:
                     finished['product_to_produce'] += line.product_uom_qty
-        if raw['product_to_produce'] == finished['product_to_produce']:
+        if raw['product_to_produce'] == finished['product_to_produce'] and raw['product_to_produce'] > 0:
             self.is_some_product = True
             self.is_by_operation = False
 

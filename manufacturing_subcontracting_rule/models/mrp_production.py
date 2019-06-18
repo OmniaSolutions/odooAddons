@@ -110,6 +110,8 @@ class MrpProduction(models.Model):
     def generateTmpFinishedMoves(self, location_source_id=None):
         outElems = []
         for stock_move_id in self.move_finished_ids:
+            if stock_move_id.state in ['cancel', 'done']:
+                continue
             newMove = self.createTmpStockMove(stock_move_id, location_source_id, self.location_src_id.id)
             newMove.source_production_move = stock_move_id.id
             newMove.production_id = False # Remove link with production order
@@ -122,7 +124,7 @@ class MrpProduction(models.Model):
         outElems = []
         location_source_id = self.location_src_id.id
         for stock_move_id in self.move_raw_ids:
-            if stock_move_id.state == 'cancel':
+            if stock_move_id.state in ['cancel', 'done']:
                 continue
             newMove = self.createTmpStockMove(stock_move_id, location_source_id, location_dest_id)
             newMove.source_production_move = stock_move_id.id
