@@ -203,17 +203,21 @@ class MrpProductionWizard(models.TransientModel):
             firstFinishMove = False
             for prod_finish_move in productionBrws.move_finished_ids:
                 firstFinishMove = prod_finish_move
+            finished_qty = 0
             for finish_move in self.move_finished_ids:
                 if finish_move.source_production_move:
                     if finish_move.source_production_move.product_id != finish_move.product_id:
                         continue
                     if finish_move.source_production_move.product_uom_qty != finish_move.product_uom_qty:
                         finish_move.source_production_move.product_uom_qty = finish_move.product_uom_qty
+                        finished_qty += finish_move.product_uom_qty
                     if finish_move.source_production_move.unit_factor != finish_move.unit_factor:
                         finish_move.source_production_move.unit_factor = finish_move.unit_factor
                 else:
                     new_move = firstFinishMove.copy(self.getTmpMoveVals(finish_move))
                     new_move.action_confirm()
+            if finished_qty < productionBrws.product_qty - productionBrws.qty_produced:
+                raise UserError('You cannot produce less finished product then expected in manufacturing order')
 
     def getTmpMoveVals(self, tmp_move):
         return {
@@ -277,6 +281,8 @@ class MrpProductionWizard(models.TransientModel):
         self.createPurches(pickIn, workorderBrw)
         workorderBrw.state = 'external'
         self.updateMOLinesWithDifferences(productionBrws)
+        if not pickIn:
+            workorderBrw.closeWO()
 
     @api.model
     def getNewExternalProductInfo(self):
@@ -531,17 +537,7 @@ class MrpProductionWizard(models.TransientModel):
         return pick_out_ids
 
     def cleanReadVals(self, vals):
-        for key, val in vals.items():
-            if isinstance(val, tuple) and len(val) == 2:
-                vals[key] = val[0]
-        if 'product_qty' in vals:
-            del vals['product_qty']
-        keys_to_del = []
-        for key, val in vals.items():
-            if isinstance(val, (list, tuple)):
-                keys_to_del.append(key)
-        for key in keys_to_del:
-            del vals[key]
+        self.env['mrp.production'].cleanReadVals(vals)
 
     def createStockPickingOutWorkorder(self, partner_id, productionBrws, customerProductionLocation, productionLocation, workorderBrw):
         stock_piking = self.env['stock.picking']

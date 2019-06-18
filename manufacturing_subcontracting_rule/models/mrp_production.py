@@ -110,8 +110,6 @@ class MrpProduction(models.Model):
     def generateTmpFinishedMoves(self, location_source_id=None):
         outElems = []
         for stock_move_id in self.move_finished_ids:
-            if stock_move_id.state in ['cancel', 'done']:
-                continue
             newMove = self.createTmpStockMove(stock_move_id, location_source_id, self.location_src_id.id)
             newMove.source_production_move = stock_move_id.id
             newMove.production_id = False # Remove link with production order
@@ -145,13 +143,21 @@ class MrpProduction(models.Model):
         for vals in source_move_vals:
             self.cleanReadVals(vals)
             return tmpMoveObj.create(vals)
-        
+
     def cleanReadVals(self, vals):
         for key, val in vals.items():
             if isinstance(val, tuple) and len(val) == 2:
                 vals[key] = val[0]
         if 'product_qty' in vals:
             del vals['product_qty']
+        keys_to_del = []
+        for key, val in vals.items():
+            if isinstance(val, (list, tuple)):
+                keys_to_del.append(key)
+        for key in keys_to_del:
+            del vals[key]
+        vals['state'] = 'draft'
+
 
     def checkCreatePartnerWarehouse(self, partnerBrws):
         if not partnerBrws:

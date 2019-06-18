@@ -138,9 +138,12 @@ class MrpWorkorder(models.Model):
 
     @api.multi
     def closeWO(self):
-        for wo_id in self:
-            wo_id.qty_produced = wo_id.qty_production
-            wo_id.record_production()
+        for woBrws in self:
+            woBrws.qty_producing = woBrws.qty_production
+            woBrws.record_production()
+            if not woBrws.next_work_order_id:
+                woBrws.production_id.post_inventory()
+                woBrws.production_id.button_mark_done()
             
     @api.multi
     def produceQty(self, qty_to_produce):
