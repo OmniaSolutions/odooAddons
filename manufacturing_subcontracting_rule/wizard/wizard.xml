@@ -39,19 +39,20 @@
 	            <field name="move_raw_ids" context="{'wizard_obj_id': id}" attrs="{'readonly': [('is_some_product', '=', True)]}">
 	                <tree>
 	                    <field name="product_id"/>
+	                    <field name="unit_factor" />
 	                    <field name="product_uom_qty" />
 	                    <field name="state" />
 	                    <field name="origin" />
 	                    <field name="date_expected" />
 	                    <field name="location_available" />
 	                    <field name="qty_available" />
-	                    <field name="unit_factor" />
 	                    <field name="operation_type" />
 	                </tree>
 	                <form>
 	                	<group>
 		                    <field name="product_id"/>
-		                    <field name="product_uom_qty" />
+		                    <field name="unit_factor" />
+		                    <field name="product_uom_qty"/>
 		                    <field name="product_uom" />
 		                    <field name="name" />
 		                    <field name="location_id" invisible='True'/>
@@ -59,7 +60,6 @@
 		                    <field name="state" />
 		                    <field name="origin" />
 		                    <field name="date_expected" />
-		                    <field name="unit_factor" />
 		                    <field name="operation_type" required='True'/>
 		                    <field name="location_available" readonly='True'/>
 		                    <field name="qty_available" readonly='True'/>
@@ -70,18 +70,19 @@
 	            <field name="move_finished_ids"  context="{'wizard_obj_id': id}" >
 	                <tree>
 	                    <field name="product_id"/>
+	                    <field name="unit_factor" />
 	                    <field name="product_uom_qty" />
 	                    <field name="state" />
 	                    <field name="origin" />
 	                    <field name="date_expected" />
 	                    <field name="location_available" />
 	                    <field name="qty_available" />
-	                    <field name="unit_factor" />
 	                </tree>
 	                <form>
 	                	<group>
 		                    <field name="product_id"/>
-		                    <field name="product_uom_qty" />
+		                    <field name="unit_factor" />
+		                    <field name="product_uom_qty"/>
 		                    <field name="product_uom" />
 		                    <field name="name" />
 		                    <field name="location_id" invisible='True'/>
@@ -89,7 +90,6 @@
 		                    <field name="state" />
 		                    <field name="origin" />
 		                    <field name="date_expected" />
-		                    <field name="unit_factor" />
 		                    <field name="location_available" readonly='True'/>
 		                    <field name="qty_available" readonly='True'/>
 		                </group>

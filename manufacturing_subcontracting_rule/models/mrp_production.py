@@ -317,14 +317,48 @@ class MrpProduction(models.Model):
 
     @api.multi
     def updateQtytoProduce(self, new_qty):
-        for mo_id in self:
-            product_qty = self.env['change.production.qty'].create({
-                'mo_id': mo_id.id,
-                'product_qty': new_qty,
-            })
-            ctx = self.env.context.copy()
-            ctx['skip_external_check'] = True
-            product_qty.with_context(ctx).change_prod_qty()
+        for raw_id in self.move_raw_ids:
+            expected_qty = new_qty * raw_id.unit_factor
+            if raw_id.state == 'done':
+                new_move = raw_id.copy()
+                new_move.product_uom_qty = expected_qty - new_move.product_uom_qty
+                new_move.action_assign()
+            else:
+                raw_id.product_uom_qty = expected_qty
+                raw_id.do_unreserve()
+                raw_id.action_assign()
+
+        for finish_id in self.move_finished_ids:
+            if finish_id.product_id == self.product_id:
+                if finish_id.state == 'done':
+                    new_move = finish_id.copy()
+                    new_move.product_uom_qty = new_qty - new_move.product_uom_qty
+                    new_move.action_assign()
+                else:
+                    finish_id.product_uom_qty = new_qty
+                    finish_id.do_unreserve()
+                    finish_id.action_assign()
+            else:
+                expected_qty = new_qty * raw_id.unit_factor
+                if finish_id.state == 'done':
+                    new_move = finish_id.copy()
+                    new_move.product_uom_qty = expected_qty - new_move.product_uom_qty
+                    new_move.action_assign()
+                else:
+                    finish_id.product_uom_qty = expected_qty
+                    finish_id.do_unreserve()
+                    finish_id.action_assign()
+        
+        self.write({'product_qty': new_qty})
+
+#         for mo_id in self:
+#             product_qty = self.env['change.production.qty'].create({
+#                 'mo_id': mo_id.id,
+#                 'product_qty': new_qty,
+#             })
+#             ctx = self.env.context.copy()
+#             ctx['skip_external_check'] = True
+#             product_qty.with_context(ctx).change_prod_qty()
 
     @api.multi
     def produceQty(self, qty_to_produce):

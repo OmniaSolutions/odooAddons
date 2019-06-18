@@ -198,7 +198,8 @@ class MrpProductionWizard(models.TransientModel):
                         if raw_move.source_production_move.unit_factor != raw_move.unit_factor:
                             raw_move.source_production_move.unit_factor = raw_move.unit_factor
                     else:
-                        firstRawMove.copy(self.getTmpMoveVals(raw_move))
+                        new_move = firstRawMove.copy(self.getTmpMoveVals(raw_move))
+                        new_move.action_confirm()
             firstFinishMove = False
             for prod_finish_move in productionBrws.move_finished_ids:
                 firstFinishMove = prod_finish_move
@@ -211,7 +212,8 @@ class MrpProductionWizard(models.TransientModel):
                     if finish_move.source_production_move.unit_factor != finish_move.unit_factor:
                         finish_move.source_production_move.unit_factor = finish_move.unit_factor
                 else:
-                    firstFinishMove.copy(self.getTmpMoveVals(finish_move))
+                    new_move = firstFinishMove.copy(self.getTmpMoveVals(finish_move))
+                    new_move.action_confirm()
 
     def getTmpMoveVals(self, tmp_move):
         return {
@@ -680,20 +682,34 @@ class TmpStockMove(models.Model):
         # Don't remove, is used to overload product_qty check
         pass
 
-    @api.onchange('product_id', 'product_qty')
-    def onchange_quantity(self):
+    @api.onchange('unit_factor')
+    def unit_factor_change(self):
+        production_id = self.getProductionID()
+        if production_id:
+            self.product_uom_qty = self.unit_factor * production_id.product_qty
+
+    @api.onchange('product_uom_qty')
+    def onchange_product_qty(self):
+        self.unit_factor_change()
+
+    @api.onchange('product_id')
+    def onchange_product(self):
         if not self.product_id or self.product_qty < 0.0:
             self.product_qty = 0.0
         if self.product_id:
             self.location_dest_id = self.product_id.property_stock_production
             self.location_id = self.product_id.property_stock_production
+            production_id = self.getProductionID()
+            if production_id:
+                self.origin = production_id.name
+
+    def getProductionID(self):
         wizard_id = self.env.context.get('wizard_obj_id', False)
         if wizard_id:
             wizard = self.env['mrp.externally.wizard'].browse(wizard_id)
             production_id = wizard.production_id
             if production_id:
-                self.origin = production_id.name
-
+                return production_id
 #     @api.model
 #     def default_get(self, fields_list):
 #         context = self.env.context
