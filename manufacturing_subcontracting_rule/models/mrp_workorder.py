@@ -74,11 +74,21 @@ class MrpWorkorder(models.Model):
     def button_cancel_produce_externally(self):
         stockPickingObj = self.env['stock.picking']
         for workOrderBrws in self:
-            stockPickList = stockPickingObj.search([('origin', '=', workOrderBrws.name)])
+            stockPickList = stockPickingObj.search([('sub_workorder_id', '=', workOrderBrws.id)])
             stockPickList += workOrderBrws.getExternalPickings()
             for pickBrws in stockPickList:
+                if pickBrws.state == 'done':
+                    raise UserError('you cannot cancel a Picking in Done state.')
                 pickBrws.action_cancel()
             workOrderBrws.write({'state': 'pending'})
+            
+            purchase = self.env['purchase.order']
+            purchase_ids = purchase.search([('workorder_external_id', '=', workOrderBrws.id)])
+            for purchase_id in purchase_ids:
+                if purchase_id.state in ['purchase', 'done']:
+                    raise UserError('you cannot cancel a purchase order in Purchase Order or Loked states.')
+                purchase_id.button_cancel()
+                purchase_id.unlink()
 
     @api.multi
     def updateProducedQty(self, newQty):
@@ -150,3 +160,18 @@ class MrpWorkorder(models.Model):
         for wo_id in self:
             wo_id.qty_producing = qty_to_produce
             wo_id.record_production()
+
+    @api.multi
+    def open_external_purchase(self):
+        newContext = self.env.context.copy()
+        purchase = self.env['purchase.order']
+        purchase_ids = purchase.search([('workorder_external_id', '=', self.id)])
+        return {
+            'name': _("Purchase External"),
+            'view_type': 'form',
+            'view_mode': 'tree,form',
+            'res_model': 'purchase.order',
+            'type': 'ir.actions.act_window',
+            'context': newContext,
+            'domain': [('id', 'in', purchase_ids.ids)],
+        }

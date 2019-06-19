@@ -110,6 +110,8 @@ class MrpProduction(models.Model):
     def generateTmpFinishedMoves(self, location_source_id=None):
         outElems = []
         for stock_move_id in self.move_finished_ids:
+            if stock_move_id.state in ['cancel', 'done']:
+                continue
             newMove = self.createTmpStockMove(stock_move_id, location_source_id, self.location_src_id.id)
             newMove.source_production_move = stock_move_id.id
             newMove.production_id = False # Remove link with production order
@@ -192,6 +194,8 @@ class MrpProduction(models.Model):
     def cancelPurchaseOrders(self):
         purchaseOrderObj = self.env['purchase.order']
         for purchese in purchaseOrderObj.search([('production_external_id', '=', self.id)]):
+            if purchese.state in ['purchase', 'done']:
+                raise UserError('you cannot cancel a purchase order in Purchase Order or Loked states.')
             purchese.button_cancel()
             purchese.unlink()
 
@@ -201,6 +205,8 @@ class MrpProduction(models.Model):
         stockPickList = stockPickingObj.search([('origin', '=', self.name)])
         stockPickList += stockPickingObj.search([('sub_production_id', '=', self.id)])
         for pickBrws in list(set(stockPickList)):
+            if pickBrws.state == 'done':
+                raise UserError('you cannot cancel a Picking in Done state.')
             pickBrws.action_cancel()
 
     @api.multi

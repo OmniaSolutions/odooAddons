@@ -155,7 +155,7 @@ class MrpProductionWizard(models.TransientModel):
                 pickingBrwsList.append(pickIn.id)
             for pick_out in pick_out_ids:
                 pickingBrwsList.append(pick_out.id)
-        self.createPurches(pickIn)
+        self.createPurches(pickIn, production=productionBrws)
         productionBrws.date_planned_finished_wo = date_planned_finished_wo
         productionBrws.date_planned_start_wo = date_planned_start_wo
         productionBrws.external_pickings = [(6, 0, pickingBrwsList)]
@@ -216,8 +216,6 @@ class MrpProductionWizard(models.TransientModel):
                 else:
                     new_move = firstFinishMove.copy(self.getTmpMoveVals(finish_move))
                     new_move.action_confirm()
-            if finished_qty < productionBrws.product_qty - productionBrws.qty_produced:
-                raise UserError('You cannot produce less finished product then expected in manufacturing order')
 
     def getTmpMoveVals(self, tmp_move):
         return {
@@ -339,7 +337,7 @@ class MrpProductionWizard(models.TransientModel):
         product_id.write(vals)
 
     @api.multi
-    def createPurches(self, pickIn, workorderBrws=False):
+    def createPurches(self, pickIn, workorderBrws=False, production=False):
         if not self:
             return
         if not self.create_purchese_order:
@@ -354,9 +352,13 @@ class MrpProductionWizard(models.TransientModel):
                                                         ('state', 'in', ['draft', 'sent'])
                                                         ], limit=1)
             if not purchaseBrws and self.create_purchese_order:
-                purchaseBrws = purchaseOrderObj.create({'partner_id': toCreatePurchese.partner_id.id,
-                                                        'date_planned': self.request_date,
-                                                        'production_external_id': self.production_id.id})
+                vals = {'partner_id': toCreatePurchese.partner_id.id,
+                        'date_planned': self.request_date}
+                if production:
+                    vals['production_external_id'] = production.id
+                if workorderBrws:
+                    vals['workorder_external_id'] = workorderBrws.id
+                purchaseBrws = purchaseOrderObj.create(vals)
 
             for lineBrws in pickIn.move_lines:
                 values = {'product_id': obj_product_product.id,
@@ -366,8 +368,11 @@ class MrpProductionWizard(models.TransientModel):
                           'price_unit': obj_product_product.price,
                           'date_planned': self.request_date,
                           'order_id': purchaseBrws.id,
-                          'production_external_id': self.production_id.id,
                           'sub_move_line': lineBrws.id}
+                if production:
+                    values['production_external_id'] = production.id
+                if workorderBrws:
+                    values['workorder_external_id'] = workorderBrws.id
                 new_purchase_order_line = self.env['purchase.order.line'].create(values)
                 new_purchase_order_line.onchange_product_id()
                 new_purchase_order_line.date_planned = self.request_date

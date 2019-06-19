@@ -40,6 +40,7 @@ class PurchaseOrderLine(models.Model):
     _inherit = ['purchase.order.line']
 
     production_external_id = fields.Many2one('mrp.production', string=_('External Production'))
+    workorder_external_id = fields.Many2one('mrp.workorder', string=_('External Workorder'))
 
     @api.depends('order_id.state', 'move_ids.state')
     def _compute_qty_received(self):

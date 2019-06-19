@@ -61,12 +61,12 @@ class StockPicking(models.Model):
         purchase_order_line = self.env['purchase.order.line']
         if objPick.isIncoming(objPick):
             partner_location = objPick.location_id
-            if objPick.sub_production_id:
-                production_id = objPick.env['mrp.production'].search([('id', '=', objPick.sub_production_id)])
-                objPick.createSubcontractingMO(production_id, partner_location)
             if objPick.sub_workorder_id:
                 wo_id = objPick.env['mrp.workorder'].search([('id', '=', objPick.sub_workorder_id)])
                 objPick.createSubcontractingWO(wo_id, partner_location)
+            elif objPick.sub_production_id:
+                production_id = objPick.env['mrp.production'].search([('id', '=', objPick.sub_production_id)])
+                objPick.createSubcontractingMO(production_id, partner_location)
 #             if objPick.sub_workorder_id:
 #                 woBrws = objPick.env['mrp.workorder'].search([('id', '=', objPick.sub_workorder_id)])
 #                 if woBrws and woBrws.state == 'external' and objPick.state == 'done':
@@ -107,16 +107,23 @@ class StockPicking(models.Model):
                         wo_id.closeWO()
                     else:
                         wo_id.produceQty(pick_in_product_qty)
+#                         wo_id.production_id.produceQty(pick_in_product_qty)
+#                         wo_id.production_id.post_inventory()
+
     @api.multi
     def createSubcontractingMO(self, production_id, partner_location):
         target_product_id = production_id.product_id
         for pick_in in self:
             if self.isIncoming(pick_in):
-                pick_in_product_qty = pick_in.getPickProductQty(target_product_id)
-                self.subcontractFinished(pick_in, target_product_id, pick_in_product_qty)
-                self.subcontractRaw(production_id, pick_in_product_qty, partner_location)
                 total_received = pick_in.getPickRecursiveProductQty(target_product_id)
                 target_mo_qty = production_id.product_qty
+                pick_in_product_qty = pick_in.getPickProductQty(target_product_id)
+                if total_received < target_mo_qty:
+                    production_id.produceQty(pick_in_product_qty)
+                    production_id.post_inventory()
+                    continue
+                self.subcontractFinished(pick_in, target_product_id, pick_in_product_qty)
+                self.subcontractRaw(production_id, pick_in_product_qty, partner_location)
                 if total_received > target_mo_qty:
                     production_id.updateQtytoProduce(total_received)
                     if production_id.isPicksInDone():
@@ -124,9 +131,6 @@ class StockPicking(models.Model):
                 elif total_received == target_mo_qty:
                     if production_id.isPicksInDone():
                         production_id.closeMO()
-                else:
-                    production_id.produceQty(pick_in_product_qty)
-                    production_id.post_inventory()
 
     def isIncoming(self, objPick):
         return objPick.picking_type_code == 'incoming'
@@ -181,7 +185,7 @@ class StockPicking(models.Model):
 class StockBackorderConfirmation(models.TransientModel):
     _name = 'stock.backorder.confirmation'
     _inherit = ['stock.backorder.confirmation']
-    
+     
     @api.multi
     def process(self):
         res = super(StockBackorderConfirmation, self).process()
