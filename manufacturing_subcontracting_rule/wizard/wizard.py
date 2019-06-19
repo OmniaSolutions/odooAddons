@@ -41,7 +41,7 @@ class MrpProductionWizard(models.Model):
                                    default=lambda self: fields.datetime.now())
     create_purchese_order = fields.Boolean(_('Automatic create Purchase'), default=True)
     merge_purchese_order = fields.Boolean(_('Merge Purchase'), default=False)
-    confirm_purchese_order = fields.Boolean(_('Confirm Purchase'), default=True)
+    confirm_purchese_order = fields.Boolean(_('Confirm Purchase'), default=False)
     select_external_partner_ids = fields.Char(string=_('Select Partners'),
                                               compute='_compute_select_external_partner')
     select_external_partner = fields.Many2one('res.partner',
@@ -432,7 +432,7 @@ class MrpProductionWizard(models.Model):
                 'move_lines': [],
                 'state': 'draft',
                 'sub_contracting_operation': 'close',
-                'sub_production_id': self.production_id.id,
+                'sub_production_id': productionBrws.id,
                 'pick_out': pick_out.id,
                 'sub_workorder_id': sub_workorder_id,
                 }

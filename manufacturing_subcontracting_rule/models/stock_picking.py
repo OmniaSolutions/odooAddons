@@ -171,6 +171,20 @@ class StockPicking(models.Model):
                 new_sub_move.ordered_qty = moveQty
                 new_sub_move.action_done()
 
+    @api.multi
+    def action_cancel(self):
+        key = 'skip_delete_recursion'
+        context = self.env.context
+        if not context.get(key):
+            for pick_id in self:
+                if pick_id.sub_workorder_id:
+                    self.env['mrp.workorder'].browse(pick_id.sub_workorder_id).with_context({key: True}).button_cancel_produce_externally()
+                    return
+                elif pick_id.sub_production_id:
+                    self.env['mrp.production'].browse(pick_id.sub_production_id).with_context({key: True}).button_cancel_produce_externally()
+                    return
+        return super(StockPicking, self).action_cancel()
+
 
 class StockBackorderConfirmation(models.TransientModel):
     _name = 'stock.backorder.confirmation'
