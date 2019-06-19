@@ -82,13 +82,21 @@ class MrpWorkorder(models.Model):
                 pickBrws.action_cancel()
             workOrderBrws.write({'state': 'pending'})
             
-            purchase = self.env['purchase.order']
-            purchase_ids = purchase.search([('workorder_external_id', '=', workOrderBrws.id)])
-            for purchase_id in purchase_ids:
-                if purchase_id.state in ['purchase', 'done']:
+            purchase_line = self.env['purchase.order.line']
+            purchase_line_ids = purchase_line.search([('workorder_external_id', '=', workOrderBrws.id)])
+            purchase_list = []
+            for purchase_line_id in purchase_line_ids:
+                purchase_list.append(purchase_line_id.order_id)
+                if purchase_line_id.state in ['purchase', 'done']:
+                    raise UserError('you cannot cancel a purchase order line in Purchase Order or Loked states.')
+                if purchase_line_id.order_id.state in ['purchase', 'done']:
                     raise UserError('you cannot cancel a purchase order in Purchase Order or Loked states.')
-                purchase_id.button_cancel()
-                purchase_id.unlink()
+                purchase_line_id.unlink()
+            purchase_list = list(set(purchase_list))
+            for purchase_id in purchase_list:
+                if not purchase_id.order_line:
+                    purchase_id.button_cancel()
+                    purchase_id.unlink()
 
     @api.multi
     def updateProducedQty(self, newQty):
@@ -164,8 +172,10 @@ class MrpWorkorder(models.Model):
     @api.multi
     def open_external_purchase(self):
         newContext = self.env.context.copy()
-        purchase = self.env['purchase.order']
-        purchase_ids = purchase.search([('workorder_external_id', '=', self.id)])
+        purchase_line_ids = self.env['purchase.order.line'].search([('workorder_external_id', '=', self.id)])
+        purchase_ids = []
+        for line_id in purchase_line_ids:
+            purchase_ids.append(line_id.order_id.id)
         return {
             'name': _("Purchase External"),
             'view_type': 'form',
@@ -173,5 +183,5 @@ class MrpWorkorder(models.Model):
             'res_model': 'purchase.order',
             'type': 'ir.actions.act_window',
             'context': newContext,
-            'domain': [('id', 'in', purchase_ids.ids)],
+            'domain': [('id', 'in', purchase_ids)],
         }

@@ -192,12 +192,21 @@ class MrpProduction(models.Model):
 
     @api.multi
     def cancelPurchaseOrders(self):
-        purchaseOrderObj = self.env['purchase.order']
-        for purchese in purchaseOrderObj.search([('production_external_id', '=', self.id)]):
-            if purchese.state in ['purchase', 'done']:
+        purchase_line = self.env['purchase.order.line']
+        purchase_line_ids = purchase_line.search([('workorder_external_id', '=', self.id)])
+        purchase_list = []
+        for purchase_line_id in purchase_line_ids:
+            purchase_list.append(purchase_line_id.order_id)
+            if purchase_line_id.state in ['purchase', 'done']:
+                raise UserError('you cannot cancel a purchase order line in Purchase Order or Loked states.')
+            if purchase_line_id.order_id.state in ['purchase', 'done']:
                 raise UserError('you cannot cancel a purchase order in Purchase Order or Loked states.')
-            purchese.button_cancel()
-            purchese.unlink()
+            purchase_line_id.unlink()
+        purchase_list = list(set(purchase_list))
+        for purchase_id in purchase_list:
+            if not purchase_id.order_line:
+                purchase_id.button_cancel()
+                purchase_id.unlink()
 
     @api.multi
     def cancelPickings(self):
@@ -270,12 +279,10 @@ class MrpProduction(models.Model):
     @api.multi
     def open_external_purchase(self):
         newContext = self.env.context.copy()
-        manufacturingIds = []
-        purchaseLines = self.env['purchase.order.line'].search([('production_external_id', '=', self.id)])
-        purchaseList = self.env['purchase.order'].browse()
-        for purchaseLineBrws in purchaseLines:
-            purchaseList = purchaseList + purchaseLineBrws.order_id
-        manufacturingIds = purchaseList.ids
+        purchase_line_ids = self.env['purchase.order.line'].search([('production_external_id', '=', self.id)])
+        purchase_ids = []
+        for line_id in purchase_line_ids:
+            purchase_ids.append(line_id.order_id.id)
         return {
             'name': _("Purchase External"),
             'view_type': 'form',
@@ -283,7 +290,7 @@ class MrpProduction(models.Model):
             'res_model': 'purchase.order',
             'type': 'ir.actions.act_window',
             'context': newContext,
-            'domain': [('id', 'in', manufacturingIds)],
+            'domain': [('id', 'in', purchase_ids)],
         }
 
     @api.multi

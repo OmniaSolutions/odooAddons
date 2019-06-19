@@ -107,8 +107,6 @@ class StockPicking(models.Model):
                         wo_id.closeWO()
                     else:
                         wo_id.produceQty(pick_in_product_qty)
-#                         wo_id.production_id.produceQty(pick_in_product_qty)
-#                         wo_id.production_id.post_inventory()
 
     @api.multi
     def createSubcontractingMO(self, production_id, partner_location):
