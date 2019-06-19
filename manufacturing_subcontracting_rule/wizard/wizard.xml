@@ -34,9 +34,11 @@
     	        	<field name="create_purchese_order"/>
     	        	<field name="merge_purchese_order"/>
     	        	<field name="confirm_purchese_order"/>
-    	        	<field name="is_some_product" attrs="{'invisible': [('work_order_id', '=', False)]}"/>
+    	        	<field name="production_id" readonly="True"/>
+    	        	<field name="work_order_id" readonly="True"/>
 	        	</group>
-	            <field name="move_raw_ids" context="{'wizard_obj_id': id}" attrs="{'readonly': [('is_some_product', '=', True)]}">
+	        	<field name="external_operation" attrs="{'readonly': [('work_order_id', '=', False)]}" required="True"/>
+	            <field name="move_raw_ids" context="{'wizard_obj_id': id}" attrs="{'invisible': [('external_operation', 'in', ['parent', 'operation'])]}">
 	                <tree>
 	                    <field name="product_id"/>
 	                    <field name="unit_factor" />
@@ -51,8 +53,22 @@
 	                <form>
 	                	<group>
 		                    <field name="product_id"/>
-		                    <field name="unit_factor" />
+		                    <field name="unit_factor" attrs="{'invisible': [('operation_type', '!=', 'deliver_consume')]}"/>
 		                    <field name="product_uom_qty"/>
+		                    <field name="unit_factor_message" invisible="True"/>
+		                    <div class="alert-danger" style="text-align: center; font-size: 18px" colspan="2"
+		                        attrs="{'invisible': ['|', ('unit_factor_message','=', False), ('operation_type', '!=', 'deliver_consume')]}">
+		                        <br/>Warning: Changing unit factor you will change production quantities.
+		        				<br/>Ex: 10 units to produce and unit factor of 3 will produce 10 X 3 = 30 units.
+		                    </div>
+
+							<field name="operation_type" required='True'/>
+		                    <div class="alert-danger" style="text-align: center; font-size: 18px" colspan="2"
+		                        attrs="{'invisible': [('operation_type', '!=', 'deliver_consume')]}">
+		                        <br/>Warning: Delivery and Consume will consume manufacturing order and will delivery material.
+		                    </div>
+		                    
+		                    
 		                    <field name="product_uom" />
 		                    <field name="name" />
 		                    <field name="location_id" invisible='True'/>
@@ -60,14 +76,14 @@
 		                    <field name="state" />
 		                    <field name="origin" />
 		                    <field name="date_expected" />
-		                    <field name="operation_type" required='True'/>
 		                    <field name="location_available" readonly='True'/>
 		                    <field name="qty_available" readonly='True'/>
+		                    <field name="source_production_move" readonly='True'/>
 		                </group>
 	                </form>
 	            </field>
 	            
-	            <field name="move_finished_ids"  context="{'wizard_obj_id': id}" >
+	            <field name="move_finished_ids"  context="{'wizard_obj_id': id}">
 	                <tree>
 	                    <field name="product_id"/>
 	                    <field name="unit_factor" />

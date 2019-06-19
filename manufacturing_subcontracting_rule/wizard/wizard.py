@@ -15,9 +15,10 @@ import datetime
 from dateutil.relativedelta import relativedelta
 
 
-class MrpProductionWizard(models.TransientModel):
+class MrpProductionWizard(models.Model):
 
     _name = "mrp.externally.wizard"
+    _table = 'mrp_externally_wizard'
 
     external_partner = fields.One2many('external.production.partner',
                                        inverse_name='wizard_id',
@@ -41,15 +42,26 @@ class MrpProductionWizard(models.TransientModel):
     create_purchese_order = fields.Boolean(_('Automatic create Purchase'), default=True)
     merge_purchese_order = fields.Boolean(_('Merge Purchase'), default=False)
     confirm_purchese_order = fields.Boolean(_('Confirm Purchase'), default=True)
-    is_some_product = fields.Boolean(_('Same Product In and Out'), default=False)
-    
     select_external_partner_ids = fields.Char(string=_('Select Partners'),
                                               compute='_compute_select_external_partner')
     select_external_partner = fields.Many2one('res.partner',
                                     string=_('External Partner Stock'))
+    external_operation = fields.Selection([('normal', 'Normal'),
+                                           ('parent', 'Parent'),
+                                           ('operation', 'Operation')],
+                                           default='normal',
+                                           string=_('Produce it externally automatically as'),
+                                           help="""Normal: Use the Parent object as Product for the Out Pickings and the raw material for the Out Picking
+                                                   Parent: Use the Parent product for the In Out pickings
+                                                   Operation: Use the Product that have the Operation assigned for the In Out pickings""")
+
+
+    ######Deprecated########
     is_by_operation = fields.Boolean(default=False,
                                      string="Is computed by operation",
                                      help="""Push out and pull in only the product that have operation""")
+    is_some_product = fields.Boolean(_('Same Product In and Out'), default=False)
+    ########################
 
     @api.multi
     @api.depends('external_partner')
@@ -178,13 +190,14 @@ class MrpProductionWizard(models.TransientModel):
         for move_id in self.move_finished_ids:
             move_id.state = 'cancel'
         self.move_finished_ids.unlink()
+        self.unlink()
         return True
 
     def updateMOLinesWithDifferences(self, productionBrws):
         '''
             Update manufacturing order with quantities and products added / removed in the wizard
         '''
-        if not self.is_some_product and not self.is_by_operation:
+        if self.external_operation == 'normal':
             firstRawMove = False
             for prod_raw_move in productionBrws.move_raw_ids:
                 firstRawMove = prod_raw_move
@@ -230,15 +243,8 @@ class MrpProductionWizard(models.TransientModel):
 
     @api.multi
     def setupOptions(self, workorderBrw):
-        if workorderBrw.operation_id.external_operation == 'parent':
-            self.is_some_product = True
-            self.is_by_operation = False
-        elif workorderBrw.operation_id.external_operation == 'operation':
-            self.is_by_operation = True
-            self.is_some_product = True
-        elif workorderBrw.operation_id.external_operation in ['normal', '', False]:
-            self.is_by_operation = False
-            self.is_some_product = False
+        if workorderBrw.operation_id.external_operation in ['normal', '', False]:
+            self.external_operation = 'normal'
         # check parent input - output
         raw = {'product_to_produce': 0}
         finished = {'product_to_produce': 0}
@@ -251,8 +257,7 @@ class MrpProductionWizard(models.TransientModel):
                 if line.product_id == product_to_produce:
                     finished['product_to_produce'] += line.product_uom_qty
         if raw['product_to_produce'] == finished['product_to_produce'] and raw['product_to_produce'] > 0:
-            self.is_some_product = True
-            self.is_by_operation = False
+            self.external_operation = 'parent'
 
     @api.multi
     def produce_workorder(self):
@@ -440,9 +445,9 @@ class MrpProductionWizard(models.TransientModel):
         origin = self.getOriginWorkOrder(productionBrws, workorderBrw, partner_id)
         toCreate = self.getStockPickingInVals(partner_id, customerProductionLocation, productionLocation, productionBrws, pick_out, origin, workorderBrw.id)
         picking = stock_piking.create(toCreate)
-        if self.is_some_product and self.is_by_operation:     # Operation in-out
+        if self.external_operation == 'operation':     # Operation in-out
             moveToClone = None
-            for stock_move_id in self.move_raw_ids:
+            for stock_move_id in self.move_finished_ids:
                 moveToClone = stock_move_id
                 break
             for bom_line in productionBrws.bom_id.bom_line_ids:
@@ -454,7 +459,7 @@ class MrpProductionWizard(models.TransientModel):
                     newMove.product_uom_qty = bom_line.product_qty
                     self.updatePickInMove(newMove, productionLocation, customerProductionLocation, workorderBrw, picking)
         else:
-            if not self.is_some_product:
+            if self.external_operation in ['normal', 'parent']:
                 for tmpRow in self.move_finished_ids:
                     vals = tmpRow.read()[0]
                     self.cleanReadVals(vals)
@@ -554,14 +559,14 @@ class MrpProductionWizard(models.TransientModel):
         toCreate = self.getStockPickingOutVals(partner_id, productionLocation, customerProductionLocation, productionBrws, origin, sub_workorder_id=workorderBrw.id)
         picking = stock_piking.create(toCreate)
         out_picks.append(picking)
-        if self.is_some_product and not self.is_by_operation:   # Parent in - out
+        if self.external_operation == 'parent':   # Parent in - out
             for stock_move_id in self.move_finished_ids:
                 vals = stock_move_id.read()[0]
                 self.cleanReadVals(vals)
                 newMove = move_obj.create(vals)
                 newMove.unit_factor = stock_move_id.unit_factor
                 self.updatePickOutMove(newMove, productionLocation, customerProductionLocation, workorderBrw, picking)
-        elif self.is_some_product and self.is_by_operation:     # Operation in-out
+        elif self.external_operation == 'operation':     # Operation in-out
             moveToClone = None
             for stock_move_id in self.move_finished_ids:
                 moveToClone = stock_move_id
@@ -654,6 +659,41 @@ class MrpProductionWizard(models.TransientModel):
             return external_production_partner.create(vals)
         return external_production_partner
 
+    @api.onchange('external_operation')
+    def onchange_product_qty(self):
+        raw_moves = []
+        finished_moves = []
+        if self.external_operation == 'parent':
+            finished_moves = self.production_id.generateTmpFinishedMoves()
+            raw_moves = self.production_id.generateTmpFinishedMoves()
+        elif self.external_operation == 'operation':
+            self.move_raw_ids = []
+            self.move_finished_ids = []
+            if self.work_order_id:
+                r_moves = self.production_id.generateTmpRawMoves()
+                for r_move in self.env["stock.tmp_move"].browse(r_moves):
+                    for bom_line in self.production_id.bom_id.bom_line_ids:
+                        if bom_line.operation_id == self.work_order_id.operation_id:
+                            new_r_move = r_move.copy()
+                            new_r_move.write({'product_id': bom_line.product_id.id,
+                                              'product_uom_qty': bom_line.product_qty})
+                            raw_moves.append(new_r_move.id)
+                    break
+                for r_move in self.env["stock.tmp_move"].browse(r_moves):
+                    for bom_line in self.production_id.bom_id.bom_line_ids:
+                        if bom_line.operation_id == self.work_order_id.operation_id:
+                            new_r_move = r_move.copy()
+                            new_r_move.write({'product_id': bom_line.product_id.id,
+                                              'product_uom_qty': bom_line.product_qty})
+                            finished_moves.append(new_r_move.id)
+                    break
+        else:
+            finished_moves = self.production_id.generateTmpFinishedMoves()
+            raw_moves = self.production_id.generateTmpRawMoves()
+        self.move_raw_ids = raw_moves
+        self.move_finished_ids = finished_moves
+            
+        
 
 class TmpStockMove(models.Model):
     _name = "stock.tmp_move"
@@ -677,17 +717,26 @@ class TmpStockMove(models.Model):
     operation_type = fields.Selection([
         ('deliver', _('Deliver')),
         ('deliver_consume', _('Deliver and Consume')),
-        ])
+        ],
+        default='deliver_consume',
+    )
+    unit_factor_message = fields.Boolean(_('Unit Factor Message'))
 
     def _set_product_qty(self):
         # Don't remove, is used to overload product_qty check
         pass
 
+    @api.onchange('operation_type')
+    def changeOperationType(self):
+        self.unit_factor_change()
+        
     @api.onchange('unit_factor')
     def unit_factor_change(self):
         production_id = self.getProductionID()
-        if production_id:
+        if production_id and self.operation_type == 'deliver_consume':
             self.product_uom_qty = self.unit_factor * production_id.product_qty
+        if self.source_production_move.unit_factor != self.unit_factor:
+            self.unit_factor_message = True
 
     @api.onchange('product_uom_qty')
     def onchange_product_qty(self):
@@ -704,13 +753,17 @@ class TmpStockMove(models.Model):
             if production_id:
                 self.origin = production_id.name
 
-    def getProductionID(self):
+    def getWizard(self):
         wizard_id = self.env.context.get('wizard_obj_id', False)
         if wizard_id:
             wizard = self.env['mrp.externally.wizard'].browse(wizard_id)
-            production_id = wizard.production_id
-            if production_id:
-                return production_id
+            return wizard
+
+    def getProductionID(self):
+        wizard = self.getWizard()
+        production_id = wizard.production_id
+        if production_id:
+            return production_id
 #     @api.model
 #     def default_get(self, fields_list):
 #         context = self.env.context

@@ -55,6 +55,7 @@ class MrpProduction(models.Model):
                 ctx.update({'active_model': 'mrp.workorder',
                             'active_ids': [mrp_workorder_id.id]})
                 objWiz = mrp_workorder_id.createWizard()
+                objWiz.external_operation = mrp_workorder_id.operation_id.external_operation
                 objWiz.with_context(ctx).button_produce_externally()
         return mrp_workorder_ids
 
