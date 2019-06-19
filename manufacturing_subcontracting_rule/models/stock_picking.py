@@ -67,22 +67,6 @@ class StockPicking(models.Model):
             elif objPick.sub_production_id:
                 production_id = objPick.env['mrp.production'].search([('id', '=', objPick.sub_production_id)])
                 objPick.createSubcontractingMO(production_id, partner_location)
-#             if objPick.sub_workorder_id:
-#                 woBrws = objPick.env['mrp.workorder'].search([('id', '=', objPick.sub_workorder_id)])
-#                 if woBrws and woBrws.state == 'external' and objPick.state == 'done':
-#                     for line in objPick.move_lines:
-#                         if line.mrp_production_id == objProduction.id and line.state == 'done':
-#                             if woBrws.operation_id.external_operation == '':
-#                                 line.subContractingProduce(objProduction)
-#                         if woBrws.product_id.id == line.product_id.id:
-#                             woBrws.updateProducedQty(line.product_qty)
-#                         if line.purchase_order_line_subcontracting_id:
-#                             purchase_order_line_id = purchase_order_line.search([('id', '=', line.purchase_order_line_subcontracting_id)])
-#                             purchase_order_line_id._compute_qty_received()
-#                     if woBrws.operation_id.external_operation == 'normal':
-#                         # Always only one normal operation for manufacturing, I create subcontracting like manufacturing
-#                         woBrws.production_id.createSubcontractingMO(partner_location)
-#                     woBrws.checkRecordProduction()
 
     @api.multi
     def createSubcontractingWO(self, wo_id, partner_location):
@@ -107,6 +91,10 @@ class StockPicking(models.Model):
                         wo_id.closeWO()
                     else:
                         wo_id.produceQty(pick_in_product_qty)
+                purchase_line = self.env['purchase.order.line']
+                purchase_line_ids = purchase_line.search([('workorder_external_id', '=', wo_id.id)])
+                for purchase_order_line in purchase_line_ids:
+                    purchase_order_line._compute_qty_received()
 
     @api.multi
     def createSubcontractingMO(self, production_id, partner_location):
@@ -129,6 +117,10 @@ class StockPicking(models.Model):
                 elif total_received == target_mo_qty:
                     if production_id.isPicksInDone():
                         production_id.closeMO()
+                purchase_line = self.env['purchase.order.line']
+                purchase_line_ids = purchase_line.search([('production_external_id', '=', production_id.id)])
+                for purchase_order_line in purchase_line_ids:
+                    purchase_order_line._compute_qty_received()
 
     def isIncoming(self, objPick):
         return objPick.picking_type_code == 'incoming'
