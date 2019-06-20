@@ -250,21 +250,22 @@ class MrpProductionWizard(models.Model):
 
     @api.multi
     def setupOptions(self, workorderBrw):
-        if workorderBrw.operation_id.external_operation in ['normal', '', False]:
-            self.external_operation = 'normal'
-        # check parent input - output
-        raw = {'product_to_produce': 0}
-        finished = {'product_to_produce': 0}
-        product_to_produce = workorderBrw.production_id.product_id
-        for line in self.move_raw_ids:
-            if line.product_id == product_to_produce:
-                raw['product_to_produce'] += line.product_uom_qty
-        if raw['product_to_produce'] > 0:
-            for line in self.move_finished_ids:
+        if not self.external_operation:
+            if workorderBrw.operation_id.external_operation in ['normal', '', False]:
+                self.external_operation = 'normal'
+            # check parent input - output
+            raw = {'product_to_produce': 0}
+            finished = {'product_to_produce': 0}
+            product_to_produce = workorderBrw.production_id.product_id
+            for line in self.move_raw_ids:
                 if line.product_id == product_to_produce:
-                    finished['product_to_produce'] += line.product_uom_qty
-        if raw['product_to_produce'] == finished['product_to_produce'] and raw['product_to_produce'] > 0:
-            self.external_operation = 'parent'
+                    raw['product_to_produce'] += line.product_uom_qty
+            if raw['product_to_produce'] > 0:
+                for line in self.move_finished_ids:
+                    if line.product_id == product_to_produce:
+                        finished['product_to_produce'] += line.product_uom_qty
+            if raw['product_to_produce'] == finished['product_to_produce'] and raw['product_to_produce'] > 0:
+                self.external_operation = 'parent'
 
     @api.multi
     def produce_workorder(self):
@@ -442,6 +443,7 @@ class MrpProductionWizard(models.Model):
                 'sub_production_id': productionBrws.id,
                 'pick_out': pick_out.id,
                 'sub_workorder_id': sub_workorder_id,
+                'external_operation': self.external_operation,
                 }
 
     def createStockPickingInWorkOrder(self, partner_id, productionBrws, customerProductionLocation, productionLocation, workorderBrw, pick_out=None):
@@ -559,7 +561,7 @@ class MrpProductionWizard(models.Model):
     def createStockPickingOutWorkorder(self, partner_id, productionBrws, customerProductionLocation, productionLocation, workorderBrw):
         stock_piking = self.env['stock.picking']
         move_obj = self.env['stock.move']
-        if not self.move_raw_ids:
+        if not self.move_raw_ids and self.external_operation not in ['parent', 'opration']:
             return [stock_piking]
         out_picks = []
         origin = self.getOriginWorkOrder(productionBrws, workorderBrw, partner_id)
@@ -635,7 +637,9 @@ class MrpProductionWizard(models.Model):
                 'state': 'draft',
                 'sub_contracting_operation': 'open',
                 'sub_production_id': self.production_id.id,
-                'sub_workorder_id': sub_workorder_id}
+                'sub_workorder_id': sub_workorder_id,
+                'external_operation': self.external_operation,
+                }
 
     @api.multi
     def create_vendors(self, production_id, workorder_id=False):
@@ -667,39 +671,45 @@ class MrpProductionWizard(models.Model):
         return external_production_partner
 
     @api.onchange('external_operation')
-    def onchange_product_qty(self):
-        raw_moves = []
-        finished_moves = []
-        if self.external_operation == 'parent':
-            finished_moves = self.production_id.generateTmpFinishedMoves()
-            raw_moves = self.production_id.generateTmpFinishedMoves()
-        elif self.external_operation == 'operation':
-            self.move_raw_ids = []
-            self.move_finished_ids = []
-            if self.work_order_id:
-                r_moves = self.production_id.generateTmpRawMoves()
-                for r_move in self.env["stock.tmp_move"].browse(r_moves):
-                    for bom_line in self.production_id.bom_id.bom_line_ids:
-                        if bom_line.operation_id == self.work_order_id.operation_id:
-                            new_r_move = r_move.copy()
-                            new_r_move.write({'product_id': bom_line.product_id.id,
-                                              'product_uom_qty': bom_line.product_qty})
-                            raw_moves.append(new_r_move.id)
-                    break
-                for r_move in self.env["stock.tmp_move"].browse(r_moves):
-                    for bom_line in self.production_id.bom_id.bom_line_ids:
-                        if bom_line.operation_id == self.work_order_id.operation_id:
-                            new_r_move = r_move.copy()
-                            new_r_move.write({'product_id': bom_line.product_id.id,
-                                              'product_uom_qty': bom_line.product_qty})
-                            finished_moves.append(new_r_move.id)
-                    break
-        else:
-            finished_moves = self.production_id.generateTmpFinishedMoves()
-            raw_moves = self.production_id.generateTmpRawMoves()
-        self.move_raw_ids = raw_moves
-        self.move_finished_ids = finished_moves
-            
+    def onchange_external_production(self):
+        wizard_id = self.env.context.get('wizard_obj_id', False)
+        if wizard_id:
+            wizard_brws = self.browse(wizard_id)
+            raw_moves = []
+            finished_moves = []
+            if wizard_brws.external_operation == 'parent':
+                finished_moves = wizard_brws.production_id.generateTmpFinishedMoves()
+                raw_moves = wizard_brws.production_id.generateTmpFinishedMoves()
+            elif wizard_brws.external_operation == 'operation':
+                wizard_brws.move_raw_ids = []
+                wizard_brws.move_finished_ids = []
+                if wizard_brws.work_order_id:
+                    r_moves = wizard_brws.production_id.generateTmpRawMoves()
+                    for r_move in wizard_brws.env["stock.tmp_move"].browse(r_moves):
+                        for bom_line in wizard_brws.production_id.bom_id.bom_line_ids:
+                            if bom_line.operation_id == wizard_brws.work_order_id.operation_id:
+                                new_r_move = r_move.copy()
+                                new_r_move.write({'product_id': bom_line.product_id.id,
+                                                  'product_uom_qty': bom_line.product_qty})
+                                raw_moves.append(new_r_move.id)
+                        break
+                    for r_move in wizard_brws.env["stock.tmp_move"].browse(r_moves):
+                        for bom_line in wizard_brws.production_id.bom_id.bom_line_ids:
+                            if bom_line.operation_id == wizard_brws.work_order_id.operation_id:
+                                new_r_move = r_move.copy()
+                                new_r_move.write({'product_id': bom_line.product_id.id,
+                                                  'product_uom_qty': bom_line.product_qty})
+                                finished_moves.append(new_r_move.id)
+                        break
+            else:
+                finished_moves = wizard_brws.production_id.generateTmpFinishedMoves()
+                raw_moves = wizard_brws.production_id.generateTmpRawMoves()
+#             wizard_brws.move_raw_ids = raw_moves
+#             wizard_brws.move_finished_ids = finished_moves
+            wizard_brws.write({'move_raw_ids': [(6,0,raw_moves)],
+                       'move_finished_ids': [(6,0,finished_moves)]
+                       })
+            pass
         
 
 class TmpStockMove(models.Model):

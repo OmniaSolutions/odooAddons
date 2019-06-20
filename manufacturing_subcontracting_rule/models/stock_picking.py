@@ -46,6 +46,14 @@ class StockPicking(models.Model):
     sub_production_id = fields.Integer(string=_('Sub production Id'))
     pick_out = fields.Many2one('stock.picking', string=_('Reference Stock pick out'))
     sub_workorder_id = fields.Integer(string=_('Sub Workorder Id'))
+    external_operation = fields.Selection([('normal', 'Normal'),
+                                           ('parent', 'Parent'),
+                                           ('operation', 'Operation')],
+                                           default='normal',
+                                           string=_('Produce it externally automatically as'),
+                                           help="""Normal: Use the Parent object as Product for the Out Pickings and the raw material for the Out Picking
+                                                   Parent: Use the Parent product for the In Out pickings
+                                                   Operation: Use the Product that have the Operation assigned for the In Out pickings""")
 
     @api.multi
     def do_new_transfer(self):
@@ -71,7 +79,9 @@ class StockPicking(models.Model):
     def createSubcontractingWO(self, wo_id, partner_location):
         target_product_id = wo_id.product_id
         production_id = wo_id.production_id
-        if wo_id.operation_id.external_operation not in ['normal', False, '']:
+        if self.external_operation not in ['normal', False, '']:
+            if wo_id.isPicksInDone():
+                wo_id.closeWO()
             return 
         for pick_in in self:
             if self.isIncoming(pick_in):

@@ -37,7 +37,7 @@
     	        	<field name="production_id" readonly="True"/>
     	        	<field name="work_order_id" readonly="True"/>
 	        	</group>
-	        	<field name="external_operation" attrs="{'readonly': [('work_order_id', '=', False)]}" required="True"/>
+	        	<field name="external_operation" attrs="{'readonly': [('work_order_id', '=', False)]}" required="True" context="{'wizard_obj_id': id}"/>
 	            <field name="move_raw_ids" context="{'wizard_obj_id': id}" attrs="{'invisible': [('external_operation', 'in', ['parent', 'operation'])]}">
 	                <tree>
 	                    <field name="product_id"/>
@@ -83,7 +83,7 @@
 	                </form>
 	            </field>
 	            
-	            <field name="move_finished_ids"  context="{'wizard_obj_id': id}">
+	            <field name="move_finished_ids"  context="{'wizard_obj_id': id}" attrs="{'invisible': [('external_operation', 'in', ['parent', 'operation'])]}">
 	                <tree>
 	                    <field name="product_id"/>
 	                    <field name="unit_factor" />
