@@ -223,12 +223,19 @@ class MrpProductionWizard(models.Model):
                         continue
                     if finish_move.source_production_move.product_uom_qty != finish_move.product_uom_qty:
                         finish_move.source_production_move.product_uom_qty = finish_move.product_uom_qty
-                        finished_qty += finish_move.product_uom_qty
                     if finish_move.source_production_move.unit_factor != finish_move.unit_factor:
+                        if productionBrws.product_id == finish_move.product_id:
+                            raise UserError(_("You can't change manufacturing finished product unit factor"))
                         finish_move.source_production_move.unit_factor = finish_move.unit_factor
+                    if productionBrws.product_id == finish_move.product_id:
+                        finished_qty += finish_move.product_uom_qty
                 else:
                     new_move = firstFinishMove.copy(self.getTmpMoveVals(finish_move))
                     new_move.action_confirm()
+                    if productionBrws.product_id == new_move.product_id:
+                        finished_qty += new_move.product_uom_qty
+            if finished_qty != productionBrws.product_qty:
+                raise UserError(_('You cannot produce different quantity that expected in production order.\n Expected %r, producing %r') % (productionBrws.product_qty, finished_qty))
 
     def getTmpMoveVals(self, tmp_move):
         return {
@@ -601,7 +608,7 @@ class MrpProductionWizard(models.Model):
                     self.cleanReadVals(vals)
                     stockMove = self.env['stock.move'].create(vals)
                     stockMove.unit_factor = move.unit_factor
-                    self.updatePickOutMove(newMove, stock_location, customerProductionLocation, workorderBrw, pick_out_2)
+                    self.updatePickOutMove(stockMove, stock_location, customerProductionLocation, workorderBrw, pick_out_2)
                 out_picks.append(pick_out_2)
         return out_picks
 
@@ -733,6 +740,9 @@ class TmpStockMove(models.Model):
     @api.onchange('unit_factor')
     def unit_factor_change(self):
         production_id = self.getProductionID()
+        if self.external_prod_finish and production_id.product_id == self.product_id and self.unit_factor not in [1]:
+            self.unit_factor = 1
+            raise UserError(_('You cannot change quantity of manufactured product. Change manufacturing order quantity instead.'))
         if production_id and self.operation_type == 'deliver_consume':
             self.product_uom_qty = self.unit_factor * production_id.product_qty
         if self.source_production_move.unit_factor != self.unit_factor:

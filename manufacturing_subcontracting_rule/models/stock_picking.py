@@ -58,7 +58,6 @@ class StockPicking(models.Model):
 
     @api.multi
     def commonSubcontracting(self, objPick):
-        purchase_order_line = self.env['purchase.order.line']
         if objPick.isIncoming(objPick):
             partner_location = objPick.location_id
             if objPick.sub_workorder_id:
@@ -72,56 +71,69 @@ class StockPicking(models.Model):
     def createSubcontractingWO(self, wo_id, partner_location):
         target_product_id = wo_id.product_id
         production_id = wo_id.production_id
+        if wo_id.operation_id.external_operation not in ['normal', False, '']:
+            return 
         for pick_in in self:
             if self.isIncoming(pick_in):
-                pick_in_product_qty = pick_in.getPickProductQty(target_product_id)
-                self.subcontractFinished(pick_in, target_product_id, pick_in_product_qty)
-                self.subcontractRaw(production_id, pick_in_product_qty, partner_location)
-                total_received = pick_in.getPickRecursiveProductQty(target_product_id)
-                target_mo_qty = wo_id.qty_production
-                if total_received > target_mo_qty:
-                    wo_id.updateQtytoProduce(total_received)    # Update WO and MO qty
-                    if wo_id.isPicksInDone():
-                        wo_id.closeWO()
-                elif total_received == target_mo_qty:
-                    if wo_id.isPicksInDone():
-                        wo_id.closeWO()
-                else:
-                    if wo_id.isPicksInDone():
-                        wo_id.closeWO()
+                for move_id in pick_in.move_lines:
+                    if move_id.product_id == target_product_id:
+                        pick_in_product_qty = move_id.ordered_qty
+                        self.subcontractFinished(pick_in, target_product_id, pick_in_product_qty)
+                        self.subcontractRaw(production_id, pick_in_product_qty, partner_location)
+                        total_received = pick_in.getPickRecursiveProductQty(target_product_id)
+                        target_mo_qty = wo_id.qty_production
+                        if total_received > target_mo_qty:
+                            wo_id.updateQtytoProduce(total_received)    # Update WO and MO qty
+                            if wo_id.isPicksInDone():
+                                wo_id.closeWO()
+                        elif total_received == target_mo_qty:
+                            if wo_id.isPicksInDone():
+                                wo_id.closeWO()
+                        else:
+                            if wo_id.isPicksInDone():
+                                wo_id.closeWO()
+                            else:
+                                wo_id.produceQty(pick_in_product_qty)
                     else:
-                        wo_id.produceQty(pick_in_product_qty)
-                purchase_line = self.env['purchase.order.line']
-                purchase_line_ids = purchase_line.search([('workorder_external_id', '=', wo_id.id)])
-                for purchase_order_line in purchase_line_ids:
-                    purchase_order_line._compute_qty_received()
+                        self.subcontractFinished(pick_in, move_id.product_id, move_id.product_uom_qty)
+        self.updatePurchaseLines(production_id, wo_id)
 
     @api.multi
     def createSubcontractingMO(self, production_id, partner_location):
         target_product_id = production_id.product_id
         for pick_in in self:
             if self.isIncoming(pick_in):
-                total_received = pick_in.getPickRecursiveProductQty(target_product_id)
-                target_mo_qty = production_id.product_qty
-                pick_in_product_qty = pick_in.getPickProductQty(target_product_id)
-                if total_received < target_mo_qty:
-                    production_id.produceQty(pick_in_product_qty)
-                    production_id.post_inventory()
-                    continue
-                self.subcontractFinished(pick_in, target_product_id, pick_in_product_qty)
-                self.subcontractRaw(production_id, pick_in_product_qty, partner_location)
-                if total_received > target_mo_qty:
-                    production_id.updateQtytoProduce(total_received)
-                    if production_id.isPicksInDone():
-                        production_id.closeMO()
-                elif total_received == target_mo_qty:
-                    if production_id.isPicksInDone():
-                        production_id.closeMO()
-                purchase_line = self.env['purchase.order.line']
-                purchase_line_ids = purchase_line.search([('production_external_id', '=', production_id.id)])
-                for purchase_order_line in purchase_line_ids:
-                    purchase_order_line._compute_qty_received()
+                for move_id in pick_in.move_lines:
+                    if move_id.product_id == target_product_id:
+                        total_received = pick_in.getPickRecursiveProductQty(target_product_id)
+                        target_mo_qty = production_id.product_qty
+                        pick_in_product_qty = move_id.ordered_qty
+                        self.subcontractFinished(pick_in, target_product_id, pick_in_product_qty)
+                        self.subcontractRaw(production_id, pick_in_product_qty, partner_location)
+                        if total_received > target_mo_qty:
+                            production_id.updateQtytoProduce(total_received)
+                            if production_id.isPicksInDone():
+                                production_id.closeMO()
+                        elif total_received == target_mo_qty:
+                            if production_id.isPicksInDone():
+                                production_id.closeMO()
+                        if total_received < target_mo_qty:
+                            production_id.produceQty(pick_in_product_qty)
+                            production_id.post_inventory()
+                    else:
+                        self.subcontractFinished(pick_in, move_id.product_id, move_id.product_uom_qty)
+        self.updatePurchaseLines(production_id)
 
+
+    def updatePurchaseLines(self, production_id, workorder_id=False):
+        purchase_line = self.env['purchase.order.line']
+        to_search = [('production_external_id', '=', production_id.id)]
+        if workorder_id:
+            to_search = [('workorder_external_id', '=', workorder_id.id)]
+        purchase_line_ids = purchase_line.search(to_search)
+        for purchase_order_line in purchase_line_ids:
+            purchase_order_line._compute_qty_received()
+        
     def isIncoming(self, objPick):
         return objPick.picking_type_code == 'incoming'
 

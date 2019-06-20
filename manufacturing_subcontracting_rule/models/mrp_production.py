@@ -116,6 +116,7 @@ class MrpProduction(models.Model):
             newMove = self.createTmpStockMove(stock_move_id, location_source_id, self.location_src_id.id)
             newMove.source_production_move = stock_move_id.id
             newMove.production_id = False # Remove link with production order
+            newMove.operation_type = 'deliver_consume'
             newMove.do_unreserve()
             newMove.state = 'draft'
             outElems.append(newMove.id)
@@ -194,7 +195,7 @@ class MrpProduction(models.Model):
     @api.multi
     def cancelPurchaseOrders(self):
         purchase_line = self.env['purchase.order.line']
-        purchase_line_ids = purchase_line.search([('workorder_external_id', '=', self.id)])
+        purchase_line_ids = purchase_line.search([('production_external_id', '=', self.id)])
         purchase_list = []
         for purchase_line_id in purchase_line_ids:
             purchase_list.append(purchase_line_id.order_id)
@@ -214,10 +215,11 @@ class MrpProduction(models.Model):
         stockPickingObj = self.env['stock.picking']
         stockPickList = stockPickingObj.search([('origin', '=', self.name)])
         stockPickList += stockPickingObj.search([('sub_production_id', '=', self.id)])
-        for pickBrws in list(set(stockPickList)):
+        pickings = list(set(stockPickList))
+        for pickBrws in pickings:
             if pickBrws.state == 'done':
                 raise UserError('you cannot cancel a Picking in Done state.')
-            pickBrws.action_cancel()
+            pickBrws.with_context({'skip_delete_recursion': True}).action_cancel()
 
     @api.multi
     def cancelRestoreMO(self):
@@ -307,36 +309,6 @@ class MrpProduction(models.Model):
             'domain': [('id', 'in', self.external_pickings.ids)],
         }
 
-#     @api.multi
-#     def createSubcontractingMO(self, partner_location):
-#         subcontracting_location = self.env['stock.location'].getSubcontractiongLocation()
-#         for production in self:
-#             for raw_move in production.move_raw_ids:
-#                 new_sub_move = raw_move.subcontractingMove(partner_location, subcontracting_location, raw_move.id)
-#                 new_sub_move.action_done()
-#             for finish_move in production.move_finished_ids:
-#                 new_sub_move = finish_move.subcontractingMove(subcontracting_location, partner_location, finish_move.id)
-#                 new_sub_move.action_done()
-
-#     @api.multi
-#     def createSubcontractingMO(self):
-#         subcontracting_location = self.env['stock.location'].getSubcontractiongLocation()
-#         for pickIn in self:
-#             finish_moves = pickIn.move_lines
-#             for finish_move in finish_moves:
-#                 new_sub_move = finish_move.subcontractingMove(subcontracting_location, finish_move.location_id, finish_move.id)
-#                 new_sub_move.action_done()
-#                 new_sub_move.date = finish_move.date
-#             pick_out = pickIn.pick_out
-#             if pick_out:
-#                 for raw_line in pick_out.move_lines:
-#                     moveQty = raw_line.quantity_done * raw_line.unit_factor
-#                     raw_move = raw_line.subcontractingMove(raw_line.location_dest_id, subcontracting_location, self.id)
-#                     raw_move.ordered_qty = moveQty
-#                     raw_move.product_uom_qty = moveQty
-#                     raw_move.action_done()
-#                     raw_move.date = raw_line.date
-
     @api.multi
     def updateQtytoProduce(self, new_qty):
         for raw_id in self.move_raw_ids:
@@ -373,14 +345,6 @@ class MrpProduction(models.Model):
         
         self.write({'product_qty': new_qty})
 
-#         for mo_id in self:
-#             product_qty = self.env['change.production.qty'].create({
-#                 'mo_id': mo_id.id,
-#                 'product_qty': new_qty,
-#             })
-#             ctx = self.env.context.copy()
-#             ctx['skip_external_check'] = True
-#             product_qty.with_context(ctx).change_prod_qty()
 
     @api.multi
     def produceQty(self, qty_to_produce):

@@ -72,16 +72,26 @@ class MrpWorkorder(models.Model):
 
     @api.multi
     def button_cancel_produce_externally(self):
+        for workOrderBrws in self:
+            workOrderBrws.cancelPurchase()
+            workOrderBrws.cancelPickings()
+            workOrderBrws.write({'state': 'pending'})
+            # TODO: Check the partial record production
+
+    @api.multi
+    def cancelPickings(self):
         stockPickingObj = self.env['stock.picking']
         for workOrderBrws in self:
             stockPickList = stockPickingObj.search([('sub_workorder_id', '=', workOrderBrws.id)])
             stockPickList += workOrderBrws.getExternalPickings()
-            for pickBrws in stockPickList:
+            for pickBrws in list(set(stockPickList)):
                 if pickBrws.state == 'done':
                     raise UserError('you cannot cancel a Picking in Done state.')
-                pickBrws.action_cancel()
-            workOrderBrws.write({'state': 'pending'})
-            
+                pickBrws.with_context({'skip_delete_recursion': True}).action_cancel()
+
+    @api.multi
+    def cancelPurchase(self):
+        for workOrderBrws in self:
             purchase_line = self.env['purchase.order.line']
             purchase_line_ids = purchase_line.search([('workorder_external_id', '=', workOrderBrws.id)])
             purchase_list = []
@@ -157,8 +167,12 @@ class MrpWorkorder(models.Model):
     @api.multi
     def closeWO(self):
         for woBrws in self:
-            woBrws.record_production()
-            if not woBrws.next_work_order_id:
+            if woBrws.state != 'done':
+                needed_to_complete = woBrws.qty_production - woBrws.qty_produced
+                if woBrws.qty_producing != needed_to_complete:
+                    woBrws.qty_producing = needed_to_complete
+                woBrws.record_production()
+            if not woBrws.next_work_order_id and woBrws.production_id.state != 'done':
                 woBrws.production_id.post_inventory()
                 woBrws.production_id.button_mark_done()
             

@@ -31,7 +31,7 @@ class stock_picking_custom(models.Model):
                         old_move.state = 'draft'
                     else:
                         msg += "\nOriginal picking %r has not been restored due to state" % (old_move.picking_id.display_name)
-            merged_pick.mapped('move_lines').action_cancel()
+            # merged_pick.mapped('move_lines').action_cancel()
             merged_pick.write({'is_locked': True})
         res = super(stock_picking_custom, self).action_cancel()
         self.env.cr.commit()

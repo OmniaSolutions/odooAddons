@@ -67,8 +67,6 @@
 		                        attrs="{'invisible': [('operation_type', '!=', 'deliver_consume')]}">
 		                        <br/>Warning: Delivery and Consume will consume manufacturing order and will delivery material.
 		                    </div>
-		                    
-		                    
 		                    <field name="product_uom" />
 		                    <field name="name" />
 		                    <field name="location_id" invisible='True'/>
@@ -79,6 +77,8 @@
 		                    <field name="location_available" readonly='True'/>
 		                    <field name="qty_available" readonly='True'/>
 		                    <field name="source_production_move" readonly='True'/>
+		                    <field name="external_prod_finish"  invisible='True'/>
+		                    <field name="external_prod_raw"  invisible='True'/>
 		                </group>
 	                </form>
 	            </field>
@@ -93,6 +93,7 @@
 	                    <field name="date_expected" />
 	                    <field name="location_available" />
 	                    <field name="qty_available" />
+	                    <field name="operation_type" />
 	                </tree>
 	                <form>
 	                	<group>
@@ -108,6 +109,9 @@
 		                    <field name="date_expected" />
 		                    <field name="location_available" readonly='True'/>
 		                    <field name="qty_available" readonly='True'/>
+		                    <field name="operation_type" readonly='True'/>
+		                    <field name="external_prod_finish"  invisible='True'/>
+		                    <field name="external_prod_raw"  invisible='True'/>
 		                </group>
 	                </form>
 	            </field>
