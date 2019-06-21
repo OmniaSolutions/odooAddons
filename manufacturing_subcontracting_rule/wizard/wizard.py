@@ -346,7 +346,6 @@ class MrpProductionWizard(models.Model):
         """
         get the default external product suitable for the purchase
         """
-        mrp_workorder_id = self.env['mrp.workorder'].browse([mrp_workorder_id])
         if mrp_workorder_id.external_product:
             return mrp_workorder_id.external_product
         product_vals = self.getNewExternalProductInfo(mrp_workorder_id)
