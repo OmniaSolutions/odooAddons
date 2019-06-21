@@ -66,9 +66,31 @@ class PurchaseOrder(models.Model):
     def _compute_picking(self):
         super(PurchaseOrder, self)._compute_picking()
         for order in self:
-            pickingsToAppend = self.env['stock.picking'].browse()
             for purchaseLineBrws in order.order_line:
                 if purchaseLineBrws.production_external_id:
-                    pickingsToAppend = pickingsToAppend + purchaseLineBrws.production_external_id.external_pickings
-            order.picking_ids = order.picking_ids + pickingsToAppend
-            order.picking_count = order.picking_count + len(pickingsToAppend)
+                    for external_pick in purchaseLineBrws.production_external_id.external_pickings:
+                        if external_pick.partner_id == order.partner_id and external_pick not in order.picking_ids:
+                            order.picking_ids += external_pick
+            order.picking_count = len(order.picking_ids)
+
+    @api.multi
+    def button_confirm(self):
+        res = super(PurchaseOrder, self).button_confirm()
+        for pick in self:
+            partner = pick.partner_id
+            purchases = self.env['purchase.order']
+            pickings = self.env['stock.picking']
+            if pick.production_external_id:
+                purchases = pick.production_external_id.getExternalPurchase()
+                pickings = pick.production_external_id.getExternalPickings()
+            elif pick.workorder_external_id:
+                purchases = pick.workorder_external_id.getExternalPurchase()
+                pickings = pick.workorder_external_id.getExternalPickings()
+            for purchase_id in purchases:
+                if purchase_id.partner_id != partner:
+                    purchase_id.button_cancel()
+                    purchase_id.unlink()
+            for pick in pickings:
+                if purchase_id.partner_id != partner: 
+                    pick.with_context({'skip_delete_recursion': True}).action_cancel()
+        return res

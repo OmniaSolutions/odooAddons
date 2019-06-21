@@ -90,6 +90,15 @@ class MrpWorkorder(models.Model):
                 pickBrws.with_context({'skip_delete_recursion': True}).action_cancel()
 
     @api.multi
+    def getExternalPurchase(self):
+        purchase_ids = self.env['purchase.order']
+        for workorder_external_id in self:
+            purchase_line_ids = self.env['purchase.order.line'].search([('workorder_external_id', '=', workorder_external_id.id)])
+            for line_id in purchase_line_ids:
+                purchase_ids += line_id.order_id
+        return purchase_ids
+
+    @api.multi
     def cancelPurchase(self):
         for workOrderBrws in self:
             purchase_line = self.env['purchase.order.line']
@@ -128,7 +137,7 @@ class MrpWorkorder(models.Model):
     def getExternalPickings(self):
         pickObj = self.env['stock.picking']
         for woBrws in self:
-            return pickObj.search([('sub_workorder_id', '=', woBrws.id)])
+            pickObj += pickObj.search([('sub_workorder_id', '=', woBrws.id)])
         return pickObj
 
     @api.multi

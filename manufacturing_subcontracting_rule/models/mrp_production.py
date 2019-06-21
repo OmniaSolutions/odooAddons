@@ -280,12 +280,25 @@ class MrpProduction(models.Model):
         return isOut
 
     @api.multi
+    def getExternalPickings(self):
+        pickings = self.env['stock.picking']
+        for man_order in self:
+            pickings += pickings.search([('sub_production_id', '=', man_order.id)])
+        return pickings
+        
+    @api.multi
+    def getExternalPurchase(self):
+        purchase_ids = self.env['purchase.order']
+        for mrp in self:
+            purchase_line_ids = self.env['purchase.order.line'].search([('production_external_id', '=', mrp.id)])
+            for line_id in purchase_line_ids:
+                purchase_ids += line_id.order_id
+        return purchase_ids
+        
+    @api.multi
     def open_external_purchase(self):
         newContext = self.env.context.copy()
-        purchase_line_ids = self.env['purchase.order.line'].search([('production_external_id', '=', self.id)])
-        purchase_ids = []
-        for line_id in purchase_line_ids:
-            purchase_ids.append(line_id.order_id.id)
+        purchase_ids = self.getExternalPurchase()
         return {
             'name': _("Purchase External"),
             'view_type': 'form',
@@ -293,7 +306,7 @@ class MrpProduction(models.Model):
             'res_model': 'purchase.order',
             'type': 'ir.actions.act_window',
             'context': newContext,
-            'domain': [('id', 'in', purchase_ids)],
+            'domain': [('id', 'in', purchase_ids.ids)],
         }
 
     @api.multi

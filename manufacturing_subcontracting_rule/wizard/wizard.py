@@ -167,7 +167,7 @@ class MrpProductionWizard(models.Model):
                 pickingBrwsList.append(pickIn.id)
             for pick_out in pick_out_ids:
                 pickingBrwsList.append(pick_out.id)
-        self.createPurches(pickIn, production=productionBrws)
+            self.createPurches(external_partner, pickIn, production=productionBrws)
         productionBrws.date_planned_finished_wo = date_planned_finished_wo
         productionBrws.date_planned_start_wo = date_planned_start_wo
         productionBrws.external_pickings = [(6, 0, pickingBrwsList)]
@@ -286,10 +286,10 @@ class MrpProductionWizard(models.Model):
                 pickingBrwsList.append(pickIn.id)
             for pickOut in picksOut:
                 pickingBrwsList.append(pickOut.id)
+            self.createPurches(external_partner, pickIn, workorderBrw)
         workorderBrw.date_planned_finished = date_planned_finished_wo
         workorderBrw.date_planned_start = date_planned_start_wo
         productionBrws.external_pickings = [(6, 0, pickingBrwsList)]
-        self.createPurches(pickIn, workorderBrw)
         workorderBrw.state = 'external'
         self.updateMOLinesWithDifferences(productionBrws)
         if not pickIn:
@@ -390,50 +390,49 @@ class MrpProductionWizard(models.Model):
         product_id.write(vals)
 
     @api.multi
-    def createPurches(self, pickIn, workorderBrws=False, production=False):
+    def createPurches(self, external_partner, pickIn, workorderBrws=False, production=False):
         if not self:
             return
         if not self.create_purchese_order:
             return
         purchaseOrderObj = self.env['purchase.order']
         obj_product_product = self.getDefaultExternalServiceProduct(workorderBrws)
-        for toCreatePurchese in self.external_partner:
-            self.createSeller(toCreatePurchese, obj_product_product, workorderBrws)
-            purchaseBrws = None
-            if self.merge_purchese_order:
-                purchaseBrws = purchaseOrderObj.search([('partner_id', '=', toCreatePurchese.partner_id.id),
-                                                        ('state', 'in', ['draft', 'sent'])
-                                                        ], limit=1)
-            if not purchaseBrws and self.create_purchese_order:
-                vals = {'partner_id': toCreatePurchese.partner_id.id,
-                        'date_planned': self.request_date}
-                if production:
-                    vals['production_external_id'] = production.id
-                if workorderBrws:
-                    vals['workorder_external_id'] = workorderBrws.id
-                purchaseBrws = purchaseOrderObj.create(vals)
+        self.createSeller(external_partner, obj_product_product, workorderBrws)
+        purchaseBrws = None
+        if self.merge_purchese_order:
+            purchaseBrws = purchaseOrderObj.search([('partner_id', '=', external_partner.partner_id.id),
+                                                    ('state', 'in', ['draft', 'sent'])
+                                                    ], limit=1)
+        if not purchaseBrws and self.create_purchese_order:
+            vals = {'partner_id': external_partner.partner_id.id,
+                    'date_planned': self.request_date}
+            if production:
+                vals['production_external_id'] = production.id
+            if workorderBrws:
+                vals['workorder_external_id'] = workorderBrws.id
+            purchaseBrws = purchaseOrderObj.create(vals)
 
-            for lineBrws in pickIn.move_lines:
-                values = {'product_id': obj_product_product.id,
-                          'name': self.getPurcheseName(obj_product_product),
-                          'product_qty': lineBrws.product_uom_qty,
-                          'product_uom': obj_product_product.uom_po_id.id,
-                          'price_unit': obj_product_product.price,
-                          'date_planned': self.request_date,
-                          'order_id': purchaseBrws.id,
-                          'sub_move_line': lineBrws.id}
-                if production:
-                    values['production_external_id'] = production.id
-                if workorderBrws:
-                    values['workorder_external_id'] = workorderBrws.id
-                new_purchase_order_line = self.env['purchase.order.line'].create(values)
-                new_purchase_order_line.onchange_product_id()
-                new_purchase_order_line.date_planned = self.request_date
-                new_purchase_order_line.product_qty = lineBrws.product_uom_qty
-                lineBrws.purchase_order_line_subcontracting_id = new_purchase_order_line.id
-                lineBrws.purchase_line_id = new_purchase_order_line.id
-            if self.confirm_purchese_order and purchaseBrws:
-                purchaseBrws.button_confirm()
+        for lineBrws in pickIn.move_lines:
+            values = {'product_id': obj_product_product.id,
+                      'name': self.getPurcheseName(obj_product_product),
+                      'product_qty': lineBrws.product_uom_qty,
+                      'product_uom': obj_product_product.uom_po_id.id,
+                      'price_unit': obj_product_product.price,
+                      'date_planned': self.request_date,
+                      'order_id': purchaseBrws.id,
+                      'sub_move_line': lineBrws.id}
+            if production:
+                values['production_external_id'] = production.id
+            if workorderBrws:
+                values['workorder_external_id'] = workorderBrws.id
+            new_purchase_order_line = self.env['purchase.order.line'].create(values)
+            new_purchase_order_line.onchange_product_id()
+            new_purchase_order_line.date_planned = self.request_date
+            new_purchase_order_line.product_qty = lineBrws.product_uom_qty
+            lineBrws.purchase_order_line_subcontracting_id = new_purchase_order_line.id
+            lineBrws.purchase_line_id = new_purchase_order_line.id
+        if self.confirm_purchese_order and purchaseBrws:
+            purchaseBrws.button_confirm()
 
     @api.multi
     def button_close_wizard(self):

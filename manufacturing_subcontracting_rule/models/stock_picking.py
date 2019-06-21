@@ -197,15 +197,30 @@ class StockPicking(models.Model):
     def action_cancel(self):
         key = 'skip_delete_recursion'
         context = self.env.context
+        res = super(StockPicking, self).action_cancel()
         if not context.get(key):
             for pick_id in self:
                 if pick_id.sub_workorder_id:
-                    self.env['mrp.workorder'].browse(pick_id.sub_workorder_id).with_context({key: True}).button_cancel_produce_externally()
+                    workorder = self.env['mrp.workorder'].browse(pick_id.sub_workorder_id)
+                    pickings = workorder.getExternalPickings()
+                    closeWO = True
+                    for pick in pickings:
+                        if pick.state != 'cancel':
+                            closeWO = False
+                    if closeWO:
+                        workorder.with_context({key: True}).button_cancel_produce_externally()
                     return
                 elif pick_id.sub_production_id:
-                    self.env['mrp.production'].browse(pick_id.sub_production_id).with_context({key: True}).button_cancel_produce_externally()
+                    production = self.env['mrp.production'].browse(pick_id.sub_production_id)
+                    pickings = production.getExternalPickings()
+                    closeMO = True
+                    for pick in pickings:
+                        if pick.state != 'cancel':
+                            closeMO = False
+                    if closeMO:
+                        production.with_context({key: True}).button_cancel_produce_externally()
                     return
-        return super(StockPicking, self).action_cancel()
+        return res
 
 
 class StockBackorderConfirmation(models.TransientModel):
