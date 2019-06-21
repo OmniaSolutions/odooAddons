@@ -296,23 +296,42 @@ class MrpProductionWizard(models.Model):
             workorderBrw.closeWO()
 
     @api.model
-    def getNewExternalProductInfo(self):
-        if not self.production_id.product_id.default_code:
-            raise UserError("No default code Assigned to product %r " % self.production_id.product_id.name)
-        val = {'default_code': "S-" + self.production_id.product_id.default_code,
+    def getNewExternalProductInfo(self, workorder_id=None):
+        """
+        this method could be overloaded as per customer needs
+        """
+        default_code = self.production_id.product_id.name
+        if self.production_id.product_id.default_code:
+            default_code = self.production_id.product_id.default_code
+        new_default_code = "S-" + default_code
+        new_name = self.production_id.product_id.name
+        if workorder_id:
+            new_default_code = new_default_code + "-" + workorder_id.name
+            new_name = new_name + "-" + workorder_id.name
+        val = {'default_code': new_default_code,
                'type': 'service',
                'purchase_ok': True,
                'name': "[%s] %s" % (self.production_id.product_id.default_code, self.production_id.product_id.name)}
         return val
 
     @api.model
-    def getDefaultExternalServiceProduct(self):
+    def getDefaultExternalServiceProduct(self, mrp_workorder_id=None):
         """
         get the default external product suitable for the purchase
         """
-        product_brw = self.production_id.bom_id.external_product
-        if product_brw:
-            return product_brw
+        if not mrp_workorder_id:
+            return self.getDefaultProductionServiceProduct()
+        else:
+            return self.getDefaultWorkorderServiceProduct(mrp_workorder_id)
+
+    @api.model
+    def getDefaultProductionServiceProduct(self):
+        """
+        get the default external product suitable for the purchase
+        """
+        bom_product_product_id = self.production_id.bom_id.external_product
+        if bom_product_product_id:
+            return bom_product_product_id
         product_vals = self.getNewExternalProductInfo()
         newProduct = self.env['product.product'].search([('default_code', '=', product_vals.get('default_code'))])
         if not newProduct:
@@ -321,6 +340,28 @@ class MrpProductionWizard(models.Model):
                                     message_type='notification')
         self.production_id.bom_id.external_product = newProduct
         return newProduct
+
+    @api.model
+    def getDefaultWorkorderServiceProduct(self, mrp_workorder_id=None):
+        """
+        get the default external product suitable for the purchase
+        """
+        mrp_workorder_id = self.env['mrp.workorder'].browse([mrp_workorder_id])
+        if mrp_workorder_id.external_product:
+            return mrp_workorder_id.external_product
+        product_vals = self.getNewExternalProductInfo(mrp_workorder_id)
+        newProduct = self.env['product.product'].search([('default_code', '=', product_vals.get('default_code'))])
+        if not newProduct:
+            newProduct = self.env['product.product'].create(product_vals)
+            newProduct.message_post(body=_('<div style="background-color:green;color:white;border-radius:5px"><b>Create automatically from subcontracting module</b></div>'),
+                                    message_type='notification')
+
+        mrp_workorder_id.external_product = newProduct
+        mrp_workorder_id.operation_id.external_product = newProduct
+        return newProduct
+    
+    
+    
 
     @api.model
     def getPurcheseName(self, product_product):
@@ -356,7 +397,7 @@ class MrpProductionWizard(models.Model):
         if not self.create_purchese_order:
             return
         purchaseOrderObj = self.env['purchase.order']
-        obj_product_product = self.getDefaultExternalServiceProduct()
+        obj_product_product = self.getDefaultExternalServiceProduct(workorderBrws)
         for toCreatePurchese in self.external_partner:
             self.createSeller(toCreatePurchese, obj_product_product, workorderBrws)
             purchaseBrws = None
