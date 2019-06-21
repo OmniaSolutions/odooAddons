@@ -523,7 +523,7 @@ class MrpProductionWizard(models.Model):
             if self.production_id.product_id == product:
                 for wo in self.production_id.workorder_ids:
                     wo.is_mo_produced = True
-        elif self.production_id.product_id == product:
+        elif self.production_id.product_id == product and not self.external_operation in ['parent']:
             raise UserError('You cannot produce more than one time finished products of the manufacturing order.')
 
     def updatePickInMove(self, newMove, productionLocation, customerProductionLocation, workorderBrw, picking):
