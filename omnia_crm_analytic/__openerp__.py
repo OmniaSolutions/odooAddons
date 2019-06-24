@@ -28,7 +28,7 @@
 
 {
     'name': 'omnia_crm_analytic',
-    'version': '0.1',
+    'version': '10.0.0.1.0',
     'sequence': 1,
     'category': 'CRM',
     'description': """

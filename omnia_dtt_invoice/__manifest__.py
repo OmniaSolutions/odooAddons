@@ -27,7 +27,7 @@
 ##############################################################################
 {
     'name': 'omnia_ddt_invoice',
-    'version': '1.1',
+    'version': '10.0.1.1.0',
     'sequence': 1,
     'category': 'Custom',
     'description': """
