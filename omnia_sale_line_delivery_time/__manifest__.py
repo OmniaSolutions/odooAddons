@@ -21,7 +21,7 @@
 ##############################################################################
 {
     'name': 'Sale Order Line Delivery Date',
-    'version': '10.0.1.0',
+    'version': '10.0.1.0.0',
     'author': 'OmniaSolutions',
     'website': 'http://www.omniasolutions.eu',
     'description': 'Adds new field in Sale Order Line to manage product delivery date',

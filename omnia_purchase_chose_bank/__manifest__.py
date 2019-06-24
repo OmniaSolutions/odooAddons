@@ -21,7 +21,7 @@
 ##############################################################################
 {
     'name': 'Purchase Bank',
-    'version': '0.1',
+    'version': '10.0.0.1.0',
     'author': 'OmniaSolutions',
     'website': 'http://www.omniasolutions.eu',
     'category': 'Purchase',

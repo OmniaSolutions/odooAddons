@@ -20,7 +20,7 @@
 ##############################################################################
 {
     'name': 'Omnia Stage Task Filter',
-    'version': '10',
+    'version': '10.0.10.0.0',
     'author': 'OmniaSolutions',
     'website': 'https://www.omniasolutions.website',
     'category': 'project',
