@@ -286,7 +286,8 @@ class MrpProductionWizard(models.Model):
             if pickIn:
                 pickingBrwsList.append(pickIn.id)
             for pickOut in picksOut:
-                pickingBrwsList.append(pickOut.id)
+                if pickOut:
+                    pickingBrwsList.append(pickOut.id)
             self.createPurches(external_partner, pickIn, workorderBrw)
         workorderBrw.date_planned_finished = date_planned_finished_wo
         workorderBrw.date_planned_start = date_planned_start_wo
