@@ -392,7 +392,12 @@ class MrpProductionWizard(models.Model):
         product_id.write(vals)
 
     @api.multi
-    def createPurches(self, external_partner, pickIn, workorderBrws=False, production=False):
+    def hook_createPurches(self, external_partner, pickIn, workorderBrws=False, production=False, analytic_account=False):
+        return external_partner, pickIn, workorderBrws, production, analytic_account
+
+    @api.multi
+    def createPurches(self, external_partner, pickIn, workorderBrws=False, production=False, analytic_account=False):
+        external_partner, pickIn, workorderBrws, production, analytic_account = self.hook_createPurches(external_partner, pickIn, workorderBrws, production, analytic_account)
         if not self:
             return
         if not self.create_purchese_order:
@@ -431,6 +436,8 @@ class MrpProductionWizard(models.Model):
             new_purchase_order_line.onchange_product_id()
             new_purchase_order_line.date_planned = self.request_date
             new_purchase_order_line.product_qty = lineBrws.product_uom_qty
+            if analytic_account:
+                new_purchase_order_line.account_analytic_id = analytic_account
             lineBrws.purchase_order_line_subcontracting_id = new_purchase_order_line.id
             lineBrws.purchase_line_id = new_purchase_order_line.id
         if self.confirm_purchese_order and purchaseBrws:
