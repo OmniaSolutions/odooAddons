@@ -21,7 +21,7 @@
 ##############################################################################
 {
     'name': 'Purchase Detail',
-    'version': '0.1',
+    'version': '10.0.0.1.0',
     'author': 'OmniaSolutions',
     'website': 'https://www.omniasolutions.website',
     'category': 'Purchase',

@@ -25,7 +25,7 @@
 
 {
     'name': 'omnia_ddt_extended',
-    'version': '0.1',
+    'version': '10.0.0.1.0',
     'category': 'Custom',
     'sequence':1,
     'description': """

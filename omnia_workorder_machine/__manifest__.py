@@ -21,7 +21,7 @@
 ##############################################################################
 {
     'name': 'Omnia Workorder Machine',
-    'version': '11',
+    'version': '10.0.11.0.0',
     'author': 'OmniaSolutions',
     'website': 'http://www.omniasolutions.eu',
     'category': 'report',

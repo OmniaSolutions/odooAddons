@@ -28,7 +28,7 @@
 
 {
     'name': 'omnia_print_template_direct',
-    'version': '0.1',
+    'version': '10.0.0.1.0',
     'sequence': 1,
     'category': 'SALE',
     'description': """
