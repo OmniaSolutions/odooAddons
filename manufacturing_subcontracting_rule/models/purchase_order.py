@@ -51,8 +51,8 @@ class PurchaseOrder(models.Model):
         manufacturingList = self.env['mrp.production'].browse()
         for purchaseLineBrws in self.order_line:
             manufacturingList = manufacturingList + purchaseLineBrws.production_external_id
-        manufacturingList += self.production_external_id.production_id
-        manufacturingList += self.workorder_external_id
+        manufacturingList += self.production_external_id
+        manufacturingList += self.workorder_external_id.production_id
         manufacturingIds = manufacturingList.ids
         return {
             'name': _("Manufacturing External"),
