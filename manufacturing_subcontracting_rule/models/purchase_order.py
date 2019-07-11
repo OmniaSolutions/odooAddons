@@ -93,6 +93,6 @@ class PurchaseOrder(models.Model):
                     purchase_id.button_cancel()
                     purchase_id.unlink()
             for pick in pickings:
-                if purchase_id.partner_id != partner: 
+                if pick.partner_id != partner: 
                     pick.with_context({'skip_delete_recursion': True}).action_cancel()
         return res
