@@ -758,7 +758,7 @@ class MrpWorkorderWizard(MrpProductionWizard):
             vals = {'name': '',
                     'company_id': mrp_production_id.company_id.id,
                     'product_id': bom_line_id.product_id.id,
-                    'product_uom_qty': bom_line_id.product_qty,
+                    'product_uom_qty': bom_line_id.product_qty * mrp_production_id.product_qty,
                     'location_id': location_id.id,
                     'location_dest_id': location_dest_id.id,
                     'state': 'draft',
