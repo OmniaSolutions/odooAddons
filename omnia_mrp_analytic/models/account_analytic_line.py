@@ -28,23 +28,25 @@
 ##############################################################################
 
 '''
-Created on Apr 17, 2018
+Created on Dec 18, 2017
 
-@author: Matteo Boscolo
+@author: daniel
 '''
 from odoo import models
 from odoo import fields
 from odoo import api
 from odoo import _
+from odoo.exceptions import UserError
 import logging
 import datetime
 from datetime import timedelta
 from odoo.tools import DEFAULT_SERVER_DATETIME_FORMAT
 
 
-class MrpBom(models.Model):
+class AccountAnalyticLine(models.Model):
+    _name = "account.analytic.line"
+    _inherit = ['account.analytic.line']
 
-    _name = "mrp.bom"
-    _inherit = ['mrp.bom']
-    external_product = fields.Many2one('product.product',
-                                       string=_('External Product use for external production'))
+    workorder_id = fields.Many2one('mrp.workorder',
+                                 string=_('Workorder'))
+

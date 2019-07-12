@@ -38,7 +38,10 @@
     'author': 'OmniaSolutions.eu',
     'maintainer': 'OmniaSolutions.eu',
     'website': 'http://www.OmniaSolutions.eu',
-    'depends': ['stock', 'delivery', 'mrp', 'purchase'],
+    'depends': ['stock',
+                'delivery',
+                'purchase',
+                'mrp'],
     'data': [# security
              'security/ir.model.access.csv',
              #  wizard

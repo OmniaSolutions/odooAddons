@@ -38,8 +38,7 @@ from odoo import _
 
 
 class StockPicking(models.Model):
-    _name = 'stock.picking'
-    _inherit = ['stock.picking']
+    _inherit = 'stock.picking'
 
     external_production = fields.Many2one('mrp.production')
     pick_out = fields.Many2one('stock.picking', string=_('Reference Stock pick out'))

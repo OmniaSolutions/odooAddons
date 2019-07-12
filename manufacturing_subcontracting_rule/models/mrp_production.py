@@ -225,6 +225,7 @@ class MrpProduction(models.Model):
         return self.createProductionLocation(locationName)
 
     def createProductionLocation(self, locationName):
+
         def getParentLocation():
             locations = locationObj.with_context({'lang': 'en_US'}).search([
                 ('usage', '=', 'supplier'),
@@ -249,14 +250,13 @@ class MrpProduction(models.Model):
     @api.multi
     def get_wizard_value(self):
         values = {}
-        if not values:
-            values['move_raw_ids'] = [(6, 0, self.copyAndCleanLines(self.move_raw_ids,
-                                                                    location_source_id=self.location_src_id.id,
-                                                                    isRawMove=True
-                                                                    ))]
-            values['move_finished_ids'] = [(6, 0, self.copyAndCleanLines(self.move_finished_ids,
-                                                                         location_dest_id=self.location_src_id.id,
-                                                                         isRawMove=False))]
+        values['move_raw_ids'] = [(6, 0, self.copyAndCleanLines(self.move_raw_ids,
+                                                                location_source_id=self.location_src_id.id, 
+                                                                isRawMove=True
+                                                                ))]
+        values['move_finished_ids'] = [(6, 0, self.copyAndCleanLines(self.move_finished_ids,
+                                                                     location_dest_id=self.location_src_id.id,
+                                                                     isRawMove=False))]
         values['production_id'] = self.id
         values['request_date'] = datetime.datetime.now()
         return values

@@ -56,6 +56,7 @@ class MrpWorkOrder(models.Model):
                     'project_id': self.task_id.project_id.id,
                     'task_id': self.task_id.id,
                     'employee_id': self.task_id.user_id.employee_ids.id,
-                    'unit_amount': task_duration,
+                    'unit_amount': task_duration / 60,
+                    'workorder_id': self.id,
                     }
             self.env['account.analytic.line'].create(vals)
