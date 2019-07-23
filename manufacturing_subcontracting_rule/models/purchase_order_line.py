@@ -75,3 +75,30 @@ class PurchaseOrderLine(models.Model):
                                             else:
                                                 total += move.product_uom_qty
                         line.qty_received = total
+
+    
+    @api.multi
+    def _prepare_stock_moves(self, picking):
+        '''
+            Fix due to change products in purchase order, Odoo will create stock moves but with wrong locations
+        '''
+        move_lines = super(PurchaseOrderLine, self)._prepare_stock_moves(picking)
+        for moveLineVals in move_lines:
+            location_id = False
+            location_dest_id = False
+            for move in self.move_ids:
+                if move.purchase_order_line_subcontracting_id:
+                    location_id = move.location_id.id
+                    location_dest_id = move.location_dest_id.id
+                    moveLineVals['product_id'] = move.product_id.id # Setup not "S" product
+            if not location_id or not location_dest_id:
+                picking_id = moveLineVals.get('picking_id', False)
+                if picking_id:
+                    pick = self.env['stock.picking'].browse(picking_id)
+                    location_id = pick.location_id.id
+                    location_dest_id = pick.location_dest_id.id
+            if location_id:
+                moveLineVals['location_id'] = location_id
+            if location_dest_id:
+                moveLineVals['location_dest_id'] = location_dest_id
+        return move_lines
