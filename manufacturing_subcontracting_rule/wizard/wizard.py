@@ -197,7 +197,9 @@ class MrpProductionWizard(models.TransientModel):
 
     @api.onchange('operation_type')
     def operationTypeChanged(self):
-        prodObj = self.getParentObjectBrowse()
+        resObj = self.getParentObjectBrowse()
+        if resObj._name == 'mrp.workorder':
+            prodObj = resObj.production_id
         wBrws = self.getWizardBrws()
         cleanRelInfos = {'raw_material_production_id': False,
                          'origin': ''}
