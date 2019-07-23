@@ -110,6 +110,7 @@ class StockMove(models.Model):
         #
         # manage raw material
         #
+        # TODO:    Check for partial picking in / out and pick_out link
         qty = self.quantity_done
         if self.state == 'cancel':
             return

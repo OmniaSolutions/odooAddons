@@ -7,6 +7,7 @@ Created on 16 Jan 2018
 from odoo import models
 from odoo import fields
 from odoo import api
+from odoo.exceptions import UserError
 from odoo import _
 import logging
 import datetime
@@ -48,7 +49,7 @@ class MrpWorkorder(models.Model):
         values = self.production_id.get_wizard_value()
         partner = self.operation_id.default_supplier
         if not partner:
-            raise UserWarning("No Partner set to Routing Operation")
+            raise UserError("No Partner set to Routing Operation")
         values['consume_product_id'] = self.product_id.id
         values['consume_bom_id'] = self.production_id.bom_id.id
         values['external_warehouse_id'] = self.production_id.location_src_id.get_warehouse().id
