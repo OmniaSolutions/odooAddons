@@ -26,7 +26,7 @@
 	        	<field name="consume_bom_id" attrs="{'invisible': [('operation_type', '!=', 'consume')], 'required': [('operation_type', '=', 'consume')]}"
 	        			domain="[('product_tmpl_id', '=', consume_product_id.product_tmpl_id)]"/>
 	        			
-	            <field name="move_raw_ids" context="{'wizard_obj_id': id}">
+	            <field name="move_raw_ids" context="{'wizard_id': id}">
 	                <tree>
 	                    <field name="product_id"/>
 	                    <field name="product_uom_qty" />
@@ -38,7 +38,7 @@
 	                </tree>
 	            </field>
 	            
-	            <field name="move_finished_ids">
+	            <field name="move_finished_ids"  context="{'wizard_id': id}">
 	                <tree>
 	                    <field name="product_id"/>
 	                    <field name="product_uom_qty" />
