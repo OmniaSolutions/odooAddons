@@ -289,7 +289,7 @@ class MrpProduction(models.Model):
             stockPickList = stockPickingObj.search([('origin', '=', manOrderBrws.name)])
             stockPickList += stockPickingObj.search([('sub_production_id', '=', manOrderBrws.id)])
             for pickBrws in list(set(stockPickList)):
-                pickBrws._action_cancel()
+                pickBrws.action_cancel()
                 moves += pickBrws.move_lines
             manOrderBrws.write({'state': 'confirmed'})
             movesToCancel = self.env['stock.move'].search([('subcontracting_move_id', 'in', moves.ids)])
