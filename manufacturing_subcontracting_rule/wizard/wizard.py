@@ -347,9 +347,14 @@ class MrpProductionWizard(models.TransientModel):
                                                     'production_external_id': self.production_id.id,
                                                     'workorder_external_id': workorder,
                                                     })
-        wo_brws = self.env['mrp.workorder'].browse(workorder)
+        target_prod = False
+        if workorder:
+            wo_brws = self.env['mrp.workorder'].browse(workorder)
+            target_prod = wo_brws.product_id.id
+        else:
+            target_prod = self.production_id.product_id.id
         for lineBrws in picking.move_lines:
-            if lineBrws.product_id.id == wo_brws.product_id.id:
+            if lineBrws.product_id.id == target_prod:
                 values = {'product_id': obj_product_product.id,
                           'name': self.getPurcheseName(obj_product_product),
                           'product_qty': lineBrws.product_uom_qty,
