@@ -85,7 +85,7 @@ class MrpWorkorder(models.Model):
             for stock_picking_id in picking_ids:
                 stock_picking_id.do_unreserve()
                 stock_picking_id.action_cancel()
-            mrp_workorder_id.write({'state': 'pending'})
+            mrp_workorder_id.write({'state': 'ready'})
 
     def copyAndCleanLines(self, stock_move_ids, location_dest_id=None, location_source_id=None):
         outElems = []
