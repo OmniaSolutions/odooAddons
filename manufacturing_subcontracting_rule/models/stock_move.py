@@ -93,8 +93,10 @@ class StockMove(models.Model):
     @api.model
     def subContractingFilterRow(self, production_id, move_from_id, move_to, qty):
         # This Function must be overloaded in order to perform custom behaviour
-        if not move_to.mrp_production_id:
-            if not move_to.mrp_workorder_id and not move_to.workorder_id:
+        production_id = move_to.mrp_production_id
+        workorder_id = move_to.mrp_workorder_id or move_to.workorder_id.id
+        if not production_id:
+            if not workorder_id:
                 return 0, True
         moveQty = qty * (move_to.unit_factor or 1)
         return moveQty, False

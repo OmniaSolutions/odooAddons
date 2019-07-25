@@ -347,22 +347,24 @@ class MrpProductionWizard(models.TransientModel):
                                                     'production_external_id': self.production_id.id,
                                                     'workorder_external_id': workorder,
                                                     })
+        wo_brws = self.env['mrp.workorder'].browse(workorder)
         for lineBrws in picking.move_lines:
-            values = {'product_id': obj_product_product.id,
-                      'name': self.getPurcheseName(obj_product_product),
-                      'product_qty': lineBrws.product_uom_qty,
-                      'product_uom': obj_product_product.uom_po_id.id,
-                      'price_unit': obj_product_product.price,
-                      'date_planned': self.request_date,
-                      'order_id': obj_po.id,
-                      'production_external_id': self.production_id.id,
-                      'sub_move_line': lineBrws.id,
-                      }
-            new_purchase_order_line = self.env['purchase.order.line'].create(values)
-            new_purchase_order_line.onchange_product_id()
-            new_purchase_order_line.date_planned = self.request_date
-            new_purchase_order_line.product_qty = lineBrws.product_uom_qty
-            lineBrws.purchase_order_line_subcontracting_id = new_purchase_order_line.id
+            if lineBrws.product_id.id == wo_brws.product_id.id:
+                values = {'product_id': obj_product_product.id,
+                          'name': self.getPurcheseName(obj_product_product),
+                          'product_qty': lineBrws.product_uom_qty,
+                          'product_uom': obj_product_product.uom_po_id.id,
+                          'price_unit': obj_product_product.price,
+                          'date_planned': self.request_date,
+                          'order_id': obj_po.id,
+                          'production_external_id': self.production_id.id,
+                          'sub_move_line': lineBrws.id,
+                          }
+                new_purchase_order_line = self.env['purchase.order.line'].create(values)
+                new_purchase_order_line.onchange_product_id()
+                new_purchase_order_line.date_planned = self.request_date
+                new_purchase_order_line.product_qty = lineBrws.product_uom_qty
+                lineBrws.purchase_order_line_subcontracting_id = new_purchase_order_line.id
         if self.confirm_purchese_order:
             obj_po.button_confirm()
 

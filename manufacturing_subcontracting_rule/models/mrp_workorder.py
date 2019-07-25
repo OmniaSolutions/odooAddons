@@ -76,7 +76,7 @@ class MrpWorkorder(models.Model):
             picking_ids = []
             if mrp_workorder_id.state != 'external':
                 continue
-            stock_move_ids = stock_move.search([('mrp_workorder_id', '=', mrp_workorder_id.id)])
+            stock_move_ids = stock_move.search(['|', ('mrp_workorder_id', '=', mrp_workorder_id.id), ('workorder_id', '=', mrp_workorder_id.id)])
             for stock_move_id in stock_move_ids:
                 if stock_move_id.state not in ['done', 'cancel']:
                     stock_move_id._do_unreserve()
@@ -85,6 +85,10 @@ class MrpWorkorder(models.Model):
             for stock_picking_id in picking_ids:
                 stock_picking_id.do_unreserve()
                 stock_picking_id.action_cancel()
+            purchase_ids = self.env['purchase.order'].search([('workorder_external_id', '=', mrp_workorder_id.id)])
+            for purchase in purchase_ids:
+                purchase.button_cancel()
+                purchase.unlink()
             mrp_workorder_id.write({'state': 'ready'})
 
     def copyAndCleanLines(self, stock_move_ids, location_dest_id=None, location_source_id=None):
