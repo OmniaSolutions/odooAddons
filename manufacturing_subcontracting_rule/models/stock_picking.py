@@ -73,7 +73,7 @@ class StockPicking(models.Model):
             for line in self.move_lines:
                 if line.workorder_id.id == self.sub_workorder_id and line.product_id.id == line.workorder_id.product_id.id:
                     line.subContractingProduce(line.workorder_id)
-                if line.product_id.id == line.workorder_id.product_id.id and not production_recorded:
+                if line.product_id.id == line.workorder_id.product_id.id and not production_recorded and line.workorder_id.state != 'done':
                     line.workorder_id.record_production()
                     production_recorded = True
             for stock_move_id in self.move_line_ids:

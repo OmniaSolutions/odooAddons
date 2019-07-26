@@ -363,6 +363,7 @@ class MrpProductionWizard(models.TransientModel):
                           'date_planned': self.request_date,
                           'order_id': obj_po.id,
                           'production_external_id': self.production_id.id,
+                          'workorder_external_id': workorder,
                           'sub_move_line': lineBrws.id,
                           }
                 new_purchase_order_line = self.env['purchase.order.line'].create(values)
