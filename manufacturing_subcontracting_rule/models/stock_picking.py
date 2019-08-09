@@ -69,11 +69,18 @@ class StockPicking(models.Model):
                         line.subContractingProduce(objProduction)
                 if objProduction.isPicksInDone():
                     objProduction.button_mark_done()
+            production_recorded = False
+            for line in self.move_lines:
+                if line.workorder_id.id == self.sub_workorder_id and line.product_id.id == line.workorder_id.product_id.id:
+                    line.subContractingProduce(line.workorder_id)
+                if line.product_id.id == line.workorder_id.product_id.id and not production_recorded and line.workorder_id.state != 'done':
+                    line.workorder_id.record_production()
+                    production_recorded = True
             for stock_move_id in self.move_line_ids:
-                if stock_move_id.move_id.workorder_id:
-                    mrp_workorder_id = self.env['mrp.workorder'].search([('id', '=', stock_move_id.move_id.workorder_id.id)])
-                    # TODO: mettere il tempo di lavorazione calcolato fra pick in e pick put
-                    mrp_workorder_id.record_production()
+#                 if stock_move_id.move_id.workorder_id:
+#                     mrp_workorder_id = self.env['mrp.workorder'].search([('id', '=', stock_move_id.move_id.workorder_id.id)])
+#                     # TODO: mettere il tempo di lavorazione calcolato fra pick in e pick put
+#                     mrp_workorder_id.record_production()
                 if stock_move_id.move_id.purchase_order_line_subcontracting_id:
                     purchase_order_line_id = purchase_order_line.search([('id', '=', stock_move_id.move_id.purchase_order_line_subcontracting_id)])
                     purchase_order_line_id._compute_qty_received()

@@ -93,8 +93,11 @@ class StockMove(models.Model):
     @api.model
     def subContractingFilterRow(self, production_id, move_from_id, move_to, qty):
         # This Function must be overloaded in order to perform custom behaviour
-        if not move_to.mrp_production_id:
-            return 0, True
+        production_id = move_to.mrp_production_id
+        workorder_id = move_to.mrp_workorder_id or move_to.workorder_id.id
+        if not production_id:
+            if not workorder_id:
+                return 0, True
         moveQty = qty * (move_to.unit_factor or 1)
         return moveQty, False
 
@@ -110,6 +113,7 @@ class StockMove(models.Model):
         #
         # manage raw material
         #
+        # TODO:    Check for partial picking in / out and pick_out link
         qty = self.quantity_done
         if self.state == 'cancel':
             return
@@ -133,6 +137,16 @@ class StockMove(models.Model):
                 raw_move.date = self.date
                 for lineBrws in raw_move.move_line_ids:
                     lineBrws.date = move_date
+
+    @api.multi
+    def subContractingProduce2(self, pick_in_product_qty):
+        move_date = self.date
+        subcontracting_location = self.env['stock.location'].getSubcontractiongLocation()
+        production_move = self.subcontractingMove(subcontracting_location, self.location_id, self.id)
+        production_move.product_uom_qty = pick_in_product_qty
+        production_move.ordered_qty = pick_in_product_qty
+        production_move.date = move_date
+        return production_move
 
     @api.multi
     def write(self, value):

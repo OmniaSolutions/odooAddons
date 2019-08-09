@@ -7,6 +7,7 @@ Created on 16 Jan 2018
 from odoo import models
 from odoo import fields
 from odoo import api
+from odoo.exceptions import UserError
 from odoo import _
 import logging
 import datetime
@@ -48,7 +49,7 @@ class MrpWorkorder(models.Model):
         values = self.production_id.get_wizard_value()
         partner = self.operation_id.default_supplier
         if not partner:
-            raise UserWarning("No Partner set to Routing Operation")
+            raise UserError("No Partner set to Routing Operation")
         values['consume_product_id'] = self.product_id.id
         values['consume_bom_id'] = self.production_id.bom_id.id
         values['external_warehouse_id'] = self.production_id.location_src_id.get_warehouse().id
@@ -75,7 +76,7 @@ class MrpWorkorder(models.Model):
             picking_ids = []
             if mrp_workorder_id.state != 'external':
                 continue
-            stock_move_ids = stock_move.search([('mrp_workorder_id', '=', mrp_workorder_id.id)])
+            stock_move_ids = stock_move.search(['|', ('mrp_workorder_id', '=', mrp_workorder_id.id), ('workorder_id', '=', mrp_workorder_id.id)])
             for stock_move_id in stock_move_ids:
                 if stock_move_id.state not in ['done', 'cancel']:
                     stock_move_id._do_unreserve()
@@ -84,7 +85,11 @@ class MrpWorkorder(models.Model):
             for stock_picking_id in picking_ids:
                 stock_picking_id.do_unreserve()
                 stock_picking_id.action_cancel()
-            mrp_workorder_id.write({'state': 'pending'})
+            purchase_ids = self.env['purchase.order'].search([('workorder_external_id', '=', mrp_workorder_id.id)])
+            for purchase in purchase_ids:
+                purchase.button_cancel()
+                purchase.unlink()
+            mrp_workorder_id.write({'state': 'ready'})
 
     def copyAndCleanLines(self, stock_move_ids, location_dest_id=None, location_source_id=None):
         outElems = []

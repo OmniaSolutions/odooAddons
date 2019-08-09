@@ -197,7 +197,9 @@ class MrpProductionWizard(models.TransientModel):
 
     @api.onchange('operation_type')
     def operationTypeChanged(self):
-        prodObj = self.getParentObjectBrowse()
+        resObj = self.getParentObjectBrowse()
+        if resObj._name == 'mrp.workorder':
+            prodObj = resObj.production_id
         wBrws = self.getWizardBrws()
         cleanRelInfos = {'raw_material_production_id': False,
                          'origin': ''}
@@ -294,15 +296,26 @@ class MrpProductionWizard(models.TransientModel):
             productionBrws.checkCreateReorderRule(product, productionBrws.location_src_id.get_warehouse())
 
     @api.multi
+    def getWorkorderAndManufaturing(self):
+        productionBrws = self.env['mrp.production']
+        objBrws = self.getParentObjectBrowse()
+        workorderBrw = self.env['mrp.workorder']
+        if objBrws._name == 'mrp.workorder':
+            productionBrws = objBrws.production_id
+            workorderBrw = objBrws
+        else:
+            productionBrws = objBrws
+        return productionBrws, workorderBrw
+        
+    @api.multi
     def button_produce_externally(self):
+        if not self.external_partner:
+            raise UserError(_("No external partner set. Please provide one !!"))
         if not self.create_purchese_order and len(self.external_partner.ids) != 1:
             raise UserError(_("If you don't want to create purchase order you have to select only one partner."))
-        workorderBrw = self.getParentObjectBrowse()
-        if workorderBrw:
-            productionBrws = workorderBrw.production_id
-        else:
-            productionBrws = workorderBrw
-        #  self.cancelProductionRows(productionBrws)
+
+        productionBrws, workorderBrw = self.getWorkorderAndManufaturing()
+        self.cancelProductionRows(productionBrws)
         self.updateMoveLines(productionBrws)
         date_planned_finished_wo = False
         date_planned_start_wo = False
@@ -334,22 +347,30 @@ class MrpProductionWizard(models.TransientModel):
                                                     'production_external_id': self.production_id.id,
                                                     'workorder_external_id': workorder,
                                                     })
+        target_prod = False
+        if workorder:
+            wo_brws = self.env['mrp.workorder'].browse(workorder)
+            target_prod = wo_brws.product_id.id
+        else:
+            target_prod = self.production_id.product_id.id
         for lineBrws in picking.move_lines:
-            values = {'product_id': obj_product_product.id,
-                      'name': self.getPurcheseName(obj_product_product),
-                      'product_qty': lineBrws.product_uom_qty,
-                      'product_uom': obj_product_product.uom_po_id.id,
-                      'price_unit': obj_product_product.price,
-                      'date_planned': self.request_date,
-                      'order_id': obj_po.id,
-                      'production_external_id': self.production_id.id,
-                      'sub_move_line': lineBrws.id,
-                      }
-            new_purchase_order_line = self.env['purchase.order.line'].create(values)
-            new_purchase_order_line.onchange_product_id()
-            new_purchase_order_line.date_planned = self.request_date
-            new_purchase_order_line.product_qty = lineBrws.product_uom_qty
-            lineBrws.purchase_order_line_subcontracting_id = new_purchase_order_line.id
+            if lineBrws.product_id.id == target_prod:
+                values = {'product_id': obj_product_product.id,
+                          'name': self.getPurcheseName(obj_product_product),
+                          'product_qty': lineBrws.product_uom_qty,
+                          'product_uom': obj_product_product.uom_po_id.id,
+                          'price_unit': obj_product_product.price,
+                          'date_planned': self.request_date,
+                          'order_id': obj_po.id,
+                          'production_external_id': self.production_id.id,
+                          'workorder_external_id': workorder,
+                          'sub_move_line': lineBrws.id,
+                          }
+                new_purchase_order_line = self.env['purchase.order.line'].create(values)
+                new_purchase_order_line.onchange_product_id()
+                new_purchase_order_line.date_planned = self.request_date
+                new_purchase_order_line.product_qty = lineBrws.product_uom_qty
+                lineBrws.purchase_order_line_subcontracting_id = new_purchase_order_line.id
         if self.confirm_purchese_order:
             obj_po.button_confirm()
 
@@ -362,7 +383,7 @@ class MrpProductionWizard(models.TransientModel):
         if self.production_id.product_id.default_code:
             default_code = self.production_id.product_id.default_code
         new_default_code = "S-" + default_code
-        new_name = self.production_id.product_id.name
+        new_name = "S-" + self.production_id.product_id.name
         if workorder_id:
             new_default_code = new_default_code + "-" + workorder_id.name
             new_name = new_name + "-" + workorder_id.name
@@ -472,7 +493,9 @@ class MrpProductionWizard(models.TransientModel):
                 return pick.id
             return False
 
-        isWorkorder = originBrw._table == 'mrp_workorder'
+        isWorkorder = False
+        if originBrw:
+            isWorkorder = True
         stock_piking = self.env['stock.picking']
         if not pick_out:
             pick_out = stock_piking
@@ -563,7 +586,7 @@ class MrpProductionWizard(models.TransientModel):
         out_stock_move_ids = []
         isWorkorder = False
         if originBrw:
-            isWorkorder = originBrw._table == 'mrp_workorder'
+            isWorkorder = True
         if not is_some_product:
             stock_move_ids = mrp_production_id.move_raw_ids
         else:
@@ -632,7 +655,7 @@ class MrpProductionWizard(models.TransientModel):
                                                                 'unit_factor': stock_move_id.unit_factor})
                 new_stock_move_id.location_id = stock_location_id.id
                 new_stock_move_id.location_dest_id = customerProductionLocation.id
-                new_stock_move_id.sale_line_id = stock_move_id.sale_line_id
+                new_stock_move_id.sale_line_id = stock_move_id.sale_line_id.id
                 new_stock_move_line_ids.append(new_stock_move_id.id)
         out_stock_picking_id.write({'move_lines': [(6, False, new_stock_move_line_ids)]})
         return out_stock_picking_id

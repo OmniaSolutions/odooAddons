@@ -38,38 +38,36 @@ class PurchaseOrderLine(models.Model):
     _inherit = 'purchase.order.line'
 
     production_external_id = fields.Many2one('mrp.production', string=_('External Production'))
+    workorder_external_id = fields.Many2one('mrp.workorder', string=_('External Workorder'))
     sub_move_line = fields.Many2one('stock.move', string=_('Subcontracting move ref'))
 
     @api.depends('order_id.state', 'move_ids.state')
     def _compute_qty_received(self):
         super(PurchaseOrderLine, self)._compute_qty_received()
-        orders = []
-        incoming_picks = []
         for line in self:
-            orders.append(line.order_id)
-            for pick in line.order_id.picking_ids:
-                if pick.isIncoming(pick):
-                    incoming_picks.append(pick)
-        incoming_picks = list(set(incoming_picks))
-        logging.info('Incoming pickings %r' % (incoming_picks))
-        for line in self:
-            bom = line.production_external_id.bom_id
-            if line.production_external_id and bom:
-                logging.info('External production + BOM found')
-                correct_product = bom.product_id
-                if not correct_product:
-                    correct_product = bom.product_tmpl_id.product_variant_id
-                if correct_product and bom.external_product:
-                    logging.info('Extenal product in BOM found')
-                    if bom.external_product.id == line.product_id.id:
-                        total = 0
-                        for pick in incoming_picks:
-                            if line.production_external_id.id == pick.external_production.id:
-                                for move in pick.move_lines:
-                                    if move.product_id.id == correct_product.id:
-                                        if move.state == 'done':
-                                            if move.product_uom != line.product_uom:
-                                                total += move.product_uom._compute_quantity(move.product_uom_qty, line.product_uom)
-                                            else:
-                                                total += move.product_uom_qty
-                        line.qty_received = total
+            prod_to_produce = self.env['product.product']
+            s_product = self.env['product.product']
+            if line.workorder_external_id:
+                prod_to_produce = line.workorder_external_id.product_id
+                s_product = line.workorder_external_id.external_product
+                external_picks = line.workorder_external_id.getExternalPickings()
+            elif line.production_external_id:
+                prod_to_produce = line.production_external_id.product_id
+                bom = line.production_external_id.bom_id
+                if bom:
+                    s_product = bom.external_product
+                external_picks = line.production_external_id.external_pickings
+            if prod_to_produce and s_product and external_picks:
+                deliver_qty = 0
+                if s_product == line.product_id:
+                    for pick in external_picks:
+                        if pick.isIncoming(pick):
+                            for move in pick.move_lines:
+                                if move.product_id == prod_to_produce:
+                                    if move.state == 'done':
+                                        if move.product_uom != line.product_uom:
+                                            deliver_qty += move.product_uom._compute_quantity(move.product_uom_qty, line.product_uom)
+                                        else:
+                                            deliver_qty += move.product_uom_qty
+                line.qty_received = deliver_qty
+
