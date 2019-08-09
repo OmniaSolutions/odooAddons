@@ -1,0 +1,22 @@
+<odoo> 
+    <record id="omnia_mrp_routing_document_mrp_routing_workcenter" model="ir.ui.view">
+	    <field name="name">omnia.mrp.routing.document.mrp.routing.workcenter</field>
+	    <field name="model">mrp.routing.workcenter</field>
+	    <field name="inherit_id" ref="mrp.mrp_routing_workcenter_form_view"/>
+	    <field name="arch" type="xml">
+	        <xpath expr="//group[@name='description']" position="after">
+		        <group name="related_document" colspan="4">
+		            <field name="ir_attachment_relation" nolabel="1">
+		              <tree>
+		                  <button name="download_document" type="object" icon="fa-download"/>
+		                  <field name="name"/>
+    	                  <field name="tipo_mrp"/>
+		                  <field name="create_uid"/>
+		                  <field name="create_date"/>
+		              </tree>
+		            </field>
+		        </group>
+	        </xpath>
+	    </field>
+    </record>
+</odoo>
