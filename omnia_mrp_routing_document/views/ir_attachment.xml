@@ -1,0 +1,13 @@
+<odoo> 
+    <record id="omnia_mrp_routing_document_ir_attachment" model="ir.ui.view">
+	    <field name="name">omnia_mrp_routing_document_ir_attachment</field>
+	    <field name="model">ir.attachment</field>
+	    <field name="inherit_id" ref="base.view_attachment_form"/>
+	    <field name="arch" type="xml">
+	        <field name="public" position="after">
+	            <field name="tipo_mrp"/>
+	            <field name="ir_attachment_relation"/>
+	        </field>
+	    </field>
+    </record>
+</odoo>
