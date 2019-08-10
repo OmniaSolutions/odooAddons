@@ -66,8 +66,8 @@ class stock_picking_custom(models.Model):
     _inherit = 'stock.picking'
     _name = 'stock.picking'
     carriage_condition_id = fields.Many2one('stock.incoterms', 'Carriage condition')
-    goods_description_id = fields.Many2one('stock.picking.goods_description', 'Description of goods')
-    transportation_reason_id = fields.Many2one('stock.picking.goods_description', 'Reason for transportation')
+    goods_description_id = fields.Many2one('stock.picking.goods.description', 'Description of goods')
+    transportation_reason_id = fields.Many2one('stock.picking.transportation.reason', 'Reason for transportation')
     invoice_id = fields.Many2one('account.invoice', 'numberDDT', readonly=1)
     delivery_address = fields.Many2one('res.partner', "Indirizzo di spedizione secondario")
     ddt_number = fields.Char('DDT', size=64)
