@@ -49,7 +49,7 @@
              'views/purchase_extension.xml',
              'views/mrp_bom.xml',
              'views/res_partner.xml',
-             'views/mrp_workorder.xml',
+             #'views/mrp_workorder.xml',
     ],
     'installable': True,
     'application': False,
