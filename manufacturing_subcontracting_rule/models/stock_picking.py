@@ -47,11 +47,11 @@ class StockPicking(models.Model):
                                                   ('close', _('Close external Production'))])
     sub_production_id = fields.Integer(string=_('Sub production Id'))
 
-    def isIncoming(self):
-        return self.sub_contracting_operation == 'close'
+    def isIncoming(self, objPick):
+        return objPick.picking_type_code == 'incoming'
 
-    def isOutGoing(self):
-        return self.sub_contracting_operation == 'open'
+    def isOutGoing(self, objPick):
+        return objPick.picking_type_code == 'outgoing'
 
     @api.multi
     def action_done(self):
