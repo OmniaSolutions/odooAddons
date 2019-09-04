@@ -1,0 +1,37 @@
+<?xml version="1.0"?>
+<openerp>
+    <data noupdate="1"> 
+    	
+    	<record id="fix_workflow_cron" model="ir.cron">
+            <field name="name">Fix Workflow</field>
+            <field name="active" eval="False"/>
+            <field name="interval_number">1</field>
+            <field name="interval_type">days</field>
+            <field name="numbercall">-1</field>
+            <field name="doall" eval="False"/>
+            <field name="model">product.product</field>
+            <field name="function">fix_workflows</field>
+            <field name="args">()</field>
+        </record> 
+
+        <record id="action_server_fix_workflows" model="ir.actions.server">
+            <field name="name">Fix Workflow</field>
+            <field name="condition">True</field>
+            <field name="model_id" ref="model_product_product"/>
+            <field name="code">action = pool.get('product.product').fix_workflows(cr, uid, [], context)</field>
+            <field name="state">code</field>
+            <field name="type">ir.actions.server</field>
+        </record>
+
+        <record model="ir.values" id="action_fix_workflows">
+            <field name="name">action_fix_workflows</field>
+            <field name="action_id" ref="action_server_fix_workflows" />
+            <field name="value" eval="'ir.actions.server,' + str(ref('action_server_fix_workflows'))" />
+            <field name="key">action</field>
+            <field name="model_id" ref="model_product_product"/>
+            <field name="model">product.product</field>
+            <field name="key2">client_action_multi</field>
+        </record>
+
+    </data>
+</openerp>
