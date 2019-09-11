@@ -20,6 +20,15 @@ class MrpWorkorder(models.Model):
     external_product = fields.Many2one('product.product',
                                        string=_('External Product use for external production'))
     is_mo_produced = fields.Boolean('Is Manufacturing Produced')
+    external_operation = fields.Selection([('', ''),
+                                           ('normal', 'Normal'),
+                                           ('parent', 'Parent'),
+                                           ('operation', 'Operation')],
+                                           default='',
+                                           string=_('Produce it externally automatically as'),
+                                           help="""Normal: Use the Parent object as Product for the Out Pickings and the raw material for the Out Picking
+                                                   Parent: Use the Parent product for the In Out pickings
+                                                   Operation: Use the Product that have the Operation assigned for the In Out pickings""")
 
     def createTmpStockMove(self, sourceMoveObj, location_source_id=None, location_dest_id=None, unit_factor=1.0):
         tmpMoveObj = self.env["stock.tmp_move"]
@@ -76,7 +85,26 @@ class MrpWorkorder(models.Model):
             workOrderBrws.cancelPurchase()
             workOrderBrws.cancelPickings()
             workOrderBrws.write({'state': 'pending'})
+            workOrderBrws.checkRestoreIsProduced()
+            workOrderBrws.external_operation = ''
             # TODO: Check the partial record production
+
+    @api.multi
+    def checkRestoreIsProduced(self):
+        for workOrderBrws in self:
+            produced = False
+            mo_product = workOrderBrws.production_id.product_id
+            for wo in self.production_id.workorder_ids:
+                if wo.external_operation == 'parent':
+                    continue
+                for pick in wo.getExternalPickings():
+                    if pick.isIncoming(pick) and pick.state != 'cancel':
+                        for line in pick.move_lines:
+                            if line.product_id == mo_product:
+                                produced = True
+            for wo in self.production_id.workorder_ids:
+                wo.is_mo_produced = produced
+            break
 
     @api.multi
     def cancelPickings(self):

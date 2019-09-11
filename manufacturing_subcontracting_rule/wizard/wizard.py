@@ -293,6 +293,7 @@ class MrpProductionWizard(models.Model):
         workorderBrw.date_planned_start = date_planned_start_wo
         productionBrws.external_pickings = [(6, 0, pickingBrwsList)]
         workorderBrw.state = 'external'
+        workorderBrw.external_operation = self.external_operation
         self.updateMOLinesWithDifferences(productionBrws)
         if not pickIn:
             workorderBrw.closeWO()
@@ -527,12 +528,12 @@ class MrpProductionWizard(models.Model):
         return picking
 
     def updateMOProducedFlag(self, workorderBrw, product):
-        if not workorderBrw.is_mo_produced:
+        if not workorderBrw.is_mo_produced and self.external_operation not in ['parent']:
             if self.production_id.product_id == product:
                 for wo in self.production_id.workorder_ids:
                     wo.is_mo_produced = True
-        elif self.production_id.product_id == product and not self.external_operation in ['parent']:
-            raise UserError('You cannot produce more than one time finished products of the manufacturing order.')
+        elif self.production_id.product_id == product and self.external_operation not in ['parent']:
+            raise UserError('Finished products of manufacturing order are already been produced in another workorder, cannot produce again.')
 
     def updatePickInMove(self, newMove, productionLocation, customerProductionLocation, workorderBrw, picking):
         newMove.location_id = customerProductionLocation.id

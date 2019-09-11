@@ -24,6 +24,8 @@
 	            </div>
 	            <field name="production_id" position="after">
 	               <field name="external_product"/>
+	               <field name="is_mo_produced" groups="base.group_no_one"/>
+	               <field name="external_operation" readonly="True" groups="base.group_no_one"/>
 	            </field>
             </field>
         </record>
