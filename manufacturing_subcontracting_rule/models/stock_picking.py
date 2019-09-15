@@ -77,10 +77,12 @@ class StockPicking(models.Model):
                     line.workorder_id.record_production()
                     production_recorded = True
             for stock_move_id in self.move_line_ids:
-#                 if stock_move_id.move_id.workorder_id:
-#                     mrp_workorder_id = self.env['mrp.workorder'].search([('id', '=', stock_move_id.move_id.workorder_id.id)])
-#                     # TODO: mettere il tempo di lavorazione calcolato fra pick in e pick put
-#                     mrp_workorder_id.record_production()
+                mrp_workorder_id = stock_move_id.move_id.workorder_id
+                if mrp_workorder_id:
+                    mrp_workorder_id.record_production()
+                    for purchese_order_line_id in self.env['purchase.order.line'].search([('workorder_external_id', '=', mrp_workorder_id.id)]):
+                        purchese_order_line_id.qty_received += stock_move_id.qty_done
+                    # TODO: mettere il tempo di lavorazione calcolato fra pick in e pick put
                 if stock_move_id.move_id.purchase_order_line_subcontracting_id:
                     purchase_order_line_id = purchase_order_line.search([('id', '=', stock_move_id.move_id.purchase_order_line_subcontracting_id)])
                     purchase_order_line_id._compute_qty_received()

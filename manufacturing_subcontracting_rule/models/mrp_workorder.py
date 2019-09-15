@@ -162,4 +162,3 @@ class MrpWorkorder(models.Model):
             'context': newContext,
             'domain': [('id', 'in', picks.ids)],
         }
-        

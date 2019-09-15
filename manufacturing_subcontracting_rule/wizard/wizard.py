@@ -306,7 +306,7 @@ class MrpProductionWizard(models.TransientModel):
         else:
             productionBrws = objBrws
         return productionBrws, workorderBrw
-        
+
     @api.multi
     def button_produce_externally(self):
         if not self.external_partner:
@@ -354,7 +354,7 @@ class MrpProductionWizard(models.TransientModel):
         else:
             target_prod = self.production_id.product_id.id
         for lineBrws in picking.move_lines:
-            if lineBrws.product_id.id == target_prod:
+            if lineBrws.product_id.id == target_prod or wo_brws.operation_id.external_operation == 'operation':
                 values = {'product_id': obj_product_product.id,
                           'name': self.getPurcheseName(obj_product_product),
                           'product_qty': lineBrws.product_uom_qty,

@@ -135,6 +135,10 @@ class MrpProduction(models.Model):
     @api.multi
     def open_external_pickings(self):
         newContext = self.env.context.copy()
+        srock_picking_ids = []
+        for mrp_workorder_id in self.workorder_ids:
+            srock_picking_ids.extend(mrp_workorder_id.getExternalPickings().ids)
+        srock_picking_ids.extend(self.external_pickings.ids)
         return {
             'name': _("External Pickings"),
             'view_type': 'form',
@@ -142,7 +146,7 @@ class MrpProduction(models.Model):
             'res_model': 'stock.picking',
             'type': 'ir.actions.act_window',
             'context': newContext,
-            'domain': [('id', 'in', self.external_pickings.ids)],
+            'domain': [('id', 'in', srock_picking_ids)],
         }
 
     @api.model
@@ -251,7 +255,7 @@ class MrpProduction(models.Model):
     def get_wizard_value(self):
         values = {}
         values['move_raw_ids'] = [(6, 0, self.copyAndCleanLines(self.move_raw_ids,
-                                                                location_source_id=self.location_src_id.id, 
+                                                                location_source_id=self.location_src_id.id,
                                                                 isRawMove=True
                                                                 ))]
         values['move_finished_ids'] = [(6, 0, self.copyAndCleanLines(self.move_finished_ids,
