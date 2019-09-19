@@ -146,7 +146,9 @@ class TmpStockMove(models.TransientModel):
                 old_move_id.action_cancel()
         if self.validate:
             out_pick.action_confirm()
-
+        for pick in out_pick.merged_pick_ids:
+            msg = 'This picking has been merged in picking %r' % (out_pick.display_name)
+            pick.message_post(msg)
         return {
             'name': _("New Pick"),
             'view_type': 'form',
