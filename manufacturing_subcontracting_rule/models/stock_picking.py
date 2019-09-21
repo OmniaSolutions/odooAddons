@@ -79,6 +79,7 @@ class StockPicking(models.Model):
             for stock_move_id in self.move_line_ids:
                 mrp_workorder_id = stock_move_id.move_id.workorder_id
                 if mrp_workorder_id:
+                    mrp_workorder_id.qty_producing = stock_move_id.qty_done
                     mrp_workorder_id.record_production()
                     for purchese_order_line_id in self.env['purchase.order.line'].search([('workorder_external_id', '=', mrp_workorder_id.id)]):
                         purchese_order_line_id.qty_received += stock_move_id.qty_done
