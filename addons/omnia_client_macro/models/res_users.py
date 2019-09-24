@@ -45,6 +45,7 @@ class ResUsersExt(osv.osv):
 
     @api.multi
     def getMacros(self):
+        logging.info('Request macros for user %r' % (self.env.uid))
         for userBrws in self.browse(self.env.uid):
             logging.info('Request Macros file for user %r' % (userBrws.env.uid))
             if userBrws.macro_ids:
@@ -57,4 +58,3 @@ class ResUsersExt(osv.osv):
                     else:
                         return out
         return []
-
