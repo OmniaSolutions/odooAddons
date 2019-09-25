@@ -58,3 +58,19 @@ class ResUsersExt(osv.osv):
                     else:
                         return out
         return []
+
+    @api.multi
+    def getMacroUserInfos(self):
+        logging.info('Request macros for user %r' % (self.env.uid))
+        for userBrws in self.browse(self.env.uid):
+            logging.info('Request Macros info for user %r' % (userBrws.env.uid))
+            if userBrws.macro_ids:
+                return userBrws.macro_ids.getMacroUserInfos()
+            else:
+                for groupBrws in userBrws.groups_id:
+                    out = groupBrws.getMacroUserInfos()
+                    if not out:
+                        continue
+                    else:
+                        return out
+        return []

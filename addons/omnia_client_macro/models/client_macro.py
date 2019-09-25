@@ -34,7 +34,7 @@ import json
 class ClientMacro(models.Model):
     _name = 'client.macro'
 
-    name = fields.Char('Attachment Name', required=True)
+    name = fields.Char('File Name', required=True)
     integration = fields.Selection( [ 
             ('solidworks','Solidworks'), 
             ('solidedge','SolidEdge'),
@@ -49,21 +49,29 @@ class ClientMacro(models.Model):
     procedure_name = fields.Char('Procedure Name', default='main', required=True)
     
     @api.multi
-    def getSingleMacroInfos(self):
+    def getSingleMacroInfos(self, get_data=True):
         for macroBrws in self:
             logging.info('Getting Macro Infos %r -- %r' % (macroBrws.name, macroBrws.integration))
             out = {
                 'name': macroBrws.name,
                 'integration': macroBrws.integration,
-                'datas': macroBrws.db_datas,
                 'module_name': macroBrws.module_name,
                 'procedure_name': macroBrws.procedure_name
                 }
-            return json.dumps(out)
+            if get_data:
+                out['datas'] = macroBrws.db_datas
+            return out
     
     @api.multi
     def getMacrosInfos(self):
         out = []
         for macroBrws in self:
             out.append(macroBrws.getSingleMacroInfos())
+        return out
+
+    @api.multi
+    def getMacroUserInfos(self):
+        out = []
+        for macroBrws in self:
+            out.append(macroBrws.getSingleMacroInfos(get_data=False))
         return out

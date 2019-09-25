@@ -13,7 +13,7 @@
                		<field name="integration"/>
                		<field name="module_name"/>
                		<field name="procedure_name"/>
-               		<field name="db_datas"/>
+               		<field name="db_datas" filename="name"/>
                 </group>
             </form>
         </field>

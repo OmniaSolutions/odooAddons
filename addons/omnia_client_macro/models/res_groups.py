@@ -50,5 +50,13 @@ class ResGroups(osv.osv):
             if groupBrws.macro_ids:
                 return groupBrws.macro_ids.getMacrosInfos()
         return []
-        
+
+    @api.multi
+    def getMacroUserInfos(self):
+        for groupBrws in self:
+            logging.info('Request Macros info for user %r and group %r-%r and id %r' % (groupBrws.env.uid, groupBrws.category_id.name, groupBrws.name, groupBrws.id))
+            if groupBrws.macro_ids:
+                return groupBrws.macro_ids.getMacroUserInfos()
+        return []
+
 ResGroups()
