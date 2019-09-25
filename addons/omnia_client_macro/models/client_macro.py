@@ -47,12 +47,14 @@ class ClientMacro(models.Model):
             ],
                 'Integration', required=True)
     db_datas = fields.Binary('Database Data')
+    module_name = fields.Char('Module Name', default='Module1', required=True)
+    procedure_name = fields.Char('Procedure Name', default='main', required=True)
     
     @api.multi
     def getSingleMacroInfos(self):
         for macroBrws in self:
             logging.info('Getting Macro Infos %r -- %r' % (macroBrws.name, macroBrws.integration))
-            return (macroBrws.name, macroBrws.integration, macroBrws.db_datas)
+            return (macroBrws.name, macroBrws.integration, macroBrws.db_datas, macroBrws.module_name, macroBrws.procedure_name)
     
     @api.multi
     def getMacrosInfos(self):

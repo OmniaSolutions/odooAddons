@@ -39,11 +39,15 @@ Manage client macros
     'author': 'OmniaSolutions.eu',
     'maintainer': 'OmniaSolutions.eu',
     'website': 'http://www.OmniaSolutions.eu',
-    'depends': ['base'],
+    'depends': ['base',
+                'plm',
+                ],
     'data': [
                 #view
+                'view/client_macro.xml',
                 'view/res_users.xml',
                 'view/res_groups.xml',
+                'view/security.xml',
              
     ],
     'installable': True,

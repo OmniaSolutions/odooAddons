@@ -10,7 +10,7 @@
 			    <notebook position="inside">
                 	<page name="omnia_custom" string="Omnia Client Macro">
 		                <group name="omnia_macro">
-		                    <field name="macro_ids"/>
+		                    <field name="macro_ids"></field>
 		                </group>
 		            </page>
 			    </notebook>
