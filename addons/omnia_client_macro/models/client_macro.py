@@ -28,9 +28,7 @@ Created on Apr 19, 2017
 
 from openerp import models, fields, api
 import logging
-import base64
-import tempfile
-import os
+import json
 
 
 class ClientMacro(models.Model):
@@ -54,7 +52,14 @@ class ClientMacro(models.Model):
     def getSingleMacroInfos(self):
         for macroBrws in self:
             logging.info('Getting Macro Infos %r -- %r' % (macroBrws.name, macroBrws.integration))
-            return (macroBrws.name, macroBrws.integration, macroBrws.db_datas, macroBrws.module_name, macroBrws.procedure_name)
+            out = {
+                'name': macroBrws.name,
+                'integration': macroBrws.integration,
+                'datas': macroBrws.db_datas,
+                'module_name': macroBrws.module_name,
+                'procedure_name': macroBrws.procedure_name
+                }
+            return json.dumps(out)
     
     @api.multi
     def getMacrosInfos(self):
