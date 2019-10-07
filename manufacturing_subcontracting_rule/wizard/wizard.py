@@ -371,6 +371,7 @@ class MrpProductionWizard(models.TransientModel):
                 new_purchase_order_line.date_planned = self.request_date
                 new_purchase_order_line.product_qty = lineBrws.product_uom_qty
                 lineBrws.purchase_order_line_subcontracting_id = new_purchase_order_line.id
+                lineBrws.purchase_line_id = new_purchase_order_line
         if self.confirm_purchese_order:
             obj_po.button_confirm()
 
@@ -821,15 +822,15 @@ class MrpWorkorderWizard(MrpProductionWizard):
                                                             mrp_production_id,
                                                             mrp_workorder_id,
                                                             products,
-                                                            location_id,
                                                             location_dest_id,
+                                                            location_id,
                                                             picking_type_str='incoming')
         stock_picking_out = self.createStockPickingWorkorder(partner_id,
                                                              mrp_production_id,
                                                              mrp_workorder_id,
                                                              products,
-                                                             location_dest_id,
                                                              location_id,
+                                                             location_dest_id,
                                                              picking_type_str='outgoing')
         return stock_picking_in, stock_picking_out
 

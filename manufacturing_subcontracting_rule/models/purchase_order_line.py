@@ -48,7 +48,13 @@ class PurchaseOrderLine(models.Model):
             prod_to_produce = self.env['product.product']
             s_product = self.env['product.product']
             if line.workorder_external_id:
-                prod_to_produce = line.workorder_external_id.product_id
+                operation = line.workorder_external_id.operation_id.external_operation
+                if operation == 'operation':
+                    prod_to_produce = line.sub_move_line.product_id
+                elif operation == 'parent':
+                    prod_to_produce = line.workorder_external_id.product_id
+                else:  # suppose normal
+                    prod_to_produce = line.workorder_external_id.product_id
                 s_product = line.workorder_external_id.external_product
                 external_picks = line.workorder_external_id.getExternalPickings()
             elif line.production_external_id:
