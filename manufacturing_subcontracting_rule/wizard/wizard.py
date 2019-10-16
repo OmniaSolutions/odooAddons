@@ -409,7 +409,7 @@ class MrpProductionWizard(models.Model):
         purchaseBrws = None
         if self.merge_purchese_order:
             purchaseBrws = purchaseOrderObj.search([('partner_id', '=', external_partner.partner_id.id),
-                                                    ('state', 'in', ['draft', 'sent'])
+                                                    ('state', 'in', ['draft'])
                                                     ], limit=1)
         if not purchaseBrws and self.create_purchese_order:
             vals = {'partner_id': external_partner.partner_id.id,
