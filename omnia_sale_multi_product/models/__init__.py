@@ -1,8 +1,8 @@
 # -*- encoding: utf-8 -*-
 ##############################################################################
 #
-#    OmniaSolutions, Your own solutions
-#    Copyright (C) 2010-2018 OmniaSolutions (<http://omniasolutions.eu>). All Rights Reserved
+#    OmniaSolutions, Open Source Management Solution
+#    Copyright (C) 2010-2018 OmniaSolutions (<http://www.omniasolutions.eu>). All Rights Reserved
 #    $Id$
 #
 #    This program is free software: you can redistribute it and/or modify
@@ -21,31 +21,11 @@
 ##############################################################################
 
 '''
-Created on Jul 25, 2018
+Created on Jul 21, 2017
 
-@author: Daniel Smerghetto
+@author: daniel
 '''
-import logging
-from datetime import datetime
-from odoo import models
-from odoo import fields
-from odoo import api
-from odoo import _
-from odoo.exceptions import ValidationError
-from odoo.exceptions import AccessError
-from odoo.exceptions import UserError
-from odoo import SUPERUSER_ID
-import os
 
+from . import sale_order
 
-class MrpProduction(models.Model):
-    _inherit = 'mrp.production'
-
-    @api.model
-    def _compute_obsoleted(self):
-        for productionBrws in self:
-            productionBrws.obsolete_presents =  productionBrws.bom_id.obsolete_presents or productionBrws.bom_id.obsolete_presents_recursive
-
-    obsolete_presents = fields.Boolean(_("Obsolete presents"), compute='_compute_obsoleted')
-
-    
+# vim:expandtab:smartindent:tabstop=4:softtabstop=4:shiftwidth=4:

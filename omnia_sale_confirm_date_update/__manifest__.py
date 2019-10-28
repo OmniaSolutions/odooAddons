@@ -1,8 +1,8 @@
 # -*- encoding: utf-8 -*-
 ##############################################################################
 #
-#    OmniaSolutions, Open Source Management Solution
-#    Copyright (C) 2010-2018 OmniaSolutions (<http://www.omniasolutions.eu>). All Rights Reserved
+#    OmniaSolutions, Open Source Management Solution    
+#    Copyright (C) 2010-2011 OmniaSolutions (<http://www.omniasolutions.eu>). All Rights Reserved
 #    $Id$
 #
 #    This program is free software: you can redistribute it and/or modify
@@ -20,20 +20,22 @@
 #
 ##############################################################################
 {
-    'name': 'Omnia Stock delivery Report',
-    'version': '11',
+    'name': 'Sale Order Confirm Date',
+    'version': '12.0.1',
     'author': 'OmniaSolutions',
     'website': 'http://www.omniasolutions.eu',
-    'category': 'report',
+    'category': 'Sale Order Customization',
     'sequence': 15,
-    'summary': 'Stock Delivery Report',
+    'summary': 'This module updates Sale Order date when Quotation is confirmed.',
     'images': [],
-    'depends': ['sale_stock'],
-    'description': """Add a new report to see in details the delivery date of each product""",
-    'data': ['views/stock_move.xml',
-             'report/stock_delivery_report.xml'],
-    'demo': [],
-    'test': [],
+    'depends': ['sale'],
+    'description': """ """,
+    'data': [
+       ],
+    'demo': [
+        ],
+    'test': [
+        ],
     'installable': True,
     'application': False,
     'auto_install': False,

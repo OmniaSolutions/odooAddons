@@ -19,27 +19,6 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 ##############################################################################
-{
-    'name': 'Sale Order Max-Min Dates',
-    'version': '11',
-    'author': 'OmniaSolutions',
-    'website': 'http://www.omniasolutions.eu',
-    'category': 'Sale Order Customization',
-    'sequence': 15,
-    'summary': 'Adds commitment last date on sale order.',
-    'images': [],
-    'depends': ['sale'],
-    'description': """ """,
-    'data': [
-             'views/sale_order.xml',
-       ],
-    'demo': [
-        ],
-    'test': [
-        ],
-    'installable': True,
-    'application': False,
-    'auto_install': False,
-}
-
-# vim:expandtab:smartindent:tabstop=4:softtabstop=4:shiftwidth=4:
+from . import sale_order
+from . import stock_warehouse
+from . import product_product

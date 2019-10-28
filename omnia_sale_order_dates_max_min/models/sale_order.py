@@ -43,7 +43,7 @@ class SaleOrder(models.Model):
         dates_list = []
         for order in self:
             dates_list = []
-            order_datetime = datetime.datetime.strptime(order.date_order, DEFAULT_SERVER_DATETIME_FORMAT)
+            order_datetime = order.date_order
             for line in order.order_line:
                 if line.state == 'cancel':
                     continue

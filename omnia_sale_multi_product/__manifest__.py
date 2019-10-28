@@ -20,23 +20,19 @@
 #
 ##############################################################################
 {
-    'name': 'Sale Order Max-Min Dates',
+    'name': 'Omnia Sale Multi Product',
     'version': '11',
     'author': 'OmniaSolutions',
     'website': 'http://www.omniasolutions.eu',
     'category': 'Sale Order Customization',
     'sequence': 15,
-    'summary': 'Adds commitment last date on sale order.',
+    'summary': 'Add a compulsory product to the product',
     'images': [],
     'depends': ['sale'],
     'description': """ """,
-    'data': [
-             'views/sale_order.xml',
-       ],
-    'demo': [
-        ],
-    'test': [
-        ],
+    'data': ['views/product_product.xml',],
+    'demo': [],
+    'test': [],
     'installable': True,
     'application': False,
     'auto_install': False,

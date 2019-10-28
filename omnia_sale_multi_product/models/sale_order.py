@@ -1,8 +1,8 @@
 # -*- encoding: utf-8 -*-
 ##############################################################################
 #
-#    OmniaSolutions, Your own solutions
-#    Copyright (C) 2010-2018 OmniaSolutions (<http://omniasolutions.eu>). All Rights Reserved
+#    OmniaSolutions, Open Source Management Solution    
+#    Copyright (C) 2010-2011 OmniaSolutions (<http://www.omniasolutions.eu>). All Rights Reserved
 #    $Id$
 #
 #    This program is free software: you can redistribute it and/or modify
@@ -21,31 +21,26 @@
 ##############################################################################
 
 '''
-Created on Jul 25, 2018
+Created on Jul 21, 2017
 
-@author: Daniel Smerghetto
+@author: daniel
 '''
-import logging
-from datetime import datetime
+from odoo.tools import DEFAULT_SERVER_DATETIME_FORMAT
 from odoo import models
-from odoo import fields
 from odoo import api
+from odoo import fields
 from odoo import _
-from odoo.exceptions import ValidationError
-from odoo.exceptions import AccessError
-from odoo.exceptions import UserError
-from odoo import SUPERUSER_ID
-import os
 
 
-class MrpProduction(models.Model):
-    _inherit = 'mrp.production'
+class SaleOrderLine(models.Model):
+    _inherit = 'sale.order.line'
 
-    @api.model
-    def _compute_obsoleted(self):
-        for productionBrws in self:
-            productionBrws.obsolete_presents =  productionBrws.bom_id.obsolete_presents or productionBrws.bom_id.obsolete_presents_recursive
+    @api.depends('price_unit', 'discount')
+    def _compute_line_margin(self):
+        for lineBrws in self:
+            margin = (lineBrws.price_unit / 100) * (100 - lineBrws.discount)
+            lineBrws.sale_order_line_margin = margin - lineBrws.purchase_price
 
-    obsolete_presents = fields.Boolean(_("Obsolete presents"), compute='_compute_obsoleted')
+    sale_order_line_margin = fields.Float(_('Margin'), compute="_compute_line_margin")
 
-    
+# vim:expandtab:smartindent:tabstop=4:softtabstop=4:shiftwidth=4:
