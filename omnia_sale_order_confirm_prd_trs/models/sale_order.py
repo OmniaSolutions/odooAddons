@@ -29,6 +29,7 @@ from odoo import models
 from odoo import api
 from odoo import fields
 from odoo import _
+from odoo.exceptions import UserError
 from datetime import date
 
 class stockpicking(models.Model):
@@ -88,7 +89,7 @@ class SaleOrder(models.Model):
     @api.multi
     def getNextAnalyticNumber(self):
         newSequenceNumber = self.env['ir.sequence'].next_by_code('MATRICOLA')
-        return unicode(date.today().year) + '/' + unicode(newSequenceNumber)
+        return str(date.today().year) + '/' + str(newSequenceNumber)
 
     @api.multi
     def createRelatedAnalyticAccount(self, newBaseName, partner_id):
@@ -156,7 +157,7 @@ class SaleOrder(models.Model):
         
     @api.multi
     def createNewCodedProduct(self, newBaseName, count, oldProdBrws):
-        newProductName = unicode(newBaseName) + '/' + unicode('{:03.0f}'.format(count))
+        newProductName = str(newBaseName) + '/' + str('{:03.0f}'.format(count))
         toCreate = {
             'name': newProductName,
             'route_ids': [(6, False, self.getRoutesToSet())],

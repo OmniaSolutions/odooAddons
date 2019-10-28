@@ -42,8 +42,7 @@ class SaleOrderLine(models.Model):
     def _get_default_product_datetime_value(self):
         for sale_order_line in self:
             if sale_order_line.product_id:
-                order_date = datetime.datetime.strptime(sale_order_line.order_id.date_order, DEFAULT_SERVER_DATETIME_FORMAT)
-                newDate = order_date + timedelta(days=sale_order_line.customer_lead)
+                newDate = sale_order_line.order_id.date_order + timedelta(days=sale_order_line.customer_lead)
                 sale_order_line.product_delivery_date = newDate.strftime(DEFAULT_SERVER_DATETIME_FORMAT)
 
     @api.onchange('customer_lead')

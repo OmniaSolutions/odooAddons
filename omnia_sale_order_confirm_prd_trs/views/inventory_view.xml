@@ -4,8 +4,8 @@
 
 
         <record id="action_picking_line_form_all" model="ir.ui.view">
-            <field name="name">stock.pack.operation.form</field>
-            <field name="model">stock.pack.operation</field>
+            <field name="name">stock.move.sale.transfer.form</field>
+            <field name="model">stock.move</field>
             <field name="priority" eval="5"></field>
             <field name="arch" type="xml">
                 <form>
@@ -14,11 +14,11 @@
 	                    <field name="product_id"/>
 	                    <field name="picking_id"/>
 	                    <field name="product_qty"/>
-	                    <field name="qty_done"/>
-	                    <field name="product_uom_id"/>
+	                    <field name="string_availability_info"/>
+	                    <field name="product_uom"/>
 	                    <field name="location_id"/>
 	                    <field name="location_dest_id"/>
-	                    <field name="owner_id"/>
+<!-- 	                    <field name="owner_id"/>  missing field-->
                     </group>
                 </sheet>
                 </form>
@@ -26,25 +26,25 @@
         </record>
 
         <record id="action_picking_line_tree_all" model="ir.ui.view">
-            <field name="name">stock.pack.operation.tree</field>
-            <field name="model">stock.pack.operation</field>
+            <field name="name">stock.move.sale.transfer.tree</field>
+            <field name="model">stock.move</field>
             <field name="arch" type="xml">
                 <tree create="0">
                     <field name="product_id"/>
                     <field name="picking_id"/>
                     <field name="product_qty"/>
-                    <field name="qty_done"/>
-                    <field name="product_uom_id"/>
+                    <field name="string_availability_info"/>
+                    <field name="product_uom"/>
                     <field name="location_id"/>
                     <field name="location_dest_id"/>
-                    <field name="owner_id"/>
+<!--                     <field name="owner_id"/> missing field-->
                 </tree>
             </field>
         </record>
 
         <record id="action_picking_line_all" model="ir.actions.act_window">
             <field name="name">All Ready Pickings</field>
-            <field name="res_model">stock.pack.operation</field>
+            <field name="res_model">stock.move</field>
             <field name="type">ir.actions.act_window</field>
             <field name="view_type">form</field>
             <field name="view_mode">tree,form</field>
