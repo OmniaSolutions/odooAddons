@@ -52,7 +52,7 @@ class SaleOrder(models.Model):
             if not machinePresent:
                 machineNoProdPresent = self.checkMachineProductsNoCreationPresents()
             if machinePresent or machineNoProdPresent:
-                if not order.project_id:
+                if not order.analytic_account_id:
                     newBaseName = self.getNextAnalyticNumber()
                     newAnalyticAccount = order.createRelatedAnalyticAccount(newBaseName, order.partner_id)
                     if not newAnalyticAccount:
@@ -60,10 +60,10 @@ class SaleOrder(models.Model):
                     newWarehouse = order.createRelatedWarehouse(newBaseName)
                     if not newWarehouse:
                         raise UserError(_('Unable to create warehouse!'))
-                    order.project_id = newAnalyticAccount.id
+                    order.analytic_account_id = newAnalyticAccount.id
                     order.warehouse_id = newWarehouse.id
                 else:
-                    newBaseName = order.project_id.name
+                    newBaseName = order.analytic_account_id.name
                     if not order.warehouse_id:
                         order.warehouse_id = self.getRelatedWarehouse(newBaseName)
                 if machinePresent:
