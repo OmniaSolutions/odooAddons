@@ -3,7 +3,7 @@
     <record id="mrp_workorder_view_form_inherit_omnia" model="ir.ui.view">
         <field name="name">mrp.workorder.view.form.inherit.omnia</field>
         <field name="model">mrp.workorder</field>
-        <field name="inherit_id" ref="mrp.mrp_production_workcenter_form_view_inherit"/>
+        <field name="inherit_id" ref="mrp.mrp_production_workorder_form_view_inherit"/>
         <field name="arch" type="xml">
             <xpath expr="//field[@name='time_ids']//form//field[@name='loss_id']" position="after">
                 <field name="workcenter_id"/>
