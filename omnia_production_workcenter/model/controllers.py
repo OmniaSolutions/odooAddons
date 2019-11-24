@@ -50,6 +50,3 @@ class WorkCenters(http.Controller):
         return http.request.render('omnia_production_workcenter.index', {
             'workcenter_dict': wcDict,
         })
-
-#     @http.route('/academy/academy/objects/', auth='public')
-#     def list(self, **kw):
