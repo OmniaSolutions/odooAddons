@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <data>
+        <record id="mrp_production_workcenter_mrp_workcenter_view" model="ir.ui.view">
+            <field name="model">mrp.workcenter</field>
+            <field name="inherit_id" ref="mrp.mrp_workcenter_view"/>
+            <field name="arch" type="xml">
+                <field name="costs_hour" position="after">
+                    <field name ="web_ip_address"/>
+                </field>
+            </field>
+        </record>
+    </data>
+</odoo>

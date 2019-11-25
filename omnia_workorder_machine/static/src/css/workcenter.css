@@ -1,0 +1,74 @@
+.Row
+{
+    display: table;
+    width: 100%; /*Optional*/
+    table-layout: fixed; /*Optional*/
+    border-spacing: 10px; /*Optional*/
+}
+.Column
+{
+    display: table-cell;
+    background-color: red; /*Optional*/
+}
+html,body{font-family:Verdana,sans-serif;font-size:15px;line-height:1.5}html{overflow-x:hidden}
+
+table{
+    border-collapse:collapse;
+    border-spacing:0;
+    width:100%;
+    display:table}
+
+#active_workorder_table > thead
+{
+background: lightgreen;
+}
+
+#ready_workorder_table > thead
+{
+background: darkorange;
+}
+
+p.table_title{
+    text-align:center;
+    font-weight: bold;
+    background: cadetblue;
+    color: white;
+    font-size: large;
+}
+
+th
+{
+	padding:8px 8px;
+	display:table-cell;
+	text-align:left;
+	vertical-align:top
+}
+tr td {
+  border-bottom:1pt solid #babdb6;
+}
+
+tbody >tr:hover {background-color: aqua;}
+
+.active_workorder_table tr{border-bottom:1px solid #ddd}
+
+
+#workcenter_name {
+    width: 250px;
+    box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+    text-align: center;
+    border: solid 1px;
+    border-radius: 5px;
+    border-color: lightgray;
+    text-align: center;
+}
+
+#customer_image{
+	text-align:center;
+	width: 250px;
+    box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+    text-align: center;
+    border: solid 1px;
+    border-radius: 5px;
+    border-color: lightgray;
+    text-align: center;
+}
