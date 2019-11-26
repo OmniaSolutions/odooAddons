@@ -28,11 +28,8 @@
     'sequence': 15,
     'summary': 'Omnia Workorder Machine',
     'images': [],
-    'depends': ['base',
+    'depends': [
                 'web',
-                'base_setup',
-                'stock',
-                'web_editor',
                 'mrp'],
     'description': """ This module allows to update workorder using a simple web interface.""",
     'data': [
