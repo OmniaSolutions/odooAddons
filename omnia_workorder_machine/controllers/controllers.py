@@ -7,16 +7,15 @@ import logging
 import json
 import os
 import base64
-from odoo import http
 from odoo import _
+from odoo import http
 from odoo.http import request
 from odoo.http import Response
-from odoo.addons.website.controllers.main import QueryURL
-from odoo.addons.website_sale.controllers.main import WebsiteSale
+from odoo.http import Controller
 import tempfile
 
 
-class WebsiteWorkorderController(http.Controller):
+class WebsiteWorkorderController(Controller):
 
     def renderTemplate(self, templateName, values):
         return request.render(templateName, values)
@@ -158,7 +157,7 @@ class WebsiteWorkorderController(http.Controller):
 
     def get_workcenter_table(self,
                              workcenter_id,
-                             status="READY"):
+                             status="READY", csrf=False):
         if status =='READY':
             data = {'data':  request.env['mrp.workorder'].getReadyWorkorder(workcenter_id)}
             return self.renderTemplate('omnia_workorder_machine.workorder_simple_table', data)
@@ -167,43 +166,41 @@ class WebsiteWorkorderController(http.Controller):
             return self.renderTemplate('omnia_workorder_machine.workorder_simple_table', data)
         return ''
         
-    @http.route('/mrp/workorder_simple')
+    @http.route('/mrp/workorder_simple', csrf=False)
     def workcenter_main_form(*arg, **kargs):
         return request.render('omnia_workorder_machine.workorder_simple','')
     
-    @http.route('/mrp/workorder_simple', methods=['POST'], csrf=False)
-    def workcenter_main__form_post(self, *arg, **kargs):
+    @http.route('/mrp/workorder_simple_post', methods=['POST'], csrf=False)
+    def workcenter_main_form_post(self, *arg, **kargs):
         workorder_id = kargs.get('workorder_id')
         request.env['mrp.workorder'].confirm_start_workorder(workorder_id)
         return 'OK'
     
-    @http.route('/mrp/active_workorder_simple')
+    @http.route('/mrp/active_workorder_simple', csrf=False)
     def get_active_workorder_table(self, *arg, **kargs):
-        host = request.httprequest.host
         workcenter_id = self.getWorkcenterFromRequest()
         if workcenter_id:
             return self.get_workcenter_table(workcenter_id, status='INPROGRESS')
         return ""
         
-    @http.route('/mrp/ready_workorder_simple')
+    @http.route('/mrp/ready_workorder_simple', csrf=False)
     def get_ready_workorder_table(self, *arg, **kargs):
         workcenter_id = self.getWorkcenterFromRequest()
         if workcenter_id:
             return self.get_workcenter_table(workcenter_id, status='READY')
         return ""
     
-    def getWorkcenterFromRequest(self):
-        host = request.httprequest.host
-        workcenter_ids = request.env['mrp.workcenter'].search([('web_ip_address', '=', host)])
-        for workcenter_id in workcenter_ids:
-            return workcenter_id 
-        logging.warning("No workcenter found for address : %r" % host)
-        
-    
-    @http.route('/mrp/workcenter_name')
+    @http.route('/mrp/workcenter_name', csrf=False)
     def get_workcenter_name(self, *args, **kargs):
         workcenter_id = self.getWorkcenterFromRequest()
         if workcenter_id:
             return workcenter_id.name
         return request.httprequest.host
 
+    def getWorkcenterFromRequest(self):
+        host = request.httprequest.host
+        workcenter_ids = request.env['mrp.workcenter'].search([('web_ip_address', '=', host)])
+        for workcenter_id in workcenter_ids:
+            return workcenter_id 
+        logging.warning("No workcenter found for address : %r" % host)
+                        

@@ -16,7 +16,7 @@ var getValue = function(){
 	var val = document.getElementById("input_workorder_id").value;
 	$.ajax({
 	  type: 'POST',
-	  url: "/mrp/workorder_simple/?workorder_id="+val,
+	  url: "/mrp/workorder_simple_post/?workorder_id="+val,
 	  data: JSON.stringify(val),
 	  success: function(data){
 		  showtmpMessage("ok_done");

@@ -21,15 +21,20 @@
 ##############################################################################
 {
     'name': 'Omnia Workorder Machine',
-    'version': '11',
+    'version': '12.0.1',
     'author': 'OmniaSolutions',
     'website': 'http://www.omniasolutions.eu',
     'category': 'report',
     'sequence': 15,
     'summary': 'Omnia Workorder Machine',
     'images': [],
-    'depends': ['base', 'web', 'base_setup', 'stock', 'web_editor'],
-    'description': """ This module allows to update workorder using machine communication.""",
+    'depends': ['base',
+                'web',
+                'base_setup',
+                'stock',
+                'web_editor',
+                'mrp'],
+    'description': """ This module allows to update workorder using a simple web interface.""",
     'data': [
         'views/templates.xml',
         'views/mrp_workorder.xml',
