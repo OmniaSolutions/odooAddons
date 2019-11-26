@@ -90,5 +90,5 @@ var get_workcenter = function(){
 var on_load_body = function(){
 	get_workcenter();
 	update_tables();
-	setTimeout(update_tables , 10000);
+	setInterval(update_tables , 10000);
 }
