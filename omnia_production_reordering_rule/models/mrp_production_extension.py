@@ -60,8 +60,7 @@ class MrpProductionExtension(models.Model):
         for prodBrws in prodList:
             if prodBrws:
                 tmplBrws = prodBrws.product_tmpl_id
-                if not self.checkExistingReorderRule(prodBrws, warehouse):
-                    self.createReorderRule(prodBrws, warehouse)
+                self.createReorderRule(prodBrws, warehouse)
 
     def checkExistingReorderRule(self, prod_brws, warehouse):
         reorderRules = self.env['stock.warehouse.orderpoint'].search([
@@ -73,17 +72,18 @@ class MrpProductionExtension(models.Model):
         return False
 
     def createReorderRule(self, prod_brws, warehouse):
-        logging.info('Creating reordering rule for product ID %r and warehouse ID %r' % (prod_brws.id, warehouse.id))
-        toCreate = {
-            'product_id': prod_brws.id,
-            'warehouse_id': warehouse.id,
-            'product_min_qty': 0,
-            'product_max_qty': 0,
-            'qty_multiple': 1,
-            'location_id': warehouse.lot_stock_id.id,
-            }
-        wareHouseBrws = self.env['stock.warehouse.orderpoint'].create(toCreate)
-        return wareHouseBrws
+        if not self.checkExistingReorderRule(prod_brws, warehouse):
+            logging.info('Creating reordering rule for product ID %r and warehouse ID %r' % (prod_brws.id, warehouse.id))
+            toCreate = {
+                'product_id': prod_brws.id,
+                'warehouse_id': warehouse.id,
+                'product_min_qty': 0,
+                'product_max_qty': 0,
+                'qty_multiple': 1,
+                'location_id': warehouse.lot_stock_id.id,
+                }
+            wareHouseBrws = self.env['stock.warehouse.orderpoint'].create(toCreate)
+            return wareHouseBrws
 
     @api.multi
     def button_reorder_rule(self):

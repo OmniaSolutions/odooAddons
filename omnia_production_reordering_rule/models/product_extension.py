@@ -37,9 +37,5 @@ class ProductExtension(models.Model):
     _inherit = ['product.template']
     
     auto_reorder = fields.Boolean(string=_('Automatic Reorder Rule'))
-    
-    @api.multi
-    def createStockProductReorderingRule(self):
-        for product_tmpl_id in self:
-            
+
 
