@@ -85,8 +85,11 @@ class MrpProduction(models.Model):
                     if move_line_id.state in ['draft', 'confirmed', 'assigned', 'waiting']:
                         if move_line_id.state=='assigned':
                             move_line_id.do_unreserve()
-                        move_line_id.action_cancel()
-                        move_line_id.unlink()
+                        if move_line_id.quantity_done:
+                            move_line_id.confirm_and_reverse()
+                        else:
+                            move_line_id.action_cancel()
+                            move_line_id.unlink()
                     else:
                         mrp_production_id.update_message+= """<b>Unable to delete product: %r due to the move status in: %r</b></br>""" % (move_line_id.product_id.name, move_line_id.state)
                         

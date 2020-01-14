@@ -51,9 +51,32 @@ class StockMove(models.Model):
         # Check for all draft moves whether they are mto or not
         mrp_production_id._adjust_procure_method()
         mrp_production_id.move_raw_ids.action_confirm()
-        
-            
+    
+    @api.multi
+    def _confirm_and_reverse(self):
+        for stock_move in self:
+            qty_done = stock_move.quantity_done
+            raw_material_production_id = stock_move.raw_material_production_id
+            production_id = stock_move.production_id
+            stock_move.raw_material_production_id = False
+            stock_move.production_id = False 
+            stock_move.action_confirm()
+            new_stock_move = stock_move.copy({'raw_material_production_id': raw_material_production_id.id,
+                                              'production_id': production_id.id,
+                                              'quantity_done': 0.0})
+            location_id = new_stock_move.location_id
+            location_dest_id = new_stock_move.location_dest_id
+            new_stock_move.location_id = location_dest_id.id
+            new_stock_move.location_dest_id = location_id.id
+            #new_stock_move.quantity_done = qty_done
 
-            
+
+    @api.multi
+    def confirm_and_reverse(self):
+        for stock_move in self:
+            if stock_move.quantity_done < stock_move.product_uom_qty:
+                diffQty = stock_move.product_uom_qty - stock_move.quantity_done
+                stock_move.quantity_done+=diffQty
+            stock_move._confirm_and_reverse()                
             
             
