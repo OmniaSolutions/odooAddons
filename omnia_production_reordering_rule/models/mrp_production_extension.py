@@ -84,3 +84,11 @@ class MrpProductionExtension(models.Model):
             }
         wareHouseBrws = self.env['stock.warehouse.orderpoint'].create(toCreate)
         return wareHouseBrws
+
+    @api.multi
+    def button_reorder_rule(self):
+        for mrp_production_id in self:
+            rawProds = self.getRawProds(mrp_production_id)
+            self.createReorderRules(mrp_production_id, rawProds)
+            
+            

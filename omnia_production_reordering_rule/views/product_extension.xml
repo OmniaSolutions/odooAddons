@@ -8,7 +8,7 @@
         <field name="type">form</field>
          <field name="arch" type="xml">
         	<div name="options" position="inside">
-                <div>
+                <div name="auto_reorder">
                     <field name="auto_reorder"/>
                     <label for="auto_reorder"/>
                 </div>
