@@ -34,7 +34,8 @@
     we create automatically the rule only for the product that are marked as Automatic Reorder Rule
     """,
     'data': [
-        'views/product_extension.xml'
+        'views/product_extension.xml',
+        'views/mrp_production.xml'
             ],
 
     'demo': [],
