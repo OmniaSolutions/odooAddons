@@ -26,10 +26,12 @@
     'website': 'http://www.omniasolutions.eu',
     'category': 'Production',
     'sequence': 15,
-    'summary': 'Allows to create reordering rules before sale order confirmation.',
+    'summary': 'Allows to create reordering in manufactory order creation',
     'images': [],
     'depends': ['mrp'],
     'description': """
+    When a new production is created we check all the item of the manufactory order and we create the reordeing rule based on the wherehous present in the manufactory order
+    we create automatically the rule only for the product that are marked as Use for production order
     """,
     'data': [
         'views/product_extension.xml'
