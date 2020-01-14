@@ -21,9 +21,9 @@
 ##############################################################################
 {
     'name': 'Omnia Production Reordering Rule',
-    'version': '10.0.1.1.0',
+    'version': '10.0.1.2.0',
     'author': 'OmniaSolutions',
-    'website': 'http://www.omniasolutions.eu',
+    'website': 'https://www.omniasolutions.website',
     'category': 'Production',
     'sequence': 15,
     'summary': 'Allows to create reordering in manufactory order creation',
@@ -31,7 +31,7 @@
     'depends': ['mrp'],
     'description': """
     When a new production is created we check all the item of the manufactory order and we create the reordeing rule based on the wherehous present in the manufactory order
-    we create automatically the rule only for the product that are marked as Use for production order
+    we create automatically the rule only for the product that are marked as Automatic Reorder Rule
     """,
     'data': [
         'views/product_extension.xml'

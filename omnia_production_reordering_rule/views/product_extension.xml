@@ -9,8 +9,8 @@
          <field name="arch" type="xml">
         	<div name="options" position="inside">
                 <div>
-                    <field name="production_order_use"/>
-                    <label for="production_order_use"/>
+                    <field name="auto_reorder"/>
+                    <label for="auto_reorder"/>
                 </div>
             </div>
         </field>

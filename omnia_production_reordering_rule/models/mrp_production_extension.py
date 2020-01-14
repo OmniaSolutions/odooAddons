@@ -50,7 +50,9 @@ class MrpProductionExtension(models.Model):
     def getRawProds(self, manOrderBrws):
         prodList = []
         for lineBws in manOrderBrws.move_raw_ids:
-            prodList.append(lineBws.product_id)
+            product_template = lineBws.product_id.product_tmpl_id
+            if product_template.type=='product' and product_template.auto_reorder:
+                prodList.append(lineBws.product_id)
         return prodList
 
     def createReorderRules(self, manOrderBrws, prodList):
@@ -58,9 +60,8 @@ class MrpProductionExtension(models.Model):
         for prodBrws in prodList:
             if prodBrws:
                 tmplBrws = prodBrws.product_tmpl_id
-                if tmplBrws.auto_reorder:
-                    if not self.checkExistingReorderRule(prodBrws, warehouse):
-                        self.createReorderRule(prodBrws, warehouse)
+                if not self.checkExistingReorderRule(prodBrws, warehouse):
+                    self.createReorderRule(prodBrws, warehouse)
 
     def checkExistingReorderRule(self, prod_brws, warehouse):
         reorderRules = self.env['stock.warehouse.orderpoint'].search([
