@@ -53,5 +53,6 @@ class StockPicking(models.Model):
 
     @api.multi
     def do_new_transfer(self):
-        return super(StockPicking, self.with_context({'skip_omnia_project': True})).do_new_transfer()
+        objs = self.with_context({'skip_omnia_project': True})
+        return super(StockPicking, objs).do_new_transfer()
         
