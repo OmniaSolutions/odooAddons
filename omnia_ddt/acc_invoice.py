@@ -44,7 +44,7 @@ class Omnia_ddt_account_invoice(models.Model):
                                                       ('ddt_number', '!=', False),
                                                       ('invoice_id', '=', None),
                                                       ('use_for_ddt', '=', True)],
-                                                     )).ids
+                                                     ).ids)
             elif ogg.origin == 'merged':                             # Used only in case of "account_invoice_merge_no_unlink" module
                 for mergedInv in self.search([('merged_invoice_id', '=', ogg.id)]):
                     if mergedInv.origin:
@@ -54,7 +54,7 @@ class Omnia_ddt_account_invoice(models.Model):
                                                                   ('ddt_number', '!=', False),
                                                                   ('invoice_id', '=', None),
                                                                   ('use_for_ddt', '=', True)],
-                                                                 )).ids
+                                                                 ).ids)
         for ddtId in idspicking:
             objStckPkng.write(ddtId, {'invoice_id': self.env.ids[0]})
         return True
