@@ -32,6 +32,7 @@
     'version': '1.1',
     'sequence': 1,
     'category': 'Custom',
+    'license': 'AGPL-3',
     'description': """
 Fix component and document workflow
 ====================
