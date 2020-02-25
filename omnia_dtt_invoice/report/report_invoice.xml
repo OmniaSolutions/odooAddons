@@ -19,7 +19,7 @@
                <tr>
                     <td  class="table_rows">Motivo Trasporto <div t-esc="o.ddt_reason"/></td>
                     <td  class="table_rows">Peso Lordo <div t-esc="o.peso_lordo"/></td>
-                    <td  class="table_rows">Peso Netto <div t-esc="peso_netto"/></td>
+                    <td  class="table_rows">Peso Netto <div t-esc="o.peso_netto"/></td>
                     <td  class="table_rows">N. Packages<div t-esc="o.number_of_packages"/></td>
                </tr>
 	        </tbody>
