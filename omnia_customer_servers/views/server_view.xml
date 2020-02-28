@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+<data>
+
+    <record model="ir.actions.act_window" id="server_menu_action">
+    	<field name="name">Server Config</field>
+        <field name="res_model">server.config</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+    
+    <record model="ir.ui.view" id="server_tree_view">
+            <field name="name">server.tree</field>
+            <field name="model">server.config</field>
+            <field name="arch" type="xml">
+                <tree string="Server Tree">
+                	<field name="partner_id"/>
+                	<field name="ip_server"/>
+                	<field name="user_login_odoo"/>
+                	<field name="password_login_odoo"/>
+                	<field name="odoo_version"/>
+                </tree>
+            </field>
+    </record>
+            
+    <record model="ir.ui.view" id="server_form_view">
+            <field name="name">server.form</field>
+            <field name="model">server.config</field>
+            <field name="arch" type="xml">
+                <form string="Server Form">
+                	<sheet>
+                    	<div class="oe_title">
+                     		<h3>
+                     			<group>
+                            		<field name="partner_id"/>
+                            	</group>
+                        	</h3>
+                    	</div>                    
+     					<group>
+                       		<group>
+                          		<field name="ip_server"/>
+								<field name="user_login_odoo"/>
+                            	<field name="password_login_odoo"/>
+                        	</group>
+                        	<group>
+                            	<field name="odoo_version"/>
+                        	</group>
+                        	<group string="OpenVPN" colspan="4">
+	                        	<group>
+	                            	<field name="open_vpn"/>
+	                            	<field name="open_vpn_login"/>
+	            					<field name="open_vpn_password"/>
+	                        	</group>
+	                        </group>
+                        	<group string="SSH" colspan="4">
+	                        	<group>
+	                        		<field name="ip_ssh"/>
+	                        		<field name="user_ssh"/>
+	                        		<field name="password_ssh"/>
+	                        		<field name="comando_ssh"/>
+	                        	</group>
+	                        	<group>
+	                        		<field name="ssh_key"/>
+	                        		<field name="user_root_ssh"/>
+	                        		<field name="password_root_ssh"/>
+	                        	</group>
+                        	</group>
+                        	<group string="Client" colspan="4">
+	                        	<group>
+	                        		<field name="client_port"/>
+	                        		<field name="client_protocol"/>
+	                        		<field name="db_name"/>
+	                        	</group>
+                        	</group>
+                        	<group string="Server Config" colspan="4">
+                        		<field name="path_file_config"/>
+                        		<field name="path_file_log"/>
+                        		<field name="path_addons"/>
+                        	</group>
+                        	<group></group>
+                       		<label for="notes"></label>
+                       		<field name="notes" nolabel="1"/>
+                    	</group>
+           			</sheet>
+                </form>
+            </field>
+    </record>
+    
+    <record id="view_partner_form" model="ir.ui.view">
+    	<field name="name">res.partner.form</field>
+    	<field name="model">res.partner</field>
+    	<field name="inherit_id" ref="base.view_partner_form"/>
+    	<field name="arch" type="xml">
+    		<xpath expr="//page[3]" position='after'>
+    			<page string='Server Config'  groups="omnia_customer_servers.server_config_security_admin">
+    				<field name="server_tab"  context="{'default_partner_id': id}"/>
+    			</page>
+    		</xpath>
+    	</field>
+    </record>
+              
+	<menuitem id="server_menu" name="Server configuration" parent="contacts.menu_contacts"
+              action="server_menu_action" groups="omnia_customer_servers.server_config_security_admin"/>
+            
+	</data>  
+</odoo>

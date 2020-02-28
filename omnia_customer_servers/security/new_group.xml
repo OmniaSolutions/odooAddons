@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+	<data>
+		
+		<record id="server_config_security_admin" model="res.groups">
+               <field name="name">Server Config Security Admin</field>
+               
+        </record>
+        
+        <record id="server_config_security" model="res.groups">
+               <field name="name">Server Config Security</field>
+        </record>
+        
+	</data>  
+</odoo>
