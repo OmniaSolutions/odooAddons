@@ -30,7 +30,9 @@
     'category': 'Custom',
     'summary': 'Server configuration integration',
     'description': """This module integrates the ability to manage server configurations of your customers, implementing a dedicated item in the contacts module.""",
-
+    
+    'images': ['static/img/omnia_customer_servers.png'],
+    
     'depends': ['base'],
 
     'data': [
