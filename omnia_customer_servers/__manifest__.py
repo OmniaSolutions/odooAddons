@@ -33,7 +33,7 @@
     
     'images': ['static/img/omnia_customer_servers.png'],
     
-    'depends': ['base'],
+    'depends': ['base', 'contacts'],
 
     'data': [
         'security/new_group.xml',
