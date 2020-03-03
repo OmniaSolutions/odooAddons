@@ -26,4 +26,3 @@ Created on 2 Mar 2020
 from . import stock_move
 from . import mrp_production
 from . import make_procurement
-from . import stock_warehouse_orderpoint
