@@ -23,12 +23,7 @@ Created on 2 Mar 2020
 
 @author: mboscolo
 '''
-
-'''
-Created on Dec 18, 2017
-
-@author: daniel
-'''
-
+from . import stock_move
 from . import mrp_production
 from . import make_procurement
+from . import stock_warehouse_orderpoint

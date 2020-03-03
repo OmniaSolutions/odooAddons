@@ -57,8 +57,11 @@ class MrpProduction(models.Model):
             for move_line_id in mrp_production_id.move_raw_ids:
                 if move_line_id.state in ['cancel', 'done']:
                     continue
-                qty = move_line_id.remaining_qty
-                if qty ==0:
+                qty_remaining = move_line_id.remaining_qty
+                if qty_remaining==0:
+                    continue
+                proc_qty = move_line_id.getOmniaProcurementQty()
+                if  proc_qty == move_line_id.product_qty:
                     continue
                 if move_line_id.product_id.virtual_available>0:
                     continue
@@ -69,10 +72,12 @@ class MrpProduction(models.Model):
                 if float_compare(op_product_virtual, orderpoint.product_min_qty, precision_rounding=orderpoint.product_uom.rounding) <= 0:
                     qty = max(orderpoint.product_min_qty, orderpoint.product_max_qty) - op_product_virtual
                     substract_quantity = location_orderpoints.subtract_procurements_from_orderpoints()
-                    qty -= substract_quantity[orderpoint.id]
-                    if qty>0: # necessari
+                    s_qty = substract_quantity[orderpoint.id]
+                    qty -= s_qty
+                    qty_remaining =  qty_remaining - proc_qty
+                    if qty > 0 and qty_remaining > 0: # necessari
                         new_proc = make_procurament.create({
-                           'qty': qty,
+                           'qty': qty_remaining,
                            'product_id': move_line_id.product_id.id,
                            'product_tmpl_id': move_line_id.product_id.product_tmpl_id.id,
                            'uom_id': move_line_id.product_id.uom_id.id,
@@ -91,6 +96,7 @@ class MrpProduction(models.Model):
                         if is_production:
                             production_to_call.append(ret.production_id)
                         ret.orderpoint_id = location_orderpoints[0].id
+                        ret.omnia_move_id = move_line_id.id
                         ret.run()
         for production_id in production_to_call:
             production_id.create_procuraments()
