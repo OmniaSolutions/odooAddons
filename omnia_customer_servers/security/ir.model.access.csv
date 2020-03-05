@@ -1,3 +1,5 @@
 id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
 access_server_config_admin,access.server.config.admin,model_server_config,omnia_customer_servers.server_config_security_admin,1,1,1,1
 access_server_config,access.server.config,model_server_config,omnia_customer_servers.server_config_security,1,0,0,0
+access_cad_programs_admin,access.cad.programs.admin,model_cad_programs,omnia_customer_servers.server_config_security_admin,1,1,1,1
+access_cad_programs,access.cad.programs,model_cad_programs,omnia_customer_servers.server_config_security,1,0,0,0

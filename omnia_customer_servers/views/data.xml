@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="utf-8"?>
+<openerp>
+        <data>
+        	
+			<!-- SolidWorks -->
+        		
+            <record id="data_sw_2015" model="cad.programs">
+                 <field name="name">SolidWorks</field>
+                 <field name="version">2015</field>
+            </record>
+            
+            <record id="data_sw_2016" model="cad.programs">
+                 <field name="name">SolidWorks</field>
+                 <field name="version">2016</field>
+            </record>
+            
+            <record id="data_sw_2017" model="cad.programs">
+                 <field name="name">SolidWorks</field>
+                 <field name="version">2017</field>
+            </record>
+            
+            <record id="data_sw_2018" model="cad.programs">
+                 <field name="name">SolidWorks</field>
+                 <field name="version">2018</field>
+            </record>
+            
+            <record id="data_sw_2019" model="cad.programs">
+                 <field name="name">SolidWorks</field>
+                 <field name="version">2019</field>
+            </record>
+            
+            <record id="data_sw_2020" model="cad.programs">
+                 <field name="name">SolidWorks</field>
+                 <field name="version">2020</field>
+            </record>
+            
+            <!-- ThinkDesign -->
+        		
+            <record id="data_td_2015" model="cad.programs">
+                 <field name="name">ThinkDesign</field>
+                 <field name="version">2015</field>
+            </record>
+            
+            <record id="data_td_2016" model="cad.programs">
+                 <field name="name">ThinkDesign</field>
+                 <field name="version">2016</field>
+            </record>
+            
+            <record id="data_td_2017" model="cad.programs">
+                 <field name="name">ThinkDesign</field>
+                 <field name="version">2017</field>
+            </record>
+            
+            <record id="data_td_2018" model="cad.programs">
+                 <field name="name">ThinkDesign</field>
+                 <field name="version">2018</field>
+            </record>
+            
+            <record id="data_td_2019" model="cad.programs">
+                 <field name="name">ThinkDesign</field>
+                 <field name="version">2019</field>
+            </record>
+            
+            <!-- SolidEdge -->
+            
+            <record id="data_se_ST8" model="cad.programs">
+                 <field name="name">SolidEdge</field>
+                 <field name="version">ST8</field>
+            </record>
+            
+            <record id="data_se_ST9" model="cad.programs">
+                 <field name="name">SolidEdge</field>
+                 <field name="version">ST9</field>
+            </record>
+            
+            <record id="data_se_ST10" model="cad.programs">
+                 <field name="name">SolidEdge</field>
+                 <field name="version">ST10</field>
+            </record>
+            
+            <record id="data_se_2019" model="cad.programs">
+                 <field name="name">SolidEdge</field>
+                 <field name="version">2019</field>
+            </record>
+            
+            <record id="data_se_2020" model="cad.programs">
+                 <field name="name">SolidEdge</field>
+                 <field name="version">2020</field>
+            </record>
+            
+            <!-- AutoCAD -->
+            
+            <record id="data_ac_2015" model="cad.programs">
+                 <field name="name">AutoCAD</field>
+                 <field name="version">2015</field>
+            </record>
+            
+            <record id="data_ac_2016" model="cad.programs">
+                 <field name="name">AutoCAD</field>
+                 <field name="version">2016</field>
+            </record>
+            
+            <record id="data_ac_2017" model="cad.programs">
+                 <field name="name">AutoCAD</field>
+                 <field name="version">2017</field>
+            </record>
+            
+            <record id="data_ac_2018" model="cad.programs">
+                 <field name="name">AutoCAD</field>
+                 <field name="version">2018</field>
+            </record>
+            
+            <record id="data_ac_2019" model="cad.programs">
+                 <field name="name">AutoCAD</field>
+                 <field name="version">2019</field>
+            </record>
+            
+            <!-- Inventor -->
+            
+            <record id="data_in_2015" model="cad.programs">
+                 <field name="name">Inventor</field>
+                 <field name="version">2015</field>
+            </record>
+            
+            <record id="data_in_2016" model="cad.programs">
+                 <field name="name">Inventor</field>
+                 <field name="version">2016</field>
+            </record>
+            
+            <record id="data_in_2017" model="cad.programs">
+                 <field name="name">Inventor</field>
+                 <field name="version">2017</field>
+            </record>
+            
+            <record id="data_in_2018" model="cad.programs">
+                 <field name="name">Inventor</field>
+                 <field name="version">2018</field>
+            </record>
+            
+            <record id="data_in_2019" model="cad.programs">
+                 <field name="name">Inventor</field>
+                 <field name="version">2019</field>
+            </record>
+            
+            <record id="data_in_2020" model="cad.programs">
+                 <field name="name">Inventor</field>
+                 <field name="version">2020</field>
+            </record>
+
+			<!-- FreeCAD -->
+                
+            <record id="data_fc_015" model="cad.programs">
+                 <field name="name">FreeCAD</field>
+                 <field name="version">0.15</field>
+            </record>
+            
+            <record id="data_fc_016" model="cad.programs">
+                 <field name="name">FreeCAD</field>
+                 <field name="version">0.16</field>
+            </record>
+            
+            <record id="data_fc_017" model="cad.programs">
+                 <field name="name">FreeCAD</field>
+                 <field name="version">0.17</field>
+            </record>
+            
+            <record id="data_fc_018" model="cad.programs">
+                 <field name="name">FreeCAD</field>
+                 <field name="version">0.18</field>
+            </record>
+ 
+        </data>
+</openerp>

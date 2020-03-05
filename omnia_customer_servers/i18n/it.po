@@ -1,0 +1,368 @@
+# Translation of Odoo Server.
+# This file contains the translation of the following modules:
+# 	* omnia_customer_servers
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 10.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2020-03-05 08:30+0000\n"
+"PO-Revision-Date: 2020-03-05 10:17+0100\n"
+"Last-Translator: <>\n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: it_IT\n"
+"X-Generator: Poedit 2.0.6\n"
+
+#. module: omnia_customer_servers
+#: code:addons/omnia_customer_servers/models/model_config.py:66
+#: model:ir.model.fields,field_description:omnia_customer_servers.field_server_config_notes
+#, python-format
+msgid "Additional Notes"
+msgstr "Note Aggiuntive"
+
+#. module: omnia_customer_servers
+#: code:addons/omnia_customer_servers/models/model_config.py:63
+#: model:ir.model.fields,field_description:omnia_customer_servers.field_server_config_path_addons
+#, python-format
+msgid "Addons Path"
+msgstr "Percorso Addons"
+
+#. module: omnia_customer_servers
+#: code:addons/omnia_customer_servers/models/model_config.py:60
+#: model:ir.model.fields,field_description:omnia_customer_servers.field_server_config_path_backup
+#, python-format
+msgid "Backup Path"
+msgstr "Percorso Backup"
+
+#. module: omnia_customer_servers
+#: code:addons/omnia_customer_servers/models/cad_programs.py:29
+#: model:ir.model.fields,field_description:omnia_customer_servers.field_cad_programs_name
+#, python-format
+msgid "CAD"
+msgstr "CAD"
+
+#. module: omnia_customer_servers
+#: model:ir.actions.act_window,name:omnia_customer_servers.server_menu_cad_action
+#: model:ir.ui.menu,name:omnia_customer_servers.server_menu_cad
+msgid "CADs"
+msgstr "CADs"
+
+#. module: omnia_customer_servers
+#: model:ir.ui.view,arch_db:omnia_customer_servers.cad_form_view
+msgid "Cad Form"
+msgstr "Cad Form"
+
+#. module: omnia_customer_servers
+#: model:ir.ui.view,arch_db:omnia_customer_servers.server_form_view
+msgid "Client"
+msgstr "Client"
+
+#. module: omnia_customer_servers
+#: code:addons/omnia_customer_servers/models/model_config.py:52
+#: model:ir.model.fields,field_description:omnia_customer_servers.field_server_config_client_port
+#, python-format
+msgid "Client Port"
+msgstr "Porta Client"
+
+#. module: omnia_customer_servers
+#: code:addons/omnia_customer_servers/models/model_config.py:53
+#: model:ir.model.fields,field_description:omnia_customer_servers.field_server_config_client_protocol
+#, python-format
+msgid "Client Protocol"
+msgstr "Protocollo Client"
+
+#. module: omnia_customer_servers
+#: code:addons/omnia_customer_servers/models/model_config.py:50
+#: model:ir.model.fields,field_description:omnia_customer_servers.field_server_config_comando_ssh
+#, python-format
+msgid "Command SSH"
+msgstr "Comando SSH"
+
+#. module: omnia_customer_servers
+#: code:addons/omnia_customer_servers/models/model_config.py:57
+#: model:ir.model.fields,field_description:omnia_customer_servers.field_server_config_path_file_config
+#, python-format
+msgid "Config File Path"
+msgstr "Percorso File Config"
+
+#. module: omnia_customer_servers
+#: model:ir.model.fields,field_description:omnia_customer_servers.field_cad_programs_create_uid
+#: model:ir.model.fields,field_description:omnia_customer_servers.field_server_config_create_uid
+msgid "Created by"
+msgstr "Creato da"
+
+#. module: omnia_customer_servers
+#: model:ir.model.fields,field_description:omnia_customer_servers.field_cad_programs_create_date
+#: model:ir.model.fields,field_description:omnia_customer_servers.field_server_config_create_date
+msgid "Created on"
+msgstr "Creato il"
+
+#. module: omnia_customer_servers
+#: model:ir.model.fields,field_description:omnia_customer_servers.field_server_config_partner_id
+msgid "Customer"
+msgstr "Cliente"
+
+#. module: omnia_customer_servers
+#: code:addons/omnia_customer_servers/models/model_config.py:37
+#: model:ir.model.fields,field_description:omnia_customer_servers.field_server_config_db_name
+#, python-format
+msgid "DB Name"
+msgstr "Nome DB"
+
+#. module: omnia_customer_servers
+#: code:addons/omnia_customer_servers/models/model_config.py:62
+#: model:ir.model.fields,field_description:omnia_customer_servers.field_server_config_path_demon
+#, python-format
+msgid "Demon Path"
+msgstr "Percorso Demone"
+
+#. module: omnia_customer_servers
+#: model:ir.model.fields,field_description:omnia_customer_servers.field_cad_programs_display_name
+#: model:ir.model.fields,field_description:omnia_customer_servers.field_server_config_display_name
+msgid "Display Name"
+msgstr "Nome Visualizzato"
+
+#. module: omnia_customer_servers
+#: code:addons/omnia_customer_servers/models/model_config.py:61
+#: model:ir.model.fields,field_description:omnia_customer_servers.field_server_config_path_filestore
+#, python-format
+msgid "Filestore Path"
+msgstr "Percorso Filestore"
+
+#. module: omnia_customer_servers
+#: model:ir.model.fields,field_description:omnia_customer_servers.field_cad_programs_id
+#: model:ir.model.fields,field_description:omnia_customer_servers.field_server_config_id
+msgid "ID"
+msgstr "ID"
+
+#. module: omnia_customer_servers
+#: code:addons/omnia_customer_servers/models/model_config.py:44
+#: model:ir.model.fields,field_description:omnia_customer_servers.field_server_config_ip_ssh
+#, python-format
+msgid "IP SSH"
+msgstr "IP SSH"
+
+#. module: omnia_customer_servers
+#: code:addons/omnia_customer_servers/models/model_config.py:34
+#: model:ir.model.fields,field_description:omnia_customer_servers.field_server_config_ip_server
+#, python-format
+msgid "IP Server"
+msgstr "IP Server"
+
+#. module: omnia_customer_servers
+#: code:addons/omnia_customer_servers/models/model_config.py:54
+#: model:ir.model.fields,field_description:omnia_customer_servers.field_server_config_path_internal_network
+#, python-format
+msgid "Internal Network Path"
+msgstr "Percorso Rete Interna"
+
+#. module: omnia_customer_servers
+#: model:ir.model.fields,field_description:omnia_customer_servers.field_cad_programs___last_update
+#: model:ir.model.fields,field_description:omnia_customer_servers.field_server_config___last_update
+msgid "Last Modified on"
+msgstr "Ultima modifica il"
+
+#. module: omnia_customer_servers
+#: model:ir.model.fields,field_description:omnia_customer_servers.field_cad_programs_write_uid
+#: model:ir.model.fields,field_description:omnia_customer_servers.field_server_config_write_uid
+msgid "Last Updated by"
+msgstr "Ultima modifica di"
+
+#. module: omnia_customer_servers
+#: model:ir.model.fields,field_description:omnia_customer_servers.field_cad_programs_write_date
+#: model:ir.model.fields,field_description:omnia_customer_servers.field_server_config_write_date
+msgid "Last Updated on"
+msgstr "Ultima modifica il"
+
+#. module: omnia_customer_servers
+#: code:addons/omnia_customer_servers/models/model_config.py:58
+#: model:ir.model.fields,field_description:omnia_customer_servers.field_server_config_path_file_log
+#, python-format
+msgid "Log File Path"
+msgstr "Percorso File Log"
+
+#. module: omnia_customer_servers
+#: code:addons/omnia_customer_servers/models/model_config.py:65
+#: model:ir.model.fields,field_description:omnia_customer_servers.field_server_config_migration_code
+#, python-format
+msgid "Migration Code"
+msgstr "Codice Migrazione"
+
+#. module: omnia_customer_servers
+#: code:addons/omnia_customer_servers/models/model_config.py:33
+#: model:ir.model.fields,field_description:omnia_customer_servers.field_server_config_odoo_version
+#, python-format
+msgid "Odoo Version"
+msgstr "Versione Odoo"
+
+#. module: omnia_customer_servers
+#: code:addons/omnia_customer_servers/models/model_config.py:39
+#: model:ir.model.fields,field_description:omnia_customer_servers.field_server_config_open_vpn
+#, python-format
+msgid "Open VPN"
+msgstr "Open VPN"
+
+#. module: omnia_customer_servers
+#: code:addons/omnia_customer_servers/models/model_config.py:40
+#: model:ir.model.fields,field_description:omnia_customer_servers.field_server_config_open_vpn_fname
+#, python-format
+msgid "Open VPN Filename"
+msgstr "Open VPN Nome File"
+
+#. module: omnia_customer_servers
+#: code:addons/omnia_customer_servers/models/model_config.py:41
+#: model:ir.model.fields,field_description:omnia_customer_servers.field_server_config_open_vpn_login
+#, python-format
+msgid "Open VPN Login"
+msgstr "Open VPN Login"
+
+#. module: omnia_customer_servers
+#: code:addons/omnia_customer_servers/models/model_config.py:42
+#: model:ir.model.fields,field_description:omnia_customer_servers.field_server_config_open_vpn_password
+#, python-format
+msgid "Open VPN Password"
+msgstr "Open VPN Password"
+
+#. module: omnia_customer_servers
+#: model:ir.ui.view,arch_db:omnia_customer_servers.server_form_view
+msgid "OpenVPN"
+msgstr "OpenVPN"
+
+#. module: omnia_customer_servers
+#: model:ir.model,name:omnia_customer_servers.model_res_partner
+msgid "Partner"
+msgstr "Partner"
+
+#. module: omnia_customer_servers
+#: code:addons/omnia_customer_servers/models/model_config.py:36
+#: model:ir.model.fields,field_description:omnia_customer_servers.field_server_config_password_login_odoo
+#, python-format
+msgid "Password Login"
+msgstr "Password Login"
+
+#. module: omnia_customer_servers
+#: code:addons/omnia_customer_servers/models/model_config.py:48
+#: model:ir.model.fields,field_description:omnia_customer_servers.field_server_config_password_root_ssh
+#, python-format
+msgid "Password Root SSH"
+msgstr "Password Root SSH"
+
+#. module: omnia_customer_servers
+#: code:addons/omnia_customer_servers/models/model_config.py:46
+#: model:ir.model.fields,field_description:omnia_customer_servers.field_server_config_password_ssh
+#, python-format
+msgid "Password SSH"
+msgstr "Password SSH"
+
+#. module: omnia_customer_servers
+#: model:ir.ui.view,arch_db:omnia_customer_servers.server_form_view
+msgid "SSH"
+msgstr "SSH"
+
+#. module: omnia_customer_servers
+#: code:addons/omnia_customer_servers/models/model_config.py:49
+#: model:ir.model.fields,field_description:omnia_customer_servers.field_server_config_ssh_key
+#, python-format
+msgid "SSH Key"
+msgstr "Chiave SSH"
+
+#. module: omnia_customer_servers
+#: code:addons/omnia_customer_servers/models/res_partner.py:34
+#: model:ir.actions.act_window,name:omnia_customer_servers.server_menu_action
+#: model:ir.model.fields,field_description:omnia_customer_servers.field_res_partner_server_tab
+#: model:ir.model.fields,field_description:omnia_customer_servers.field_res_users_server_tab
+#: model:ir.ui.view,arch_db:omnia_customer_servers.server_form_view
+#: model:ir.ui.view,arch_db:omnia_customer_servers.view_partner_form
+#, python-format
+msgid "Server Config"
+msgstr "Server Config"
+
+#. module: omnia_customer_servers
+#: model:res.groups,name:omnia_customer_servers.server_config_security
+msgid "Server Config Security"
+msgstr "Server Config Security"
+
+#. module: omnia_customer_servers
+#: model:res.groups,name:omnia_customer_servers.server_config_security_admin
+msgid "Server Config Security Admin"
+msgstr "Server Config Security Admin"
+
+#. module: omnia_customer_servers
+#: model:ir.ui.view,arch_db:omnia_customer_servers.server_form_view
+msgid "Server Form"
+msgstr "Server Form"
+
+#. module: omnia_customer_servers
+#: model:ir.ui.view,arch_db:omnia_customer_servers.server_tree_view
+msgid "Server Tree"
+msgstr "Server Tree"
+
+#. module: omnia_customer_servers
+#: model:ir.ui.menu,name:omnia_customer_servers.server_menu
+msgid "Server configuration"
+msgstr "Server configuration"
+
+#. module: omnia_customer_servers
+#: model:ir.model,name:omnia_customer_servers.model_server_config
+msgid "Server configurations"
+msgstr "Server configurations"
+
+#. module: omnia_customer_servers
+#: code:addons/omnia_customer_servers/models/model_config.py:59
+#: model:ir.model.fields,field_description:omnia_customer_servers.field_server_config_path_share
+#, python-format
+msgid "Share Path"
+msgstr "Percorso Share"
+
+#. module: omnia_customer_servers
+#: code:addons/omnia_customer_servers/models/model_config.py:55
+#: model:ir.model.fields,field_description:omnia_customer_servers.field_server_config_used_cad
+#, python-format
+msgid "Used CAD"
+msgstr "CAD Usato"
+
+#. module: omnia_customer_servers
+#: code:addons/omnia_customer_servers/models/model_config.py:35
+#: model:ir.model.fields,field_description:omnia_customer_servers.field_server_config_user_login_odoo
+#, python-format
+msgid "User Login"
+msgstr "Login Utente"
+
+#. module: omnia_customer_servers
+#: code:addons/omnia_customer_servers/models/model_config.py:47
+#: model:ir.model.fields,field_description:omnia_customer_servers.field_server_config_user_root_ssh
+#, python-format
+msgid "User Root SSH"
+msgstr "Utente Root SSH"
+
+#. module: omnia_customer_servers
+#: code:addons/omnia_customer_servers/models/model_config.py:45
+#: model:ir.model.fields,field_description:omnia_customer_servers.field_server_config_user_ssh
+#, python-format
+msgid "User SSH"
+msgstr "Utente SSH"
+
+#. module: omnia_customer_servers
+#: code:addons/omnia_customer_servers/models/cad_programs.py:30
+#: model:ir.model.fields,field_description:omnia_customer_servers.field_cad_programs_version
+#, python-format
+msgid "Version"
+msgstr "Versione"
+
+#. module: omnia_customer_servers
+#: model:ir.model,name:omnia_customer_servers.model_autocad
+msgid "autocad"
+msgstr "autocad"
+
+#. module: omnia_customer_servers
+#: model:ir.model,name:omnia_customer_servers.model_cad_programs
+msgid "cad.programs"
+msgstr "cad.programs"
+
+#. module: omnia_customer_servers
+#: model:ir.model,name:omnia_customer_servers.model_solidworks
+msgid "solidworks"
+msgstr "solidworks"
