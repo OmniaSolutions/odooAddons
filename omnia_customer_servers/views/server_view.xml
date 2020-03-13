@@ -7,6 +7,19 @@
         <field name="res_model">server.config</field>
         <field name="view_mode">tree,form</field>
     </record>
+                       
+    <record id="server_search_view" model="ir.ui.view">
+    	<field name="name">server.search.view</field>
+    	<field name="model">server.config</field>
+    	<field name="arch" type="xml">
+    		<search string="Customer search">
+    			<field name="partner_id"/>
+    			<group expand="0" name="group_by" string="Group By">
+    				<filter name="partner_id" string="Customer" domain="[]" context="{'group_by' : 'partner_id'}"/>
+    			</group>
+    		</search>
+    	</field>
+    </record>
     
     <record model="ir.ui.view" id="server_tree_view">
             <field name="name">server.tree</field>

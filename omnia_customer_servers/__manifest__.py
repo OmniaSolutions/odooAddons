@@ -40,6 +40,6 @@
         'views/server_view.xml',
         'views/cad_view.xml',
         'views/data.xml',
-        'security/ir.model.access.csv',
+        'security/ir.model.access.csv',   
     ],
 }
