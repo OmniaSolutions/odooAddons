@@ -1,123 +1,118 @@
 odoo.define('omniasolutions_custom_widget.FieldSelectionExtention', function (require) {
-"use strict";
-var core = require('web.core');
-var Model = require('web.Model');
-var form_widgets = require('web.form_widgets');
-var _t = core._t;
-var qweb = core.qweb;
+    'use strict';
+	var AbstractField = require('web.AbstractField');
+	var field_registry = require('web.field_registry');
+	var relational_fields = require('web.relational_fields');
 
+	var FieldSelectionExtention = relational_fields.FieldSelection.extend({
+		
+    supportedFieldTypes: ['char'],
+    events: _.extend({}, AbstractField.prototype.events, {
+        'click': '_onClick',
+		'change': '_onChange',
+    }),
 
-var FieldSelectionExtention = core.form_widget_registry.get('selection').extend({
-    init: function (field_manager, node) {
-		this._super(field_manager, node);
-		//this.records_orderer = new instance.web.DropMisordered();
-	},
-
-    render_value: function() {
-        var values = this.get("values");
-        values =  [[false, this.node.attrs.placeholder || '']].concat(values);
-        var found = _.find(values, function(el) { return el[0] === this.get("value"); }, this);
-        if (! found) {
-            found = [this.get("value"), _t('Unknown')];
-            values = [found].concat(values);
-        }
-        var selfff = this;
-        selfff.found = found;
-        if (! this.get("effective_readonly")) {
-        	var resArray = selfff.get_selected_val(selfff);
-        	if (resArray.length == 2){
-            	//selfff.selectedOption = resArray[0];
-            	//var selectionTarget = resArray[1];
-            	//selfff.attach_onchange(selectionTarget,selfff);
-            	var parent = this.getParent();
-            	var groupart = parent.get_field_value('x_groupart');
-            	new Model(this.view.model).call("get_selection_vals",[groupart]).then(function(values2){
-    	            //selfff.$().html(qweb.render("FieldSelectionSelect", {widget: selfff, values: values2}));
-            		qweb.add_template('/web/static/src/xml/base.xml');
-            		var selHtml = qweb.render("FieldSelection", {widget: selfff, values: values2});
-    	            selfff.$().html(selHtml);
-    	            selfff.$("select").val(JSON.stringify(found[0]));
-    	        });
-        	}
-        } else {
-        	var parent = this.getParent();
-        	var current_id = parent.get_field_value('id');
-        	new Model(this.view.model).call("get_val_fromdb_name",[selfff.found[0], current_id]).then(function(toDisplay){
-        		selfff.$el.text(toDisplay);
-        		selfff.$el.val(toDisplay);
-	        });
-        }
+    init: function (parent, name, record, options) {
+		console.log('init');
+        this._super.apply(this, arguments);
+		var possible_values;
+		self.possible_values = this.get_possible_values();
+		console.log(self.possible_values)
     },
 
+/* On click recompute values to show */
+    /**
+     * @private
+     * @param {MouseEvent} event
+     */
+    _onClick: function (event) {
+		console.log('_onClick');
+		var self = this;
+		var currentval;
+		currentval = this.get_selected_val();
+		if (currentval in this.possible_values) {
+        	this.values = this.possible_values[currentval];
+			}
+		else {
+			this.values = [[false, '']]
+		}
+		this._render();
+    },
+
+/* Call python to get all possible selection values and calls render to reload selection values */
+	get_possible_values : function () {
+		var prom;
+		var self = this;
+		prom = self._rpc({
+                        model: self.model,
+                        method: 'get_val_fromdb_name',
+						args: [self.record.id],
+                        kwargs: {},
+                    });
+		Promise.resolve(prom).then(function (results) {
+                    self.possible_values = results;
+					console.log(self.possible_values)
+					self._render();
+                });
+		return [['false', '']];
+
+	},
+
+/* Get value from field with specific class */
     get_selected_val : function () {
     	var elements = $('.omniasolutions_'+this.name);
-    	if (elements.length == 2){
-    		var customEl = elements[1];
+    	if (elements.length == 1){
+    		var customEl = elements[0];
     		var elemType = customEl.tagName;
-    		if (elemType == 'SPAN'){
-    			c1 = customEl.children[0];
-    			if (c1 != undefined){
-        			if (c1.tagName == 'SELECT'){
-        				var selOptions = c1.selectedOptions;
-        				if (selOptions.length == 1){
-        					var selectedVal = selOptions[0].value;
-        					return [selectedVal,c1]
-        				}
-        			}
-    			}
-    		}
+			if (elemType == 'SPAN'){
+				return customEl.textContent;
+			}
+			if (elemType == 'SELECT'){
+				var selOptions = customEl.selectedOptions;
+				if (selOptions.length == 1){
+					return selOptions[0].innerText;
+				}
+			}
     	}
     	return ['','']
     },
-    
-    attach_onchange: function(elem,selfff) {
-    	if (elem != undefined){
-        	elem.onchange = function(){
-        		var resArray = selfff.get_selected_val();
-        		if (resArray.length == 2){
-        			// To clear children options
-	            	selfff.$("select")[0].options.length = 0;
-		        	new Model(selfff.view.model).call("get_selection_vals",[resArray[0]]).then(function(values3){
-		        		// To set first value as empty
-		        		selfff.$("select").append($('<option>', {		
-					    	value: '',
-					    	text: ''
-							}));
-		        		// Set avaible options due to selected val
-			            for (i=0; i< values3.length; i++){
-					        selfff.$("select").append($('<option>', {
-					    	value: values3[i][0],
-					    	text: values3[i][1]
-							}));
-						}
-					});
-		        	// To set as default empty index
-	        		selfff.$("select")[0].options.selectedIndex = 0;
-        		}
-    		}
-    	}
+
+/* Render take value from field with specific class and compute possible selection values */
+    _render: function () {
+		console.log('_render');
+		if (this.possible_values != undefined){
+			var currentval;
+			currentval = this.get_selected_val();
+			if (currentval in this.possible_values) {
+	        	this.values = this.possible_values[currentval];
+				}
+			else {
+				this.values = [[false, '']]
+			}
+		}
+        this._super.apply(this, arguments);
     },
-    
-    store_dom_value: function () {
-        if (!this.get('effective_readonly') && this.$('select').length) {
-            var val = this.$('select').val();
-            if (val != null){
-	            if (val.charAt(0) == '"'){
-	            	val = JSON.parse(val); 
-	            }
-            }
-            else{
-            	val = JSON.parse(false);
-            }
-            this.internal_set_value(val);
-        }
+
+/* Render readonly is called when you are not in edit mode, simply display text value */
+    _renderReadonly: function () {
+		console.log('_renderReadonly');
+        this._super.apply(this, arguments);
+		for (var i = 0; i < this.values.length; i++) {
+		    if (this.values[i][0] == this.value){
+				this.$el.empty().text(this._formatValue(this.values[i][1]));
+				return;
+		}
+		}
     },
+
 });
 
-core.form_widget_registry.add('selection_field_extention', FieldSelectionExtention);
-
+	field_registry.add('selection_field_extention', FieldSelectionExtention);
+	
 return {
-	FieldSelectionExtention: FieldSelectionExtention,
+    FieldSelectionExtention: FieldSelectionExtention
 };
-
+    
 });
+
+
