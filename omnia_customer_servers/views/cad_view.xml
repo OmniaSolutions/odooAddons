@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+<data>
+
+    <record model="ir.actions.act_window" id="server_menu_cad_action">
+    	<field name="name">CADs</field>
+        <field name="res_model">cad.programs</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+    
+    <record model="ir.ui.view" id="cad_tree_view">
+    	<field name="name">cad.programs.tree</field>
+        <field name="model">cad.programs</field>
+        <field name="arch" type="xml">
+        	<tree>
+    			<field name="name"/>
+    			<field name="version"/>
+    		</tree>
+       	</field>
+    </record>
+            
+    <record model="ir.ui.view" id="cad_form_view">
+            <field name="name">cad.programs.form</field>
+            <field name="model">cad.programs</field>
+            <field name="arch" type="xml">
+                <form string="Cad Form">
+                	<sheet>                  
+     					<group>
+			    			<field name="name"/>
+			    			<field name="version"/>
+                    	</group>
+           			</sheet>
+                </form>
+            </field>
+    </record>
+              
+	<menuitem id="server_menu_cad" name="CADs" parent="contacts.menu_contacts"
+              action="server_menu_cad_action" groups="omnia_customer_servers.server_config_security_admin"/>
+            
+	</data>  
+</odoo>

@@ -19,16 +19,17 @@
 #
 ##############################################################################
 {
-    'name': 'Omnia Mrp Make Procutament',
+    'name': 'Omnia Mrp Make Procurement',
     'version': '10.0.1.1.0',
     'sequence': 1,
     'category': 'Custom',
     'description': """
-Allow the capability to recursiveli make procurament order from manufactoring order on all levels
+Allow the capability to recursively make procurement order from manufactoring order on all levels
 """,
     'author': 'OmniaSolutions.eu',
     'maintainer': 'OmniaSolutions.eu',
-    'website': 'http://www.OmniaSolutions.eu',
+    'website': 'https://www.omniasolutions.website',
+    'images': ['static/img/mrp_make_procurement.png'],
     'depends': ['mrp','stock'],
     'data': [
         #  view

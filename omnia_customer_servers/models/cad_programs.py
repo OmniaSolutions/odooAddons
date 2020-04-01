@@ -18,10 +18,13 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 ##############################################################################
-# Leonardo Cazziolati
-# leonardo.cazziolati@omniasolutions.eu
-# 28-02-2020
 
-from . import model_config
-from . import res_partner
-from . import cad_programs
+from odoo import models, fields
+from odoo import _
+
+class CadPrograms(models.Model):
+    _name = 'cad.programs'
+    _description = ''
+
+    name = fields.Char(string=_('CAD'))
+    version = fields.Char(string=_('Version'))

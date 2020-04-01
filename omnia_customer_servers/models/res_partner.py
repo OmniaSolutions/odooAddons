@@ -23,6 +23,7 @@
 # 28-02-2020
 
 from odoo import models, fields
+from odoo import _
 
 class PartnerServerExtension(models.Model):
     _name = 'res.partner'
@@ -30,5 +31,5 @@ class PartnerServerExtension(models.Model):
     
     server_tab = fields.One2many(comodel_name='server.config',
                                  inverse_name='partner_id',
-                                 string='Server Config')
+                                 string=_('Server Config'))
         

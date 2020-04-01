@@ -7,6 +7,19 @@
         <field name="res_model">server.config</field>
         <field name="view_mode">tree,form</field>
     </record>
+                       
+    <record id="server_search_view" model="ir.ui.view">
+    	<field name="name">server.search.view</field>
+    	<field name="model">server.config</field>
+    	<field name="arch" type="xml">
+    		<search string="Customer search">
+    			<field name="partner_id"/>
+    			<group expand="0" name="group_by" string="Group By">
+    				<filter name="partner_id" string="Customer" domain="[]" context="{'group_by' : 'partner_id'}"/>
+    			</group>
+    		</search>
+    	</field>
+    </record>
     
     <record model="ir.ui.view" id="server_tree_view">
             <field name="name">server.tree</field>
@@ -17,6 +30,8 @@
                 	<field name="ip_server"/>
                 	<field name="user_login_odoo"/>
                 	<field name="password_login_odoo"/>
+                	<field name="db_name"/>
+                	<field name="used_cad"/>
                 	<field name="odoo_version"/>
                 </tree>
             </field>
@@ -42,11 +57,13 @@
                             	<field name="password_login_odoo"/>
                         	</group>
                         	<group>
+	                        		<field name="db_name"/>
                             	<field name="odoo_version"/>
                         	</group>
                         	<group string="OpenVPN" colspan="4">
 	                        	<group>
-	                            	<field name="open_vpn"/>
+	                        		<field name="open_vpn_fname" select="1"/>
+	                            	<field name="open_vpn" filename="open_vpn_fname"/>
 	                            	<field name="open_vpn_login"/>
 	            					<field name="open_vpn_password"/>
 	                        	</group>
@@ -68,17 +85,27 @@
 	                        	<group>
 	                        		<field name="client_port"/>
 	                        		<field name="client_protocol"/>
-	                        		<field name="db_name"/>
+	                        		<field name="path_internal_network"/>
 	                        	</group>
                         	</group>
                         	<group string="Server Config" colspan="4">
+                        		<field name="path_share"/>
+                        		<field name="path_backup"/>
+                        		<field name="path_filestore"/>
                         		<field name="path_file_config"/>
                         		<field name="path_file_log"/>
+                        		<field name="path_demon"/>
                         		<field name="path_addons"/>
+                        	</group>
+                        	<group>
+                        		<field name="migration_code"/>
+                        	</group>
+                        	<group colspan="4">
+                        		<field nolabel="1" name="used_cad"/>
                         	</group>
                         	<group></group>
                        		<label for="notes"></label>
-                       		<field name="notes" nolabel="1"/>
+                       		<field name="notes" nolabel="1" widget="html"/>
                     	</group>
            			</sheet>
                 </form>

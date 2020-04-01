@@ -23,31 +23,44 @@
 # 28-02-2020
 
 from odoo import models, fields
+from odoo import _
 
 class ServerConfig(models.Model):
     _name = 'server.config'
     _description = "Server configurations"
     
     partner_id = fields.Many2one("res.partner","Customer")
-    odoo_version = fields.Char(string='Odoo Version')
-    ip_server = fields.Char(string='IP Server')
-    user_login_odoo = fields.Char(string='User Login')
-    password_login_odoo = fields.Char(string='Password Login')
-    open_vpn = fields.Binary(string='Open VPN')
-    open_vpn_login = fields.Char(string='Open VPN Login')
-    open_vpn_password = fields.Char(string='Open VPN Password')
-    ip_ssh = fields.Char(string='IP SSH')
-    user_ssh = fields.Char(string='User SSH')
-    password_ssh = fields.Char(string='Password SSH')
-    user_root_ssh = fields.Char(string='User Root SSH')
-    password_root_ssh = fields.Char(string='Password Root SSH')
-    ssh_key = fields.Char(string='SSH Key')
-    comando_ssh = fields.Char(string='Command SSH')
-    path_file_config = fields.Char(string='Config File Path')
-    path_file_log = fields.Char(string='Log File Path')
-    path_addons = fields.Text(string='Addons Path')
-    client_port = fields.Char(string='Client Port')
-    client_protocol = fields.Char(string='Client Protocol')
-    db_name = fields.Char(string='DB Name')
-    notes = fields.Text(string='Additional Notes')
-    # used_cad = fields.one2many(string='CAD utilizzato')
+    odoo_version = fields.Char(string=_('Odoo Version'))
+    ip_server = fields.Char(string=_('IP Server'))
+    user_login_odoo = fields.Char(string=_('User Login'))
+    password_login_odoo = fields.Char(string=_('Password Login'))
+    db_name = fields.Char(string=_('DB Name'))
+    
+    open_vpn = fields.Binary(string=_('Open VPN'))
+    open_vpn_fname = fields.Char(string=_('Open VPN Filename'))
+    open_vpn_login = fields.Char(string=_('Open VPN Login'))
+    open_vpn_password = fields.Char(string=_('Open VPN Password'))
+    
+    ip_ssh = fields.Char(string=_('IP SSH'))
+    user_ssh = fields.Char(string=_('User SSH'))
+    password_ssh = fields.Char(string=_('Password SSH'))
+    user_root_ssh = fields.Char(string=_('User Root SSH'))
+    password_root_ssh = fields.Char(string=_('Password Root SSH'))
+    ssh_key = fields.Char(string=_('SSH Key'))
+    comando_ssh = fields.Char(string=_('Command SSH'))
+    
+    client_port = fields.Char(string=_('Client Port'))
+    client_protocol = fields.Char(string=_('Client Protocol'))
+    path_internal_network = fields.Char(string=_('Internal Network Path'))
+    used_cad = fields.Many2many("cad.programs",string=_("Used CAD"))
+    
+    path_file_config = fields.Char(string=_('Config File Path'))
+    path_file_log = fields.Char(string=_('Log File Path'))
+    path_share = fields.Char(string=_('Share Path'))
+    path_backup = fields.Char(string=_('Backup Path'))
+    path_filestore = fields.Char(string=_('Filestore Path'))
+    path_demon = fields.Char(string=_('Demon Path'))
+    path_addons = fields.Text(string=_('Addons Path'))
+
+    migration_code = fields.Char(string=_('Migration Code'))
+    notes = fields.Text(string=_('Additional Notes'))
