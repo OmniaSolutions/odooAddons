@@ -7,7 +7,9 @@ from odoo.tools import DEFAULT_SERVER_DATETIME_FORMAT
 from odoo import models
 from odoo import api
 from odoo import fields
+from odoo import tools
 from odoo import _
+import pytz
 import logging
 from datetime import datetime
 
@@ -20,7 +22,14 @@ class MrpProductionWCLine(models.Model):
     def getDictWorkorder(self, woBrwsList):
         out = []
         for woBrws in woBrwsList:
+            new_str_datetime = ''
             if woBrws.production_id.state in ['confirm', 'planned', 'progress']:
+                user_tz = False
+                if woBrws.date_planned_start:
+                    dt = datetime.strptime(woBrws.date_planned_start, tools.DEFAULT_SERVER_DATETIME_FORMAT)
+                    user_tz = pytz.timezone(self.env.user.tz)
+                    new_date = pytz.utc.localize(dt).astimezone(user_tz)
+                    new_str_datetime = datetime.strftime(new_date, tools.DEFAULT_SERVER_DATETIME_FORMAT)
                 woDict = {
                     'wo_id': woBrws.id,
                     'wo_name': woBrws.name,
@@ -30,7 +39,7 @@ class MrpProductionWCLine(models.Model):
                     'product_default_code': woBrws.product_id.default_code or '',
                     'wo_state': woBrws.state,
                     'qty': "%s / %s %s" %(woBrws.qty_produced, woBrws.qty_production, woBrws.product_uom_id.name),
-                    'date_planned': woBrws.date_planned_start or '',
+                    'date_planned': new_str_datetime or '',
                     'is_user_working': woBrws.is_user_working,
                     }
                 out.append(woDict)

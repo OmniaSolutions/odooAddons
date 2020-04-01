@@ -9,7 +9,7 @@
         <field name="arch" type="xml">
             <field name="move_raw_ids" position="after">
                 <label for="raw_material_name"></label>
-                <field name="raw_material_name" readobly="True"/>
+                <field name="raw_material_name" readonly="True"/>
             </field>
         </field>
     </record>
