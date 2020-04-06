@@ -53,11 +53,11 @@ class TmpStockMove(models.TransientModel):
     def populateFromPick(self, pick_ids):
         pick_ids.sort()
         tmp_pick_ids = self.env['stock.picking'].browse(pick_ids)
-        good_pick_list = []
+        good_pick_list = self.env['stock.picking']
         for pick_brws in tmp_pick_ids:
             if pick_brws.state not in ['done', 'cancel']:
-                good_pick_list.append(pick_brws)
-        if len(good_pick_list) <= 1:
+                good_pick_list += pick_brws
+        if len(good_pick_list.ids) <= 1:
             raise UserError(_('You have only one available picking to merge. Merge operation is aborted'))
         TmpStockMoveLineObj = self.env['stock.tmp_merge_pick_line']
         first_partner_id = -1
@@ -78,6 +78,7 @@ class TmpStockMove(models.TransientModel):
                 self.pick_origin = str(self.pick_origin or '') + "," + str(pick_brws.origin or '')
 
         product_qty_assigned = {}
+        good_pick_list = good_pick_list.sorted(key=lambda r: r.id)
         logging.info('good_pick_list: %r' % (good_pick_list))
         for pick_brws in good_pick_list:
             if pick_brws.state in ['done', 'cancel']:
