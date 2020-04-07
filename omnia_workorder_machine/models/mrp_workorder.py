@@ -29,7 +29,7 @@ class MrpProductionWCLine(models.Model):
                     dt = datetime.strptime(woBrws.date_planned_start, tools.DEFAULT_SERVER_DATETIME_FORMAT)
                     user_tz = pytz.timezone(self.env.user.tz)
                     new_date = pytz.utc.localize(dt).astimezone(user_tz)
-                    new_str_datetime = datetime.strftime(new_date, tools.DEFAULT_SERVER_DATETIME_FORMAT)
+                    new_str_datetime = self.getLocalizedDT(new_date, self.env.user.lang)
                 woDict = {
                     'wo_id': woBrws.id,
                     'wo_name': woBrws.name,
@@ -44,7 +44,14 @@ class MrpProductionWCLine(models.Model):
                     }
                 out.append(woDict)
         return out
-    
+
+    @api.model
+    def getLocalizedDT(self, dt, lang_code):
+        lang_obj = self.env['res.lang'].search([('code', '=', lang_code)])
+        if lang_obj:
+            return datetime.strftime(dt, '%s %s' % (lang_obj.date_format, lang_obj.time_format))
+        return datetime.strftime(dt, tools.DEFAULT_SERVER_DATETIME_FORMAT)
+
     @api.model
     def getWorkorders(self, workcenter, workorder=False, listify=False):
         logging.info('Getting Work Orders with parameters %r, workorder %r' % (workcenter, workorder))
