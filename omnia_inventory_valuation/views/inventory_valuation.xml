@@ -1,0 +1,45 @@
+<odoo>
+    <data>
+
+	<record id="inventory_valuation_view" model="ir.ui.view">
+        <field name="name">inventory.valuation.form</field>
+        <field name="model">inventory.valuation</field>
+        <field name="type">form</field>
+        <field name="arch" type="xml">
+        <form string="Export Form">
+        	<group>
+       			<field name="ref_date"/>
+       			<field name="location_id" required="True"/>
+       			<field name="price_unit_grater"/>
+		    </group>
+            <group>
+        		<field name="datas_fname"/>
+	            <field name="datas" readonly="1" filename="datas_fname"/>
+			</group>
+            <separator string=""/>
+            <footer>
+            	<button special="cancel" string="Cancel"/>
+            	<button string="Generate inventory" name="action_generate_inventory" type="object"/>
+            </footer>
+        </form>
+        </field>
+    </record>
+
+    <record model="ir.actions.act_window" id="action_inventory_valuation">
+        <field name="name">Inventory Valuation</field>
+        <field name="res_model">inventory.valuation</field>
+        <field name="view_type">form</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+	   
+    <menuitem 
+	    name="Inventory valuation" 
+	    action="omnia_inventory_valuation.action_inventory_valuation" 
+	    id="menu_inventory_valuation"
+	    parent="stock.menu_warehouse_report"
+		sequence="12"  
+    />
+<!-- groups="plm.group_plm_integrationuser" -->
+    </data>
+</odoo>
