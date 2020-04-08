@@ -186,7 +186,7 @@ class StockPicking(models.Model):
     def subcontractRaw(self, production_id, finish_qty, partner_location):
         subcontracting_location = self.env['stock.location'].getSubcontractiongLocation()
         for raw_move in production_id.move_raw_ids:
-            if raw_move.state not in ['done', 'cancel']:
+            if raw_move.state not in ['done', 'cancel'] and raw_move.product_uom_qty > 0:
                 new_sub_move = raw_move.subcontractingMove(partner_location, subcontracting_location)
                 moveQty = finish_qty * (raw_move.unit_factor or 1)
                 new_sub_move.product_uom_qty = moveQty

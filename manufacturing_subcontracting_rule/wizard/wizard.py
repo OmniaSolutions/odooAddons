@@ -611,7 +611,9 @@ class MrpProductionWizard(models.Model):
     def createStockPickingOutWorkorder(self, partner_id, productionBrws, customerProductionLocation, productionLocation, workorderBrw):
         stock_piking = self.env['stock.picking']
         move_obj = self.env['stock.move']
-        if not self.move_raw_ids and self.external_operation not in ['parent', 'opration']:
+        if not self.move_raw_ids and self.external_operation not in ['parent', 'operation']:
+            return [stock_piking]
+        if not self.move_raw_ids.filtered(lambda x: x.product_uom_qty > 0) and self.external_operation not in ['parent', 'operation']:
             return [stock_piking]
         out_picks = []
         origin = self.getOriginWorkOrder(productionBrws, workorderBrw, partner_id)
