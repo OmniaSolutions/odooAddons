@@ -26,6 +26,8 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 ##############################################################################
+import shutil
+import stat
 
 '''
 Created on Apr 17, 2018
@@ -40,7 +42,7 @@ import logging
 import datetime
 from datetime import timedelta
 from odoo.tools import DEFAULT_SERVER_DATETIME_FORMAT
-import csv
+from openpyxl import load_workbook
 import tempfile
 import os
 import base64
@@ -49,53 +51,100 @@ import base64
 class InventoryValuation(models.TransientModel):
     _name = "inventory.valuation"
 
+# location, categoria e prodotto
+# Security
+
     ref_date = fields.Date('Date reference')
+    warehouse_id = fields.Many2one('stock.warehouse', 'Warehouse')
     location_id = fields.Many2one('stock.location', 'Location')
+    show_zero = fields.Boolean('View zero quantity')
     datas_fname = fields.Char('Out Filename')
     datas = fields.Binary('File content')
-    price_unit_grater = fields.Float('Price unit grater than', default=0)
-    
+
+    def filterLocationsByWarehouse(self, target_stock, locations):
+        out = self.env['stock.location']
+        
+        def checkRecursion(target, location):
+            if location.id == target.id:
+                return True
+            return checkRecursion(target, location.parent_left)
+            
+            
+        for location in locations:
+            if location.id == target_stock.id:
+                out += location
+                continue
+            if checkRecursion(target_stock, location):
+                out += location
+        return out
+
     @api.multi
     def action_generate_inventory(self):
+        location_ids = self.env['stock.location']
+        if self.location_id:
+            location_ids = self.location_id
+        else:
+            internal_locations = location_ids.search([('usage', '=', 'internal')])
+            if not self.warehouse_id:
+                location_ids = internal_locations
+            else:
+                location_ids = self.filterLocationsByWarehouse(self.warehouse_id.lot_stock_id, internal_locations)
         params = {
             'ref_date': self.ref_date or '5000-01-01',
-            'location_id': self.location_id.id,
-            'price_unit_grater': self.price_unit_grater,
+            'location_ids': tuple(location_ids.ids),
             }
+        zero_condition = 'price_unit_on_quant != 0 and '
+        if self.show_zero:
+            zero_condition = ''
         sql_query = """select sum(price_unit_on_quant),
                               sum(price),
                               ss.product_id,
                               ss.product_categ_id,
+                              ss.location_id,
                               sum(quantity) from (
                                     select price_unit_on_quant, 
                                            quantity * price_unit_on_quant as price,
                                            product_id,
                                            product_categ_id,
-                                           quantity 
-                                           from stock_history where 
-                                               price_unit_on_quant > %(price_unit_grater)s and 
+                                           quantity,
+                                           location_id
+                                           from stock_history where """
+        sql_query += zero_condition
+        sql_query += """
                                                date < %(ref_date)s and 
-                                               location_id = %(location_id)s 
+                                               location_id in %(location_ids)s 
                                                order by product_id) as ss 
-                                    group by ss.product_id, ss.product_categ_id order by ss.product_categ_id desc"""
+                                    group by ss.location_id, ss.product_categ_id, ss.product_id order by ss.location_id asc, ss.product_categ_id asc, ss.product_id asc"""
         self.env.cr.execute(sql_query, params)
         results = self.env.cr.fetchall()
         if not results:
             return
+        template_file = os.path.join(os.path.dirname(__file__), 'inventory_valuation.xlsx')
         out_fname = self.datas_fname
         if not out_fname:
             out_fname = 'stock_inventory'
-        if not out_fname.endswith('.csv'):
-            out_fname += '.csv'
+        if not out_fname.endswith('.xlsx'):
+            out_fname += '.xlsx'
         self.datas_fname = out_fname
         full_path = os.path.join(tempfile.gettempdir(), out_fname)
-        with open(full_path, 'w') as file_obj:
-            writer = csv.writer(file_obj)
-            writer.writerow(['Product', 'Category', 'Price unit', 'Price total', 'Quantity'])
-            for price_unit, price_total, product_id, product_categ_id, quantity in results:
-                prod_name = self.env['product.product'].browse(product_id).display_name
-                categ = self.env['product.category'].browse(product_categ_id).display_name
-                writer.writerow([str(prod_name.encode('utf-8')), categ, price_unit, price_total, quantity])
+        shutil.copy(template_file, full_path)
+        os.chmod(full_path, stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO)
+        workbook = load_workbook(filename=full_path)
+        worksheet = workbook.get_sheet_by_name('data_sheet')
+        row_counter = 2
+        for price_unit, price_total, product_id, product_categ_id, location_id, quantity in results:
+            location_name = self.env['stock.location'].browse(location_id).complete_name
+            prod_name = self.env['product.product'].browse(product_id).display_name
+            categ = self.env['product.category'].browse(product_categ_id).display_name
+            worksheet.cell(row=row_counter, column=1).value = location_name
+            worksheet.cell(row=row_counter, column=2).value = categ
+            worksheet.cell(row=row_counter, column=3).value = prod_name
+            worksheet.cell(row=row_counter, column=4).value = price_unit
+            worksheet.cell(row=row_counter, column=5).value = price_total
+            worksheet.cell(row=row_counter, column=6).value = quantity
+            row_counter += 1
+        workbook.save(full_path)
+        os.chmod(full_path, stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO)
         with open(full_path, 'rb') as f:
             fileContent = f.read()
             if fileContent:
