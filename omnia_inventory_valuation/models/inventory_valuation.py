@@ -58,7 +58,7 @@ class InventoryValuation(models.TransientModel):
     warehouse_id = fields.Many2one('stock.warehouse', 'Warehouse')
     location_id = fields.Many2one('stock.location', 'Location')
     show_zero = fields.Boolean('View zero quantity')
-    datas_fname = fields.Char('Out Filename')
+    datas_fname = fields.Char('Optional Filename')
     datas = fields.Binary('File content')
 
     def filterLocationsByWarehouse(self, target_stock, locations):
