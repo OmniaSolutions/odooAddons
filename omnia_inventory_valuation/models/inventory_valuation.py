@@ -62,8 +62,22 @@ class InventoryValuation(models.TransientModel):
             'location_id': self.location_id.id,
             'price_unit_grater': self.price_unit_grater,
             }
-        sql_query = """select sum(price_unit_on_quant), sum(price) , ss.product_id, ss.product_categ_id from (
-                            select price_unit_on_quant, quantity * price_unit_on_quant as price, product_id, product_categ_id, "date" from stock_history where price_unit_on_quant > %(price_unit_grater)s  and date < %(ref_date)s and location_id = %(location_id)s order by product_id) as ss group by ss.product_id, ss.product_categ_id order by ss.product_categ_id desc"""
+        sql_query = """select sum(price_unit_on_quant),
+                              sum(price),
+                              ss.product_id,
+                              ss.product_categ_id,
+                              sum(quantity) from (
+                                    select price_unit_on_quant, 
+                                           quantity * price_unit_on_quant as price,
+                                           product_id,
+                                           product_categ_id,
+                                           quantity 
+                                           from stock_history where 
+                                               price_unit_on_quant > %(price_unit_grater)s and 
+                                               date < %(ref_date)s and 
+                                               location_id = %(location_id)s 
+                                               order by product_id) as ss 
+                                    group by ss.product_id, ss.product_categ_id order by ss.product_categ_id desc"""
         self.env.cr.execute(sql_query, params)
         results = self.env.cr.fetchall()
         if not results:
@@ -77,11 +91,11 @@ class InventoryValuation(models.TransientModel):
         full_path = os.path.join(tempfile.gettempdir(), out_fname)
         with open(full_path, 'w') as file_obj:
             writer = csv.writer(file_obj)
-            writer.writerow(['Product', 'Category', 'Price unit', 'Price total'])
-            for price_unit, price_total, product_id, product_categ_id in results:
+            writer.writerow(['Product', 'Category', 'Price unit', 'Price total', 'Quantity'])
+            for price_unit, price_total, product_id, product_categ_id, quantity in results:
                 prod_name = self.env['product.product'].browse(product_id).display_name
                 categ = self.env['product.category'].browse(product_categ_id).display_name
-                writer.writerow([str(prod_name.encode('utf-8')), categ, price_unit, price_total])
+                writer.writerow([str(prod_name.encode('utf-8')), categ, price_unit, price_total, quantity])
         with open(full_path, 'rb') as f:
             fileContent = f.read()
             if fileContent:
