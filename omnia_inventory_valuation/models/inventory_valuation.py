@@ -67,7 +67,7 @@ class InventoryValuation(models.TransientModel):
         def checkRecursion(target, location):
             if location.id == target.id:
                 return True
-            return checkRecursion(target, location.parent_left)
+            return checkRecursion(target, self.env['stock.location'].browse(location.parent_left))
             
             
         for location in locations:
