@@ -39,6 +39,7 @@
     'depends': ['stock'],
     'data': [#view
             'views/inventory_valuation.xml',
+            'security/security.xml',
     ],
     'installable': True,
     'application': False,

@@ -43,6 +43,7 @@ import datetime
 from datetime import timedelta
 from odoo.tools import DEFAULT_SERVER_DATETIME_FORMAT
 from openpyxl import load_workbook
+from odoo import _
 import tempfile
 import os
 import base64
@@ -51,15 +52,15 @@ import base64
 class InventoryValuation(models.TransientModel):
     _name = "inventory.valuation"
 
-# location, categoria e prodotto
+# descrizione in italiano
 # Security
 
-    ref_date = fields.Date('Date reference')
-    warehouse_id = fields.Many2one('stock.warehouse', 'Warehouse')
-    location_id = fields.Many2one('stock.location', 'Location')
-    show_zero = fields.Boolean('View zero quantity')
-    datas_fname = fields.Char('Optional Filename')
-    datas = fields.Binary('File content')
+    ref_date = fields.Date(_('Date reference'))
+    warehouse_id = fields.Many2one('stock.warehouse', _('Warehouse'))
+    location_id = fields.Many2one('stock.location', _('Location'))
+    show_zero = fields.Boolean(_('View zero quantity'))
+    datas_fname = fields.Char(_('Optional Filename'))
+    datas = fields.Binary(_('File content'))
 
     def filterLocationsByWarehouse(self, target_stock, locations):
         out = self.env['stock.location']

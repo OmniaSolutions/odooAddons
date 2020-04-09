@@ -27,7 +27,7 @@
     </record>
 
     <record model="ir.actions.act_window" id="action_inventory_valuation">
-        <field name="name">Inventory Valuation</field>
+        <field name="name">Omnia Inventory Valuation</field>
         <field name="res_model">inventory.valuation</field>
         <field name="view_type">form</field>
         <field name="view_mode">form</field>
@@ -35,7 +35,7 @@
     </record>
 	   
     <menuitem 
-	    name="Inventory valuation" 
+	    name="Omnia Inventory Valuation" 
 	    action="omnia_inventory_valuation.action_inventory_valuation" 
 	    id="menu_inventory_valuation"
 	    parent="stock.menu_warehouse_report"
