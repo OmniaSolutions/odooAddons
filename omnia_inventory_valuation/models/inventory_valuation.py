@@ -99,7 +99,7 @@ class InventoryValuation(models.TransientModel):
         if self.show_zero:
             zero_condition = ''
         sql_query = """select sum(price_unit_on_quant),
-                              sum(price) as total_price,
+                              sum(price),
                               ss.product_id,
                               ss.product_categ_id,
                               ss.location_id,
