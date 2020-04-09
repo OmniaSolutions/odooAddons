@@ -5,7 +5,7 @@
 		<record id="inventory_valuation" model="ir.model.access">
 		    <field name="name">Inventory Valuation</field>
 		    <field name="model_id" ref="model_inventory_valuation"/>
-		    <field name="group_id" ref="account.group_account_invoice"/>
+		    <field name="group_id" ref="stock.group_stock_user"/>
 		    <field name="perm_read" eval="True"/>
 		    <field name="perm_write" eval="True"/>
 		    <field name="perm_create" eval="True"/>
