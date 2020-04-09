@@ -67,7 +67,9 @@ class InventoryValuation(models.TransientModel):
         def checkRecursion(target, location):
             if location.id == target.id:
                 return True
-            return checkRecursion(target, location.parent_left)
+            if not location.location_id:
+                return False
+            return checkRecursion(target, location.location_id)
             
             
         for location in locations:
@@ -97,7 +99,7 @@ class InventoryValuation(models.TransientModel):
         if self.show_zero:
             zero_condition = ''
         sql_query = """select sum(price_unit_on_quant),
-                              sum(price),
+                              sum(price) as total_price,
                               ss.product_id,
                               ss.product_categ_id,
                               ss.location_id,
@@ -133,15 +135,17 @@ class InventoryValuation(models.TransientModel):
         worksheet = workbook.get_sheet_by_name('data_sheet')
         row_counter = 2
         for price_unit, price_total, product_id, product_categ_id, location_id, quantity in results:
+            if price_total == 0 and not self.show_zero:
+                continue
             location_name = self.env['stock.location'].browse(location_id).complete_name
             prod_name = self.env['product.product'].browse(product_id).display_name
             categ = self.env['product.category'].browse(product_categ_id).display_name
             worksheet.cell(row=row_counter, column=1).value = location_name
             worksheet.cell(row=row_counter, column=2).value = categ
             worksheet.cell(row=row_counter, column=3).value = prod_name
-            worksheet.cell(row=row_counter, column=4).value = price_unit
-            worksheet.cell(row=row_counter, column=5).value = price_total
-            worksheet.cell(row=row_counter, column=6).value = quantity
+            worksheet.cell(row=row_counter, column=4).value = round(price_unit, 4)
+            worksheet.cell(row=row_counter, column=5).value = round(price_total, 4)
+            worksheet.cell(row=row_counter, column=6).value = round(quantity, 4)
             row_counter += 1
         workbook.save(full_path)
         os.chmod(full_path, stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO)
