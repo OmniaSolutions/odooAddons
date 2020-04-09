@@ -134,6 +134,7 @@ class InventoryValuation(models.TransientModel):
         workbook = load_workbook(filename=full_path)
         worksheet = workbook.get_sheet_by_name('data_sheet')
         row_counter = 2
+        prec = self.env['decimal.precision'].precision_get('Product Price')
         for price_unit, price_total, product_id, product_categ_id, location_id, quantity in results:
             if price_total == 0 and not self.show_zero:
                 continue
@@ -143,9 +144,9 @@ class InventoryValuation(models.TransientModel):
             worksheet.cell(row=row_counter, column=1).value = location_name
             worksheet.cell(row=row_counter, column=2).value = categ
             worksheet.cell(row=row_counter, column=3).value = prod_name
-            worksheet.cell(row=row_counter, column=4).value = round(price_unit, 4)
-            worksheet.cell(row=row_counter, column=5).value = round(price_total, 4)
-            worksheet.cell(row=row_counter, column=6).value = round(quantity, 4)
+            worksheet.cell(row=row_counter, column=4).value = round(price_unit, prec)
+            worksheet.cell(row=row_counter, column=5).value = round(price_total, prec)
+            worksheet.cell(row=row_counter, column=6).value = round(quantity, prec)
             row_counter += 1
         workbook.save(full_path)
         os.chmod(full_path, stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO)
