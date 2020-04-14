@@ -11,6 +11,7 @@
             	<xpath expr="//page[@name='other_info']" position="after">
                     <page string="Accompagnatoria" attrs="{'invisible':[('is_accompagnatoria', '=', False)]}">
                         <group>
+                        	<field name="weight_validity_message" attrs="{'invisible': [('weight_validity_message', 'in', [False, ''])]}"/>
                             <field name="carrier_id"/>
 						    <field name="carriage_condition_id"/>
 						    <field name="goods_description_id"/>
@@ -18,6 +19,7 @@
 						    <field name="ddt_reason"/>
 						    <field name="peso_lordo"/>
 						    <field name="peso_netto"/>
+						    <field name="unita_misura_peso"/>
 						    <field name="volume"/>
 						    <field name="number_of_packages"/>
                         </group>

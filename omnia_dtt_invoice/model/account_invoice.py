@@ -42,9 +42,24 @@ class OmniaDdtAccountIvoice(models.Model):
                                   'Trasporto a Cura di')
     peso_lordo = fields.Float(_('Peso Lordo'))
     peso_netto = fields.Float(_('Peso Netto'))
+    unita_misura_peso = fields.Many2one('product.uom', string="Unita' di misura")
     volume = fields.Char('Volume', size=64)
     number_of_packages = fields.Integer(string='Number of Packages', copy=False)
-    
+    weight_validity_message = fields.Html(compute='_compute_weight_validity')
+
+    @api.depends('peso_lordo', 'peso_netto')
+    @api.onchange('peso_lordo', 'peso_netto')
+    def _compute_weight_validity(self):
+        for invoice in self:
+            msg = ''
+            if len('%.2f' % invoice.peso_lordo) > 7:
+                msg += 'Accompagnatoria gross weight cannot be exported in e-invoice because limit is 7 carachters<br>'
+            if len('%.2f' % invoice.peso_netto) > 7:
+                msg += 'Accompagnatoria net weight cannot be exported in e-invoice because limit is 7 carachters<br>'
+            if msg:
+                msg = '<div style="background-color:#ffaa00;">%s</div>' % (msg)
+            invoice.weight_validity_message = msg
+
     @api.multi
     def action_invoice_open(self):
         res = super(OmniaDdtAccountIvoice, self).action_invoice_open()
