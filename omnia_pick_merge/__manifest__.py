@@ -38,6 +38,7 @@ merge picking
     'website': 'http://www.OmniaSolutions.eu',
     'depends': ['sale',
                 'stock',],
+    'license': 'AGPL-3',
     'data': ['views/stock_picking.xml',
              'wizard/wizard.xml',
              # report
