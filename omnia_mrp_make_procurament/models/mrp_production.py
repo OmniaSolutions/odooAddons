@@ -89,8 +89,9 @@ class MrpProduction(models.Model):
         make_procurament = self.env['make.procurement']
         stock_warehouse_orderpoint = self.env['stock.warehouse.orderpoint']
         for mrp_production_id in self:
-            mrp_production_id.pullFromStockVirtual()
             source_location_id = mrp_production_id.location_src_id
+            mrp_production_id.action_assign()
+            mrp_production_id.pullFromStockVirtual()
             mrp_production_id.action_assign()
             for move_line_id in mrp_production_id.move_raw_ids:
                 if move_line_id.state in ['cancel', 'done']:
