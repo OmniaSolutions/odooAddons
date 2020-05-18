@@ -130,7 +130,9 @@ class SaleOrder(models.Model):
 
     @api.multi
     def getProductCategoryName(self, line):
-        return line.product_id.categ_id.with_context({'lang': 'en_US'}).name.upper()
+        if line.product_id and line.product_id.categ_id:
+            return line.product_id.categ_id.with_context({'lang': 'en_US'}).name.upper()
+        return ''
 
     @api.multi
     def setupAnalyticLines(self, newBaseName):
