@@ -8,7 +8,8 @@
 #
 #    Author : Smerghetto Daniel  (Omniasolutions)
 #    mail:daniel.smerghetto@omniasolutions.eu
-#    Copyright (c) 2014 Omniasolutions (http://www.omniasolutions.eu) 
+#    Copyright (c) 2014 Omniasolutions (http://www.omniasolutions.eu)
+#    Copyright (c) 2018 Omniasolutions (http://www.omniasolutions.eu)
 #    All Right Reserved
 #
 #    This program is free software: you can redistribute it and/or modify
@@ -31,16 +32,23 @@ Created on Dec 18, 2017
 
 @author: daniel
 '''
+from odoo import models
+from odoo import fields
+from odoo import api
+from odoo import _
+from odoo.exceptions import UserError
+import logging
+import datetime
+from datetime import timedelta
+from odoo.tools import DEFAULT_SERVER_DATETIME_FORMAT
 
-from . import mrp_production
-from . import stock_picking
-from . import mrp_workorder
-from . import mrp_routing_workcenter
-from . import stock_move
-from . import purchase_order
-from . import mrp_bom
-from . import res_partner
-from . import stock_location
-from . import change_production_qty
-from . import product_supplierinfo
-from . import purchase_order_line
+
+class ProductSupplierinfo(models.Model):
+
+    _name = "product.supplierinfo"
+    _inherit = ['product.supplierinfo']
+
+    routing_id = fields.Many2one('mrp.routing',
+                                 string=_('Routing'))
+    operation_id = fields.Many2one('mrp.routing.workcenter',
+                                   string=_('Phase'))

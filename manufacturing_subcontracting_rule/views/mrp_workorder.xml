@@ -3,12 +3,38 @@
 	    <record id="manufacturing_subcontracting_rule_mrp_workorder" model="ir.ui.view">
 	        <field name="name">manufacturing.subcontracting.rule.mrp.workorder</field>
 	        <field name="model">mrp.workorder</field>
-	        <field name="inherit_id" ref="mrp.mrp_production_workorder_form_view_inherit"/>
+	        <field name="priority" eval="30"/>
+	        <field name="inherit_id" ref="mrp.mrp_production_workcenter_form_view_inherit"/>
 	        <field name="arch" type="xml">
+<!--                 <xpath expr="//header//button[8]" position="attributes"> -->
+<!--                 	<attribute name="attrs">{'invisible': ['|', '|', ('working_state', '=', 'blocked'), ('is_user_working', '=', True), ('state', 'in', ('done', 'pending', 'ready', 'cancel', 'external'))]}</attribute> -->
+<!--                 </xpath> -->
+<!--                 <xpath expr="//header/button[9]" position="attributes">  -->
+<!--                 	<attribute name="attrs">{'invisible': ['|', '|', ('production_state', '=', 'done'), ('working_state', '=', 'blocked'), ('state', 'in', ('done', 'external'))]}</attribute> -->
+<!--                 </xpath> -->
+<!--                 <xpath expr="//header/button[10]" position="attributes">  -->
+<!--                 	<attribute name="attrs">{'invisible': [('state', 'in', ('confirmed', 'cancel', 'external'))]}</attribute> -->
+<!--                 </xpath> -->
 	           <xpath expr="//header//button[last()]" position="after">
 	                <button name="button_produce_externally"  string="Produce Externally" type="object" attrs="{'invisible': ['|', ('state', '=', 'external'), ('state', '=', 'done')]}"/>
 	                <button name="button_cancel_produce_externally"  string="Cancel Produce Externally" type="object" attrs="{'invisible': [('state', '!=', 'external')]}"/>
                 </xpath>
+                
+	            <div name="button_box" position="inside">
+	                 <button name="open_external_pickings" type="object" class="oe_stat_button" icon="fa-truck">
+	                     <div class="o_form_field o_stat_info">
+	                         <span class="o_stat_text">Ext. Pickings</span>
+	                     </div>
+	                 </button>
+	                 <button name="open_external_purchase" type="object" class="oe_stat_button" icon="fa-shopping-cart">
+	                     <div class="o_form_field o_stat_info">
+	                         <span class="o_stat_text">Ext. Purchase</span>
+	                     </div>
+	                 </button>
+	            </div>
+	            <field name="production_id" position="after">
+	               <field name="external_product"/>
+	            </field>
 	        </field>
 	    </record>
     </data>

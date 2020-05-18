@@ -38,24 +38,29 @@ from odoo import _
 
 
 class StockPicking(models.Model):
-    _name = 'stock.picking'
-    _inherit = ['stock.picking']
+    _inherit = 'stock.picking'
 
     external_production = fields.Many2one('mrp.production')
     pick_out = fields.Many2one('stock.picking', string=_('Reference Stock pick out'))
     sub_contracting_operation = fields.Selection([('open', _('Open external Production')),
                                                   ('close', _('Close external Production'))])
     sub_production_id = fields.Integer(string=_('Sub production Id'))
+    sub_workorder_id = fields.Integer(string=_('Sub Workorder Id'))
 
-    def isIncoming(self, objPick):
+    def isIncoming(self, objPick=None):
+        if objPick is None:
+            objPick = self
         return objPick.picking_type_code == 'incoming'
 
-    def isOutGoing(self, objPick):
+    def isOutGoing(self, objPick=None):
+        if objPick is None:
+            objPick = self
         return objPick.picking_type_code == 'outgoing'
 
     @api.multi
     def action_done(self):
         res = super(StockPicking, self).action_done()
+        purchase_order_line = self.env['purchase.order.line']
         if self.isIncoming():
             objProduction = self.env['mrp.production'].search([('id', '=', self.sub_production_id)])
             if objProduction and objProduction.state == 'external':
@@ -64,6 +69,24 @@ class StockPicking(models.Model):
                         line.subContractingProduce(objProduction)
                 if objProduction.isPicksInDone():
                     objProduction.button_mark_done()
+            production_recorded = False
+            for line in self.move_lines:
+                if line.workorder_id.id == self.sub_workorder_id and line.product_id.id == line.workorder_id.product_id.id:
+                    line.subContractingProduce(line.workorder_id)
+                if line.product_id.id == line.workorder_id.product_id.id and not production_recorded and line.workorder_id.state != 'done':
+                    line.workorder_id.record_production()
+                    production_recorded = True
+            for stock_move_id in self.move_line_ids:
+                mrp_workorder_id = stock_move_id.move_id.workorder_id
+                if mrp_workorder_id:
+                    mrp_workorder_id.qty_producing = stock_move_id.qty_done
+                    mrp_workorder_id.record_production()
+                    for purchese_order_line_id in self.env['purchase.order.line'].search([('workorder_external_id', '=', mrp_workorder_id.id)]):
+                        purchese_order_line_id.qty_received += stock_move_id.qty_done
+                    # TODO: mettere il tempo di lavorazione calcolato fra pick in e pick put
+                if stock_move_id.move_id.purchase_order_line_subcontracting_id:
+                    purchase_order_line_id = purchase_order_line.search([('id', '=', stock_move_id.move_id.purchase_order_line_subcontracting_id)])
+                    purchase_order_line_id._compute_qty_received()
         return res
 
     @api.multi

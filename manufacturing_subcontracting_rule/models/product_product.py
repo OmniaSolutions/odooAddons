@@ -1,16 +1,8 @@
 # -*- coding: utf-8 -*-
 ##############################################################################
 #
-#    OpenERP, Open Source Management Solution
-#    Copyright (C) 2004-2009 Tiny SPRL (<http://tiny.be>).
-#    Copyright (C) 2010-2012 OpenERP s.a. (<http://openerp.com>).
-#
-#
-#    Author : Smerghetto Daniel  (Omniasolutions)
-#    mail:daniel.smerghetto@omniasolutions.eu
-#    Copyright (c) 2014 Omniasolutions (http://www.omniasolutions.eu)
-#    Copyright (c) 2018 Omniasolutions (http://www.omniasolutions.eu)
-#    All Right Reserved
+#    OmniaSolutions, ERP-PLM-CAD Open Source Solutions
+#    Copyright (C) 2011-2019 https://OmniaSolutions.website
 #
 #    This program is free software: you can redistribute it and/or modify
 #    it under the terms of the GNU Affero General Public License as
@@ -23,28 +15,28 @@
 #    GNU Affero General Public License for more details.
 #
 #    You should have received a copy of the GNU Affero General Public License
-#    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#    along with this prograIf not, see <http://www.gnu.org/licenses/>.
 #
 ##############################################################################
-
 '''
-Created on Apr 17, 2018
+Created on May 8, 2019
 
-@author: Matteo Boscolo
+@author: mboscolo
 '''
+import logging
+import datetime
 from odoo import models
 from odoo import fields
 from odoo import api
 from odoo import _
-import logging
-import datetime
+from odoo.exceptions import UserError
 from datetime import timedelta
 from odoo.tools import DEFAULT_SERVER_DATETIME_FORMAT
 
 
-class MrpBom(models.Model):
+class ProductProduct(models.Model):
+    _inherit = ['product.product']
 
-    _name = "mrp.bom"
-    _inherit = ['mrp.bom']
-    external_product = fields.Many2one('product.product',
-                                       string=_('External Product use for external production'))
+    @api.one
+    def getSubContractingProduct(self):
+        return self.bom_id.external_product

@@ -46,8 +46,12 @@ class StockMove(models.Model):
     _inherit = ['stock.move']
 
     mrp_original_move = fields.Char(_('Is genereted from orignin MO'))
-    mrp_production_id = fields.Integer(_('Original mrp id'))
+    mrp_production_id = fields.Integer(string=_('Original Mrp Production id'),
+                                       help="""source Mrp Production Subcontracting id""")
+    mrp_workorder_id = fields.Integer(string=_('Original Mrp Work Order id'),
+                                      help="""source Mrp Workorder Subcontracting id""")
     purchase_order_line_subcontracting_id = fields.Integer(_('Original Purchase line Id'))
+    subcontracting_source_stock_move_id = fields.Integer(_('Original Production ID'))
     subcontracting_move_id = fields.Integer(_('Original move id'))
 
     @api.model
@@ -69,20 +73,31 @@ class StockMove(models.Model):
 
     @api.model
     def subcontractingMove(self, from_location, to_location, source_id=False):
-        return self.copy(default={'name': 'SUB: ' + self.display_name,
+        name = 'SUB: '
+        if self.picking_id.sub_workorder_id:
+            woBrws = self.env['mrp.workorder'].search([('id', '=', self.picking_id.sub_workorder_id)])
+            routingName = woBrws.production_id.routing_id.name
+            phaseName = woBrws.name
+            name += '[%s - %s] ' % (routingName, phaseName)
+        name += self.display_name
+        return self.copy(default={'name': name,
                                   'location_id': from_location.id,
                                   'location_dest_id': to_location.id,
                                   'sale_line_id': False,
                                   'production_id': False,
                                   'raw_material_production_id': False,
                                   'picking_id': False,
-                                  'subcontracting_move_id': source_id})
+                                  'subcontracting_move_id': source_id,
+                                  'subcontracting_source_stock_move_id': source_id})
 
     @api.model
     def subContractingFilterRow(self, production_id, move_from_id, move_to, qty):
         # This Function must be overloaded in order to perform custom behaviour
-        if not move_to.mrp_production_id:
-            return 0, True
+        production_id = move_to.mrp_production_id
+        workorder_id = move_to.mrp_workorder_id or move_to.workorder_id.id
+        if not production_id:
+            if not workorder_id:
+                return 0, True
         moveQty = qty * (move_to.unit_factor or 1)
         return moveQty, False
 
@@ -98,6 +113,7 @@ class StockMove(models.Model):
         #
         # manage raw material
         #
+        # TODO:    Check for partial picking in / out and pick_out link
         qty = self.quantity_done
         if self.state == 'cancel':
             return
@@ -123,9 +139,19 @@ class StockMove(models.Model):
                     lineBrws.date = move_date
 
     @api.multi
+    def subContractingProduce2(self, pick_in_product_qty):
+        move_date = self.date
+        subcontracting_location = self.env['stock.location'].getSubcontractiongLocation()
+        production_move = self.subcontractingMove(subcontracting_location, self.location_id, self.id)
+        production_move.product_uom_qty = pick_in_product_qty
+        production_move.ordered_qty = pick_in_product_qty
+        production_move.date = move_date
+        return production_move
+
+    @api.multi
     def write(self, value):
         for move in self:
             if 'quantity_done' in list(value.keys()):
-                for subMove in self.search([('subcontracting_move_id', '=', move.id)]):
+                for subMove in self.search([('subcontracting_source_stock_move_id', '=', move.id)]):
                     subMove.quantity_done = value['quantity_done']
         return super(StockMove, self).write(value)

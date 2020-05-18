@@ -29,7 +29,7 @@
 
 {
     'name': 'Omnia Manufacturing Subcontracting Rule',
-    'version': '1.1',
+    'version': '13.0.1',
     'sequence': 1,
     'category': 'Custom',
     'description': """
@@ -38,7 +38,10 @@
     'author': 'OmniaSolutions.eu',
     'maintainer': 'OmniaSolutions.eu',
     'website': 'http://www.OmniaSolutions.eu',
-    'depends': ['stock', 'delivery', 'mrp', 'purchase'],
+    'depends': ['stock',
+                'delivery',
+                'purchase',
+                'mrp'],
     'data': [# security
              'security/ir.model.access.csv',
              #  wizard
@@ -49,7 +52,7 @@
              'views/purchase_extension.xml',
              'views/mrp_bom.xml',
              'views/res_partner.xml',
-             #'views/mrp_workorder.xml',
+             'views/mrp_workorder.xml',
     ],
     'installable': True,
     'application': False,
