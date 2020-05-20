@@ -4,11 +4,20 @@
 
         <record id="reordering_rule_production_order_server_action" model="ir.actions.server">
             <field name="name">Assign reordering Rule</field>
+            <field name="binding_model_id" ref="mrp.model_mrp_production" />
             <field name="model_id" ref="mrp.model_mrp_production"/>
             <field name="state">code</field>
             <field name="code">records.button_reorder_rule()</field>
         </record>
 
+        <record id="procurement_production_order_server_action" model="ir.actions.server">
+            <field name="name">Run Procurement</field>
+            <field name="binding_model_id" ref="mrp.model_mrp_production" />
+            <field name="model_id" ref="mrp.model_mrp_production"/>
+            <field name="state">code</field>
+            <field name="code">records.create_procuraments()</field>
+        </record>
+        
         <record id="run_reordering_rule_action" model="ir.values">
             <field name="model_id" ref="mrp.model_mrp_production" />
             <field name="name">Assign reordering Rule</field>

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 ##############################################################################
 #
-#    OmniaSolutions, ERP-PLM-CAD Open Source Solution
+#    OmniaSolutions, ERP-PLM-CAD Open Source Solutions
 #    Copyright (C) 2011-2020 https://OmniaSolutions.website
 #
 #    This program is free software: you can redistribute it and/or modify
@@ -19,9 +19,26 @@
 #
 ##############################################################################
 '''
-Created on 2 Mar 2020
+Created on 24 Jan 2020
 
 @author: mboscolo
 '''
-from . import mrp_production
-from . import procurement_order
+import logging
+import datetime
+from odoo import models
+from odoo import fields
+from odoo import api
+from odoo import _
+from odoo.exceptions import UserError
+from datetime import timedelta
+from odoo.tools import DEFAULT_SERVER_DATETIME_FORMAT
+
+class ProcurementOrder(models.Model):
+    _inherit = 'procurement.order'
+
+    def _get_orderpoint_domain(self, company_id=False):
+        domain = super(ProcurementOrder, self)._get_orderpoint_domain()
+        product_ids = self.env.context.get('product_ids')
+        if product_ids :
+            domain += [('product_id.id', 'in', product_ids)]
+        return domain
