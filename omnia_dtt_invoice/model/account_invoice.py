@@ -24,7 +24,7 @@ Created on 10/lug/2013
 from odoo import models
 from odoo import fields
 from odoo import api
-from odoo import _
+from odoo import _ 
 import logging
 
 
@@ -32,6 +32,9 @@ class OmniaDdtAccountIvoice(models.Model):
     _inherit = ['account.invoice']
     is_accompagnatoria = fields.Boolean("Is Accompagnatoria")
     carrier_id = fields.Many2one("delivery.carrier", string="Carrier")
+    delivery_address = fields.Many2one('res.partner', string='Delivery address')
+    data_ritiro = fields.Datetime('Data e ora ritiro')
+    data_consegna = fields.Datetime('Data e ora consegna')
     carriage_condition_id = fields.Many2one('stock.picking.carriage_condition', 'Carriage condition')
     goods_description_id = fields.Many2one('stock.picking.goods_description', 'Description of goods')
     transportation_reason_id = fields.Many2one('stock.picking.transportation_reason', 'Reason for transportation')
@@ -44,6 +47,7 @@ class OmniaDdtAccountIvoice(models.Model):
     peso_netto = fields.Float(_('Peso Netto'))
     volume = fields.Char('Volume', size=64)
     number_of_packages = fields.Integer(string='Number of Packages', copy=False)
+    notes_invoice = fields.Char(string='Annotazioni')
     
     @api.multi
     def action_invoice_open(self):
@@ -64,3 +68,17 @@ class OmniaDdtAccountIvoice(models.Model):
                         #        ddt_msg += " %s " % ddt_number
                         #        check_ddt.append(ddt_number)
         return res
+
+    @api.onchange('partner_id')
+    def onchange_partner(self):
+        for invoice in self:
+            final_address = False
+            if invoice.partner_id:
+                for child in invoice.partner_id.child_ids:
+                    if child.type == 'delivery':
+                        final_address = child.id
+            invoice.delivery_address = final_address
+                
+                
+            
+            

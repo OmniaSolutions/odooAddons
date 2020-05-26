@@ -14,7 +14,7 @@
 	           		<td  class="table_rows">Vettore <div t-esc="o.carrier_id.name"/></td>
 	                <td  class="table_rows">Cond. Trasp <div t-esc="o.carriage_condition_id.name"/></td>
 	               	<td  class="table_rows">Desc. Merc<div t-esc="o.goods_description_id.name"/></td>
-	                <td  class="table_rows">Reson <div t-esc="o.transportation_reason_id.name"/></td>
+	                <td  class="table_rows">Reason<div t-esc="o.transportation_reason_id.name"/></td>
 	           </tr>
                <tr>
                     <td  class="table_rows">Motivo Trasporto <div t-esc="o.ddt_reason"/></td>
