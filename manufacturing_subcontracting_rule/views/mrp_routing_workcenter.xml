@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <odoo>
     <data>
 	    <record id="msr_mrp_routing_workcenter_form_view" model="ir.ui.view">
@@ -17,11 +18,11 @@
             <field name="model">mrp.routing.workcenter</field>
             <field name="inherit_id" ref="mrp.mrp_routing_workcenter_tree_view"/>
             <field name="arch" type="xml">
-                <field name="company_id" position="after">
-                    <field name="default_supplier"/>
-                    <field name="external_product"/>
-                    <field name="external_operation"/>
-                </field>
+				<field name="sequence" position="after">
+					<field name="default_supplier"/>
+					<field name="external_product"/>
+					<field name="external_operation"/>
+				</field>
             </field>
         </record>
     </data>

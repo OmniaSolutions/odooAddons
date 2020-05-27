@@ -191,7 +191,7 @@ class MrpProductionWizard(models.TransientModel):
     def changeBOMId(self):
         self.operationTypeChanged()
 
-    @api.multi
+    # @api.multi
     def getWizardBrws(self):
         return self.browse(self._context.get('wizard_id', False))
 
@@ -221,14 +221,14 @@ class MrpProductionWizard(models.TransientModel):
             self.move_raw_ids = [(6, 0, moves.ids)]
             self.move_finished_ids = [(6, 0, manOrderFinishedLines)]
 
-    @api.multi
+    # @api.multi
     def getParentProduction(self):
         model = self.env.context.get('active_model', '')
         objIds = self.env.context.get('active_ids', [])
         relObj = self.env[model]
         return relObj.browse(objIds)
 
-    @api.multi
+    # @api.multi
     def getParentObjectBrowse(self):
         model = self.env.context.get('active_model', '')
         objIds = self.env.context.get('active_ids', [])
@@ -289,13 +289,13 @@ class MrpProductionWizard(models.TransientModel):
         productionBrws.write({'move_raw_ids': move_raw_ids,
                               'move_finished_ids': move_finished_ids,
                               'state': 'external',
-                              'external_partner': (6, 0, [external_partner.partner_id.id])
+                              'external_partner': (6, 0, [external_partner.partner_id.id  ])
                               })
         productsToCheck = list(set(productsToCheck))
         for product in self.env['product.product'].browse(productsToCheck):
             productionBrws.checkCreateReorderRule(product, productionBrws.location_src_id.get_warehouse())
 
-    @api.multi
+    # @api.multi
     def getWorkorderAndManufaturing(self):
         productionBrws = self.env['mrp.production']
         objBrws = self.getParentObjectBrowse()
@@ -307,7 +307,7 @@ class MrpProductionWizard(models.TransientModel):
             productionBrws = objBrws
         return productionBrws, workorderBrw
 
-    @api.multi
+    # @api.multi
     def button_produce_externally(self):
         if not self.external_partner:
             raise UserError(_("No external partner set. Please provide one !!"))
@@ -337,7 +337,7 @@ class MrpProductionWizard(models.TransientModel):
         movesToCancel._do_unreserve()
         movesToCancel._action_cancel()
 
-    @api.multi
+    # @api.multi
     def createPurches(self, toCreatePurchese, picking, workorder):
         if not self.create_purchese_order:
             return
@@ -450,7 +450,7 @@ class MrpProductionWizard(models.TransientModel):
         else:
             return product_product.name
 
-    @api.multi
+    # @api.multi
     def button_close_wizard(self):
         self.move_raw_ids.unlink()
         self.move_finished_ids.unlink()
@@ -661,11 +661,11 @@ class MrpProductionWizard(models.TransientModel):
         out_stock_picking_id.write({'move_lines': [(6, False, new_stock_move_line_ids)]})
         return out_stock_picking_id
 
-    @api.multi
+    # @api.multi
     def write(self, vals):
         return super(MrpProductionWizard, self).write(vals)
 
-    @api.multi
+    # @api.multi
     def create_vendors(self):
         external_production_partner = self.env['external.production.partner']
         for seller in self.consume_bom_id.external_product.seller_ids:
@@ -728,7 +728,7 @@ class MrpWorkorderWizard(MrpProductionWizard):
                                      string="Is computed by operation",
                                      help="""Push out and pull in only the product that have operation""")
 
-    @api.multi
+    # @api.multi
     def create_vendors_from(self, partner_id):
         external_production_partner = self.env['external.workorder.partner']
         vals = {'partner_id': partner_id.id,
@@ -834,7 +834,7 @@ class MrpWorkorderWizard(MrpProductionWizard):
                                                              picking_type_str='outgoing')
         return stock_picking_in, stock_picking_out
 
-    @api.multi
+    # @api.multi
     def button_produce_externally(self):
         if not self.external_partner:
             raise UserError(_("No partner selected"))
