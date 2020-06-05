@@ -45,59 +45,19 @@ from odoo.tools import DEFAULT_SERVER_DATETIME_FORMAT, float_compare, float_roun
 
 class MrpProduction(models.Model):
     _inherit = ['mrp.production']
-      
+
     @api.multi
     def create_procuraments(self):
         production_to_call = []
         make_procurament = self.env['make.procurement']
         stock_warehouse_orderpoint = self.env['stock.warehouse.orderpoint']
         for mrp_production_id in self:
-            source_location_id = mrp_production_id.location_src_id
-            mrp_production_id.action_assign()
-            for move_line_id in mrp_production_id.move_raw_ids:
-                if move_line_id.state in ['cancel', 'done']:
-                    continue
-                qty_remaining = move_line_id.remaining_qty
-                if qty_remaining==0:
-                    continue
-                proc_qty = move_line_id.getOmniaProcurementQty()
-                if  proc_qty == move_line_id.product_qty:
-                    continue
-                if move_line_id.product_id.virtual_available>0:
-                    continue
-                op_product_virtual = float(move_line_id.product_id.virtual_available)
-                location_orderpoints = stock_warehouse_orderpoint.search([('product_id', 'in', move_line_id.product_id.ids),
-                                                                          ('location_id','=', source_location_id.id)])
-                orderpoint = location_orderpoints[0]
-                if float_compare(op_product_virtual, orderpoint.product_min_qty, precision_rounding=orderpoint.product_uom.rounding) <= 0:
-                    qty = max(orderpoint.product_min_qty, orderpoint.product_max_qty) - op_product_virtual
-                    substract_quantity = location_orderpoints.subtract_procurements_from_orderpoints()
-                    s_qty = substract_quantity[orderpoint.id]
-                    qty -= s_qty
-                    qty_remaining =  qty_remaining - proc_qty
-                    if qty > 0 and qty_remaining > 0: # necessari
-                        new_proc = make_procurament.create({
-                           'qty': qty_remaining,
-                           'product_id': move_line_id.product_id.id,
-                           'product_tmpl_id': move_line_id.product_id.product_tmpl_id.id,
-                           'uom_id': move_line_id.product_id.uom_id.id,
-                           'warehouse_id': source_location_id.get_warehouse().id
-                           })
-                        ret = new_proc.make_procurement1(self.name)
-                        is_production = ret.production_id
-                        if is_production:
-                            origin = "PROD: %s : %s " % (self.name, self.origin or '')
-                        else:
-                            origin = "ACQ: %s : %s " % (self.name, self.origin or '')
-                        if ret.origin:
-                            ret.origin = ret.origin + origin
-                        else:
-                            ret.origin = origin
-                        if is_production:
-                            production_to_call.append(ret.production_id)
-                        ret.orderpoint_id = location_orderpoints[0].id
-                        ret.omnia_move_id = move_line_id.id
-                        ret.run()
-        for production_id in production_to_call:
-            production_id.create_procuraments()
-        
+            ids=[]
+            for line in mrp_production_id.move_raw_ids:
+                if line.state not in ['done', 'cancel'] and line.product_qty - line.quantity_available > 0:
+                    ids.append(line.product_id.id)
+            ctx=self.env.context.copy()
+            ctx['product_ids'] = ids
+            date_now = datetime.datetime.now().strftime(DEFAULT_SERVER_DATETIME_FORMAT)
+            self.env['procurement.order'].with_context(ctx).run_scheduler(company_id=self.env.user.company_id.id)
+            self.search([('create_date', '>', date_now)]).create_procuraments()

@@ -133,15 +133,28 @@ class InventoryValuation(models.TransientModel):
         shutil.copy(template_file, full_path)
         os.chmod(full_path, stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO)
         workbook = load_workbook(filename=full_path)
+        worksheetpivot = workbook.get_sheet_by_name('inventory')
+        worksheetpivot.cell(row=1, column=2).value = self.warehouse_id.name if  self.warehouse_id else ''
+        worksheetpivot.cell(row=2, column=2).value = self.ref_date or ''
+        worksheetpivot.cell(row=3, column=2).value = self.location_id.name if self.location_id else ''
+
         worksheet = workbook.get_sheet_by_name('data_sheet')
         row_counter = 2
         prec = self.env['decimal.precision'].precision_get('Product Price')
+        location_cache = {}
+        category_cache = {}
         for price_unit, price_total, product_id, product_categ_id, location_id, quantity in results:
             if price_total == 0 and not self.show_zero:
                 continue
-            location_name = self.env['stock.location'].browse(location_id).complete_name
+            location_name =  location_cache.get(location_id)
+            if not location_name:
+                location_name = self.env['stock.location'].browse(location_id).complete_name
+                location_cache[location_id]=location_name
+            categ  = category_cache.get(product_categ_id)
+            if not categ:
+                categ = self.env['product.category'].browse(product_categ_id).display_name
+                category_cache[product_categ_id] = categ
             prod_name = self.env['product.product'].browse(product_id).display_name
-            categ = self.env['product.category'].browse(product_categ_id).display_name
             worksheet.cell(row=row_counter, column=1).value = location_name
             worksheet.cell(row=row_counter, column=2).value = categ
             worksheet.cell(row=row_counter, column=3).value = prod_name

@@ -19,7 +19,7 @@
 #
 ##############################################################################
 '''
-Created on 3 Mar 2020
+Created on 24 Jan 2020
 
 @author: mboscolo
 '''
@@ -33,22 +33,12 @@ from odoo.exceptions import UserError
 from datetime import timedelta
 from odoo.tools import DEFAULT_SERVER_DATETIME_FORMAT
 
-class StockMove(models.Model):
-    _inherit = ['stock.move']
-    
-    omnia_procurement_ids = fields.One2many('procurement.order',
-                                           'omnia_move_id',
-                                           string='OR.Proc')
-    @api.multi
-    def getOmniaProcurementQty(self):
-        out = 0.0
-        for procurement_id in self.omnia_procurement_ids:
-            out =+ procurement_id.product_qty
-        return out
-
 class ProcurementOrder(models.Model):
-    _inherit = ['procurement.order']
-    
-    omnia_move_id = fields.Many2one('stock.move',
-                                           string='Omnia releted move')
-    
+    _inherit = 'procurement.order'
+
+    def _get_orderpoint_domain(self, company_id=False):
+        domain = super(ProcurementOrder, self)._get_orderpoint_domain()
+        product_ids = self.env.context.get('product_ids')
+        if product_ids :
+            domain += [('product_id.id', 'in', product_ids)]
+        return domain

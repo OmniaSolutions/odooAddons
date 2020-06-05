@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+<data>
+
+       <record id="view_purchase_order_line_filter_tree" model="ir.ui.view">
+            <field name="name">view.purchase.order.line.filter.tree</field>
+            <field name="model">purchase.order.line</field>
+            <field name="arch" type="xml">
+	            <tree decoration-bf="message_unread==True" decoration-muted="state=='cancel'" decoration-info="state in ('wait','confirmed')">
+	            <!--  <tree decoration-bf="message_unread==True" decoration-muted="state=='cancel'" decoration-info="state in ('wait','confirmed')">-->
+	                <field name="product_id"/>
+	                <field name="product_qty"/>
+	                <field name="price_unit"/>
+	                <field name="price_total"/>
+	                <field name="state"/> 
+	                <field name="account_analytic_id"/>
+	                <field name="analytic_tag_ids"/>
+	                <field name="company_id"/>
+	                <field name="name"/> 
+	                <field name="order_id"/> 
+	                <field name="partner_id"/>  
+	                <field name="date_planned"/>
+	                <field name="order_id"/>
+	            </tree>
+            </field>
+        </record>
+
+        <record model="ir.ui.view" id="purchase_order_line_calendar">
+            <field name="name">purchase.order.line.calendar</field>
+            <field name="model">purchase.order.line</field>
+            <field name="priority" eval="2"/>
+            <field name="arch" type="xml">
+                <calendar string="Calendar View" date_start="date_planned" color="partner_id">
+                    <field name="name"/>
+                    <field name="price_unit" widget="monetary"/>
+                    <field name="partner_id"/>
+                    <field name="product_id"/>
+                </calendar>
+            </field>
+        </record>
+         <record id="purchase_order_line" model="ir.actions.act_window">
+            <field name="name">Purchase Order Line</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="res_model">purchase.order.line</field>
+            <field name="domain">[('state','in',('draft','sent','cancel', 'confirmed'))]</field>
+            <field name="search_view_id" ref="view_purchase_order_line_filter_tree"/>
+            <field name="view_mode">tree,form,calendar</field>
+        </record>
+        
+             <menuitem action="purchase_order_line" 
+                id="menu_purchase_order_line"
+                parent="purchase.menu_procurement_management"
+                sequence="1"/> 
+</data>
+
+
+ 
+</odoo>
