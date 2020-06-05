@@ -53,8 +53,9 @@ class MrpProduction(models.Model):
         stock_warehouse_orderpoint = self.env['stock.warehouse.orderpoint']
         for mrp_production_id in self:
             ids=[]
-            for line in mrp_production_id.bom_id.bom_line_ids:
-                ids.append(line.product_id.id)
+            for line in mrp_production_id.move_raw_ids:
+                if line.state not in ['done', 'cancel'] and line.product_qty - line.quantity_available > 0:
+                    ids.append(line.product_id.id)
             ctx=self.env.context.copy()
             ctx['product_ids'] = ids
             date_now = datetime.datetime.now().strftime(DEFAULT_SERVER_DATETIME_FORMAT)
