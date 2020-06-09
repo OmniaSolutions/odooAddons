@@ -564,7 +564,7 @@ class MrpProductionWizard(models.Model):
     def createStockPickingOutProductionOrder(self, partner_id, productionBrws, customerProductionLocation, productionLocation):
         pick_out_ids = []
         stock_piking = self.env['stock.picking']
-        if not self.move_raw_ids:
+        if not self.move_raw_ids or not self.move_raw_ids.filtered(lambda x: x.product_uom_qty > 0):
             return [stock_piking]
         origin = self.getOriginProdOrder(productionBrws)
         toCreate = self.getStockPickingOutVals(partner_id, productionLocation, customerProductionLocation, productionBrws, origin)
@@ -573,16 +573,17 @@ class MrpProductionWizard(models.Model):
         only_deliver_moves = []
         for stock_move_id in self.move_raw_ids:
             if stock_move_id.operation_type == 'deliver_consume':
+                if stock_move_id.product_uom_qty:
                 # Manufacturing - Subcontracting moves
-                vals = stock_move_id.read()[0]
-                self.cleanReadVals(vals)
-                stockMove = self.env['stock.move'].create(vals)
-                stockMove.name = stock_move_id.product_id.display_name
-                stockMove.unit_factor = stock_move_id.unit_factor
-                stockMove.location_id = productionLocation.id
-                stockMove.location_dest_id = customerProductionLocation.id
-                stockMove.picking_id = pick_out.id
-                stockMove.state = 'draft'
+                    vals = stock_move_id.read()[0]
+                    self.cleanReadVals(vals)
+                    stockMove = self.env['stock.move'].create(vals)
+                    stockMove.name = stock_move_id.product_id.display_name
+                    stockMove.unit_factor = stock_move_id.unit_factor
+                    stockMove.location_id = productionLocation.id
+                    stockMove.location_dest_id = customerProductionLocation.id
+                    stockMove.picking_id = pick_out.id
+                    stockMove.state = 'draft'
             elif stock_move_id.operation_type == 'deliver':
                 only_deliver_moves.append(stock_move_id)
         if only_deliver_moves:
@@ -610,7 +611,9 @@ class MrpProductionWizard(models.Model):
     def createStockPickingOutWorkorder(self, partner_id, productionBrws, customerProductionLocation, productionLocation, workorderBrw):
         stock_piking = self.env['stock.picking']
         move_obj = self.env['stock.move']
-        if not self.move_raw_ids and self.external_operation not in ['parent', 'opration']:
+        if not self.move_raw_ids and self.external_operation not in ['parent', 'operation']:
+            return [stock_piking]
+        if not self.move_raw_ids.filtered(lambda x: x.product_uom_qty > 0) and self.external_operation not in ['parent', 'operation']:
             return [stock_piking]
         out_picks = []
         origin = self.getOriginWorkOrder(productionBrws, workorderBrw, partner_id)
@@ -833,19 +836,11 @@ class TmpStockMove(models.Model):
         production_id = wizard.production_id
         if production_id:
             return production_id
-#     @api.model
-#     def default_get(self, fields_list):
-#         context = self.env.context
-#         res = super(TmpStockMove, self).default_get(fields_list)
-#         wh = context.get('warehouse_id', False)
-#         if wh:
-#             res['warehouse_id'] = wh
-#             res['name'] = self.env['stock.warehouse'].browse(res['warehouse_id']).display_name
-#         wizardId = context.get('wizard_obj_id', False)
-#         if wizardId:
-#             wizardObj = self.env["mrp.externally.wizard"].browse(wizardId)
-#             res['location_id'] = wizardObj.production_id.location_src_id.id
-#         return res
+
+    @api.multi
+    def unlink(self):
+        for tmp_move in self:
+            tmp_move.product_uom_qty = 0
 
 
 class externalProductionPartner(models.TransientModel):

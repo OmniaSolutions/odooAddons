@@ -12,10 +12,7 @@
                         <span class="">Run.A</span>
                     </div>
                 </button>
-           </div>
-           <xpath expr="//tree/field[@name='product_uom']" position="after">
-                  <field name='omnia_procurement_ids' widget="one2many" mode="tree"/>
-           </xpath>                                    
+           </div>                             
         </field>
     </record> 
 </odoo>

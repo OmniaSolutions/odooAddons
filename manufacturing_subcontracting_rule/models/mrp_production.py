@@ -80,9 +80,21 @@ class MrpProduction(models.Model):
                 raw_move.quantity_done = raw_move.product_uom_qty   # Do not remove or material is not consumed
             for finish_move in production_id.move_finished_ids:
                 finish_move.quantity_done = finish_move.product_uom_qty   # Do not remove or material is not consumed
+            production_id.cleanEmptyStockMoves()
             production_id.post_inventory()
             production_id.button_mark_done()
 
+    @api.multi
+    def post_inventory(self):
+        self.cleanEmptyStockMoves()
+        return super(MrpProduction, self).post_inventory()
+
+    @api.multi
+    def cleanEmptyStockMoves(self):
+        for production_id in self:
+            for move in production_id.move_raw_ids.filtered(lambda x: x.remaining_qty == 0):
+                move.state = 'done'
+        
     @api.multi
     def button_produce_externally(self):
         values = self.get_wizard_value()

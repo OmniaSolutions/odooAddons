@@ -2,10 +2,13 @@
 ##############################################################################
 #
 #    OpenERP, Open Source Management Solution
+#    Copyright (C) 2004-2009 Tiny SPRL (<http://tiny.be>).
+#    Copyright (C) 2010-2012 OpenERP s.a. (<http://openerp.com>).
 #
-#    Author : Matteo Boscolo  (Omniasolutions)
-#    mail:matteo.boscolo@omniasolutions.eu
-#    Copyright (c) 2018 Omniasolutions (http://www.omniasolutions.eu)
+#
+#    Author : Smerghetto Daniel  (Omniasolutions)
+#    mail:daniel.smerghetto@omniasolutions.eu
+#    Copyright (c) 2014 Omniasolutions (http://www.omniasolutions.eu) 
 #    All Right Reserved
 #
 #    This program is free software: you can redistribute it and/or modify
@@ -23,32 +26,9 @@
 #
 ##############################################################################
 
+'''
+Created on Dec 18, 2017
 
-{
-    'name': 'omnia_pick_merge',
-    'version': '10.0.1.1.0',
-    'sequence': 1,
-    'category': 'Custom',
-    'description': """
-merge picking
-====================
-""",
-    'author': 'OmniaSolutions.eu',
-    'maintainer': 'OmniaSolutions.eu',
-    'website': 'http://www.OmniaSolutions.eu',
-    'depends': ['sale',
-                'stock',],
-    'license': 'AGPL-3',
-    'data': ['views/stock_picking.xml',
-             'wizard/wizard.xml',
-             # report
-             #'report/report_ddt.xml',
-             # menu
-             #'view/menu_configuration.xml',
-             # security
-             #'security/ddt_groups.xml',
-             ],
-    'installable': True,
-    'application': False,
-    'auto_install': False,
-}
+@author: daniel
+'''
+from . import inventory_valuation
