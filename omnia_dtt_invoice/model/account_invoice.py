@@ -20,7 +20,7 @@
 '''
 Created on 10/lug/2013
 @author: mboscolo
-'''
+'''      
 from odoo import models
 from odoo import fields
 from odoo import api
@@ -32,7 +32,7 @@ class OmniaDdtAccountIvoice(models.Model):
     _inherit = ['account.invoice']
     is_accompagnatoria = fields.Boolean("Is Accompagnatoria")
     carrier_id = fields.Many2one("delivery.carrier", string="Carrier")
-    delivery_address = fields.Many2one('res.partner', string='Delivery address')
+    delivery_address_id = fields.Many2one('res.partner', string='Delivery address')
     data_ritiro = fields.Datetime('Data e ora ritiro')
     data_consegna = fields.Datetime('Data e ora consegna')
     carriage_condition_id = fields.Many2one('stock.picking.carriage_condition', 'Carriage condition')
@@ -92,8 +92,25 @@ class OmniaDdtAccountIvoice(models.Model):
                 for child in invoice.partner_id.child_ids:
                     if child.type == 'delivery':
                         final_address = child.id
-            invoice.delivery_address = final_address
+            invoice.delivery_address_id = final_address
+    
+    @api.onchange('delivery_address_id')
+    def onchange_delivery_address(self):
+        for invoice in self:
+            if invoice.delivery_address_id:
+                invoice.delivery_address = ''
+                if invoice.delivery_address_id.street:
+                    invoice.delivery_address += ' ' + invoice.delivery_address_id.street
+                if invoice.delivery_address_id.city:
+                    invoice.delivery_address += ' ' + invoice.delivery_address_id.city
+                if invoice.delivery_address_id.zip:
+                    invoice.delivery_address += ' ' + invoice.delivery_address_id.zip
+                if invoice.delivery_address_id.state_id:
+                    invoice.delivery_address += ' ' + invoice.delivery_address_id.state_id.name
+                if invoice.delivery_address_id.country_id:
+                    invoice.delivery_address += ' ' + invoice.delivery_address_id.country_id.name
+            else:
+                return    
                 
                 
-            
             
