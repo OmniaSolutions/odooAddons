@@ -1,0 +1,189 @@
+# Translation of Odoo Server.
+# This file contains the translation of the following modules:
+# 	* omnia_mrp_analytic
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 10.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2020-08-27 14:08+0000\n"
+"PO-Revision-Date: 2020-08-27 16:14+0200\n"
+"Last-Translator: <>\n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: \n"
+"Language: it\n"
+"X-Generator: Poedit 2.0.6\n"
+
+#. module: omnia_mrp_analytic
+#: model:ir.model,name:omnia_mrp_analytic.model_account_analytic_line
+msgid "Analytic Line"
+msgstr "Riga analitica"
+
+#. module: omnia_mrp_analytic
+#: model:ir.ui.view,arch_db:omnia_mrp_analytic.import_wizard_view
+msgid "Apply"
+msgstr "Applica"
+
+#. module: omnia_mrp_analytic
+#: code:addons/omnia_mrp_analytic/models/mrp_workorder.py:22
+#: model:ir.model.fields,field_description:omnia_mrp_analytic.field_mrp_workorder_user_id
+#, python-format
+msgid "Assigned User"
+msgstr "Assigned User"
+
+#. module: omnia_mrp_analytic
+#: code:addons/omnia_mrp_analytic/models/mrp_cost.py:81
+#, python-format
+msgid "Automatic calculation of production cost [%s]"
+msgstr "Calcolo automatico costo produzione [%s]"
+
+#. module: omnia_mrp_analytic
+#: model:ir.ui.view,arch_db:omnia_mrp_analytic.report_mrp_cost
+msgid "BOM Name"
+msgstr "Nome distinta base"
+
+#. module: omnia_mrp_analytic
+#: model:ir.ui.view,arch_db:omnia_mrp_analytic.report_mrp_cost
+msgid "BOM Ref"
+msgstr "Rif distinta base"
+
+#. module: omnia_mrp_analytic
+#: model:ir.ui.view,arch_db:omnia_mrp_analytic.report_mrp_cost
+msgid "BOM Structure Cost"
+msgstr "BOM Structure Cost"
+
+#. module: omnia_mrp_analytic
+#: model:ir.ui.view,arch_db:omnia_mrp_analytic.import_wizard_view
+msgid "Cancel"
+msgstr "Annulla"
+
+#. module: omnia_mrp_analytic
+#: model:ir.actions.act_window,name:omnia_mrp_analytic.import_wizard_action
+#: model:ir.ui.view,arch_db:omnia_mrp_analytic.import_wizard_view
+msgid "Import Production Cost"
+msgstr "Importa Costo Produzione"
+
+#. module: omnia_mrp_analytic
+#: code:addons/omnia_mrp_analytic/models/project_project.py:46
+#: model:ir.model.fields,field_description:omnia_mrp_analytic.field_project_project_man_orders_completed
+#, python-format
+msgid "Manufacturing Completed"
+msgstr "Manufacturing Completed"
+
+#. module: omnia_mrp_analytic
+#: model:ir.model,name:omnia_mrp_analytic.model_mrp_production
+msgid "Manufacturing Order"
+msgstr "Manufacturing Order"
+
+#. module: omnia_mrp_analytic
+#: model:ir.model.fields,field_description:omnia_mrp_analytic.field_project_project_man_orders_count
+msgid "Number of manufacturing orders attached"
+msgstr "Number of manufacturing orders attached"
+
+#. module: omnia_mrp_analytic
+#: code:addons/omnia_mrp_analytic/models/mrp_cost.py:32
+#, python-format
+msgid "Product"
+msgstr "Prodotto"
+
+#. module: omnia_mrp_analytic
+#: code:addons/omnia_mrp_analytic/models/project_project.py:54
+#: model:ir.ui.view,arch_db:omnia_mrp_analytic.project_project_form_production_omnia
+#, python-format
+msgid "Production Orders"
+msgstr "Production Orders"
+
+#. module: omnia_mrp_analytic
+#: code:addons/omnia_mrp_analytic/models/mrp_production.py:51
+#: model:ir.model,name:omnia_mrp_analytic.model_project_project
+#: model:ir.model.fields,field_description:omnia_mrp_analytic.field_mrp_production_project_id
+#, python-format
+msgid "Project"
+msgstr "Progetto"
+
+#. module: omnia_mrp_analytic
+#: code:addons/omnia_mrp_analytic/models/mrp_production.py:52
+#: model:ir.model.fields,help:omnia_mrp_analytic.field_mrp_production_project_id
+#, python-format
+msgid "Project related to this production, if set the at action plan for each workorder a new task is created"
+msgstr "Project related to this production, if set the at action plan for each workorder a new task is created"
+
+#. module: omnia_mrp_analytic
+#: model:ir.ui.view,arch_db:omnia_mrp_analytic.report_mrp_cost
+msgid "Quantity"
+msgstr "Quantità"
+
+#. module: omnia_mrp_analytic
+#: code:addons/omnia_mrp_analytic/models/mrp_workorder.py:18
+#: model:ir.model.fields,field_description:omnia_mrp_analytic.field_mrp_workorder_task_id
+#, python-format
+msgid "Reference Task"
+msgstr "Reference Task"
+
+#. module: omnia_mrp_analytic
+#: model:ir.actions.report.xml,name:omnia_mrp_analytic.action_report_mrp_cost
+msgid "Report Mrp Cost"
+msgstr "Report Mrp Cost"
+
+#. module: omnia_mrp_analytic
+#: model:ir.model,name:omnia_mrp_analytic.model_project_task
+msgid "Task"
+msgstr "Attività"
+
+#. module: omnia_mrp_analytic
+#: code:addons/omnia_mrp_analytic/models/mrp_production.py:66
+#: model:ir.model.fields,field_description:omnia_mrp_analytic.field_mrp_production_totale_project_time
+#, python-format
+msgid "Total time"
+msgstr "Total time"
+
+#. module: omnia_mrp_analytic
+#: code:addons/omnia_mrp_analytic/models/mrp_production.py:67
+#: model:ir.model.fields,help:omnia_mrp_analytic.field_mrp_production_totale_project_time
+#, python-format
+msgid "Total time spent on this manufacture"
+msgstr "Total time spent on this manufacture"
+
+#. module: omnia_mrp_analytic
+#: model:ir.model.fields,field_description:omnia_mrp_analytic.field_mrp_routing_workcenter_user_time_percentage
+#: model:ir.model.fields,field_description:omnia_mrp_analytic.field_project_task_user_time_percentage
+msgid "User Percentage to use of machine time"
+msgstr "User Percentage to use of machine time"
+
+#. module: omnia_mrp_analytic
+#: code:addons/omnia_mrp_analytic/models/mrp_workorder.py:28
+#: model:ir.model.fields,field_description:omnia_mrp_analytic.field_mrp_workorder_user_time_spent
+#, python-format
+msgid "User Time Used"
+msgstr "User Time Used"
+
+#. module: omnia_mrp_analytic
+#: model:ir.model,name:omnia_mrp_analytic.model_mrp_routing_workcenter
+msgid "Work Center Usage"
+msgstr "Utilizzo Centri di Lavoro"
+
+#. module: omnia_mrp_analytic
+#: model:ir.model,name:omnia_mrp_analytic.model_mrp_workorder
+msgid "Work Order"
+msgstr "Ordine di Lavoro"
+
+#. module: omnia_mrp_analytic
+#: code:addons/omnia_mrp_analytic/models/account_analytic_line.py:51
+#: model:ir.model.fields,field_description:omnia_mrp_analytic.field_account_analytic_line_workorder_id
+#, python-format
+msgid "Workorder"
+msgstr "Workorder"
+
+#. module: omnia_mrp_analytic
+#: code:addons/omnia_mrp_analytic/models/mrp_cost.py:44
+#, python-format
+msgid "[ERROR] Missing product"
+msgstr "[ERRORE] Prodotto mancante"
+
+#. module: omnia_mrp_analytic
+#: model:ir.model,name:omnia_mrp_analytic.model_import_wizard
+msgid "import.wizard"
+msgstr "import.wizard"

@@ -40,7 +40,8 @@ Add analytics fields to the production order and create task for each work order
     'website': 'http://www.OmniaSolutions.eu',
     'depends': ['mrp',
                 'project',
-                'hr_timesheet'],
+                'hr_timesheet',
+                'analytic'],
     'data': [
         #  view
         'views/mrp_production.xml',
@@ -48,6 +49,7 @@ Add analytics fields to the production order and create task for each work order
         'views/project_project.xml',
         'views/mrp_routing_workcenter.xml',
         'views/project_task.xml',
+        'views/import_wizard.xml'
     ],
     'installable': True,
     'application': False,
