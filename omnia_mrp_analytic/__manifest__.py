@@ -49,7 +49,8 @@ Add analytics fields to the production order and create task for each work order
         'views/project_project.xml',
         'views/mrp_routing_workcenter.xml',
         'views/project_task.xml',
-        'views/import_wizard.xml'
+        'views/import_wizard.xml',
+        'report/mrp_cost_report.xml'
     ],
     'installable': True,
     'application': False,

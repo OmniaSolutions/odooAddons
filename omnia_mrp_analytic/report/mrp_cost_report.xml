@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+        
+<template id="report_mrp_cost">
+    <t t-call="report.html_container">
+        <t t-call="report.internal_layout">
+            <div class="page">
+                <h2>MRP Structure Cost</h2>
+                <table class="table table-condensed">
+                    <thead>
+                        <tr>
+                            <th>Product Name</th>
+                            <th>Quantity</th>
+                            <th>Unit Price</th>
+                            <th>Price</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <t t-foreach="docs" t-as="o">
+                        	<t t-foreach="get_mrp_code(o.product_id, o.account_id)" t-as="p">
+	                        	<tr style="font-weight: bold;">
+	                                <td>
+	                                    <span t-field="o.product_id.default_code"/>
+	                                	[<span t-esc="p['production_name']"/>]
+	                                </td>
+	                                <td>
+	                                	<span t-esc="p['production_qty']"/>
+	                                </td>
+	                                <td>
+	                                </td>
+	                                <td>
+	                                </td>
+	                            </tr>
+	                            <tr t-foreach="p['children']" t-as="l">
+	                                <td style="padding-left: 40px;">
+	                                    <span style="color: white;" t-esc="'... '*2*(l['level'])"/>
+	                                    <span t-esc="l['pname']"/>
+	                                </td>
+	                                <td>
+	                                    <span t-esc="l['pqty']"/>
+	                                </td>
+	                                <td>
+	                                    <span t-esc="l['unit_price']"/>
+	                                </td>
+	                                <td>
+	                                	<span t-esc="l['price']"/>
+	                                </td>
+	                            </tr>
+	                            <tr style="font-weight: bold">
+	                            	<td>
+	                            	</td>
+	                            	<td>
+	                            	</td>
+	                            	<td style="background-color:lightgrey">
+	                            		Subtotal
+	                            	</td>
+	                            	<td style="background-color:lightgrey">	                            	
+	                            		<span t-esc="p['subtotal']"/>
+	                            	</td>
+	                            </tr>
+                            </t>
+                           	<tr style="font-weight: bold">
+                           		<td>
+                           		</td>
+                           		<td>
+                           		</td>
+                           		<td style="background-color:lightgrey">
+                            		TOTAL
+                            	</td>
+                            	<td style="background-color:lightgrey">	                            	
+                            		<span t-esc="get_total()"/>
+                            	</td>
+                           	</tr>
+                        </t>
+                    </tbody>
+                </table>
+            </div>
+        </t>
+    </t>
+</template>
+
+<report 
+	string="Report Mrp Cost" 
+    id="action_report_mrp_cost" 
+    model="account.analytic.line" 
+    name="omnia_mrp_analytic.report_mrp_cost"
+    report_type="qweb-pdf"
+/>
+                 
+</odoo>

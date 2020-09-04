@@ -1,21 +1,19 @@
 # Translation of Odoo Server.
 # This file contains the translation of the following modules:
-# 	* omnia_mrp_analytic
+#	* omnia_mrp_analytic
 #
 msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 10.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2020-08-27 14:08+0000\n"
-"PO-Revision-Date: 2020-08-27 16:14+0200\n"
+"POT-Creation-Date: 2020-09-04 07:54+0000\n"
+"PO-Revision-Date: 2020-09-04 07:54+0000\n"
 "Last-Translator: <>\n"
 "Language-Team: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
-"Content-Transfer-Encoding: 8bit\n"
+"Content-Transfer-Encoding: \n"
 "Plural-Forms: \n"
-"Language: it\n"
-"X-Generator: Poedit 2.0.6\n"
 
 #. module: omnia_mrp_analytic
 #: model:ir.model,name:omnia_mrp_analytic.model_account_analytic_line
@@ -25,7 +23,7 @@ msgstr "Riga analitica"
 #. module: omnia_mrp_analytic
 #: model:ir.ui.view,arch_db:omnia_mrp_analytic.import_wizard_view
 msgid "Apply"
-msgstr "Applica"
+msgstr "Salva"
 
 #. module: omnia_mrp_analytic
 #: code:addons/omnia_mrp_analytic/models/mrp_workorder.py:22
@@ -41,30 +39,35 @@ msgid "Automatic calculation of production cost [%s]"
 msgstr "Calcolo automatico costo produzione [%s]"
 
 #. module: omnia_mrp_analytic
-#: model:ir.ui.view,arch_db:omnia_mrp_analytic.report_mrp_cost
-msgid "BOM Name"
-msgstr "Nome distinta base"
-
-#. module: omnia_mrp_analytic
-#: model:ir.ui.view,arch_db:omnia_mrp_analytic.report_mrp_cost
-msgid "BOM Ref"
-msgstr "Rif distinta base"
-
-#. module: omnia_mrp_analytic
-#: model:ir.ui.view,arch_db:omnia_mrp_analytic.report_mrp_cost
-msgid "BOM Structure Cost"
-msgstr "BOM Structure Cost"
-
-#. module: omnia_mrp_analytic
 #: model:ir.ui.view,arch_db:omnia_mrp_analytic.import_wizard_view
 msgid "Cancel"
 msgstr "Annulla"
+
+#. module: omnia_mrp_analytic
+#: model:ir.model.fields,field_description:omnia_mrp_analytic.field_report_omnia_mrp_analytic_report_mrp_cost_display_name
+msgid "Display Name"
+msgstr "Nome Visualizzato"
+
+#. module: omnia_mrp_analytic
+#: model:ir.model.fields,field_description:omnia_mrp_analytic.field_report_omnia_mrp_analytic_report_mrp_cost_id
+msgid "ID"
+msgstr "ID"
 
 #. module: omnia_mrp_analytic
 #: model:ir.actions.act_window,name:omnia_mrp_analytic.import_wizard_action
 #: model:ir.ui.view,arch_db:omnia_mrp_analytic.import_wizard_view
 msgid "Import Production Cost"
 msgstr "Importa Costo Produzione"
+
+#. module: omnia_mrp_analytic
+#: model:ir.model.fields,field_description:omnia_mrp_analytic.field_report_omnia_mrp_analytic_report_mrp_cost___last_update
+msgid "Last Modified on"
+msgstr "Ultima modifica il"
+
+#. module: omnia_mrp_analytic
+#: model:ir.ui.view,arch_db:omnia_mrp_analytic.report_mrp_cost
+msgid "MRP Structure Cost"
+msgstr "MRP Structure Cost"
 
 #. module: omnia_mrp_analytic
 #: code:addons/omnia_mrp_analytic/models/project_project.py:46
@@ -84,10 +87,20 @@ msgid "Number of manufacturing orders attached"
 msgstr "Number of manufacturing orders attached"
 
 #. module: omnia_mrp_analytic
+#: model:ir.ui.view,arch_db:omnia_mrp_analytic.report_mrp_cost
+msgid "Price"
+msgstr "Prezzo"
+
+#. module: omnia_mrp_analytic
 #: code:addons/omnia_mrp_analytic/models/mrp_cost.py:32
 #, python-format
 msgid "Product"
 msgstr "Prodotto"
+
+#. module: omnia_mrp_analytic
+#: model:ir.ui.view,arch_db:omnia_mrp_analytic.report_mrp_cost
+msgid "Product Name"
+msgstr "Nome prodotto"
 
 #. module: omnia_mrp_analytic
 #: code:addons/omnia_mrp_analytic/models/project_project.py:54
@@ -129,6 +142,16 @@ msgid "Report Mrp Cost"
 msgstr "Report Mrp Cost"
 
 #. module: omnia_mrp_analytic
+#: model:ir.ui.view,arch_db:omnia_mrp_analytic.report_mrp_cost
+msgid "Subtotal"
+msgstr "Subtotale"
+
+#. module: omnia_mrp_analytic
+#: model:ir.ui.view,arch_db:omnia_mrp_analytic.report_mrp_cost
+msgid "TOTAL"
+msgstr "TOTALE"
+
+#. module: omnia_mrp_analytic
 #: model:ir.model,name:omnia_mrp_analytic.model_project_task
 msgid "Task"
 msgstr "Attività"
@@ -146,6 +169,11 @@ msgstr "Total time"
 #, python-format
 msgid "Total time spent on this manufacture"
 msgstr "Total time spent on this manufacture"
+
+#. module: omnia_mrp_analytic
+#: model:ir.ui.view,arch_db:omnia_mrp_analytic.report_mrp_cost
+msgid "Unit Price"
+msgstr "Prezzo Unitario"
 
 #. module: omnia_mrp_analytic
 #: model:ir.model.fields,field_description:omnia_mrp_analytic.field_mrp_routing_workcenter_user_time_percentage
@@ -187,3 +215,14 @@ msgstr "[ERRORE] Prodotto mancante"
 #: model:ir.model,name:omnia_mrp_analytic.model_import_wizard
 msgid "import.wizard"
 msgstr "import.wizard"
+
+#. module: omnia_mrp_analytic
+#: model:ir.model,name:omnia_mrp_analytic.model_mrp_cost_report
+msgid "mrp.cost.report"
+msgstr "mrp.cost.report"
+
+#. module: omnia_mrp_analytic
+#: model:ir.model,name:omnia_mrp_analytic.model_report_omnia_mrp_analytic_report_mrp_cost
+msgid "report.omnia_mrp_analytic.report_mrp_cost"
+msgstr "report.omnia_mrp_analytic.report_mrp_cost"
+

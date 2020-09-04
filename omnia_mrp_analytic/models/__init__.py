@@ -39,3 +39,4 @@ from . import mrp_routing_workcenter
 from . import project_task
 from . import account_analytic_line
 from . import mrp_cost
+from . import mrp_cost_report

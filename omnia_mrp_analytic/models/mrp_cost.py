@@ -60,7 +60,7 @@ class ImportWizard(models.TransientModel):
                 for row in production.move_raw_ids:
                     if self.env['mrp.production'].search_count([('product_id', '=', row.product_id.id), ('project_id', '=', project_id)]) > 0:
                         children_amount = _calculateAnalyticCost(row.product_id.id, project_id)
-                        tot_price += children_amount * row.product_uom_qty
+                        tot_price += children_amount
                     else:
                         tot_price += row.price_unit * row.product_uom_qty
             return tot_price
