@@ -116,7 +116,7 @@ class InventoryValuation(models.TransientModel):
         sql_query += """
                                                date < %(ref_date)s and 
                                                location_id in %(location_ids)s 
-                                               order by product_id) as ss 
+                                               order by product_id) as ss
                                     group by ss.location_id, ss.product_categ_id, ss.product_id order by ss.location_id asc, ss.product_categ_id asc, ss.product_id asc"""
         self.env.cr.execute(sql_query, params)
         results = self.env.cr.fetchall()
@@ -146,6 +146,9 @@ class InventoryValuation(models.TransientModel):
         for price_unit, price_total, product_id, product_categ_id, location_id, quantity in results:
             if price_total == 0 and not self.show_zero:
                 continue
+            product_product = self.env['product.product'].browse(product_id)
+            if product_product.type != 'product':
+                continue
             location_name =  location_cache.get(location_id)
             if not location_name:
                 location_name = self.env['stock.location'].browse(location_id).complete_name
@@ -154,7 +157,7 @@ class InventoryValuation(models.TransientModel):
             if not categ:
                 categ = self.env['product.category'].browse(product_categ_id).display_name
                 category_cache[product_categ_id] = categ
-            prod_name = self.env['product.product'].browse(product_id).display_name
+            prod_name = product_product.display_name
             worksheet.cell(row=row_counter, column=1).value = location_name
             worksheet.cell(row=row_counter, column=2).value = categ
             worksheet.cell(row=row_counter, column=3).value = prod_name
