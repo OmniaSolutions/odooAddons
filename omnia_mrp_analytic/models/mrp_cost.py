@@ -35,65 +35,62 @@ class ImportWizard(models.TransientModel):
     def calculateAnalyticCost(self,
                               product_id,
                               project_id):
-        """
-        Calculate the cost of the production based on product id and project assigned to the mo
-        product_id: product.product obj
-        project_id: project.project obj
-        """
         if not product_id:
             raise UserError(_('[ERROR] Missing product'))
+        
+        evaluated = {}
 
         def _calculateAnalyticCost(product_id,
-                                   project_id):
-            """
-            Calculate the cost of the production based on product id and project assigned to the mo
-            product_id: product.product obj
-            project_id: project.project obj
-            """
+                                   project_id,
+                                   production_id=False):
             tot_price = 0
-            production_id = self.env['mrp.production'].search([('product_id', '=', product_id), ('project_id', '=', project_id), ('state', '=', 'done')])
+            if not production_id:
+                production_id = self.env['mrp.production'].search([('product_id', '=', product_id), ('project_id', '=', project_id), ('state', '=', 'done')])
             for production in production_id:
                 for raw in production.move_raw_ids:
-                    if self.env['mrp.production'].search_count([('product_id', '=', raw.product_id.id), ('project_id', '=', project_id)]) > 0:
-                        children_amount = _calculateAnalyticCost(raw.product_id.id, project_id)
+                    if raw.product_id not in evaluated:
+                        evaluated[raw.product_id] = []
+                    children_productions = self.env['mrp.production'].search([('product_id', '=', raw.product_id.id), ('project_id', '=', project_id), ('state', '=', 'done')])
+                    if not evaluated[raw.product_id]:
+                        evaluated[raw.product_id] = children_productions.ids
+                    if children_productions:
+                        production_child_id = evaluated[raw.product_id].pop(0)
+                        children_amount = _calculateAnalyticCost(raw.product_id.id, project_id, self.env['mrp.production'].browse(production_child_id))
                         tot_price += children_amount
                     else:
-                        tot_price += self.getUnitPrice(raw.product_id.id, raw) * raw.product_uom_qty
+                        unit_price = self.getUnitPrice(raw.product_id.id, raw.price_unit, production.write_date) * raw.product_uom_qty
+                        tot_price += unit_price
             return tot_price
 
         return _calculateAnalyticCost(product_id, project_id)
         
-    def getUnitPrice(self, raw_product, raw):
-        stock_quant = self.env['stock.quant'].search([('product_id', '=', raw_product),
-                                                            ('in_date', '<=', raw.create_date)], order="in_date desc")
-        for product in stock_quant:
-            if product.cost != 0:
-                return product.cost
+    def getUnitPrice(self, raw_product, price_unit, write_date):
+        stock_historys = self.env['stock.history'].search([('product_id', '=', raw_product),
+                                                              ('date', '<=', write_date),
+                                                              ('quantity', '>', 0)], order="date desc")
+        for stock_history in stock_historys:
+            if stock_history.price_unit_on_quant != 0:
+                return stock_history.price_unit_on_quant
             break
-        invoice_line = self.env['account.invoice.line'].search([('product_id', '=', raw_product),
-                                                                      ('write_date', '<=', raw.create_date)], order="write_date desc")
-        for product in invoice_line:
-            if product.price_unit != 0:
-                return product.price_unit
+        invoice_lines = self.env['account.invoice.line'].search([('product_id', '=', raw_product),
+                                                                      ('write_date', '<=', write_date)], order="write_date desc")
+        for invoice_line in invoice_lines:
+            if invoice_line.price_unit != 0:
+                return invoice_line.price_unit
             break
-        purchase_line = self.env['purchase.order.line'].search([('product_id', '=', raw_product),
-                                                                      ('write_date', '<=', raw.create_date)], order="write_date desc")
-        for product in purchase_line:
-            if product.price_unit != 0:
-                return product.price_unit
+        purchase_lines = self.env['purchase.order.line'].search([('product_id', '=', raw_product),
+                                                                      ('write_date', '<=', write_date)], order="write_date desc")
+        for purchase_line in purchase_lines:
+            if purchase_line.price_unit != 0:
+                return purchase_line.price_unit
             break
-        return raw.price_unit
+        return price_unit
     
     @api.model
     def createCostOnAnalyticAccount(self,
                                     product_id,
                                     cost,
                                     active_id):
-        """
-        Write product cost to analytic account
-        product_id: product.product obj
-        project_id: project.project obj
-        """
         product_name = self.env['product.product'].browse(product_id).display_name
         line_to_create = {'name': _('Automatic calculation of production cost [%s]') % (product_name),
                           'account_id': active_id,

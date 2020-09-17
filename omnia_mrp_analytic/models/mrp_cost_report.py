@@ -36,14 +36,15 @@ class MrpCostReport(report_sxw.rml_parse):
                 res['level'] = level
                 children_productions = product_id.env['mrp.production'].search([
                     ('product_id', '=', raw_product.id),
-                    ('project_id', 'in', project_id.project_ids.ids)])
+                    ('project_id', 'in', project_id.project_ids.ids),
+                    ('state', '=', 'done')])
                 if not evaluated[raw_product]:
                     evaluated[raw_product] = children_productions.ids
                 if children_productions:
                     res['unit_price'] = None
                     res['price'] = None
                 else:
-                    res['unit_price'] = self.getUnitPrice(product_id, raw_product.id, raw)
+                    res['unit_price'] = self.getUnitPrice(product_id, raw_product.id, raw.price_unit, production_id.write_date)
                     res['price'] = res['unit_price'] * res['pqty']
                     subtotal += res['price']
                 result1.append(res)
@@ -76,26 +77,27 @@ class MrpCostReport(report_sxw.rml_parse):
 
         return result
     
-    def getUnitPrice(self, product_id, raw_product, raw):
-        stock_quant = product_id.env['stock.quant'].search([('product_id', '=', raw_product),
-                                                            ('in_date', '<=', raw.create_date)], order="in_date desc")
-        for product in stock_quant:
-            if product.cost != 0:
-                return product.cost
+    def getUnitPrice(self, product_id, raw_product, price_unit, write_date):
+        stock_historys = product_id.env['stock.history'].search([('product_id', '=', raw_product),
+                                                              ('date', '<=', write_date),
+                                                              ('quantity', '>', 0)], order="date desc")
+        for stock_history in stock_historys:
+            if stock_history.price_unit_on_quant != 0:
+                return stock_history.price_unit_on_quant
             break
-        invoice_line = product_id.env['account.invoice.line'].search([('product_id', '=', raw_product),
-                                                                      ('write_date', '<=', raw.create_date)], order="write_date desc")
-        for product in invoice_line:
-            if product.price_unit != 0:
-                return product.price_unit
+        invoice_lines = product_id.env['account.invoice.line'].search([('product_id', '=', raw_product),
+                                                                      ('write_date', '<=', write_date)], order="write_date desc")
+        for invoice_line in invoice_lines:
+            if invoice_line.price_unit != 0:
+                return invoice_line.price_unit
             break
-        purchase_line = product_id.env['purchase.order.line'].search([('product_id', '=', raw_product),
-                                                                      ('write_date', '<=', raw.create_date)], order="write_date desc")
-        for product in purchase_line:
-            if product.price_unit != 0:
-                return product.price_unit
+        purchase_lines = product_id.env['purchase.order.line'].search([('product_id', '=', raw_product),
+                                                                      ('write_date', '<=', write_date)], order="write_date desc")
+        for purchase_line in purchase_lines:
+            if purchase_line.price_unit != 0:
+                return purchase_line.price_unit
             break
-        return raw.price_unit
+        return price_unit
               
 
 class MrpCostReportAbstract(osv.AbstractModel):
