@@ -42,7 +42,6 @@ class ImportWizard(models.TransientModel):
         """
         if not product_id:
             raise UserError(_('[ERROR] Missing product'))
-        computed = []
 
         def _calculateAnalyticCost(product_id,
                                    project_id):
@@ -52,26 +51,44 @@ class ImportWizard(models.TransientModel):
             project_id: project.project obj
             """
             tot_price = 0
-            if product_id in computed:
-                return 0
-            computed.append(product_id)
             production_id = self.env['mrp.production'].search([('product_id', '=', product_id), ('project_id', '=', project_id), ('state', '=', 'done')])
             for production in production_id:
-                for row in production.move_raw_ids:
-                    if self.env['mrp.production'].search_count([('product_id', '=', row.product_id.id), ('project_id', '=', project_id)]) > 0:
-                        children_amount = _calculateAnalyticCost(row.product_id.id, project_id)
+                for raw in production.move_raw_ids:
+                    if self.env['mrp.production'].search_count([('product_id', '=', raw.product_id.id), ('project_id', '=', project_id)]) > 0:
+                        children_amount = _calculateAnalyticCost(raw.product_id.id, project_id)
                         tot_price += children_amount
                     else:
-                        tot_price += row.price_unit * row.product_uom_qty
+                        tot_price += self.getUnitPrice(raw.product_id.id, raw) * raw.product_uom_qty
             return tot_price
 
         return _calculateAnalyticCost(product_id, project_id)
         
+    def getUnitPrice(self, raw_product, raw):
+        stock_quant = self.env['stock.quant'].search([('product_id', '=', raw_product),
+                                                            ('in_date', '<=', raw.create_date)], order="in_date desc")
+        for product in stock_quant:
+            if product.cost != 0:
+                return product.cost
+            break
+        invoice_line = self.env['account.invoice.line'].search([('product_id', '=', raw_product),
+                                                                      ('write_date', '<=', raw.create_date)], order="write_date desc")
+        for product in invoice_line:
+            if product.price_unit != 0:
+                return product.price_unit
+            break
+        purchase_line = self.env['purchase.order.line'].search([('product_id', '=', raw_product),
+                                                                      ('write_date', '<=', raw.create_date)], order="write_date desc")
+        for product in purchase_line:
+            if product.price_unit != 0:
+                return product.price_unit
+            break
+        return raw.price_unit
+    
     @api.model
     def createCostOnAnalyticAccount(self,
                                     product_id,
-                                    project_id,
-                                    cost):
+                                    cost,
+                                    active_id):
         """
         Write product cost to analytic account
         product_id: product.product obj
@@ -79,10 +96,10 @@ class ImportWizard(models.TransientModel):
         """
         product_name = self.env['product.product'].browse(product_id).display_name
         line_to_create = {'name': _('Automatic calculation of production cost [%s]') % (product_name),
-                          'account_id': project_id,
+                          'account_id': active_id,
                           'amount': cost,
                           'product_id': product_id}
-        check_line_id = self.env['account.analytic.line'].search([('product_id', '=', product_id), ('account_id', '=', project_id)])
+        check_line_id = self.env['account.analytic.line'].search([('product_id', '=', product_id), ('account_id', '=', active_id)])
         if check_line_id:
             for line_id in check_line_id:
                 line_id.write({'amount': cost})
@@ -92,14 +109,14 @@ class ImportWizard(models.TransientModel):
     @api.multi
     def import_data(self):
         product_id = self.product.id
-        project_id = self.env.context.get('active_id')
+        active_id = self.env.context.get('active_id', False)
+        project_id = self.env['project.project'].search([('analytic_account_id', '=', active_id)])
         cost = self.calculateAnalyticCost(product_id,
-                                          project_id)
+                                          project_id.id)
         self.createCostOnAnalyticAccount(product_id,
-                                         project_id,
-                                         cost)
+                                         cost,
+                                         active_id)
         vals = self.env.ref('analytic.account_analytic_line_action').read()[0]
-        active_id = str(project_id)
-        vals['domain'] = vals.get('domain', '').replace('active_id', active_id)
-        vals['context'] = vals.get('context', '').replace('active_id', active_id)
+        vals['domain'] = vals.get('domain', '').replace('active_id', str(active_id))
+        vals['context'] = vals.get('context', '').replace('active_id', str(active_id))
         return vals
