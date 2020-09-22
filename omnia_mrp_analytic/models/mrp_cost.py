@@ -42,11 +42,15 @@ class ImportWizard(models.TransientModel):
 
         def _calculateAnalyticCost(product_id,
                                    project_id,
-                                   production_id=False):
+                                   production_id=False,
+                                   firstLevel=True):
             tot_price = 0
+            qty = 0
             if not production_id:
                 production_id = self.env['mrp.production'].search([('product_id', '=', product_id), ('project_id', '=', project_id), ('state', '=', 'done')])
             for production in production_id:
+                if firstLevel:
+                    qty += production.product_qty
                 for raw in production.move_raw_ids:
                     if raw.product_id not in evaluated:
                         evaluated[raw.product_id] = []
@@ -55,12 +59,12 @@ class ImportWizard(models.TransientModel):
                         evaluated[raw.product_id] = children_productions.ids
                     if children_productions:
                         production_child_id = evaluated[raw.product_id].pop(0)
-                        children_amount = _calculateAnalyticCost(raw.product_id.id, project_id, self.env['mrp.production'].browse(production_child_id))
+                        children_amount, _ = _calculateAnalyticCost(raw.product_id.id, project_id, self.env['mrp.production'].browse(production_child_id), False)
                         tot_price += children_amount
                     else:
                         unit_price = self.getUnitPrice(raw.product_id.id, raw.price_unit, production.write_date) * raw.product_uom_qty
                         tot_price += unit_price
-            return tot_price
+            return tot_price, qty
 
         return _calculateAnalyticCost(product_id, project_id)
         
@@ -90,16 +94,18 @@ class ImportWizard(models.TransientModel):
     def createCostOnAnalyticAccount(self,
                                     product_id,
                                     cost,
+                                    parentQty,
                                     active_id):
         product_name = self.env['product.product'].browse(product_id).display_name
         line_to_create = {'name': _('Automatic calculation of production cost [%s]') % (product_name),
                           'account_id': active_id,
-                          'amount': cost,
+                          'amount': -cost,
+                          'unit_amount': parentQty,
                           'product_id': product_id}
         check_line_id = self.env['account.analytic.line'].search([('product_id', '=', product_id), ('account_id', '=', active_id)])
         if check_line_id:
             for line_id in check_line_id:
-                line_id.write({'amount': cost})
+                line_id.write({'amount': -cost, 'unit_amount': parentQty})
         else:
             self.env['account.analytic.line'].create(line_to_create)
     
@@ -108,10 +114,11 @@ class ImportWizard(models.TransientModel):
         product_id = self.product.id
         active_id = self.env.context.get('active_id', False)
         project_id = self.env['project.project'].search([('analytic_account_id', '=', active_id)])
-        cost = self.calculateAnalyticCost(product_id,
+        cost, parentQty = self.calculateAnalyticCost(product_id,
                                           project_id.id)
         self.createCostOnAnalyticAccount(product_id,
                                          cost,
+                                         parentQty,
                                          active_id)
         vals = self.env.ref('analytic.account_analytic_line_action').read()[0]
         vals['domain'] = vals.get('domain', '').replace('active_id', str(active_id))
