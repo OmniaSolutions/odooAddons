@@ -41,7 +41,11 @@ class MrpWorkorderExtension(models.Model):
     def get_raw_material(self):
         for mrp_workorder in self:
             out_raw = ""
+            product_computed = []
             for stock_move in mrp_workorder.production_id.move_raw_ids:
+                if stock_move.product_id.id in product_computed:
+                    continue
+                product_computed.append(stock_move.product_id.id)    
                 if len(out_raw) > 0:
                     out_raw += ","
                 out_raw += stock_move.product_id.display_name
