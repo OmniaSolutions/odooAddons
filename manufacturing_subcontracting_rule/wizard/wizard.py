@@ -772,9 +772,10 @@ class TmpStockMove(models.Model):
     unit_factor = fields.Float('Unit Factor', default=1)
     qty_available = fields.Float(_('Qty available'))
     location_available = fields.Many2one('stock.location', string=_('Qty Location'))
-    external_prod_workorder_finish = fields.Many2one(comodel_name="mrp.workorder.externally.wizard",
-                                                     string="Finished",
-                                                     readonly=True)
+# Commented becouse it's not used in any part of the code
+#     external_prod_workorder_finish = fields.Many2one(comodel_name="mrp.workorder.externally.wizard",
+#                                                      string="Finished",
+#                                                      readonly=True)
     external_prod_raw = fields.Many2one(comodel_name="mrp.externally.wizard",
                                         string="Raw",
                                         readonly=True)
