@@ -35,7 +35,7 @@ class ProjectProject(models.Model):
         compute completed manufacturing orders related to this project
         """
         for project_brws in self:
-            completed_man_orders = self.relatedManufacturingOrders(project_brws, [('state', '=', 'done')])
+            completed_man_orders = self.relatedManufacturingOrders(project_brws, [('state', 'in', ['done', 'cancel'])])
             if project_brws.man_orders_count > 0:
                 project_brws.man_orders_completed = round(100.0 * (len(completed_man_orders.ids) / float(project_brws.man_orders_count)), 2)
             else:
