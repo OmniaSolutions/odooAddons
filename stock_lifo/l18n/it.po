@@ -1,0 +1,193 @@
+# Translation of Odoo Server.
+# This file contains the translation of the following modules:
+#	* stock_lifo
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 10.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2020-12-10 14:18+0000\n"
+"PO-Revision-Date: 2020-12-10 14:18+0000\n"
+"Last-Translator: <>\n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: \n"
+"Plural-Forms: \n"
+
+#. module: stock_lifo
+#: code:addons/stock_lifo/models/stock_lifo.py:38
+#: model:ir.model.fields,field_description:stock_lifo.field_stock_lifo_total_amount
+#, python-format
+msgid "Amount Total"
+msgstr "Totale"
+
+#. module: stock_lifo
+#: model:ir.ui.menu,name:stock_lifo.stock_lifo_menu
+msgid "Analisi LIFO"
+msgstr "Analisi LIFO"
+
+#. module: stock_lifo
+#: code:addons/stock_lifo/models/stock_lifo.py:37
+#: model:ir.model.fields,field_description:stock_lifo.field_stock_lifo_avg_price
+#, python-format
+msgid "Average Product Price"
+msgstr "Costo Medio Prodotto"
+
+#. module: stock_lifo
+#: model:ir.ui.view,arch_db:stock_lifo.act_stock_lifo_wizard
+msgid "Cancel"
+msgstr "Annulla"
+
+#. module: stock_lifo
+#: code:addons/stock_lifo/models/stock_lifo_wizard.py:35
+#: model:ir.model.fields,field_description:stock_lifo.field_stock_lifo_wizard_product_category_ids
+#, python-format
+msgid "Categories"
+msgstr "Categorie"
+
+#. module: stock_lifo
+#: code:addons/stock_lifo/models/stock_lifo.py:41
+#: model:ir.model.fields,field_description:stock_lifo.field_stock_lifo_computed_qty
+#, python-format
+msgid "Computed Qty"
+msgstr "Quantità Calcolata"
+
+#. module: stock_lifo
+#: model:ir.model.fields,field_description:stock_lifo.field_stock_lifo_create_uid
+#: model:ir.model.fields,field_description:stock_lifo.field_stock_lifo_wizard_create_uid
+msgid "Created by"
+msgstr "Creato da"
+
+#. module: stock_lifo
+#: model:ir.model.fields,field_description:stock_lifo.field_stock_lifo_create_date
+#: model:ir.model.fields,field_description:stock_lifo.field_stock_lifo_wizard_create_date
+msgid "Created on"
+msgstr "Creato il"
+
+#. module: stock_lifo
+#: model:ir.model.fields,field_description:stock_lifo.field_stock_lifo_display_name
+#: model:ir.model.fields,field_description:stock_lifo.field_stock_lifo_wizard_display_name
+msgid "Display Name"
+msgstr "Nome Visualizzato"
+
+#. module: stock_lifo
+#: model:ir.ui.view,arch_db:stock_lifo.act_stock_lifo_wizard
+msgid "Generate LIFO"
+msgstr "Genera LIFO"
+
+#. module: stock_lifo
+#: model:ir.actions.act_window,name:stock_lifo.act_stock_lifo_action
+msgid "Generate LIFO Currect Year"
+msgstr "Genera LIFO Anno Corrente"
+
+#. module: stock_lifo
+#: model:ir.ui.view,arch_db:stock_lifo.stock_lifo_search_view
+msgid "Group By..."
+msgstr "Raggruppa per..."
+
+#. module: stock_lifo
+#: model:ir.model.fields,field_description:stock_lifo.field_stock_lifo_id
+#: model:ir.model.fields,field_description:stock_lifo.field_stock_lifo_wizard_id
+msgid "ID"
+msgstr "ID"
+
+#. module: stock_lifo
+#: model:ir.model.fields,field_description:stock_lifo.field_stock_lifo___last_update
+#: model:ir.model.fields,field_description:stock_lifo.field_stock_lifo_wizard___last_update
+msgid "Last Modified on"
+msgstr "Ultima modifica il"
+
+#. module: stock_lifo
+#: model:ir.model.fields,field_description:stock_lifo.field_stock_lifo_wizard_write_uid
+#: model:ir.model.fields,field_description:stock_lifo.field_stock_lifo_write_uid
+msgid "Last Updated by"
+msgstr "Ultima modifica di"
+
+#. module: stock_lifo
+#: model:ir.model.fields,field_description:stock_lifo.field_stock_lifo_wizard_write_date
+#: model:ir.model.fields,field_description:stock_lifo.field_stock_lifo_write_date
+msgid "Last Updated on"
+msgstr "Ultima modifica il"
+
+#. module: stock_lifo
+#: model:ir.ui.view,arch_db:stock_lifo.stock_lifo_pivot_view
+msgid "Lifo Amount"
+msgstr "Ammontare LIFO"
+
+#. module: stock_lifo
+#: model:ir.model,name:stock_lifo.model_stock_lifo
+msgid "Lifo configuration"
+msgstr "Configurazione LIFO"
+
+#. module: stock_lifo
+#: model:ir.model,name:stock_lifo.model_stock_lifo_wizard
+msgid "Lifo wizard"
+msgstr "Lifo Wizard"
+
+#. module: stock_lifo
+#: code:addons/stock_lifo/models/stock_lifo.py:42
+#: model:ir.model.fields,field_description:stock_lifo.field_stock_lifo_lifo_desc
+#, python-format
+msgid "Old Desc"
+msgstr "Vecchia Desc."
+
+#. module: stock_lifo
+#: code:addons/stock_lifo/models/stock_lifo.py:34
+#: code:addons/stock_lifo/models/stock_lifo_wizard.py:36
+#: model:ir.model.fields,field_description:stock_lifo.field_stock_lifo_product_id
+#: model:ir.model.fields,field_description:stock_lifo.field_stock_lifo_wizard_product_id
+#: model:ir.ui.view,arch_db:stock_lifo.stock_lifo_search_view
+#, python-format
+msgid "Product"
+msgstr "Prodotto"
+
+#. module: stock_lifo
+#: code:addons/stock_lifo/models/stock_lifo.py:35
+#: model:ir.model.fields,field_description:stock_lifo.field_stock_lifo_qty_in
+#, python-format
+msgid "Quantity In"
+msgstr "Qtà Ingresso"
+
+#. module: stock_lifo
+#: code:addons/stock_lifo/models/stock_lifo.py:36
+#: model:ir.model.fields,field_description:stock_lifo.field_stock_lifo_qty_out
+#, python-format
+msgid "Quantity Out"
+msgstr "Qtà Uscita"
+
+#. module: stock_lifo
+#: code:addons/stock_lifo/models/stock_lifo.py:40
+#: model:ir.model.fields,field_description:stock_lifo.field_stock_lifo_remaining_year_qty
+#, python-format
+msgid "Remaining Year Qty"
+msgstr "Quantità Rimanente Anno"
+
+#. module: stock_lifo
+#: model:ir.actions.act_window,name:stock_lifo.stock_lifo_menu_action
+msgid "Stock Lifo"
+msgstr "Stock Lifo"
+
+#. module: stock_lifo
+#: model:ir.ui.view,arch_db:stock_lifo.stock_lifo_form_view
+msgid "Stock Lifo Form"
+msgstr "Stock Lifo Form"
+
+#. module: stock_lifo
+#: model:ir.ui.view,arch_db:stock_lifo.stock_lifo_search_view
+msgid "Stock Lifo Search"
+msgstr "Stock Lifo Search"
+
+#. module: stock_lifo
+#: model:ir.ui.view,arch_db:stock_lifo.stock_lifo_tree_view
+msgid "Stock Lifo Tree"
+msgstr "Stock Lifo Tree"
+
+#. module: stock_lifo
+#: code:addons/stock_lifo/models/stock_lifo.py:39
+#: model:ir.model.fields,field_description:stock_lifo.field_stock_lifo_year
+#: model:ir.ui.view,arch_db:stock_lifo.stock_lifo_search_view
+#, python-format
+msgid "Year"
+msgstr "Anno"
+

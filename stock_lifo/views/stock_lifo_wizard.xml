@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+	<data>
+
+	<record id="act_stock_lifo_wizard" model="ir.ui.view">
+        <field name="name">stock.lifo.wizard.form</field>
+        <field name="model">stock.lifo.wizard</field>
+        <field name="type">form</field>
+        <field name="arch" type="xml">
+        <form string="Generate LIFO">
+        	<group>
+      			<field name="product_category_ids" attrs="{'invisible': [('product_id', '!=', False)]}"/>
+      			<field name="product_id"/>
+      			<field name="year"/>
+		    </group>
+            <footer>
+            	<button special="cancel" string="Cancel"/>
+            	<button string="Generate LIFO" name="action_generate_lifo" type="object"/>
+            </footer>
+        </form>
+        </field>
+    </record>
+
+    <act_window name="Generate LIFO Currect Year"
+        res_model="stock.lifo.wizard" 
+        src_model="stock.lifo"
+        view_mode="form"
+        view_id="act_stock_lifo_wizard"
+        target="new"
+        key2="client_action_multi"
+        id="act_stock_lifo_action" 
+        	/>
+
+	</data>
+</odoo>
