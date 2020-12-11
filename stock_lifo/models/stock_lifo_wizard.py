@@ -146,7 +146,10 @@ class StockLifoWizard(models.TransientModel):
             for product_id in product_ids:
                 prices = po_lines_dict.get(product_id, {'prices': []}).get('prices', [])
                 qty_in = po_lines_dict.get(product_id, {'qty': 0.0}).get('qty', 0.0)
-                average = sum(prices) / float(len(prices))
+                if not prices:
+                    average = 0
+                else:
+                    average = sum(prices) / float(len(prices))
                 current_stock = product_id.qty_available
                 qty_out = stock_moves_out.get(product_id, {'qty': 0.0}).get('qty', 0.0)
                 self.checkCreateStockLifo(product_id, qty_in, qty_out, average, year, current_stock)
