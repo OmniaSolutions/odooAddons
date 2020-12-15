@@ -1,4 +1,0 @@
-This module offers this functionalities:
-
-	- Allow create a new DDT number
-	- Allow to link delivery orders starting from invoice. (work well also using merged invoices)

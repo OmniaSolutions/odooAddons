@@ -24,7 +24,7 @@
 
 {
     'name': 'omnia_metel_import',
-    'version': '1.1',
+    'version': '14.0',
     'sequence': 1,
     'category': 'Custom',
     'description': """
@@ -38,7 +38,7 @@ Import purchase pricelists from Metel
     'data': [
             'views/supplier_info.xml',
              ],
-    'installable': True,
+    'installable': False,
     'application': False,
     'auto_install': False,
 }

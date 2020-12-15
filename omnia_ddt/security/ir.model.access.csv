@@ -1,7 +1,0 @@
-"group_id:id","id","name","model_id","perm_read","perm_write","perm_create","perm_unlink"
-"group_DDT_viewuser","carriage_condition_1","Carriage Condition","picking_carriage_condition",1,0,0,0
-"group_DDT_viewuser","goods_description_1","Description of Goods","picking_goods_description",1,0,0,0
-"group_DDT_viewuser","transportation_reason_1","Reason for transportation","picking_transportation_reason",1,0,0,0
-"group_DDT_admin","carriage_condition_2","Carriage Condition","picking_carriage_condition",1,1,1,1
-"group_DDT_admin","goods_description_2","Description of Goods","picking_goods_description",1,1,1,1
-"group_DDT_admin","transportation_reason_2","Reason for transportation","picking_transportation_reason",1,1,1,1

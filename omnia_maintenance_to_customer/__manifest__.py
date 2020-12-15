@@ -21,7 +21,7 @@
 ##############################################################################
 {
     'name': 'Maintenance to customer',
-    'version': '11.0',
+    'version': '14.0',
     'author': 'OmniaSolutions',
     'website': 'http://www.omniasolutions.eu',
     'category': 'maintenance',
@@ -31,7 +31,7 @@
     'depends': ['sale', 'maintenance'],
     'description': """
 Extend maintenance to the customer
-==============================================
+==================================
     """,
     'data': [
             # security
@@ -46,7 +46,7 @@ Extend maintenance to the customer
 #    'qweb': ['views/templates.xml'],
     'demo': [],
     'test': [],
-    'installable': True,
+    'installable': False,
     'application': False,
     'auto_install': False,
 }

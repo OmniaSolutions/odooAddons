@@ -28,7 +28,7 @@
 
 {
     'name': 'omnia_crm_sale_field_extended',
-    'version': '0.1',
+    'version': '14.0',
     'sequence': 1,
     'category': 'CRM',
     'description': """
@@ -51,7 +51,7 @@ This module extend the integration between the crm and the sale module adding fi
         # data
         'data/custom_filter.xml'
     ],
-    'installable': True,
+    'installable': False,
     'application': True,
     'auto_install': False,
 }

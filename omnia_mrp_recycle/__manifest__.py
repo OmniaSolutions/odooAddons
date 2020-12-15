@@ -26,7 +26,7 @@
 
 {
     'name': 'omnia_mrp_recycle',
-    'version': '1.1',
+    'version': '14.0',
     'sequence': 1,
     'category': 'Custom',
     'description': """
@@ -43,7 +43,7 @@
              # views
              'views/data.xml',
              'views/stock_recycle_product.xml'],
-    'installable': True,
+    'installable': False,
     'application': False,
     'auto_install': False,
 }

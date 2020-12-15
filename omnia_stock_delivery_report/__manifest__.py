@@ -21,7 +21,7 @@
 ##############################################################################
 {
     'name': 'Omnia Stock delivery Report',
-    'version': '11',
+    'version': '14.0',
     'author': 'OmniaSolutions',
     'website': 'http://www.omniasolutions.eu',
     'category': 'report',
@@ -34,7 +34,7 @@
              'report/stock_delivery_report.xml'],
     'demo': [],
     'test': [],
-    'installable': True,
+    'installable': False,
     'application': False,
     'auto_install': False,
 }

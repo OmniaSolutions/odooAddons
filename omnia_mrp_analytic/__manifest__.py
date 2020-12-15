@@ -29,7 +29,7 @@
 
 {
     'name': 'Omnia Mrp Analytics',
-    'version': '1.1',
+    'version': '14.0',
     'sequence': 1,
     'category': 'Custom',
     'description': """
@@ -48,7 +48,7 @@ Add analytics fields to the production order and create task for each work order
         'views/mrp_routing_workcenter.xml',
         'views/project_task.xml',
     ],
-    'installable': True,
+    'installable': False,
     'application': False,
     'auto_install': False,
 }

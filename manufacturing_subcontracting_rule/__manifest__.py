@@ -29,7 +29,7 @@
 
 {
     'name': 'Omnia Manufacturing Subcontracting Rule',
-    'version': '13.0.1',
+    'version': '14.0',
     'sequence': 1,
     'category': 'Custom',
     'description': """
@@ -54,7 +54,7 @@
              'views/res_partner.xml',
              'views/mrp_workorder.xml',
     ],
-    'installable': True,
+    'installable': False,
     'application': False,
     'auto_install': False,
 }

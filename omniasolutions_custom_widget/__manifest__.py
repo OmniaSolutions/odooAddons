@@ -22,7 +22,7 @@
 
 {
     'name': 'Omnia Custom Widget',
-    'version': '1.1',
+    'version': '14.0',
     'author': 'OmniaSolutions',
     'website': 'http://www.omniasolutions.eu',
     'category': 'Custom',
@@ -43,7 +43,7 @@
         ],
     'test': [
         ],
-    'installable': True,
+    'installable': False,
     'application': True,
     'auto_install': False,
 }

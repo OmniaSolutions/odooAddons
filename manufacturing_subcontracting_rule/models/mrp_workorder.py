@@ -52,13 +52,12 @@ class MrpWorkorder(models.Model):
             raise UserError("No Partner set to Routing Operation")
         values['consume_product_id'] = self.product_id.id
         values['consume_bom_id'] = self.production_id.bom_id.id
-        values['external_warehouse_id'] = self.production_id.location_src_id.get_warehouse().id
+        #values['external_warehouse_id'] = self.production_id.location_src_id.get_warehouse().id
         values['workorder_id'] = self.id
         mrp_workorder_externally_wizard_id = self.env['mrp.workorder.externally.wizard'].create(values)
         mrp_workorder_externally_wizard_id.create_vendors_from(partner)
         return mrp_workorder_externally_wizard_id
 
-    @api.multi
     def button_produce_externally(self):
         return {
             'type': 'ir.actions.act_window',
@@ -69,7 +68,6 @@ class MrpWorkorder(models.Model):
             'target': 'new',
         }
 
-    @api.multi
     def button_cancel_produce_externally(self):
         stock_move = self.env['stock.move']
         for mrp_workorder_id in self:
@@ -98,20 +96,17 @@ class MrpWorkorder(models.Model):
                 outElems.append(self.createTmpStockMove(stock_move_id, location_source_id, location_dest_id).id)
         return outElems
 
-    @api.multi
     def updateProducedQty(self, newQty):
         for woBrws in self:
             alreadyProduced = woBrws.qty_produced
             # FIXME: Se ne produco piu' del dovuto?
             woBrws.qty_produced = alreadyProduced + newQty
 
-    @api.multi
     def checkRecordProduction(self):
         for woBrws in self:
             if woBrws.qty_produced >= woBrws.qty_production:
                 woBrws.button_finish()
 
-    @api.multi
     def button_finish(self):
         res = super(MrpWorkorder, self).button_finish()
         production_id = self.production_id
@@ -126,14 +121,12 @@ class MrpWorkorder(models.Model):
             production_id.write({'state': 'done', 'date_finished': fields.Datetime.now()})
         return res
 
-    @api.multi
     def getExternalPickings(self):
         pickObj = self.env['stock.picking']
         for woBrws in self:
             return pickObj.search([('sub_workorder_id', '=', woBrws.id)])
         return pickObj
 
-    @api.multi
     def open_external_pickings(self):
         newContext = self.env.context.copy()
         picks = self.getExternalPickings()
@@ -147,7 +140,7 @@ class MrpWorkorder(models.Model):
             'domain': [('id', 'in', picks.ids)],
         }
 
-    @api.multi
+    
     def open_external_purchase(self):
         newContext = self.env.context.copy()
         picks = self.env['purchase.order']

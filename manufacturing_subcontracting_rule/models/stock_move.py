@@ -101,7 +101,6 @@ class StockMove(models.Model):
         moveQty = qty * (move_to.unit_factor or 1)
         return moveQty, False
 
-    @api.multi
     def subContractingProduce(self, objProduction):
         move_date = self.date
         subcontracting_location = self.env['stock.location'].getSubcontractiongLocation()
@@ -138,7 +137,7 @@ class StockMove(models.Model):
                 for lineBrws in raw_move.move_line_ids:
                     lineBrws.date = move_date
 
-    @api.multi
+    
     def subContractingProduce2(self, pick_in_product_qty):
         move_date = self.date
         subcontracting_location = self.env['stock.location'].getSubcontractiongLocation()
@@ -148,7 +147,7 @@ class StockMove(models.Model):
         production_move.date = move_date
         return production_move
 
-    @api.multi
+    
     def write(self, value):
         for move in self:
             if 'quantity_done' in list(value.keys()):

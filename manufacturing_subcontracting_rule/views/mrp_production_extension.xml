@@ -9,7 +9,7 @@
         <field name="arch" type="xml">
          	
             <button name="button_mark_done" position="after">
-                <button name="button_produce_externally" attrs="{'invisible': [('state', '!=', 'confirmed')]}" string="Produce Externally" type="object"/>
+                <button name="button_produce_externally" attrs="{'invisible': [('state', '!=', 'draft')]}" string="Produce Externally" type="object"/>
                 <button name="button_cancel_produce_externally" attrs="{'invisible': [('state', '!=', 'external')]}" string="Cancel Produce Externally" type="object"/>
             </button>
             
@@ -29,23 +29,20 @@
             <field name="origin" position="after">
                  <field name="purchase_external_id"/>
                  <field name="external_partner" readonly="True"/>
-            </field>
-
-            <field name="availability" position="after">
                  <field name="external_pickings" invisible="True"/>
             </field>
+
+<!--             <button name="action_assign" position="attributes"> -->
+<!--                 <attribute name="attrs">{'invisible': ['|', ('availability', 'in', ('assigned', 'none')), ('state', '=', 'external')]}</attribute> -->
+<!--             </button> -->
             
-            <button name="action_assign" position="attributes">
-                <attribute name="attrs">{'invisible': ['|', ('availability', 'in', ('assigned', 'none')), ('state', '=', 'external')]}</attribute>
-            </button>
+<!--             <button name="action_cancel" position="attributes"> -->
+<!--                 <attribute name="attrs">{'invisible': ['|', ('state', 'in', ('done','cancel', 'external')), ('check_to_done', '=', True)]}</attribute> -->
+<!--             </button> -->
             
-            <button name="action_cancel" position="attributes">
-                <attribute name="attrs">{'invisible': ['|', ('state', 'in', ('done','cancel', 'external')), ('check_to_done', '=', True)]}</attribute>
-            </button>
-            
-            <button name="button_scrap" position="attributes">
-                <attribute name="attrs">{'invisible': ['|', ('availability', '=', 'none'), ('state', 'in', ('cancel', 'external'))]}</attribute>
-            </button>
+<!--             <button name="button_scrap" position="attributes"> -->
+<!--                 <attribute name="attrs">{'invisible': ['|', ('availability', '=', 'none'), ('state', 'in', ('cancel', 'external'))]}</attribute> -->
+<!--             </button> -->
              
         </field>
     </record> 

@@ -27,7 +27,7 @@
 ##############################################################################
 {
     'name': 'Omnia Mrp Bom Cost',
-    'version': '1.1',
+    'version': '14.0',
     'sequence': 1,
     'category': 'Custom',
     'description': """
@@ -41,7 +41,7 @@ The procedure work in recursive way
     'data': [#view
             'views/mrp_bom.xml',
     ],
-    'installable': True,
+    'installable': False,
     'application': False,
     'auto_install': False,
 }

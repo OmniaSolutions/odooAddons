@@ -21,7 +21,7 @@
 ##############################################################################
 {
     'name': 'Sale Order Confirm Date',
-    'version': '12.0.1',
+    'version': '14.0',
     'author': 'OmniaSolutions',
     'website': 'http://www.omniasolutions.eu',
     'category': 'Sale Order Customization',
@@ -36,7 +36,7 @@
         ],
     'test': [
         ],
-    'installable': True,
+    'installable': False,
     'application': False,
     'auto_install': False,
 }

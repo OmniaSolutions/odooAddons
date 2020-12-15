@@ -28,7 +28,7 @@
 
 {
     'name': 'omnia_print_template_direct',
-    'version': '0.1',
+    'version': '14.0',
     'sequence': 1,
     'category': 'SALE',
     'description': """
@@ -51,7 +51,7 @@ This Module add a print template inside the sale order to make if faster then th
         # data
         # 'data/custom_filter.xml'
     ],
-    'installable': True,
+    'installable': False,
     'application': True,
     'auto_install': False,
 }

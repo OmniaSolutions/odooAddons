@@ -9,7 +9,7 @@
 
 {
     "name": "Sale Order Line Date",
-    "version": "11.0.1.0.0",
+    "version": "14.0",
     "author": "OdooMRP team,"
               "AvanzOSC,"
               "Serv. Tecnol. Avanzados - Pedro M. Baeza,"
@@ -25,5 +25,5 @@
         "views/sale_order_view.xml",
         "views/stock_picking.xml",
     ],
-    "installable": True,
+    "installable": False,
 }

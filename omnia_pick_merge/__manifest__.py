@@ -26,7 +26,7 @@
 
 {
     'name': 'omnia_pick_merge',
-    'version': '1.1',
+    'version': '14.0',
     'sequence': 1,
     'category': 'Custom',
     'description': """
@@ -48,7 +48,7 @@ merge picking
              # security
              #'security/ddt_groups.xml',
              ],
-    'installable': True,
+    'installable': False,
     'application': True,
     'auto_install': False,
 }
