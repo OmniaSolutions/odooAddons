@@ -24,3 +24,4 @@
 
 from . import stock_lifo
 from . import stock_lifo_wizard
+from . import stock_lifo_report_wizard

@@ -35,6 +35,7 @@
     'data': [
         'views/stock_lifo.xml',
         'views/stock_lifo_wizard.xml',
+        'views/report_wizard.xml',
         'security/security.xml',
     ],
 }
