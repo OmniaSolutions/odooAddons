@@ -35,6 +35,10 @@ from odoo.tools import DEFAULT_SERVER_DATETIME_FORMAT
 
 class ProductProduct(models.Model):
     _inherit = ['product.product']
+
+    needed_children_product_ids = fields.Many2many(
+            'product.product', 'needed_prod_child', 'parent_id', 'child_id',
+            string='Prodotti figli obbligatori')
     
     
     

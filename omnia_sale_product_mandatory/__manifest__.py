@@ -36,14 +36,13 @@
     also if you change the qty of a mandatory product also the parent mandatory product quantity will be changed
     """,
     'data': [
-             'views/product_template.xml',
              'views/product_product.xml',
        ],
     'demo': [
         ],
     'test': [
         ],
-    'installable': False,
+    'installable': True,
     'application': False,
     'auto_install': False,
 }
