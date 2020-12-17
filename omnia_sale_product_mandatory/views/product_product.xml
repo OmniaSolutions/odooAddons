@@ -7,7 +7,7 @@
             <field name="inherit_id" ref="product.product_normal_form_view"/>
             <field name="arch" type="xml">
                 <field name="company_id" position="before">
-                    <field name="needed_children_product_ids" widget="many2many_tags"/>
+                    <field name="needed_children_product_ids" widget="many2many_tags" domain="[('id', '!=', id)]"/>
                 </field>
             </field>
         </record>
