@@ -413,7 +413,8 @@ class MrpProductionWizard(models.Model):
                                                     ], limit=1)
         if not purchaseBrws and self.create_purchese_order:
             vals = {'partner_id': external_partner.partner_id.id,
-                    'date_planned': self.request_date}
+                    'date_planned': self.request_date,
+                    'payment_term_id': external_partner.partner_id.property_supplier_payment_term_id.id}
             if production:
                 vals['production_external_id'] = production.id
             if workorderBrws:
