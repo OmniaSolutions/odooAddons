@@ -44,11 +44,10 @@ class SaleOrder(models.Model):
         removed_ids = list(set(old_ids) - set(new_ids))
         
         for line in self.order_line:
-            print('[%r] %r' % (line.id, line.display_name))
             if line.parent_sale_line_needed or line.self_sale_line_needed:
                 continue
+            omnia_id = str(time.time())
             for needed_prod_id in line.product_id.needed_children_product_ids:
-                omnia_id = str(time.time())
                 line.self_sale_line_needed = omnia_id
                 self.order_line = [(0,0, {
                         'parent_sale_line_needed': omnia_id,
@@ -59,7 +58,6 @@ class SaleOrder(models.Model):
                         'is_child_line_needed': True}
                     )]
         for line in self.order_line:
-            print(line.parent_sale_line_needed)
             if line.id.ref == 0: # New
                 line.product_id_change()
         
