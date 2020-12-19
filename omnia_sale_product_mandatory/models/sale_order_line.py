@@ -65,8 +65,9 @@ class SaleOrder(models.Model):
         
         if removed_ids:
             for line in self.env['sale.order.line'].browse(removed_ids):
-                for child_line in self.env['sale.order.line'].search([('parent_sale_line_needed', '=', line.self_sale_line_needed)]):
-                    self.update({'order_line': [(2, child_line.id, 0)]})
+                if line.self_sale_line_needed:
+                    for child_line in self.env['sale.order.line'].search([('parent_sale_line_needed', '=', line.self_sale_line_needed)]):
+                        self.update({'order_line': [(2, child_line.id, 0)]})
 
 
 class SaleOrderLine(models.Model):

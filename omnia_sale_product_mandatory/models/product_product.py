@@ -39,6 +39,5 @@ class ProductProduct(models.Model):
     needed_children_product_ids = fields.Many2many(
             'product.product', 'needed_prod_child', 'parent_id', 'child_id',
             string='Prodotti figli obbligatori')
-    
-    
+  
     

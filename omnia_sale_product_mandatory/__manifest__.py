@@ -37,6 +37,7 @@
     """,
     'data': [
              'views/product_product.xml',
+             'views/sale_order.xml',
        ],
     'demo': [
         ],
