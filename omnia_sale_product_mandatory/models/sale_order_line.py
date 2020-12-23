@@ -47,6 +47,7 @@ class SaleOrder(models.Model):
             if line.parent_sale_line_needed or line.self_sale_line_needed:
                 continue
             omnia_id = str(time.time())
+            logging.warning(omnia_id)
             for needed_prod_id in line.product_id.needed_children_product_ids:
                 line.self_sale_line_needed = omnia_id
                 self.order_line = [(0,0, {
@@ -62,9 +63,13 @@ class SaleOrder(models.Model):
                 line.product_id_change()
         
         if removed_ids:
+            refs = []
             for line in self.env['sale.order.line'].browse(removed_ids):
-                if line.self_sale_line_needed:
-                    for child_line in self.env['sale.order.line'].search([('parent_sale_line_needed', '=', line.self_sale_line_needed)]):
+                idRef = line.self_sale_line_needed or line.parent_sale_line_needed 
+                refs.append(idRef)
+            for ref in set(refs):
+                for child_line in self.order_line:
+                    if ref in [child_line.parent_sale_line_needed, child_line.self_sale_line_needed]:
                         self.update({'order_line': [(2, child_line.id, 0)]})
 
 
@@ -81,5 +86,6 @@ class SaleOrderLine(models.Model):
     def changeQty(self):
         for line in self:
             if line.self_sale_line_needed:
-                for child_line in self.env['sale.order.line'].search([('parent_sale_line_needed', '=', line.self_sale_line_needed)]):
+                for child_line in self.env['sale.order.line'].search([('parent_sale_line_needed', '=', line.self_sale_line_needed),
+                                                                      ('order_id', '=', line._origin.order_id.id)]):
                     child_line.product_uom_qty = line.product_uom_qty
