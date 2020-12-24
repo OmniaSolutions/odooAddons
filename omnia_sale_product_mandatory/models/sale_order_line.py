@@ -37,7 +37,7 @@ class SaleOrder(models.Model):
   
     @api.onchange('order_line')
     def changeOrderLine(self):
-        orderId = self.id.origin
+        orderId = self.id or self.id.origin
         sale_order = self.browse(orderId)
         old_ids = sale_order.order_line.ids
         new_ids = self.order_line.ids
@@ -50,17 +50,15 @@ class SaleOrder(models.Model):
             logging.warning(omnia_id)
             for needed_prod_id in line.product_id.needed_children_product_ids:
                 line.self_sale_line_needed = omnia_id
-                self.order_line = [(0,0, {
-                        'parent_sale_line_needed': omnia_id,
-                        'product_id': needed_prod_id.id,
-                        'product_uom_qty': line.product_uom_qty,
-                        'price_unit': needed_prod_id.lst_price,
-                        'name': needed_prod_id.display_name,
-                        'is_child_line_needed': True}
-                    )]
-        for line in self.order_line:
-            if line.id.ref == 0: # New
-                line.product_id_change()
+                newLine = self.env["sale.order.line"].create({'order_id': sale_order.id,
+                                                              'parent_sale_line_needed': omnia_id,
+                                                              'product_id': needed_prod_id.id,
+                                                              'product_uom_qty': line.product_uom_qty,
+                                                              'name': needed_prod_id.display_name,
+                                                              'is_child_line_needed': True})
+                newLine.product_id_change()
+                newLine.price_unit=needed_prod_id.lst_price
+                newLine._onchange_discount()  
         
         if removed_ids:
             refs = []
@@ -72,6 +70,12 @@ class SaleOrder(models.Model):
                 for child_line in self.order_line:
                     if ref in [child_line.parent_sale_line_needed, child_line.self_sale_line_needed]:
                         self.update({'order_line': [(2, child_line.id, 0)]})
+        for old_line in sale_order.order_line + self.order_line:
+            if old_line.temporary_change:
+                 old_line.temporary_change=False
+        
+        return {'type': 'ir.actions.client',
+                'tag': 'reload' }
 
 
 class SaleOrderLine(models.Model):
@@ -82,6 +86,7 @@ class SaleOrderLine(models.Model):
     parent_sale_line_needed = fields.Char('Parent sale order line')
     self_sale_line_needed = fields.Char('Self Virtual Id')
     is_child_line_needed = fields.Boolean('Is child needed')
+    temporary_change = fields.Boolean('TemporaryV Changed need update')
     
     @api.onchange('product_uom_qty')
     def changeQty(self):
@@ -90,3 +95,20 @@ class SaleOrderLine(models.Model):
                 for child_line in self.env['sale.order.line'].search([('parent_sale_line_needed', '=', line.self_sale_line_needed),
                                                                       ('order_id', '=', line._origin.order_id.id)]):
                     child_line.product_uom_qty = line.product_uom_qty
+                    child_line.temporary_change = True 
+        return {'type': 'ir.actions.client',
+                'tag': 'reload'}
+    
+    def getReletedLine(self):
+        """
+        support function to get the releted line
+        """
+        out = []
+        
+        for line in self:
+            order_id = line.order_id.id 
+            idRef = line.self_sale_line_needed or line.parent_sale_line_needed
+            out += self.search([('order_id', '=', order_id),
+                                '|', ('parent_sale_line_needed', '=', idRef),
+                                     ('self_sale_line_needed', '=', idRef)])
+        return out
