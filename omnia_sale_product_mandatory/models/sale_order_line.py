@@ -65,8 +65,9 @@ class SaleOrder(models.Model):
         if removed_ids:
             refs = []
             for line in self.env['sale.order.line'].browse(removed_ids):
-                idRef = line.self_sale_line_needed or line.parent_sale_line_needed 
-                refs.append(idRef)
+                idRef = line.self_sale_line_needed or line.parent_sale_line_needed
+                if idRef:
+                    refs.append(idRef)
             for ref in set(refs):
                 for child_line in self.order_line:
                     if ref in [child_line.parent_sale_line_needed, child_line.self_sale_line_needed]:
