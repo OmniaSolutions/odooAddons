@@ -195,7 +195,7 @@ class StockLifoReportWizard(models.TransientModel):
                 for line in lines:
                     product_total += line.total_amount
                 if product_total != 0 or (product_total == 0 and wizard.include_zero):
-                    product_description = product_id.description
+                    product_description = product_id.description or ''
                     desc_len = len(product_description)
                     if desc_len > wizard.parting:
                         product_description = product_description[:-(desc_len-wizard.parting)]
