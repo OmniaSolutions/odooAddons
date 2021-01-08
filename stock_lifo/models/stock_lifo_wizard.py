@@ -193,6 +193,8 @@ class StockLifoWizard(models.TransientModel):
                 last_year.computed_qty = current_stock - stock_lifo.remaining_year_qty
                 last_year.total_amount = last_year.computed_qty * last_year.avg_price
                 current_stock = stock_lifo.remaining_year_qty
+            if not last_year.avg_price:
+                last_year.avg_price = stock_lifo.avg_price
             last_year = stock_lifo
             if current_stock <= 0:
                 break
