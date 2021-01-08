@@ -10,6 +10,8 @@
         <form string="Generate LIFO">
         	<group>
       			<field name="product_category_ids" attrs="{'invisible': [('product_id', '!=', False)]}"/>
+      			<field name="warehouse_id"/>
+      			<field name="location_id"/>
       			<field name="product_id"/>
       			<field name="year"/>
 		    </group>
