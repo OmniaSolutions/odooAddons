@@ -108,7 +108,8 @@ class SaleOrderLine(models.Model):
         for line in self:
             order_id = line.order_id.id 
             idRef = line.self_sale_line_needed or line.parent_sale_line_needed
-            out += self.search([('order_id', '=', order_id),
-                                '|', ('parent_sale_line_needed', '=', idRef),
-                                     ('self_sale_line_needed', '=', idRef)])
+            if idRef:
+                out += self.search([('order_id', '=', order_id),
+                                    '|', ('parent_sale_line_needed', '=', idRef),
+                                         ('self_sale_line_needed', '=', idRef)])
         return out
