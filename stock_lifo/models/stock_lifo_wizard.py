@@ -35,6 +35,8 @@ class StockLifoWizard(models.TransientModel):
     product_category_ids = fields.Many2many(comodel_name='product.category', string=_("Categories"))
     product_id = fields.Many2one("product.product", _("Product"))
     year = fields.Char(_('Year'), default=datetime.datetime.now().year)
+    warehouse_id = fields.Many2one('stock.warehouse', _('Warehouse'))
+    location_id = fields.Many2one('stock.location', _('Location'))
 
     @api.model
     def getAvailableProducts(self, category_ids, product_id):
@@ -82,13 +84,22 @@ class StockLifoWizard(models.TransientModel):
         return stockLocation.search([('usage', 'in', availableLoctypes)])
 
     @api.model
-    def getStockMovesOut(self, start_date, end_date):
+    def getStockMovesOut(self, start_date, end_date, warehouse_id=False, location_id=False):
         out = {}
         stockMoveEnv = self.env['stock.move']
-        locations = self.getOutLocations()
+        locations = self.env['stock.location']
+        if location_id:
+            locations = location_id
+        elif warehouse_id:
+            location_ids = self.getOutLocations()
+            for location in location_ids:
+                if location.get_warehouse() == warehouse_id:
+                    locations += location
+        else:
+            locations = self.getOutLocations()
         stockMoves = stockMoveEnv.search([
             ('state', '=', 'done'),
-            ('location_id', 'in', locations.ids),
+            ('location_id', 'in', location_id.ids),
             ('date', '>=', str(start_date)),
             ('date', '<=', str(end_date)),
             ])
@@ -134,26 +145,40 @@ class StockLifoWizard(models.TransientModel):
 
     @api.multi
     def action_generate_lifo(self):
+        logging.info('[action_generate_lifo] start')
         for wizard in self:
             category_ids = wizard.product_category_ids
             product_id = wizard.product_id
+            warehouse_id = wizard.warehouse_id
+            location_id = wizard.location_id
             start_date, end_date, year = self.getTargetDates(wizard.year)
             product_ids = self.getAvailableProducts(category_ids, product_id)
             product_ids_len = len(product_ids.ids)
             logging.info('LIFO products to evaluate %r' % (product_ids_len))
             po_lines_dict = self.getPoLines(start_date, end_date)
-            stock_moves_out = self.getStockMovesOut(start_date, end_date)
-            for product_id in product_ids:
+            stock_moves_out = self.getStockMovesOut(start_date, end_date, warehouse_id, location_id)
+            lenToeval = len(product_ids.ids)
+            for index, product_id in enumerate(product_ids):
+                if index % 300 == 0:
+                    logging.info('[action_generate_lifo] %s / %s' % (index, lenToeval))
                 prices = po_lines_dict.get(product_id, {'prices': []}).get('prices', [])
                 qty_in = po_lines_dict.get(product_id, {'qty': 0.0}).get('qty', 0.0)
                 if not prices:
                     average = 0
                 else:
                     average = sum(prices) / float(len(prices))
-                current_stock = product_id.qty_available
+                current_stock = 0
+                for quant in product_id.stock_quant_ids:
+                    if location_id and quant.location_id == location_id:
+                        current_stock += quant.qty
+                    elif warehouse_id and quant.location_id.get_warehouse() == warehouse_id:
+                        current_stock += quant.qty
+                    elif not warehouse_id and not location_id:
+                        current_stock = product_id.qty_available
                 qty_out = stock_moves_out.get(product_id, {'qty': 0.0}).get('qty', 0.0)
                 self.checkCreateStockLifo(product_id, qty_in, qty_out, average, year, current_stock)
                 self.recomputeLifoQty(product_id, current_stock, year)
+        logging.info('[action_generate_lifo] end')
     
     @api.model
     def recomputeLifoQty(self, product_id, current_stock, year):
@@ -169,10 +194,12 @@ class StockLifoWizard(models.TransientModel):
             if stock_lifo == stock_lifos[-1]:
                 stock_lifo.computed_qty = current_stock
                 break
-            if current_stock > stock_lifo.remaining_year_qty:
+            if last_year and current_stock > stock_lifo.remaining_year_qty:
                 last_year.computed_qty = current_stock - stock_lifo.remaining_year_qty
                 last_year.total_amount = last_year.computed_qty * last_year.avg_price
                 current_stock = stock_lifo.remaining_year_qty
+            if not last_year.avg_price and stock_lifo and last_year:
+                last_year.avg_price = stock_lifo.avg_price
             last_year = stock_lifo
             if current_stock <= 0:
                 break

@@ -189,13 +189,15 @@ class StockLifoReportWizard(models.TransientModel):
             newsheet.write(2,6,'Importo', style=header)
             i=3
             total = 0
-            for product_id in product_ids:
+            for index, product_id in enumerate(product_ids):
+                if index % 300 == 0:
+                    logging.info('[action_generate_report] %s / %s' % (index, product_ids_len))
                 product_total = 0
                 lines = self.env['stock.lifo'].search([('product_id', '=', product_id.id),('year', '<=', wizard.year)], order='year ASC')
                 for line in lines:
                     product_total += line.total_amount
                 if product_total != 0 or (product_total == 0 and wizard.include_zero):
-                    product_description = product_id.description
+                    product_description = product_id.description or ''
                     desc_len = len(product_description)
                     if desc_len > wizard.parting:
                         product_description = product_description[:-(desc_len-wizard.parting)]
