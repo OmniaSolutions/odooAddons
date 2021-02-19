@@ -124,24 +124,23 @@ class StockLifoWizard(models.TransientModel):
             ('product_id', '=', product_id.id),
             ('year', '=', year)
             ])
-        if current_stock < 0:
-            current_stock = 0
-        total_amount = 0
-        computed_qty = 0
-        vals = {
-            'product_id': product_id.id,
-            'qty_in': qty_in,
-            'qty_out': qty_out,
-            'avg_price': average,
-            'total_amount': total_amount,
-            'year': year,
-            'remaining_year_qty': current_stock,
-            'computed_qty': computed_qty,
-            }
-        if lifos:
-            lifos.write(vals)
-        else:
-            lifos.create(vals)
+        if current_stock > 0:
+            total_amount = 0
+            computed_qty = 0
+            vals = {
+                'product_id': product_id.id,
+                'qty_in': qty_in,
+                'qty_out': qty_out,
+                'avg_price': average,
+                'total_amount': total_amount,
+                'year': year,
+                'remaining_year_qty': current_stock,
+                'computed_qty': computed_qty,
+                }
+            if lifos:
+                lifos.write(vals)
+            else:
+                lifos.create(vals)
 
     @api.multi
     def action_generate_lifo(self):
