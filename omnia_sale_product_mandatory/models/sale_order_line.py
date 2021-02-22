@@ -37,28 +37,34 @@ class SaleOrder(models.Model):
   
     @api.onchange('order_line')
     def changeOrderLine(self):
-        orderId = self.id or self.id.origin
-        sale_order = self.browse(orderId)
+        orderId = self.id
+        if self.id.origin:
+            orderId = self.id.origin
+            sale_order = self.browse(orderId)
+        else:
+            sale_order = self
         old_ids = sale_order.order_line.ids
         new_ids = self.order_line.ids
         removed_ids = list(set(old_ids) - set(new_ids))
-        
+        omnia_ids = []
         for line in self.order_line:
             if line.parent_sale_line_needed or line.self_sale_line_needed:
                 continue
             omnia_id = str(time.time())
+            
             logging.warning(omnia_id)
             for needed_prod_id in line.product_id.needed_children_product_ids:
                 line.self_sale_line_needed = omnia_id
-                newLine = self.env["sale.order.line"].create({'order_id': sale_order.id,
-                                                              'parent_sale_line_needed': omnia_id,
-                                                              'product_id': needed_prod_id.id,
-                                                              'product_uom_qty': line.product_uom_qty,
-                                                              'name': needed_prod_id.display_name,
-                                                              'is_child_line_needed': True})
-                newLine.product_id_change()
-                newLine.price_unit=needed_prod_id.lst_price
-                newLine._onchange_discount()  
+                ret = self.update({'order_line': [(0,0, {'parent_sale_line_needed': omnia_id,
+                                                         'product_id': needed_prod_id.id,
+                                                         'product_uom_qty': line.product_uom_qty,
+                                                         'name': needed_prod_id.display_name,
+                                                         'is_child_line_needed': True})]})
+                omnia_ids.append(omnia_id)
+        for newLine in self.order_line.filtered(lambda x: x.parent_sale_line_needed in omnia_ids):
+             newLine.product_id_change()
+             newLine.price_unit=newLine.product_id.lst_price
+             newLine._onchange_discount()  
         
         if removed_ids:
             refs = []
