@@ -37,12 +37,8 @@ class SaleOrder(models.Model):
   
     @api.onchange('order_line')
     def changeOrderLine(self):
-        orderId = self.id
-        if self.id.origin:
-            orderId = self.id.origin
-            sale_order = self.browse(orderId)
-        else:
-            sale_order = self
+        orderId = self.id or self.id.origin
+        sale_order = self.browse(orderId)
         old_ids = sale_order.order_line.ids
         new_ids = self.order_line.ids
         removed_ids = list(set(old_ids) - set(new_ids))
