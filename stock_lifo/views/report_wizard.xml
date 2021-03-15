@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+        <!-- wizard action on stock.lifo -->
+        <act_window id="import_wizard_action"
+            name="Genera Report LIFO"
+            src_model="stock.lifo"
+            res_model='stock.lifo.report.wizard'
+            view_mode="form"
+            key2="client_action_multi" target="new"/>
+
+        <!-- wizard form -->
+        <record id="report_wizard_view" model="ir.ui.view">
+            <field name="name">report.wizard.form</field>
+            <field name="model">stock.lifo.report.wizard</field>
+            <field name="arch" type="xml">
+                <form string="Genera Report LIFO">
+                    <group>
+		      			<field name="product_category_ids" attrs="{'invisible': [('product_id', '!=', False)]}"/>
+		      			<field name="product_id"/>
+		      			<field name="year"/>
+		      			<field name="parting"/>
+		      			<field name="include_zero"/>
+		      		</group>
+		      		<group>
+		      			<field name="xls_filename"/>
+		      			<field name="xls_data" readonly="1" filename="xls_filename"/>
+		    		</group>
+           			<footer>
+		            	<button special="cancel" string="Cancel"/>
+		            	<button string="Generate Report" name="action_generate_report" type="object"/>
+            		</footer>
+                </form>
+            </field>
+        </record>
+</odoo>

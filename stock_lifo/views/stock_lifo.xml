@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+<data>
+
+	    <record model="ir.ui.view" id="stock_lifo_pivot_view">
+	        <field name="name">stock.lifo.pivot</field>
+	        <field name="model">stock.lifo</field>
+	        <field name="arch" type="xml">
+	            <pivot string="Lifo Amount" display_quantity="true">
+	                <field name="product_id" type="row"/>
+	                <field name="year" type="row"/>
+	                <field name="remaining_year_qty" type="measure"/>
+	                <field name="computed_qty" type="measure"/>
+	                <field name="avg_price" type="measure"/>
+	                <field name="total_amount" type="measure"/>
+	            </pivot>
+	        </field>
+	    </record>  
+
+        <record id="stock_lifo_search_view" model="ir.ui.view">
+            <field name="name">stock.lifo.search</field>
+            <field name="model">stock.lifo</field>
+            <field name="arch" type="xml">
+                <search string="Stock Lifo Search">
+                    <field name="product_id"/>
+                    <field name="year"/>
+                    <field name="lifo_desc"/>
+                    <field name="computed_qty"/>
+                    <group string="Group By..." expand="0" name="groupby">
+                        <filter string="Product" context="{'group_by':'product_id'}" name="product_id"/>
+                        <filter string="Year" context="{'group_by':'year'}" name="year"/>
+                    </group>
+                </search>
+            </field>
+        </record>
+
+    <record model="ir.ui.view" id="stock_lifo_tree_view">
+            <field name="name">stock.lifo.tree</field>
+            <field name="model">stock.lifo</field>
+            <field name="arch" type="xml">
+                <tree string="Stock Lifo Tree">
+	                <field name="product_id"/>
+	               	<field name="qty_in"/>
+	               	<field name="qty_out"/>
+	               	<field name="year"/>
+	               	<field name="remaining_year_qty"/>
+	               	<field name="computed_qty"/>
+	               	<field name="avg_price"/>
+	               	<field name="total_amount"/>
+	               	<field name="lifo_desc"/>
+                </tree>
+            </field>
+    </record>
+            
+    <record model="ir.ui.view" id="stock_lifo_form_view">
+            <field name="name">stock.lifo.form</field>
+            <field name="model">stock.lifo</field>
+            <field name="arch" type="xml">
+                <form string="Stock Lifo Form">
+                	<sheet>                  
+                    	<group>
+	                    	<field name="product_id"/>
+		                	<field name="qty_in"/>
+		                	<field name="qty_out"/>
+		                	<field name="avg_price"/>
+		                	<field name="year"/>
+		                	<field name="total_amount"/>
+		                	<field name="remaining_year_qty"/>
+		                	<field name="computed_qty"/>
+		                	<field name="lifo_desc"/>
+	                	</group>
+           			</sheet>
+                </form>
+            </field>
+    </record>
+        
+    <record model="ir.actions.act_window" id="stock_lifo_menu_action">
+    	<field name="name">Stock Lifo</field>
+        <field name="res_model">stock.lifo</field>
+        <field name="view_mode">tree,form,pivot</field>
+        <field name="search_view_id" ref="stock_lifo.stock_lifo_search_view"/>
+    </record>
+
+	<menuitem id="stock_lifo_menu" name="Analisi LIFO" parent="stock.menu_warehouse_report"
+              action="stock_lifo_menu_action" groups="stock.group_stock_manager"/>
+            
+	</data>  
+</odoo>

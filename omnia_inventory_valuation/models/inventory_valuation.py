@@ -164,6 +164,7 @@ class InventoryValuation(models.TransientModel):
             worksheet.cell(row=row_counter, column=4).value = round(price_unit, prec)
             worksheet.cell(row=row_counter, column=5).value = round(price_total, prec)
             worksheet.cell(row=row_counter, column=6).value = round(quantity, prec)
+            self.generate_inventory_line(worksheet, row_counter, product_product, location_name, categ)
             row_counter += 1
         workbook.save(full_path)
         os.chmod(full_path, stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO)
@@ -180,4 +181,7 @@ class InventoryValuation(models.TransientModel):
                 'type': 'ir.actions.act_window',
                 'domain': "[]"}
 
-
+    
+    @api.multi
+    def generate_inventory_line(self, worksheet, row_counter, product_product, location_name, categ):
+        return

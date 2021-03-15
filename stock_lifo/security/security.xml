@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<openerp>
+        <data>
+                
+                <record id="stock_lifo_admin" model="ir.model.access">
+		            <field name="name">Stock Lifo Admin</field>
+		            <field name="model_id" ref="model_stock_lifo"/>
+		            <field name="group_id" ref="stock.group_stock_manager"/>
+		            <field name="perm_read" eval="True"/>
+		            <field name="perm_write" eval="True"/>
+		            <field name="perm_create" eval="True"/>
+		            <field name="perm_unlink" eval="False"/>
+        		</record>
+
+                <record id="stock_lifo_wizard_admin" model="ir.model.access">
+		            <field name="name">Stock Lifo Wizard Admin</field>
+		            <field name="model_id" ref="model_stock_lifo_wizard"/>
+		            <field name="group_id" ref="stock.group_stock_manager"/>
+		            <field name="perm_read" eval="True"/>
+		            <field name="perm_write" eval="True"/>
+		            <field name="perm_create" eval="True"/>
+		            <field name="perm_unlink" eval="True"/>
+        		</record>
+        		
+        		<record id="stock_lifo_report_wizard_admin" model="ir.model.access">
+		            <field name="name">Stock Lifo Report Wizard Admin</field>
+		            <field name="model_id" ref="model_stock_lifo_report_wizard"/>
+		            <field name="group_id" ref="stock.group_stock_manager"/>
+		            <field name="perm_read" eval="True"/>
+		            <field name="perm_write" eval="True"/>
+		            <field name="perm_create" eval="True"/>
+		            <field name="perm_unlink" eval="True"/>
+        		</record>
+
+        </data>
+</openerp>
