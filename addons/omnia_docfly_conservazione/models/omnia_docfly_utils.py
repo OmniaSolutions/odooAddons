@@ -360,6 +360,7 @@ class FTPTLS(FTPTLS_OBJ):
         self.host = host
         self.port = port
         self.timeout = timeout
+        logging.info('Host %r %r, %r %r, %r %r,' % (host, type(host), port, type(port), timeout, type(timeout)))
         #try:
         self.sock = socket.create_connection((self.host, self.port), self.timeout)
         self.af = self.sock.family
