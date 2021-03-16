@@ -364,6 +364,7 @@ class FTPTLS(FTPTLS_OBJ):
         #try:
         self.sock = socket.create_connection((self.host, self.port), self.timeout)
         self.af = self.sock.family
+        self.keyfile = None
         self.sock = ssl.wrap_socket(self.sock, self.keyfile, self.certfile)
         self.file = self.sock.makefile('r')
         self.welcome = self.getresp()
