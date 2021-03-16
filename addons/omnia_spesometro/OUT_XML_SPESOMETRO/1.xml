@@ -1,0 +1,48 @@
+<DatiFatturaType  xmlns:ds="http://www.w3.org/2000/09/xmldsig#" >
+    <DatiFatturaHeader>
+        <ProgressivoInvio>1</ProgressivoInvio>
+    </DatiFatturaHeader>
+    <DTR>
+        <CessionarioCommittenteDTR>
+            <IdentificativiFiscali>
+                <IdFiscaleIVA>
+                    <IdPaese>IT</IdPaese>
+                    <IdCodice>02761990247</IdCodice>
+                </IdFiscaleIVA>
+            </IdentificativiFiscali>
+            <AltriDatiIdentificativi>
+                <Denominazione>Acquacontrol Automazioni srl</Denominazione>
+                <Sede>
+                    <Indirizzo>Via Seconda strada, 151</Indirizzo>
+                    <CAP>36071</CAP>
+                    <Comune>Arzignano</Comune>
+                    <Nazione>IT</Nazione>
+                </Sede>
+            </AltriDatiIdentificativi>
+        </CessionarioCommittenteDTR>
+        <CedentePrestatoreDTR>
+            <IdentificativiFiscali>
+                <IdFiscaleIVA>
+                    <IdPaese>IT</IdPaese>
+                    <IdCodice>00820540169</IdCodice>
+                </IdFiscaleIVA>
+                <CodiceFiscale>00820640169</CodiceFiscale>
+            </IdentificativiFiscali>
+            <AltriDatiIdentificativi>
+                <Denominazione>Roplast Srl</Denominazione>
+                <Sede>
+                    <Indirizzo>Via Castegnate N.86</Indirizzo>
+                    <CAP>24030</CAP>
+                    <Comune>Terno D'Isola (BG)</Comune>
+                    <Provincia>BG</Provincia>
+                    <Nazione>IT</Nazione>
+                </Sede>
+            </AltriDatiIdentificativi>
+            <DatiFatturaBodyDTR>
+                <DatiGenerali>
+                    <TipoDocumento>TD01</TipoDocumento>
+                    <Data>2017-06-30</Data>
+                    <Numero>ACQ/2017/0509</Numero>
+                </DatiGenerali>
+                <DatiRiepilogo>
+                    

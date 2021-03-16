@@ -1,0 +1,15 @@
+*.pyc
+*.so
+*.project
+*.pydevproject
+*.db
+*.settings
+/addons/omnia_spesometro/dist
+/addons/omnia_spesometro/build
+/addons/account_invoice_merge_no_unlink
+/addons/account_invoice_merge_no_unlink_5
+/addons/mrp_move_direct
+/addons/not_load
+/addons/omnia_hr_expense
+/addons/account_partner_ledger
+/omnia_account
