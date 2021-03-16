@@ -28,6 +28,8 @@
 	                         <field name="fatturapa_out_ids" nolabel="1" colspan="4"/>
 	                         <label for="fatturapa_in_ids"/>
 	                         <field name="fatturapa_in_ids" nolabel="1" colspan="4"/>
+	                         <label for="fatturapa_error_ids"/>
+	                         <field name="fatturapa_error_ids" nolabel="1" colspan="4"/>
                          </group>
                     </sheet>
                 </form>

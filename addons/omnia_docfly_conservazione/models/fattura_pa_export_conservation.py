@@ -54,6 +54,10 @@ class FatturaPAExportConservation(osv.osv):
                                             'cons_in_id',
                                             'invoice_in_id',
                                             string='Fatture Fornitori esportate'),
+        'fatturapa_error_ids': fields.many2many('account.invoice',
+                                            'cons_err_id',
+                                            'invoice_err_id',
+                                            string='Fatture senza XML'),
     }
     
     def onChangeDates(self, cr, uid, ids, date_from, date_to, context=None):
@@ -65,16 +69,29 @@ class FatturaPAExportConservation(osv.osv):
     
     def getInvoices(self, cr, uid, ids, context=None):
         for item in self.browse(cr, uid, ids, context):
-            out_ivoice_ids = self.pool['account.invoice'].search(cr, uid, [('date_invoice', '>=', item.date_from ),
-                                                               ('date_invoice', '<=', item.date_to ),
-                                                               ('type', 'in', ('out_invoice', 'out_refund'))])
-                
-            in_ivoice_ids = self.pool['account.invoice'].search(cr, uid, [('date_invoice', '>=', item.date_from ),
-                                                                ('date_invoice', '<=', item.date_to ),
-                                                                ('type', 'in', ( 'in_invoice', 'in_refund'))])
+            out_ivoice_ids = self.pool['account.invoice'].search(cr, uid, [
+                ('date_invoice', '>=', item.date_from ),
+                ('date_invoice', '<=', item.date_to ),
+                ('type', 'in', ('out_invoice', 'out_refund')),
+                ('fatturapa_attachment_out_id', 'not in', (False,)),
+                ])
+            in_ivoice_ids = self.pool['account.invoice'].search(cr, uid, [
+                ('date_invoice', '>=', item.date_from ),
+                ('date_invoice', '<=', item.date_to ),
+                ('type', 'in', ( 'in_invoice', 'in_refund')),
+                ('fatturapa_attachment_in_id', 'not in', (False,)),
+                ])
+            err_ivoice_ids = self.pool['account.invoice'].search(cr, uid, [
+                ('date_invoice', '>=', item.date_from ),
+                ('date_invoice', '<=', item.date_to ),
+                ('type', 'in', ( 'in_invoice', 'in_refund', 'out_invoice', 'out_refund')),
+                ('fatturapa_attachment_out_id', 'in', (False)),
+                ('fatturapa_attachment_in_id', 'in', (False)),
+                ])
             item.write({
                 'fatturapa_out_ids': [(6, 0, out_ivoice_ids)],
                 'fatturapa_in_ids': [(6, 0, in_ivoice_ids)],
+                'fatturapa_error_ids': [(6, 0, err_ivoice_ids)],
                 })
     
     def put_to_docfly(self, cr, uid, ids, context=None):
@@ -100,21 +117,20 @@ class FatturaPAExportConservation(osv.osv):
         
         def mark_and_push(pdv_name,
                           temporary_folder, 
-                          invoices):
+                          in_xml_invoice,
+                          inv_number):
             files = ''
-            for invoice in invoices:
-                if invoice.fatturapa_attachment_in_id:
-                    in_xml_invoice = invoice.fatturapa_attachment_in_id
-                    file_path = os.path.join(temporary_folder,
-                                             in_xml_invoice.name)
-                    with open(file_path, 'w') as fobj:
-                        fobj.write(base64.b64decode(in_xml_invoice.datas))
-                    files+=generatePDVFile(pdv_name, file_path)
-                    ftp_session.push_to_aruba(pdv_name,
-                                              file_path)
-                else:
-                    raise osv.except_osv(_('Configuration Error!'),
-                        _("Unable to get the e-invoice from invoice %s" % invoice.number))
+            if in_xml_invoice:
+                file_path = os.path.join(temporary_folder,
+                                         in_xml_invoice.name)
+                with open(file_path, 'w') as fobj:
+                    fobj.write(base64.b64decode(in_xml_invoice.datas))
+                files+=generatePDVFile(pdv_name, file_path)
+                ftp_session.push_to_aruba(pdv_name,
+                                          file_path)
+            else:
+                raise osv.except_osv(_('Configuration Error!'),
+                    _("Unable to get the e-invoice from invoice %s" % invoice.number))
             pdv_path = generatePDV(temporary_folder, pdv_name, files)
             ftp_session.push_to_aruba(pdv_name,
                                       pdv_path)
@@ -122,13 +138,17 @@ class FatturaPAExportConservation(osv.osv):
         for item in self.browse(cr, uid, ids, context):
             temporary_folder = tempfile.mkdtemp()
             in_invoice_pdv =  "%s_in" % item.pdv_name
-            mark_and_push(in_invoice_pdv,
-                          temporary_folder,
-                          item.fatturapa_in_ids)
+            for inv_in in item.fatturapa_in_ids:
+                mark_and_push(in_invoice_pdv,
+                              temporary_folder,
+                              inv_in.fatturapa_attachment_in_id,
+                              inv_in.number)
             
             out_invoice_pdv =  "%s_out" % item.pdv_name
-            mark_and_push(out_invoice_pdv,
-                          temporary_folder,
-                          item.fatturapa_out_ids)
+            for inv_out in item.fatturapa_out_ids:
+                mark_and_push(out_invoice_pdv,
+                              temporary_folder,
+                              inv_out.fatturapa_attachment_out_id,
+                              inv_out.number)
             shutil.rmtree(temporary_folder)
         ftp_session.quit()
