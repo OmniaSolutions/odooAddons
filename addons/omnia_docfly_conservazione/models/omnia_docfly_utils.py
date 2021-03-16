@@ -327,7 +327,11 @@ class FTPTLS(FTPTLS_OBJ):
 
     # Init both this and super
     def __init__(self, host=None, user=None, passwd=None, acct=None, keyfile=None, certfile=None, context=None, timeout=60):        
-        FTPTLS_OBJ.__init__(self, host, user, passwd, acct, keyfile, certfile, context, timeout)
+        try:
+            FTPTLS_OBJ.__init__(self, host, user, passwd, acct, keyfile, certfile, context, timeout)
+        except Exception as ex:
+            logging.warning('Cannot make FTPTLS_OBJ init due to error %r' % (ex))
+            FTPTLS_OBJ.__init__(self, host, user, passwd, acct, timeout)
         self.codice_fiscale='' 
 
     # Custom function: Open a new FTPS session (both connection & login)

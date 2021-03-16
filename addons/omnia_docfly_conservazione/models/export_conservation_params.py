@@ -25,16 +25,6 @@ Created on 15 Mar 2021
 '''
 from openerp.tools.translate import _
 from openerp.osv import osv, fields
-import os
-import logging
-import datetime
-import base64
-import shutil
-import tempfile
-from datetime import timedelta
-from omnia_docfly_utils import generatePDVFile
-from omnia_docfly_utils import generatePDV
-from omnia_docfly_utils import FTPTLS
 from openerp import SUPERUSER_ID
 
 
