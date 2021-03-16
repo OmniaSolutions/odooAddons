@@ -81,7 +81,7 @@ class FatturaPAExportConservation(osv.osv):
         config_pool = self.pool['ir.config_parameter']
         ftp_session = FTPTLS() 
         ftp_session.connect(host=config_pool.get_param(cr, SUPERUSER_ID, 'DOCFLY_FTP_URL'),
-                            port='990',
+                            port=990,
                             timeout=5)
         try:
             ftp_session.login(user=config_pool.get_param(cr, SUPERUSER_ID, 'DOCFLY_FTP_USER'),

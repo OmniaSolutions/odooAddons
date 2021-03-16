@@ -360,16 +360,16 @@ class FTPTLS(FTPTLS_OBJ):
         self.host = host
         self.port = port
         self.timeout = timeout
-        try:
-            self.sock = socket.create_connection((self.host, self.port), self.timeout)
-            self.af = self.sock.family
-            self.sock = ssl.wrap_socket(self.sock, self.keyfile, self.certfile)
-            self.file = self.sock.makefile('r')
-            self.welcome = self.getresp()
-            if (self.logLevel > 1): self._log("INFO - FTPS connect() done: " + self.welcome)
-        except Exception as e:
-            if (self.logLevel > 0): self._log("ERROR - FTPS connect() failed - " + str(e))
-            raise Exception('Cannot connect ro FTPTLS due to error %r' % e)
+        #try:
+        self.sock = socket.create_connection((self.host, self.port), self.timeout)
+        self.af = self.sock.family
+        self.sock = ssl.wrap_socket(self.sock, self.keyfile, self.certfile)
+        self.file = self.sock.makefile('r')
+        self.welcome = self.getresp()
+        #if (self.logLevel > 1): self._log("INFO - FTPS connect() done: " + self.welcome)
+        #except Exception as e:
+        #    if (self.logLevel > 0): self._log("ERROR - FTPS connect() failed - " + str(e))
+        #    raise Exception('Cannot connect ro FTPTLS due to error %r' % e)
         return self.welcome
 
     # Override function
