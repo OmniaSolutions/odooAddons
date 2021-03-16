@@ -119,36 +119,42 @@ class FatturaPAExportConservation(osv.osv):
                           temporary_folder, 
                           in_xml_invoice,
                           inv_number):
-            files = ''
+            
             if in_xml_invoice:
                 file_path = os.path.join(temporary_folder,
                                          in_xml_invoice.name)
                 with open(file_path, 'w') as fobj:
                     fobj.write(base64.b64decode(in_xml_invoice.datas))
-                files+=generatePDVFile(pdv_name, file_path)
                 ftp_session.push_to_aruba(pdv_name,
                                           file_path)
+                return generatePDVFile(pdv_name, file_path)
             else:
                 raise osv.except_osv(_('Configuration Error!'),
                     _("Unable to get the e-invoice from invoice %s" % invoice.number))
-            pdv_path = generatePDV(temporary_folder, pdv_name, files)
-            ftp_session.push_to_aruba(pdv_name,
-                                      pdv_path)
+            return ''
 
         for item in self.browse(cr, uid, ids, context):
             temporary_folder = tempfile.mkdtemp()
             in_invoice_pdv =  "%s_in" % item.pdv_name
+            in_files = ''
             for inv_in in item.fatturapa_in_ids:
-                mark_and_push(in_invoice_pdv,
-                              temporary_folder,
-                              inv_in.fatturapa_attachment_in_id,
-                              inv_in.number)
+                in_files += mark_and_push(in_invoice_pdv,
+                                          temporary_folder,
+                                          inv_in.fatturapa_attachment_in_id,
+                                          inv_in.number)
+            pdv_path_in = generatePDV(temporary_folder, in_invoice_pdv, in_files)
+            ftp_session.push_to_aruba(in_invoice_pdv,
+                                      pdv_path_in)
             
+            out_files = ''
             out_invoice_pdv =  "%s_out" % item.pdv_name
             for inv_out in item.fatturapa_out_ids:
-                mark_and_push(out_invoice_pdv,
-                              temporary_folder,
-                              inv_out.fatturapa_attachment_out_id,
-                              inv_out.number)
+                out_files += mark_and_push(out_invoice_pdv,
+                                           temporary_folder,
+                                           inv_out.fatturapa_attachment_out_id,
+                                           inv_out.number)
+            pdv_path_out = generatePDV(temporary_folder, out_invoice_pdv, out_files)
+            ftp_session.push_to_aruba(out_invoice_pdv,
+                                      pdv_path_out)
             shutil.rmtree(temporary_folder)
         ftp_session.quit()
