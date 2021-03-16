@@ -92,7 +92,7 @@ class FatturaPAExportConservation(models.Model):
                           temporary_folder, 
                           invoices):
             files = ''
-            for invoice in item.fatturapa_in_ids:
+            for invoice in invoices:
                 if invoice.fatturapa_attachment_in_id:
                     in_xml_invoice = invoice.fatturapa_attachment_in_id
                     file_path = os.path.join(temporary_folder,
