@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<openerp>
+    <data>
+        <record model="ir.ui.view" id="view_fatturapa_conservation_tree">
+            <field name="name">view.fatturapa.conservation.tree</field>
+            <field name="model">fatturapa.exportconservation</field>
+            <field name="arch" type="xml">
+                <tree string="Conservation Invoice">
+                     <field name="date_from"/>
+                     <field name="date_to"/>
+                     <field name="pdv_name"/>
+                </tree>
+            </field>
+        </record>
+        <record model="ir.ui.view" id="view_fatturapa_conservation_form">
+            <field name="name">view.fatturapa.conservation.form</field>
+            <field name="model">fatturapa.exportconservation</field>
+            <field name="arch" type="xml">
+                <form version="7.0" string='Export Conservation'>
+                    <sheet>
+	                    <group>
+	                         <field name="date_from" on_change="onChangeDates(date_from, date_to)"/>
+	                         <field name="date_to" on_change="onChangeDates(date_from, date_to)"/>
+	                         <field name="pdv_name"/>
+	                         <button name="getInvoices" type="object" string="Recupera Fatture"/>
+	                         <button name="put_to_docfly" type="object" string="Archivia"/>
+		                     <label for="fatturapa_out_ids"/>
+	                         <field name="fatturapa_out_ids" nolabel="1" colspan="4"/>
+	                         <label for="fatturapa_in_ids"/>
+	                         <field name="fatturapa_in_ids" nolabel="1" colspan="4"/>
+                         </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+        
+        <record id="action_fatturapa_conservation" model="ir.actions.act_window">
+            <field name="name">Electronic Invoice Conservation Files</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="res_model">fatturapa.exportconservation</field>
+            <field name="view_type">form</field>
+            <field name="view_mode">tree,form</field>
+            <field name="view_id" ref="view_fatturapa_conservation_tree"/>
+        </record>
+
+        <menuitem
+            action="action_fatturapa_conservation"
+            parent="l10n_it_fatturapa.menu_fattura_pa_receivables"
+            name="Archived Files"
+            id="fatturapa_conservation_menu"/>
+    </data>
+</openerp>

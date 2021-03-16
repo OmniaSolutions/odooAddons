@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<openerp>
+    <data>
+
+        <record model="ir.ui.view" id="view_fatturapa_conservation_param_form">
+            <field name="name">view.fatturapa.conservation.param.form</field>
+            <field name="model">fatturapa.exportconservationparams</field>
+            <field name="arch" type="xml">
+                <form version="7.0" string='Export Conservation Params'>
+                    <sheet>
+                    <div>Le credenziali per il login FTP sono sbagliate, per favore imposta le credenziali corrette.</div>
+	                    <group>
+	                         <field name="login_user"/>
+	                         <field name="login_pass"/>
+                         </group>
+                    </sheet>
+                    <footer>
+                    	<button name="setup_credentials" type="object" string="Set credentials"/>
+                    </footer>
+                </form>
+            </field>
+        </record>
+
+    </data>
+</openerp>

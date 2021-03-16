@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<openerp>
+    <data noupdate="1">
+        <record id="docfly_url" model="ir.config_parameter">
+            <field name="key">DOCFLY_FTP_URL</field>
+            <field name="value">95.110.148.110</field>
+        </record>
+        <record id="docfly_user" model="ir.config_parameter">
+            <field name="key">DOCFLY_FTP_USER</field>
+            <field name="value">docfly_user</field>
+        </record>
+        <record id="docfly_pws" model="ir.config_parameter">
+            <field name="key">DOCFLY_FTP_PWS</field>
+            <field name="value">docfly_password</field>
+        </record>
+        <record id="docfly_cp" model="ir.config_parameter">
+            <field name="key">DOCFLY_CODICE_FISCALE</field>
+            <field name="value">docfly_fiscalcode</field>
+        </record>
+    </data>
+</openerp>
