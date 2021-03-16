@@ -369,7 +369,7 @@ class FTPTLS(FTPTLS_OBJ):
             if (self.logLevel > 1): self._log("INFO - FTPS connect() done: " + self.welcome)
         except Exception as e:
             if (self.logLevel > 0): self._log("ERROR - FTPS connect() failed - " + str(e))
-            raise e
+            raise Exception('Cannot connect ro FTPTLS due to error %r' % e)
         return self.welcome
 
     # Override function
