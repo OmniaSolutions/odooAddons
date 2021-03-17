@@ -55,11 +55,6 @@ IPDV_TEMPLATE_FILE = """
                         <name>oggettodocumento</name>
                         <value>fatturapa</value>
                     </singlemetadata>
-                    <singlemetadata>
-                        <namespace>conservazione.doc</namespace>
-                        <name>dataDocumento</name>
-                        <value>{DATA_DOCUMENTO}</value>
-                    </singlemetadata>
                     <complexmetadata namespace="conservazione.doc" name="soggettotributario" namespaceNode="conservazione.soggetti" nodeName="soggetto">
                         <singlemetadata>
                             <namespace>conservazione.soggetti</namespace>
@@ -290,16 +285,15 @@ def sha256_64(file_name):
             sha256_hash.update(byte_block)
     return sha256_hash.digest().encode('base64').strip()
 
-def generatePDVFile(pdv_name, xmlFile):
+def generatePDVFile(pdv_name, xmlFile, mimetype='text/xml'):
     xml_file_name = os.path.basename(xmlFile)
     d = datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S.000Z")
     newValue = {'DOCID':"ID_%s" % datetime.datetime.now().strftime("%Y%m%d-%H%M%s%f"),
                 'FILENAME': xml_file_name,
-                'MIMETYPE': 'text/xml',
+                'MIMETYPE': mimetype,
                 'CLOSING_DATE': d, #@yyyy-mm-ddThh:mm:ss.sssZ@
                 'HASH': sha256_64(xmlFile), # md5(xmlFile),
                 'DATA_DOCUMENTO_TRIBUTARIA': d,
-                'DATA_DOCUMENTO': d,#2021-03-13T08:02:00.000Z
                 }
     return IPDV_TEMPLATE_FILE.format(**newValue)
 

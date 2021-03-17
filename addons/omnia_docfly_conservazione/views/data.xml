@@ -29,5 +29,10 @@
             <field name="key">DOCFLY_SEARCH_LIMIT_TEST_ONLY_DEFAULT_NONE</field>
             <field name="value">None</field>
         </record>
+        <record id="docfly_generation_mode" model="ir.config_parameter">
+            <field name="key">DOCFLY_GENERATION_MODE</field>
+            <field name="value">STANDARD</field>
+        </record>
+
     </data>
 </openerp>
