@@ -68,25 +68,32 @@ class FatturaPAExportConservation(osv.osv):
         return result
     
     def getInvoices(self, cr, uid, ids, context=None):
+        config_pool = self.pool['ir.config_parameter']
+        limit_txt = config_pool.get_param(cr, SUPERUSER_ID, 'DOCFLY_SEARCH_LIMIT_TEST_ONLY_DEFAULT_NONE')
+        limit = None
+        try:
+            limit = eval(limit_txt)
+        except Exception as ex:
+            logging.warning('Cannot eval DOCFLY_SEARCH_LIMIT_TEST_ONLY_DEFAULT_NONE due to error %r' % (ex))
         for item in self.browse(cr, uid, ids, context):
             out_ivoice_ids = self.pool['account.invoice'].search(cr, uid, [
                 ('date_invoice', '>=', item.date_from ),
                 ('date_invoice', '<=', item.date_to ),
                 ('type', 'in', ('out_invoice', 'out_refund')),
                 ('fatturapa_attachment_out_id', 'not in', (False,)),
-                ])
+                ], limit=limit)
             in_ivoice_ids = self.pool['account.invoice'].search(cr, uid, [
                 ('date_invoice', '>=', item.date_from ),
                 ('date_invoice', '<=', item.date_to ),
                 ('type', 'in', ( 'in_invoice', 'in_refund')),
                 ('fatturapa_attachment_in_id', 'not in', (False,)),
-                ])
+                ], limit=limit)
             err_ivoice_ids = self.pool['account.invoice'].search(cr, uid, [
                 ('date_invoice', '>=', item.date_from ),
                 ('date_invoice', '<=', item.date_to ),
                 ('type', 'in', ( 'in_invoice', 'in_refund', 'out_invoice', 'out_refund')),
-                ('fatturapa_attachment_out_id', 'in', (False)),
-                ('fatturapa_attachment_in_id', 'in', (False)),
+                ('fatturapa_attachment_out_id', 'in', (False,)),
+                ('fatturapa_attachment_in_id', 'in', (False,)),
                 ])
             item.write({
                 'fatturapa_out_ids': [(6, 0, out_ivoice_ids)],
@@ -142,7 +149,8 @@ class FatturaPAExportConservation(osv.osv):
                                           temporary_folder,
                                           inv_in.fatturapa_attachment_in_id,
                                           inv_in.number)
-            pdv_path_in = generatePDV(temporary_folder, in_invoice_pdv, in_files)
+            purchase_key = config_pool.get_param(cr, SUPERUSER_ID, 'DOCFLY_PURCHASE_KEY')
+            pdv_path_in = generatePDV(temporary_folder, in_invoice_pdv, in_files, purchase_key)
             ftp_session.push_to_aruba(in_invoice_pdv,
                                       pdv_path_in)
             
@@ -153,8 +161,10 @@ class FatturaPAExportConservation(osv.osv):
                                            temporary_folder,
                                            inv_out.fatturapa_attachment_out_id,
                                            inv_out.number)
-            pdv_path_out = generatePDV(temporary_folder, out_invoice_pdv, out_files)
+            sale_key = config_pool.get_param(cr, SUPERUSER_ID, 'DOCFLY_SALE_KEY')
+            pdv_path_out = generatePDV(temporary_folder, out_invoice_pdv, out_files, sale_key)
             ftp_session.push_to_aruba(out_invoice_pdv,
                                       pdv_path_out)
             shutil.rmtree(temporary_folder)
         ftp_session.quit()
+        return True

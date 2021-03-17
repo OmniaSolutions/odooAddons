@@ -276,7 +276,7 @@ IPDV_TEMPLATE_FILE = """
 IPDV_TEMPLATE = """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <PDV>
     <pdvid>{PDVID}</pdvid>
-    <docClass namespace="conservazione.doc">1__fatturaPA</docClass>
+    <docClass namespace="conservazione.doc">{SECTION_KEY}</docClass>
     <files>
     {FILE}
     </files>
@@ -303,10 +303,12 @@ def generatePDVFile(pdv_name, xmlFile):
                 }
     return IPDV_TEMPLATE_FILE.format(**newValue)
 
-def generatePDV(base_file, pdv_name, files):
+def generatePDV(base_file, pdv_name, files, section_key):
     pdv_file_name = os.path.join(base_file, "IPDV-%s.xml" % pdv_name)
     newValue = {'PDVID': pdv_name,
-                'FILE': files}
+                'FILE': files,
+                'SECTION_KEY': section_key,
+                }
     newIpdv = IPDV_TEMPLATE.format(**newValue) 
     with open(pdv_file_name, 'wb') as f:
         f.write(newIpdv)

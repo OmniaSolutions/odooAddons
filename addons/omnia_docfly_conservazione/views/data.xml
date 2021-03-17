@@ -17,5 +17,17 @@
             <field name="key">DOCFLY_CODICE_FISCALE</field>
             <field name="value">docfly_fiscalcode</field>
         </record>
+        <record id="docfly_pur_key" model="ir.config_parameter">
+            <field name="key">DOCFLY_PURCHASE_KEY</field>
+            <field name="value">docfly_key_for_purchase_section</field>
+        </record>
+        <record id="docfly_sale_key" model="ir.config_parameter">
+            <field name="key">DOCFLY_SALE_KEY</field>
+            <field name="value">docfly_key_for_sale_section</field>
+        </record>
+        <record id="docfly_limit_search_result_for_tests" model="ir.config_parameter">
+            <field name="key">DOCFLY_SEARCH_LIMIT_TEST_ONLY_DEFAULT_NONE</field>
+            <field name="value">None</field>
+        </record>
     </data>
 </openerp>
