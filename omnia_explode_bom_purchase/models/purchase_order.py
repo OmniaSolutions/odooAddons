@@ -20,7 +20,7 @@ class PurchaseOrderLineExtension(models.Model):
             for nBomBrws in normalBOMs:
                 for bomLineBrws in nBomBrws.bom_line_ids:
                     self.copy({'product_id': bomLineBrws.product_id.id,
-                               'product_qty': bomLineBrws.product_qty,
+                               'product_qty': bomLineBrws.product_qty * lineBrws.product_qty,
                                'price_unit': bomLineBrws.product_id.standard_price,
                                'name': '[%s] %s' % (lineBrws.product_id.engineering_code, bomLineBrws.product_id.name),
                                'order_id': order_id,
