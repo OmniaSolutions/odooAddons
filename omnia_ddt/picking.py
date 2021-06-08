@@ -121,7 +121,7 @@ class stock_picking_custom(models.Model):
 
     @api.multi
     def copy(self, default={}):
-        default.update({'ddt_number': ''})
+        default.update({'ddt_number': '', 'ddt_date': False})
         return super(stock_picking_custom, self).copy(default)
 
 stock_picking_custom()
