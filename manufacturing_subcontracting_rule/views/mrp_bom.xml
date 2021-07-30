@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <odoo>
     <data>
 	    <record id="mrp_bom_form_view_omnia_subtracting_rule" model="ir.ui.view">

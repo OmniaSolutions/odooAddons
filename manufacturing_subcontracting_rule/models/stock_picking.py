@@ -57,7 +57,7 @@ class StockPicking(models.Model):
             objPick = self
         return objPick.picking_type_code == 'outgoing'
 
-    @api.multi
+    # @api.multi
     def action_done(self):
         res = super(StockPicking, self).action_done()
         purchase_order_line = self.env['purchase.order.line']
@@ -89,7 +89,7 @@ class StockPicking(models.Model):
                     purchase_order_line_id._compute_qty_received()
         return res
 
-    @api.multi
+    # @api.multi
     def action_cancel(self):
         ref = super(StockPicking, self).action_cancel()
         for stock_picking in self:

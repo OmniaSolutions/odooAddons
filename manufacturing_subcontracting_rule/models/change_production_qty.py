@@ -17,11 +17,11 @@ import logging
 class ChangeProductionQty(models.TransientModel):
     _inherit = "change.production.qty"
 
-    @api.multi
+    # @api.multi
     def change_prod_qty_external(self, productionBrws):
         raise UserError(_('You cannot change manufacturing order quantity if you are producing it externally. Cancel the external production and update the quantity.'))
 
-    @api.multi
+    # @api.multi
     def change_prod_qty(self):
         for wizard in self:
             production = wizard.mo_id
