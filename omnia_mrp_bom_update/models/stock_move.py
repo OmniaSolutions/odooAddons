@@ -62,7 +62,8 @@ class StockMove(models.Model):
             raw_material_production_id = stock_move.raw_material_production_id
             stock_move.raw_material_production_id = False
             stock_move.production_id = False 
-            stock_move.action_confirm()
+            if stock_move.state == 'draft':
+                stock_move._action_confirm()
             new_stock_move = stock_move.copy({'raw_material_production_id': False,
                                               'production_id': False,
                                               'quantity_done': 0.0})

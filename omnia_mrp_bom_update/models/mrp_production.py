@@ -24,7 +24,6 @@ Created on Apr 6, 2019
 @author: mboscolo
 '''
 
-
 import logging
 import datetime
 from odoo import models
@@ -42,12 +41,11 @@ class MrpProduction(models.Model):
 
     auto_bom_update = fields.Boolean(string=_('Automatically update mrp production from schedule'),
                                      help=_("""If this flag is up the bom the manufactory order in state ['confirmed', 'planned', 'progress'] as automatically updated by the server"""))
-    update_message = fields.Html(string="Message from update from bom",
-                                 help="In this field you van find information on the update status error")
+    
     def update_row_line_form_bom(self):
         for mrp_production_id in self.filtered(lambda x: x.state not in ['done', 'cancel']):
             if mrp_production_id.auto_bom_update:
-                mrp_production_id.update_message=""
+                
                 move_to_create = []
                 for bom_line_id in mrp_production_id.bom_id.bom_line_ids:
                     addLine=True
@@ -59,14 +57,14 @@ class MrpProduction(models.Model):
                                     if move_line_id.state=='assigned':
                                         move_line_id._do_unreserve()
                                         reserve = True
-                                    move_line_id.product_uom_qty=bom_line_id.product_qty * mrp_production_id.product_qty
-                                    move_line_id.ordered_qty=bom_line_id.product_qty * mrp_production_id.product_qty
-                                    move_line_id.unit_factor=bom_line_id.product_qty * mrp_production_id.product_qty
+                                    bomLineQty = bom_line_id.product_qty * mrp_production_id.product_qty
+                                    move_line_id.product_uom_qty = bomLineQty
+                                    move_line_id.should_consume_qty = bomLineQty
+                                    move_line_id.unit_factor = bomLineQty
                                     if reserve:
                                         move_line_id.action_assign()
-                                    
                             else:
-                                mrp_production_id.update_message+= """<b>Unable to update product: %r due to the move status in: %r</b></br>""" % (move_line_id.product_id.name, move_line_id.state)
+                                mrp_production_id.message_post(body= """<b>Unable to update product: %r due to the move status in: %r</b></br>""" % (move_line_id.product_id.name, move_line_id.state))
                             addLine=False
                             break
                     if addLine:
@@ -90,8 +88,7 @@ class MrpProduction(models.Model):
                             move_line_id._action_cancel()
                             move_line_id.unlink()
                     else:
-                        mrp_production_id.update_message+= """<b>Unable to delete product: %r due to the move status in: %r</b></br>""" % (move_line_id.product_id.name, move_line_id.state)
-                        
+                        mrp_production_id.message_post(body= """<b>Unable to delete product: %r due to the move status in: %r</b></br>""" % (move_line_id.product_id.name, move_line_id.state))
             if move_to_create:
                 self.env['stock.move'].generate_mrp_line(mrp_production_id, move_to_create)
     

@@ -5,8 +5,8 @@
         <field name="arch" type="xml">
             <xpath expr="//field[@name='company_id']" position="after">
                 <field name="auto_bom_update"/>
-                <field name="update_message" attrs="{'invisible': [('auto_bom_update', '=', False)]}"/>
             </xpath>
+            
            <div name="button_box" position="inside">
                 <button name="update_row_line_form_bom"
                         type="object"
