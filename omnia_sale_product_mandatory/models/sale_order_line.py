@@ -88,7 +88,7 @@ class SaleOrderLine(models.Model):
     parent_sale_line_needed = fields.Char('Parent sale order line')
     self_sale_line_needed = fields.Char('Self Virtual Id')
     is_child_line_needed = fields.Boolean('Is child needed')
-    temporary_change = fields.Boolean('TemporaryV Changed need update')
+    temporary_change = fields.Boolean('Temporary Changed need update')
     
     @api.onchange('product_uom_qty')
     def changeQty(self):
@@ -101,6 +101,12 @@ class SaleOrderLine(models.Model):
         return {'type': 'ir.actions.client',
                 'tag': 'reload'}
     
+    def unlink_related(self):
+        for line in self:
+            for child_line in self.env['sale.order.line'].search([('parent_sale_line_needed', '=', line.self_sale_line_needed),
+                                                                          ('order_id', '=', line._origin.order_id.id)]):
+                child_line.unlink()
+
     def getReletedLine(self):
         """
         support function to get the releted line
