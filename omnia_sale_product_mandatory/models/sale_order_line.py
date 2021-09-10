@@ -103,9 +103,10 @@ class SaleOrderLine(models.Model):
     
     def unlink_related(self):
         for line in self:
-            for child_line in self.env['sale.order.line'].search([('parent_sale_line_needed', '=', line.self_sale_line_needed),
-                                                                          ('order_id', '=', line._origin.order_id.id)]):
-                child_line.unlink()
+            if line.self_sale_line_needed:
+                for child_line in self.env['sale.order.line'].search([('parent_sale_line_needed', '=', line.self_sale_line_needed),
+                                                                              ('order_id', '=', line._origin.order_id.id)]):
+                    child_line.unlink()
 
     def getReletedLine(self):
         """
