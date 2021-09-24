@@ -29,7 +29,7 @@
 
 {
     'name': 'Omnia Manufacturing Subcontracting Rule',
-    'version': '13.0.1',
+    'version': '13.0',
     'sequence': 1,
     'category': 'Custom',
     'description': """

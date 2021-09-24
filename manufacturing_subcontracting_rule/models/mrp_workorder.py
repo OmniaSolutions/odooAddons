@@ -14,7 +14,7 @@ import datetime
 
 
 class MrpWorkorder(models.Model):
-    _inherit = ['mrp.workorder']
+    _inherit = 'mrp.workorder'
     external_partner = fields.Many2one('res.partner', string='External Partner')
     state = fields.Selection(selection_add=[('external', 'External Production')])
     external_product = fields.Many2one('product.product',
@@ -140,7 +140,6 @@ class MrpWorkorder(models.Model):
             'domain': [('id', 'in', picks.ids)],
         }
 
-    
     def open_external_purchase(self):
         newContext = self.env.context.copy()
         picks = self.env['purchase.order']

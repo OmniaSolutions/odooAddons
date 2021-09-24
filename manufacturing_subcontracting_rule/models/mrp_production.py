@@ -46,6 +46,8 @@ from odoo.tools import DEFAULT_SERVER_DATETIME_FORMAT
 class MrpProduction(models.Model):
     _inherit = 'mrp.production'
 
+    # partner_id = fields.Many2one('res.partner')
+
     def _workorders_create(self, bom, bom_data):
         mrp_workorder_ids = super(MrpProduction, self)._workorders_create(bom, bom_data)
         for mrp_workorder_id in mrp_workorder_ids:
@@ -87,6 +89,7 @@ class MrpProduction(models.Model):
                     continue
             mrp_production.external_partner=False
 
+
     state = fields.Selection(selection_add=[('external', 'External Production')])
     stock_bom_ids = fields.One2many('stock.bom',
                                     'mrp_production_id',
@@ -94,10 +97,9 @@ class MrpProduction(models.Model):
                                     ondelete="cascade")
 
     external_partner = fields.Many2one('res.partner',
-                                       compute='_getDefaultPartner',
                                        string='Default External Partner',
                                        help="""This is a computed field in order to modifier it go to Routing -> Production Place -> Set Owner of the location
-                                               if you do not see the Production Place Field, be sure to be part of group stock.group_adv_location""")
+                                               if you do not see the Production Place Field, be sure to be part of group stock.group_adv_location""",store=True)
     purchase_external_id = fields.Many2one('purchase.order', string='External Purchase')
     move_raw_ids_external_prod = fields.One2many('stock.move',
                                                  'raw_material_production_id',
@@ -111,6 +113,7 @@ class MrpProduction(models.Model):
                                                       copy=False,
                                                       states={'done': [('readonly', True)], 'cancel': [('readonly', True)]})
     external_pickings = fields.One2many('stock.picking', 'external_production', string='External Pikings')
+
 
     def open_external_purchase(self):
         newContext = self.env.context.copy()
@@ -132,6 +135,7 @@ class MrpProduction(models.Model):
             'context': newContext,
             'domain': [('id', 'in', manufacturingIds)],
         }
+
 
     def open_external_pickings(self):
         newContext = self.env.context.copy()
@@ -171,6 +175,7 @@ class MrpProduction(models.Model):
         return False
 
     def createTmpStockMove(self, sourceMoveObj, location_source_id=None, location_dest_id=None, unit_factor=1.0):
+        print("j******************************")
         tmpMoveObj = self.env["stock.tmp_move"]
         if not location_source_id:
             location_source_id = sourceMoveObj.location_id.id
@@ -184,7 +189,7 @@ class MrpProduction(models.Model):
             'product_uom_qty': sourceMoveObj.product_uom_qty,
             'location_id': location_source_id,
             'location_dest_id': location_dest_id,
-            'partner_id': self.external_partner.id,
+            'partner_id': self.external_partner.id if self.external_partner else False,
             'note': sourceMoveObj.note,
             'state': 'draft',
             'origin': sourceMoveObj.origin,
@@ -379,3 +384,8 @@ class StockBom(models.Model):
     quantity = fields.Float("Product Quantity")
     mrp_production_id = fields.Many2one('mrp.production',
                                         'Related Production')
+
+
+
+
+
