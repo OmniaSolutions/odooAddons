@@ -30,7 +30,7 @@
     'images': [],
     'depends': ['base'],
     'description': """
-    Add standard attributes at all the tree view when "base.group_no_one"
+    Add standard attributes at all the tree view when user is part of "base.group_erp_manager"
     """,
     'data': [
        ],
