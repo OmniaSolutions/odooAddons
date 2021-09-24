@@ -34,14 +34,14 @@ class Base(models.AbstractModel):
                         fields_get = self.fields_get()
                         for child in rootElem.getchildren():
                             field_name = child.attrib.get('name', '')
-                            if field_name in fields_to_add:
+                            if field_name in FIELD_TO_ADD:
                                 fields_to_add.remove(field_name)
                         elem_maker = builder.ElementMaker()
                         for field_name in FIELD_TO_ADD:
                             if field_name in self._fields.keys():
                                 elem = elem_maker.field(name=field_name)
                                 rootElem.append(elem)
-                                fields[field_name] = fields_get.get(field_name, {})
+                                ret.get('fields', {field_name:{}})[field_name] = fields_get.get(field_name, {})
                         xml_string = etree.tostring(rootElem)
                         ret['arch'] = xml_string
             except Exception as ex:
