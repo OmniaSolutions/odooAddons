@@ -35,7 +35,7 @@ class Base(models.AbstractModel):
                         for child in rootElem.getchildren():
                             field_name = child.attrib.get('name', '')
                             if field_name in FIELD_TO_ADD:
-                                fields_to_add.remove(field_name)
+                                FIELD_TO_ADD.remove(field_name)
                         elem_maker = builder.ElementMaker()
                         for field_name in FIELD_TO_ADD:
                             if field_name in self._fields.keys():
