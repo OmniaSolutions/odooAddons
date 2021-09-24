@@ -37,6 +37,5 @@ from odoo.tools import DEFAULT_SERVER_DATETIME_FORMAT
 class ProductProduct(models.Model):
     _inherit = ['product.product']
 
-    @api.one
     def getSubContractingProduct(self):
         return self.bom_id.external_product

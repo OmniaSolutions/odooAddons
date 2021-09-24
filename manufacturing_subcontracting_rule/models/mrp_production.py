@@ -79,11 +79,13 @@ class MrpProduction(models.Model):
             if stock_move.raw_product_id == product_id_id:
                 return stock_move.quantity * qty
 
-    @api.multi
     def _getDefaultPartner(self):
         for mrp_production in self:
-            if mrp_production.routing_id.location_id.partner_id:
-                mrp_production.external_partner = mrp_production.routing_id.location_id.partner_id.id
+            if mrp_production.routing_id:
+                if mrp_production.routing_id.location_id.partner_id:
+                    mrp_production.external_partner = mrp_production.routing_id.location_id.partner_id.id
+                    continue
+            mrp_production.external_partner=False
 
     state = fields.Selection(selection_add=[('external', 'External Production')])
     stock_bom_ids = fields.One2many('stock.bom',
@@ -110,7 +112,6 @@ class MrpProduction(models.Model):
                                                       states={'done': [('readonly', True)], 'cancel': [('readonly', True)]})
     external_pickings = fields.One2many('stock.picking', 'external_production', string='External Pikings')
 
-    @api.multi
     def open_external_purchase(self):
         newContext = self.env.context.copy()
         manufacturingIds = []
@@ -132,7 +133,6 @@ class MrpProduction(models.Model):
             'domain': [('id', 'in', manufacturingIds)],
         }
 
-    @api.multi
     def open_external_pickings(self):
         newContext = self.env.context.copy()
         srock_picking_ids = []
@@ -251,7 +251,6 @@ class MrpProduction(models.Model):
             locBrws = locationObj.create(vals)
         return locBrws
 
-    @api.multi
     def get_wizard_value(self):
         values = {}
         values['move_raw_ids'] = [(6, 0, self.copyAndCleanLines(self.move_raw_ids,
@@ -265,12 +264,11 @@ class MrpProduction(models.Model):
         values['request_date'] = datetime.datetime.now()
         return values
 
-    @api.multi
     def button_produce_externally(self):
         values = self.get_wizard_value()
         values['consume_product_id'] = self.product_id.id
         values['consume_bom_id'] = self.bom_id.id
-        values['external_warehouse_id'] = self.location_src_id.get_warehouse().id
+        #values['external_warehouse_id'] = self.location_src_id.get_warehouse().id
         obj_id = self.env['mrp.production.externally.wizard'].create(values)
         obj_id.create_vendors()
         self.env.cr.commit()
@@ -284,7 +282,6 @@ class MrpProduction(models.Model):
             'target': 'new',
         }
 
-    @api.multi
     def button_cancel_produce_externally(self):
         stockPickingObj = self.env['stock.picking']
         purchaseOrderObj = self.env['purchase.order']
@@ -337,7 +334,6 @@ class MrpProduction(models.Model):
         wareHouseBrws = self.env['stock.warehouse.orderpoint'].create(toCreate)
         return wareHouseBrws
 
-    @api.multi
     def do_unreserve(self):
         for production in self:
             production.move_raw_ids.filtered(lambda x: x.state not in ('done', 'cancel'))._do_unreserve()
@@ -345,7 +341,6 @@ class MrpProduction(models.Model):
                 production.do_cancel_external_move()
         return True
 
-    @api.multi
     def do_cancel_external_move(self):
         for mrp_production in self:
             for move in mrp_production.move_raw_ids:
