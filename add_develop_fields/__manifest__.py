@@ -26,6 +26,7 @@
     'website': 'https://www.omniasolutions.website',
     'category': 'Extra Tools',
     'sequence': 15,
+     "license": "LGPL-3",
     'summary': 'Omnia Dev Tools',
     'images': [],
     'depends': ['base'],

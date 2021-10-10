@@ -2,12 +2,12 @@
 ##############################################################################
 #
 #    OpenERP, Open Source Management Solution
-#    Copyright (C) 2018-2018 OmniaSolutions (<http://omniasolutions.eu>)
+#    Copyright (C) 2018-2018 OmniaSolutions (<https://www.omniasolutions.website>)
 #
 #
 #    Author : Matteo Boscolo  (Omniasolutions)
 #    mail:matteo.boscolo@omniasolutions.eu
-#    Copyright (c) 2018 Omniasolutions (http://www.omniasolutions.eu)
+#    Copyright (c) 2018 Omniasolutions (https://www.omniasolutions.website)
 #    All Right Reserved
 #
 #    This program is free software: you can redistribute it and/or modify
