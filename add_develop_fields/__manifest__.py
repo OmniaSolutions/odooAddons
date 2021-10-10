@@ -24,12 +24,15 @@
     'version': '15.0.1',
     'author': 'OmniaSolutions',
     'website': 'http://www.omniasolutions.eu',
-    'category': 'Omnia Dev Tools',
+    'category': 'Extra Tools',
     'sequence': 15,
     'summary': 'Omnia Dev Tools',
     'images': [],
     'depends': ['base'],
-    'description': """""",
+    'description': """
+        This module add special fields like
+        id,create_date,create_user,write_date,write_user when you are part of the group base.group_erp_manager
+    """,
     'data': [
        ],
     'demo': [
