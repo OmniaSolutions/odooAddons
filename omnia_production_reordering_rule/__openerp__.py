@@ -21,7 +21,7 @@
 ##############################################################################
 {
     'name': 'Omnia Production Reordering Rule',
-    'version': '14.0',
+    'version': '15.0.1',
     'author': 'OmniaSolutions',
     'website': 'http://www.omniasolutions.eu',
     'category': 'Production',

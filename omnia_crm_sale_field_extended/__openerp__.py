@@ -28,7 +28,7 @@
 
 {
     'name': 'omnia_crm_sale_field_extended',
-    'version': '14.0',
+    'version': '15.0.1',
     'sequence': 1,
     'category': 'CRM',
     'description': """

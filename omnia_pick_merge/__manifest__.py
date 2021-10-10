@@ -26,7 +26,7 @@
 
 {
     'name': 'omnia_pick_merge',
-    'version': '14.0',
+    'version': '15.0.1',
     'sequence': 1,
     'category': 'Custom',
     'description': """

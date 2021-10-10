@@ -21,7 +21,7 @@
 ##############################################################################
 {
     'name': 'Sale Order Mandatory Product',
-    'version': '14.0',
+    'version': '15.0.1',
     'author': 'OmniaSolutions',
     'website': 'https://www.omniasolutions.website',
     'category': 'Sales/Sales',

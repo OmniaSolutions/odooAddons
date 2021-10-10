@@ -21,7 +21,7 @@
 ##############################################################################
 {
     'name': 'Maintenance to customer',
-    'version': '14.0',
+    'version': '15.0.0',
     'author': 'OmniaSolutions',
     'website': 'http://www.omniasolutions.eu',
     'category': 'maintenance',

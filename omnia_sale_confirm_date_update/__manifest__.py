@@ -21,7 +21,7 @@
 ##############################################################################
 {
     'name': 'Sale Order Confirm Date',
-    'version': '14.0',
+    'version': '15.0.1',
     'author': 'OmniaSolutions',
     'website': 'http://www.omniasolutions.eu',
     'category': 'Sale Order Customization',
