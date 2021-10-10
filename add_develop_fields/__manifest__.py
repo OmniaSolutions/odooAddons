@@ -23,7 +23,7 @@
     'name': 'Omnia Dev Tools',
     'version': '15.0.1',
     'author': 'OmniaSolutions',
-    'website': 'http://www.omniasolutions.eu',
+    'website': 'https://www.omniasolutions.website',
     'category': 'Extra Tools',
     'sequence': 15,
     'summary': 'Omnia Dev Tools',
