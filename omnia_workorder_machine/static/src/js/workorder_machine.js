@@ -252,10 +252,12 @@ odoo.define('omnia_workorder_machine.workorder_machine_list', function (require)
 			}, false)
 	    }
 	    var user_id = document.getElementById('input_user_id');
-	    user_id.onchange = function(){
-	    	show_workorders_by_user();
-	    	update_user_name();
-	    };
+		if (user_id != null){
+		    user_id.onchange = function(){
+		    	show_workorders_by_user();
+		    	update_user_name();
+		    };
+		}
     };
 
 	document.addEventListener('DOMContentLoaded', function() {
