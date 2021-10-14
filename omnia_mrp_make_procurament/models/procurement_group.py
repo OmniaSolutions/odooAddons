@@ -41,4 +41,5 @@ class ProcurementOrder(models.Model):
         product_ids = self.env.context.get('product_ids')
         if product_ids :
             domain += [('product_id.id', 'in', product_ids)]
+        logging.warning("Domain" + str(domain))
         return domain
