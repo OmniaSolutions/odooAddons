@@ -42,13 +42,7 @@ class ProcurementOrderOmnia(models.Model):
         mrpProdEnv = self.env['mrp.production']
         reorderRuleEnv = self.env['stock.warehouse.orderpoint']
         mrpProdOrders = []
-        if forceMrpBrws and isinstance(forceMrpBrws, (list, tuple)):
-            mrpProdOrders = forceMrpBrws
-        else:
-            mrpProdOrders = mrpProdEnv.search([
-                ('state', 'in', ['confirmed'])
-                ])
-        for mrpOrderBrws in mrpProdOrders:
+        for mrpOrderBrws in forceMrpBrws:
             for moveLineBrws in mrpOrderBrws.move_raw_ids:
                 prodBrws = moveLineBrws.product_id
                 if prodBrws.purchase_ok:

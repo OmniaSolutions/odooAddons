@@ -39,6 +39,6 @@ class ManufacturingOrderOmnia(models.Model):
     @api.onchange('product_id')
     def auto_reordering_rules_calculation(self):
         for mrp_production_id in self:
-            self.env['procurement.order.omnia'].auto_reordering_rules_calculation(forceMrpBrws=mrp_production_id)
+            self.env['procurement.order.omnia'].auto_reordering_rules_calculation(forceMrpBrws=[mrp_production_id])
 
 # vim:expandtab:smartindent:tabstop=4:softtabstop=4:shiftwidth=4:
