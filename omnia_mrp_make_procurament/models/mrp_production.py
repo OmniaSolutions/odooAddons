@@ -56,7 +56,12 @@ class MrpProduction(models.Model):
                 if line.state not in ['done', 'cancel'] and line.product_qty - line.quantity_done > 0:
                     ids.append(line.product_id.id)
             ctx=self.env.context.copy()
-            ctx['product_ids'] = ids
+            ctx['omnia_product_ids'] = ids
+            try:
+                if mrp_production_id.project_id:
+                    ctx['omnia_analitic_id'] = mrp_production_id.project_id.analytic_account_id.id
+            except Exception as ex:
+                logging.warning(ex)
             date_now = datetime.datetime.now().strftime(DEFAULT_SERVER_DATETIME_FORMAT)
             self.env['procurement.group'].with_context(ctx).run_scheduler(company_id=self.env.user.company_id.id)
             self.search([('create_date', '>', date_now)]).create_procuraments()

@@ -25,3 +25,5 @@ Created on 2 Mar 2020
 '''
 from . import mrp_production
 from . import procurement_group
+from . import stock_rule
+from . import purchase_order_line

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 ##############################################################################
 #
-#    OmniaSolutions, ERP-PLM-CAD Open Source Solution
+#    OmniaSolutions, ERP-PLM-CAD Open Source Solutions
 #    Copyright (C) 2011-2021 https://OmniaSolutions.website
 #
 #    This program is free software: you can redistribute it and/or modify
@@ -18,27 +18,31 @@
 #    along with this prograIf not, see <http://www.gnu.org/licenses/>.
 #
 ##############################################################################
-{
-    'name': 'Omnia Mrp Make Procurement',
-    'version': '12.0.1',
-    'sequence': 1,
-    'category': 'Custom',
-    'description': """
-Allow the capability to recursively make procurement order from manufactoring order on all levels
-""",
-    'author': 'OmniaSolutions',
-    'maintainer': 'OmniaSolutions',
-    'website': 'https://www.omniasolutions.website',
-    'images': ['static/img/mrp_make_procurement.png'],
-    'depends': ['mrp',
-                'stock',
-                'purchase',
-                'purchase_stock'],
-    'data': [
-        #  view
-        'views/mrp_production.xml',
-    ],
-    'installable': True,
-    'application': False,
-    'auto_install': False,
-}
+'''
+Created on 26 Oct 2021
+
+@author: mboscolo
+'''
+import logging
+import datetime
+from odoo import models
+from odoo import fields
+from odoo import api
+from odoo import _
+from odoo.exceptions import UserError
+from datetime import timedelta
+from odoo.tools import DEFAULT_SERVER_DATETIME_FORMAT
+
+class PurchaseOrderLine(models.Model):
+    _inherit = 'purchase.order.line'
+
+    def _merge_in_existing_line(self, product_id, product_qty, product_uom, location_id, name, origin, values):
+        """ This function purpose is to be override with the purpose to forbide _run_buy  method
+        to merge a new po line in an existing one.
+        """
+        analitic_id = self.env.context.get('omnia_analitic_id')
+        if analitic_id:
+            if self.account_analytic_id.id == analitic_id:
+                return True
+            return False
+        return True

@@ -2,7 +2,7 @@
 ##############################################################################
 #
 #    OmniaSolutions, ERP-PLM-CAD Open Source Solutions
-#    Copyright (C) 2011-2020 https://OmniaSolutions.website
+#    Copyright (C) 2011-2021 https://OmniaSolutions.website
 #
 #    This program is free software: you can redistribute it and/or modify
 #    it under the terms of the GNU Affero General Public License as
@@ -19,7 +19,7 @@
 #
 ##############################################################################
 '''
-Created on 24 Jan 2020
+Created on 26 Oct 2021
 
 @author: mboscolo
 '''
@@ -33,13 +33,19 @@ from odoo.exceptions import UserError
 from datetime import timedelta
 from odoo.tools import DEFAULT_SERVER_DATETIME_FORMAT
 
-class ProcurementOrder(models.Model):
-    _inherit = 'procurement.group'
+class StockRule(models.Model):
+    _inherit = 'stock.rule'
 
-    def _get_orderpoint_domain(self, company_id=False):
-        domain = super(ProcurementOrder, self)._get_orderpoint_domain()
-        product_ids = self.env.context.get('omnia_product_ids')
-        if product_ids :
-            domain += [('product_id.id', 'in', product_ids)]
-        logging.warning("Domain" + str(domain))
-        return domain
+    def _prepare_purchase_order_line(self, product_id, product_qty, product_uom, values, po, partner):
+        """
+        """
+        values = super(StockRule, self)._prepare_purchase_order_line(product_id,
+                                                                    product_qty,
+                                                                    product_uom,
+                                                                    values,
+                                                                    po, 
+                                                                    partner)
+        analitic_id = self.env.context.get('omnia_analitic_id')
+        if analitic_id:
+            values['account_analytic_id'] = analitic_id
+        return values
