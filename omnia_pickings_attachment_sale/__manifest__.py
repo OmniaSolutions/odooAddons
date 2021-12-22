@@ -25,10 +25,10 @@
 
 
 {
-    'name': 'Omnia Pickings Attachment',
+    'name': 'Omnia Pickings Attachment Sale',
     'version': '1.1',
     'sequence': 1,
-    'category': 'Stock',
+    'category': 'Sale Stock',
     'description': """
 Attach the same attachment to several incoming pickings
 ====================
@@ -36,12 +36,11 @@ Attach the same attachment to several incoming pickings
     'author': 'OmniaSolutions.eu',
     'maintainer': 'OmniaSolutions.eu',
     'website': 'http://www.OmniaSolutions.eu',
-    'depends': ['purchase',
-                'stock',
-                'sale'],
+    'depends': ['omnia_pickings_attachment',
+                'sale',
+                ],
     'data': [
-        'views/stock_picking.xml',
-        'views/plm_temporary.xml',
+        'views/sale_order.xml',
              ],
     'installable': True,
     'application': False,
