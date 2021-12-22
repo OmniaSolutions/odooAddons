@@ -1,0 +1,14 @@
+<odoo>     
+
+        <record id="action_purchase_attach_document" model="ir.actions.server">
+            <field name="name">Attachment to pickings</field>
+            <field name="type">ir.actions.server</field>
+            <field name="state">code</field>
+            <field name="model_id" ref="purchase.model_purchase_order"/>
+            <field name="binding_model_id" ref="purchase.model_purchase_order"/>
+            <field name="code">
+action = records.attach_to_pickings()
+            </field>
+        </record>
+
+</odoo>
