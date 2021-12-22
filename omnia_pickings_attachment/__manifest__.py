@@ -40,6 +40,7 @@ Attach the same attachment to several incoming pickings
                 'stock',],
     'data': [
         'views/purchase_order.xml',
+        'views/stock_picking.xml',
         'views/plm_temporary.xml',
              ],
     'installable': True,
