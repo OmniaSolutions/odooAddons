@@ -16,7 +16,7 @@ class Extension(main.ReportController):
                 reportname, docids = reportname.split('/')
             out_doc_ids = []
             for doc in docids.split(","):
-                if doc.index("-")>0:
+                if doc.find("-")>0:
                     out_doc_ids.append(doc.split("-")[0])
                 else:
                     out_doc_ids.append(doc)
