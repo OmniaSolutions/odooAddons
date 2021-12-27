@@ -17,9 +17,9 @@
 					        </tr>
 					    </thead>
 	                    <tbody>
-		                   <tr t-foreach="docs.sorted(lambda x: x.start_datetime)" t-as="event">
-	                            <td><t t-esc="event.start_datetime or '-'"></t></td>
-	                            <td><t t-esc="event.final_date or '-'"></t></td>
+		                   <tr t-foreach="docs.sorted(lambda x: x.start_date)" t-as="event">
+	                            <td><t t-esc="event.start_date or '-'"></t></td>
+	                            <td><t t-esc="event.stop_date or '-'"></t></td>
 	                            <td><span t-esc="event.duration" t-options='{"widget": "float", "precision": 2}'/><span> hours</span></td>
 	                            <td><t t-esc="event.project_id.display_name or '-'"></t></td>
 	                            <td><t t-esc="event.task_id.display_name or '-'"></t></td>
