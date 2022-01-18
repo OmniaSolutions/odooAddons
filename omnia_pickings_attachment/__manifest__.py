@@ -41,7 +41,7 @@ Attach the same attachment to several incoming pickings
                 'sale'],
     'data': [
         'views/stock_picking.xml',
-        'views/plm_temporary.xml',
+        'views/temporary_pick_attach.xml',
              ],
     'installable': True,
     'application': False,
