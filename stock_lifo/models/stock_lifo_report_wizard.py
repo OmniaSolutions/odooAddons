@@ -23,6 +23,7 @@
 # 04-12-2020
 
 from odoo import models, fields, api, _
+from odoo.exceptions import UserError
 import logging
 import datetime
 import xlwt
@@ -47,6 +48,7 @@ class StockLifoReportWizard(models.TransientModel):
     include_zero = fields.Boolean(string='Include Zero')
     xls_filename = fields.Char(string='Filename', default=_get_default_filename)
     xls_data = fields.Binary(string='Download File')
+    err_msg = fields.Html(_('Error res'))
     
     
     @api.onchange('xls_filename')
@@ -162,6 +164,7 @@ class StockLifoReportWizard(models.TransientModel):
         bold_borders = xlwt.easyxf('font: bold on, height 150; borders: left thin, right thin, top thin, bottom thin')
         
         for wizard in self:
+            wizard.err_msg = ''
             category_ids = wizard.product_category_ids
             product_id = wizard.product_id
             product_ids = self.getAvailableProducts(category_ids, product_id)
@@ -196,6 +199,14 @@ class StockLifoReportWizard(models.TransientModel):
                     logging.info('[action_generate_report] %s / %s' % (index, product_ids_len))
                 product_total = 0
                 lines = self.env['stock.lifo'].search([('product_id', '=', product_id.id),('year', '<=', wizard.year)], order='year ASC')
+                if not lines:
+                    logging.warning('Cannot find LIFO lines for product %r with ID %r' % (product_id.display_name, product_id.id))
+                    continue
+                if lines[-1].year != wizard.year and product_id.qty_available:
+                    msg = '[WARNING] product %r [%r] lifo line is missing.'  % (product_id.display_name, product_id.id)
+                    logging.info(msg)
+                    wizard.err_msg += '<p> - ' + msg + '</p>'
+                    continue
                 for line in lines:
                     product_total += line.total_amount
                 if product_total != 0 or (product_total == 0 and wizard.include_zero):

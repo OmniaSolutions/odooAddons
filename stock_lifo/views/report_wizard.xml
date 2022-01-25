@@ -24,6 +24,7 @@
 		      		<group>
 		      			<field name="xls_filename"/>
 		      			<field name="xls_data" readonly="1" filename="xls_filename"/>
+		      			<field name="err_msg" colspan="4" readonly="1" nolabel="1"/>
 		    		</group>
            			<footer>
 		            	<button special="cancel" string="Cancel"/>
