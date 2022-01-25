@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+	    <record id="omnia_view_calendar_event_form_calendar" model="ir.ui.view">
+	         <field name="name">omnia.view.calendar.event.form</field>
+	         <field name="model">calendar.event</field>
+	         <field name="inherit_id" ref="calendar.view_calendar_event_form"/>
+	         <field name="arch" type="xml">
+	            <xpath expr="//label[@for='description']" position="before">
+	               <group name="project">
+		               <field name="project_id"/>
+		               <field name="task_id" domain="[('project_id','=', project_id)]"/>
+	               </group>
+	            </xpath>
+	         </field>
+	    </record>
+    </data>
+</odoo>

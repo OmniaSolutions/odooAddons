@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+	<template id="report_calendar_event">
+		   <t t-call="report.html_container">
+		      <t t-call="report.external_layout">
+		            <div class="page" align="center">
+		               <table class="table table-condensed">
+            		    <thead>
+					        <tr>
+					            <th>Start Date</th>
+					            <th>End Start</th>
+					            <th>Durata</th>
+					            <th>Progetto</th>
+					            <th>Task</th>
+					            <th>Users</th>
+					            <th>Descriptions</th>
+					        </tr>
+					    </thead>
+	                    <tbody>
+		                   <tr t-foreach="docs.sorted(lambda x: x.start_date)" t-as="event">
+	                            <td><t t-esc="event.start_date or '-'"></t></td>
+	                            <td><t t-esc="event.stop_date or '-'"></t></td>
+	                            <td><span t-esc="event.duration" t-options='{"widget": "float", "precision": 2}'/><span> hours</span></td>
+	                            <td><t t-esc="event.project_id.display_name or '-'"></t></td>
+	                            <td><t t-esc="event.task_id.display_name or '-'"></t></td>
+	                            <td><t t-foreach="event.partner_ids" t-as="user">
+                                        <span t-esc="user.name"/>
+                                    </t>
+                                </td>
+	                            <td><t t-esc="event.name or '-'"></t></td>	                    
+		                   </tr>
+		               </tbody>
+		        </table>
+		     </div>
+		 </t>
+		</t>
+	</template>
+</odoo>

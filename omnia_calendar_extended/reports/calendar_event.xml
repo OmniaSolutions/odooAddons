@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<openerp>
+    <data>
+
+        <report 
+            id="calendar_event"
+            model="calendar.event"
+            string="Planning" 
+            report_type="qweb-pdf"  
+            name="omnia_calendar_extended.report_calendar_event"  
+        />
+                
+    </data>
+</openerp>
