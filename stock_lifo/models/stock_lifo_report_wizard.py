@@ -179,7 +179,7 @@ class StockLifoReportWizard(models.TransientModel):
             
             wb = xlwt.Workbook() # create empty workbook object
             newsheet = wb.add_sheet('Sheet1') # sheet name can not be longer than 32 characters
-            newsheet.write_merge(0,1,0,6,'Stampa Dettagliata LIFO', style=title)
+            newsheet.write_merge(0,1,0,7,'Stampa Dettagliata LIFO', style=title)
             newsheet.write(2,0,'Articolo', style=header)
             newsheet.write(2,1,'Descrizione', style=header)
             newsheet.write(2,2,'Anno', style=header)
@@ -187,8 +187,10 @@ class StockLifoReportWizard(models.TransientModel):
             newsheet.write(2,4,'Rim. Calcolata', style=header)
             newsheet.write(2,5,'Costo Medio', style=header)
             newsheet.write(2,6,'Importo', style=header)
+            newsheet.write(2,7,'Subtotale', style=header)
             i=3
             total = 0
+            previous_cell = None
             for index, product_id in enumerate(product_ids):
                 if index % 300 == 0:
                     logging.info('[action_generate_report] %s / %s' % (index, product_ids_len))
@@ -224,10 +226,18 @@ class StockLifoReportWizard(models.TransientModel):
                     newsheet.write(i,4,line.remaining_year_qty, style=bold_borders)
                     newsheet.write(i,5,avg, style=decimal_bold)
                     newsheet.write(i,6,product_total, style=decimal_bold)
-                    i += 1
+                    curr_subtotal_cell = xlwt.Utils.rowcol_to_cell(i,7)
+                    if previous_cell:
+                        newsheet.write(i,7, xlwt.Formula('SUM(%s;%s)' % (previous_cell, product_total)), style=decimal_bold)
+                    else:
+                        newsheet.write(i,7, product_total, style=decimal_bold)
+                    previous_cell = curr_subtotal_cell
                     total += product_total
+                    i += 1
             newsheet.write(i,5,'Totale Magazzino',style=bold)
-            newsheet.write(i,6,total, style=cell)
+            
+            if previous_cell:
+                newsheet.write(i,6, xlwt.Formula('SUM(%s; 0)' % (previous_cell)))
             wb.save(full_path)
             os.chmod(full_path, stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO)
             with open(full_path, 'rb') as f:
