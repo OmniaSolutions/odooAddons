@@ -238,8 +238,9 @@ class StockLifoReportWizard(models.TransientModel):
                     newsheet.write(i,5,avg, style=decimal_bold)
                     newsheet.write(i,6,product_total, style=decimal_bold)
                     curr_subtotal_cell = xlwt.Utils.rowcol_to_cell(i,7)
+                    total_cell = xlwt.Utils.rowcol_to_cell(i,6)
                     if previous_cell:
-                        newsheet.write(i,7, xlwt.Formula('SUM(%s;%s)' % (previous_cell, product_total)), style=decimal_bold)
+                        newsheet.write(i,7, xlwt.Formula('SUM(%s;%s)' % (previous_cell, total_cell)), style=decimal_bold)
                     else:
                         newsheet.write(i,7, product_total, style=decimal_bold)
                     previous_cell = curr_subtotal_cell
