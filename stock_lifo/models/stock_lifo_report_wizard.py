@@ -73,31 +73,6 @@ class StockLifoReportWizard(models.TransientModel):
                 ])
         return product_ids
 
-    def checkCreateStockLifo(self, product_id, qty_in, qty_out, average, year, current_stock):
-        stockLifoEnv = self.env['stock.lifo']
-        lifos = stockLifoEnv.search([
-            ('product_id', '=', product_id.id),
-            ('year', '=', year)
-            ])
-        if current_stock < 0:
-            current_stock = 0
-        total_amount = 0
-        computed_qty = 0
-        vals = {
-            'product_id': product_id.id,
-            'qty_in': qty_in,
-            'qty_out': qty_out,
-            'avg_price': average,
-            'total_amount': total_amount,
-            'year': year,
-            'remaining_year_qty': current_stock,
-            'computed_qty': computed_qty,
-            }
-        if lifos:
-            lifos.write(vals)
-        else:
-            lifos.create(vals)
-
     @api.multi
     def action_generate_report(self):
         title = xlwt.easyxf('font: bold on, height 320; borders: left thin, right thin, top thin, bottom thin; align: horiz center, vertical center')
@@ -143,14 +118,15 @@ class StockLifoReportWizard(models.TransientModel):
                 if index % 300 == 0:
                     logging.info('[action_generate_report] %s / %s' % (index, product_ids_len))
                 product_total = 0
-                lines = self.env['stock.lifo'].search([('product_id', '=', product_id.id),('year', '<=', wizard.year)], order='year ASC')
+                lines = self.env['stock.lifo'].search([('product_id', '=', product_id.id),
+                                                       ('year', '<=', wizard.year)], order='year ASC')
                 if not lines:
                     logging.warning('Cannot find LIFO lines for product %r with ID %r' % (product_id.display_name, product_id.id))
                     continue
-                if lines[-1].year != wizard.year and product_id.qty_available:
-                    msg = '[WARNING] product %r [%r] lifo line is missing.'  % (product_id.display_name, product_id.id)
+                if lines[-1].year != wizard.year:
+                    msg = '[WARNING] product %r [%r] no lifo for selected year, skipped.'  % (product_id.display_name, product_id.id)
                     logging.info(msg)
-                    wizard.err_msg += '<p> - ' + msg + '</p>'
+                    wizard.err_msg += '<p>' + msg + '</p>'
                     continue
                 for line in lines:
                     product_total += line.total_amount
