@@ -73,61 +73,6 @@ class StockLifoReportWizard(models.TransientModel):
                 ])
         return product_ids
 
-    @api.model
-    def getPoLines(self, start_date, end_date):
-        out = {}
-        poenv = self.env['purchase.order']
-        pos = poenv.search([
-            ('state', '=', 'purchase'),
-            ('date_order', '>=', str(start_date)),
-            ('date_order', '<=', str(end_date))
-            ])
-        for po in pos:
-            for pol in po.order_line:
-                product = pol.product_id
-                if product.type == 'product':
-                    if product not in out:
-                        out[product] = {'prices': [], 'qty': 0.0}
-                    out[product]['prices'].append(pol.price_unit)
-                    moves = self.env['stock.move'].search([
-                        ('purchase_line_id', '=', pol.id)
-                        ])
-                    for move in moves:
-                        out[product]['qty'] += move.product_uom_qty
-        return out
-
-    @api.model
-    def getOutLocations(self):
-        stockLocation = self.env['stock.location']
-        availableLoctypes = ['production', 'inventory'] # check internal
-        return stockLocation.search([('usage', 'in', availableLoctypes)])
-
-    @api.model
-    def getStockMovesOut(self, start_date, end_date):
-        out = {}
-        stockMoveEnv = self.env['stock.move']
-        locations = self.getOutLocations()
-        stockMoves = stockMoveEnv.search([
-            ('state', '=', 'done'),
-            ('location_id', 'in', locations.ids),
-            ('date', '>=', str(start_date)),
-            ('date', '<=', str(end_date)),
-            ])
-        for stockMove in stockMoves:
-            product = stockMove.product_id
-            if product.type == 'product':
-                if product not in out:
-                    out[product] = {'qty': 0.0}
-                out[product]['qty'] += stockMove.product_qty
-        return out
-
-    @api.model
-    def getTargetDates(self, year):
-        year = int(year)
-        start_year = datetime.datetime(year, 1, 1)
-        end_year = datetime.datetime(year, 12, 31)
-        return start_year, end_year, year
-
     def checkCreateStockLifo(self, product_id, qty_in, qty_out, average, year, current_stock):
         stockLifoEnv = self.env['stock.lifo']
         lifos = stockLifoEnv.search([
