@@ -40,6 +40,7 @@ class StockLifo(models.Model):
     remaining_year_qty = fields.Float(_('Remaining Year Qty'))
     computed_qty = fields.Float(_('Computed Qty'))
     lifo_desc = fields.Char(_('Old Desc'))
+    imported = fields.Boolean(_('Imported'))
 
     def findProduct(self, code):
         product_env = self.env['product.product']
@@ -92,6 +93,7 @@ class StockLifo(models.Model):
             'remaining_year_qty': rim_finale,
             'computed_qty': rim_calcolata,
             'lifo_desc': desc,
+            'imported': True,
             }
         lifo_lines = self.search([('product_id', '=', product_id.id),
                                   ('year', '=', str(anno))

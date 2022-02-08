@@ -68,6 +68,7 @@
 		                	<field name="remaining_year_qty"/>
 		                	<field name="computed_qty"/>
 		                	<field name="lifo_desc"/>
+		                	<field name="imported"/>
 	                	</group>
            			</sheet>
                 </form>
