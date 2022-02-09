@@ -210,8 +210,11 @@ class StockLifoWizard(models.TransientModel):
                     to_subtract = stock_qty - previous_lifo.remaining_year_qty
                     stock_lifo.computed_qty = to_subtract
                     stock_qty -= to_subtract
+                    if not stock_lifo.avg_price:
+                        stock_lifo.avg_price = previous_lifo.avg_price
                 else:
                     stock_lifo.computed_qty = 0
+                stock_lifo.total_amount = stock_lifo.computed_qty * stock_lifo.avg_price
             else:
                 stock_lifo.computed_qty = stock_qty
                 
