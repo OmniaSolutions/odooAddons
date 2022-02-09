@@ -188,45 +188,31 @@ class StockLifoWizard(models.TransientModel):
                             current_stock += quant.qty
                 qty_out = stock_moves_out.get(product_id, {'qty': 0.0}).get('qty', 0.0)
                 self.checkCreateStockLifo(product_id, qty_in, qty_out, average, year, current_stock)
-                self.recomputeLifoQty(product_id, current_stock, year)
+                self.recomputeLifoQty(product_id)
         logging.info('[action_generate_lifo] end')
     
     @api.model
-    def recomputeLifoQty(self, product_id, current_stock, year):
+    def recomputeLifoQty(self, product_id):
         stockLifoEnv = self.env['stock.lifo']
         stock_lifos = stockLifoEnv.search([
             ('product_id', '=', product_id.id),
-            ], order='year asc')
+            ], order='year desc')
         stock_qty = 0
-        for index, stock_lifo in enumerate(stock_lifos):
+        lifos = dict(enumerate(stock_lifos))
+        for index, stock_lifo in lifos.items():
             remaining_qty = stock_lifo.remaining_year_qty
-            if index == 0:
-                stock_lifo.computed_qty = remaining_qty
-            elif remaining_qty > stock_qty:
-                qty_to_add = remaining_qty - stock_qty
-                stock_lifo.computed_qty = qty_to_add
-            elif remaining_qty <= stock_qty:
-                stock_lifo.computed_qty = 0
-                stock_lifo.avg_price = 0
-            stock_lifo.total_amount = stock_lifo.computed_qty * stock_lifo.avg_price
-            stock_qty = remaining_qty
-        
-        
-        # for stock_lifo in stock_lifos:
-            # if stock_lifo.year == str(year):
-                # last_year = stock_lifo
-                # continue
-            # if stock_lifo == stock_lifos[-1]:
-                # stock_lifo.computed_qty = current_stock
-                # break
-            # if last_year and current_stock > stock_lifo.remaining_year_qty:
-                # last_year.computed_qty = current_stock - stock_lifo.remaining_year_qty
-                # last_year.total_amount = last_year.computed_qty * last_year.avg_price
-                # current_stock = stock_lifo.remaining_year_qty
-            # if not last_year.avg_price and stock_lifo and last_year:
-                # last_year.avg_price = stock_lifo.avg_price
-            # last_year = stock_lifo
-            # if current_stock <= 0:
-                # break
+            previous_index = index + 1
+            if previous_index in lifos:
+                previous_lifo = lifos.get(previous_index)
+                if index == 0:
+                    stock_qty = remaining_qty
+                if previous_lifo.remaining_year_qty < stock_qty:
+                    to_subtract = stock_qty - previous_lifo.remaining_year_qty
+                    stock_lifo.computed_qty = to_subtract
+                    stock_qty -= to_subtract
+                else:
+                    stock_lifo.computed_qty = 0
+            else:
+                stock_lifo.computed_qty = stock_qty
                 
         
