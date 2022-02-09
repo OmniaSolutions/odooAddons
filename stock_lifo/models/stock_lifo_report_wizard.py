@@ -186,26 +186,5 @@ class StockLifoReportWizard(models.TransientModel):
                     'type': 'ir.actions.act_window',
                     'domain': "[]"}
     
-    @api.model
-    def recomputeLifoQty(self, product_id, current_stock, year):
-        stockLifoEnv = self.env['stock.lifo']
-        stock_lifos = stockLifoEnv.search([
-            ('product_id', '=', product_id.id),
-            ], order='year desc')
-        last_year = self.env['stock.lifo']
-        for stock_lifo in stock_lifos:
-            if stock_lifo.year == str(year):
-                last_year = stock_lifo
-                continue
-            if stock_lifo == stock_lifos[-1]:
-                stock_lifo.computed_qty = current_stock
-                break
-            if current_stock > stock_lifo.remaining_year_qty:
-                last_year.computed_qty = current_stock - stock_lifo.remaining_year_qty
-                last_year.total_amount = last_year.computed_qty * last_year.avg_price
-                current_stock = stock_lifo.remaining_year_qty
-            last_year = stock_lifo
-            if current_stock <= 0:
-                break
                 
         

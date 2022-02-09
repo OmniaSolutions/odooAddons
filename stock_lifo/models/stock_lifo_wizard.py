@@ -214,8 +214,8 @@ class StockLifoWizard(models.TransientModel):
                         stock_lifo.avg_price = previous_lifo.avg_price
                 else:
                     stock_lifo.computed_qty = 0
-                stock_lifo.total_amount = stock_lifo.computed_qty * stock_lifo.avg_price
             else:
                 stock_lifo.computed_qty = stock_qty
+            stock_lifo.total_amount = stock_lifo.computed_qty * stock_lifo.avg_price
                 
         
