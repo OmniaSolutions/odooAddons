@@ -85,10 +85,28 @@ class StockLifoReportWizard(models.TransientModel):
         
         for wizard in self:
             wizard.err_msg = ''
+            err_msg = ''
             category_ids = wizard.product_category_ids
             product_id = wizard.product_id
             product_ids = self.getAvailableProducts(category_ids, product_id)
             product_ids_len = len(product_ids.ids)
+            all_lifos = self.env['stock.lifo'].search([('year', '<=', wizard.year), ('product_id', 'in', product_ids.ids)])
+            
+            mapping_lines = {}
+            for index, lifo in enumerate(all_lifos):
+                if index % 500 == 0:
+                    logging.info('Lines %s / %s' % (index, len(all_lifos)))
+                product = lifo.product_id.id
+                mapping_lines.setdefault(product, self.env['stock.lifo'])
+                mapping_lines[product] += lifo
+
+            mapping_products = {}
+            for index, product_dict in enumerate(self.env['product.product'].browse(mapping_lines.keys()).read(['description', 'default_code'])):
+                if index % 500 == 0:
+                    logging.info('Products %s / %s' % (index, len(all_lifos)))
+                mapping_products.setdefault(product_dict['id'], {})
+                mapping_products[product_dict['id']] = product_dict
+       
             logging.info('LIFO products to evaluate %r' % (product_ids_len))
             
             out_fname = wizard.xls_filename
@@ -118,24 +136,25 @@ class StockLifoReportWizard(models.TransientModel):
                 if index % 300 == 0:
                     logging.info('[action_generate_report] %s / %s' % (index, product_ids_len))
                 product_total = 0
-                lines = self.env['stock.lifo'].search([('product_id', '=', product_id.id),
-                                                       ('year', '<=', wizard.year)], order='year ASC')
+                lines = mapping_lines.get(product_id.id, self.env['stock.lifo'])
+                lines.sorted('year')
                 if not lines:
-                    logging.warning('Cannot find LIFO lines for product %r with ID %r' % (product_id.display_name, product_id.id))
                     continue
                 if lines[-1].year != wizard.year:
-                    msg = '[WARNING] product %r [%r] no lifo for selected year, skipped.'  % (product_id.display_name, product_id.id)
+                    msg = '[WARNING] product ID %r no lifo for selected year, skipped.'  % (product_id.id)
                     logging.info(msg)
-                    wizard.err_msg += '<p>' + msg + '</p>'
+                    err_msg += '<p>' + msg + '</p>'
                     continue
                 for line in lines:
                     product_total += line.total_amount
                 if product_total != 0 or (product_total == 0 and wizard.include_zero):
-                    product_description = product_id.description or ''
+                    prod_dict = mapping_products.get(product_id, {})
+                    product_description = prod_dict.get('description', '')
+                    default_code = prod_dict.get('default_code', '')
                     desc_len = len(product_description)
                     if desc_len > wizard.parting:
                         product_description = product_description[:-(desc_len-wizard.parting)]
-                    newsheet.write(i,0,product_id.default_code, style=cell)
+                    newsheet.write(i,0,default_code, style=cell)
                     newsheet.write(i,1,product_description, style=cell)
                     for j in range(1,len(lines),1):
                         newsheet.write(i+j,0,'', style=cell)
@@ -177,6 +196,7 @@ class StockLifoReportWizard(models.TransientModel):
                 fileContent = f.read()
                 if fileContent:
                     wizard.xls_data = base64.encodestring(fileContent)
+            wizard.err_msg = err_msg
             return {'name': _('Stampa Report Lifo'),
                     'view_type': 'form',
                     "view_mode": 'form',
