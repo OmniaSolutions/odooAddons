@@ -148,9 +148,9 @@ class StockLifoReportWizard(models.TransientModel):
                 for line in lines:
                     product_total += line.total_amount
                 if product_total != 0 or (product_total == 0 and wizard.include_zero):
-                    prod_dict = mapping_products.get(product_id, {})
-                    product_description = prod_dict.get('description', '')
-                    default_code = prod_dict.get('default_code', '')
+                    prod_dict = mapping_products.get(product_id.id, {})
+                    product_description = prod_dict.get('description', '') or ''
+                    default_code = prod_dict.get('default_code', '') or ''
                     desc_len = len(product_description)
                     if desc_len > wizard.parting:
                         product_description = product_description[:-(desc_len-wizard.parting)]
@@ -171,7 +171,7 @@ class StockLifoReportWizard(models.TransientModel):
                     avg = 0
                     if product_total and line.remaining_year_qty:
                         avg = product_total/line.remaining_year_qty   
-                    newsheet.write(i,1,'Valorizzazione Articolo', style=xlwt.easyxf('font: bold on, height 150; align: horiz right'))
+                    newsheet.write(i,1,'Valorizzazione Articolo')#, style=xlwt.easyxf('font: bold on, height 150; align: horiz right'))
                     newsheet.write(i,2,last_year, style=bold_borders)
                     newsheet.write(i,3,'', style=bold_borders)
                     newsheet.write(i,4,line.remaining_year_qty, style=bold_borders)
