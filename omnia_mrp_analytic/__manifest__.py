@@ -48,7 +48,7 @@ Add analytics fields to the production order and create task for each work order
         'views/mrp_routing_workcenter.xml',
         'views/project_task.xml',
     ],
-    'installable': False,
+    'installable': True,
     'application': False,
     'auto_install': False,
 }

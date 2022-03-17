@@ -21,14 +21,12 @@ class MrpWorkOrder(models.Model):
                               related='task_id.user_id',
                               string=_('Assigned User'))
 
-    @api.multi
     def _getTotalTimeSpent(self):
         for workorder_id in self:
             workorder_id.user_time_spent = workorder_id.task_id.effective_hours
     user_time_spent = fields.Float(string=_('User Time Used'),
                                    compute=_getTotalTimeSpent)
 
-    @api.multi
     def create_task(self):
         task_obj = self.env['project.task']
         for workorder_id in self:
@@ -41,14 +39,12 @@ class MrpWorkOrder(models.Model):
             task_id = task_obj.create(values)
             workorder_id.task_id = task_id.id
 
-    @api.multi
     def button_finish(self):
         res = super(MrpWorkOrder, self).button_finish()
         for workorder_id in self:
             workorder_id.create_timesheet()
         return res
 
-    @api.model
     def create_timesheet(self):
         task_duration = self.duration * self.task_id.user_time_percentage
         if task_duration > 0:
