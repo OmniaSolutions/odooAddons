@@ -161,12 +161,15 @@ class StockLifoReportWizard(models.TransientModel):
                         newsheet.write(i+j,1,'', style=cell)
                     last_year = 0
                     for line in lines:
+                        avg_price = line.avg_price
+                        if line.computed_qty == 0:
+                            avg_price = 0
                         last_year = line.year
-                        newsheet.write(i,2,line.year, style=cell)
-                        newsheet.write(i,3,line.remaining_year_qty, style=cell)
-                        newsheet.write(i,4,line.computed_qty, style=cell)
-                        newsheet.write(i,5,line.avg_price, style=decimal)
-                        newsheet.write(i,6,line.total_amount, style=decimal)
+                        newsheet.write(i,2, line.year, style=cell)
+                        newsheet.write(i,3, line.remaining_year_qty, style=cell)
+                        newsheet.write(i,4, line.computed_qty, style=cell)
+                        newsheet.write(i,5, avg_price, style=decimal)
+                        newsheet.write(i,6, line.total_amount, style=decimal)
                         i += 1
                     avg = 0
                     if product_total and line.remaining_year_qty:
