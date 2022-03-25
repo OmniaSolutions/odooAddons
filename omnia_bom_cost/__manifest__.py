@@ -41,7 +41,7 @@ The procedure work in recursive way
     'data': [#view
             'views/mrp_bom.xml',
     ],
-    'installable': False,
+    'installable': True,
     'application': False,
     'auto_install': False,
 }

@@ -43,10 +43,8 @@ from odoo.tools import DEFAULT_SERVER_DATETIME_FORMAT
 
 
 class MrpBom(models.Model):
-    _name = "mrp.bom"
-    _inherit = ['mrp.bom']
+    _inherit = 'mrp.bom'
 
-    @api.multi
     def _compute_bom_cost(self):
         for bom in self:
             totale_cost = 0.0
