@@ -50,6 +50,7 @@ import base64
 
 class InventoryValuation(models.TransientModel):
     _name = "inventory.valuation"
+    _description = 'Valuation of inventory at a defined date'
 
 # descrizione in italiano
 # Security

@@ -33,7 +33,7 @@ from odoo import _
 
 class ProductExtension(models.Model):
 
-    _name = "product.template"
-    _inherit = ['product.template']
+    _inherit = 'product.template'
     
     production_order_use = fields.Boolean(string=_('Use for production order'))
+    auto_reorder = fields.Boolean(string=_('Automatic Reorder Rule'))

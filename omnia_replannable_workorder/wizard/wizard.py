@@ -15,6 +15,7 @@ from dateutil.relativedelta import relativedelta
 
 class ChangeProductMoveWizard(models.TransientModel):
     _name = "change_product_move_wizard"
+    _description = 'Replace stock raw material moves in manufacturing order'
 
     stock_moves = fields.Many2many('stock.move')
     product_id = fields.Many2one('product.product',

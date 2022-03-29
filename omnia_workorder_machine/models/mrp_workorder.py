@@ -126,7 +126,6 @@ class MrpProductionWCLine(models.Model):
         work_order_ids._recordWork(n_pieces,
                                    n_scrap)
         
-    @api.multi
     def _recordWork(self,
                     n_pieces=0,
                     n_scrap=0.0):
