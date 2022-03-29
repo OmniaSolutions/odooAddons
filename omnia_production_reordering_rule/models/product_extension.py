@@ -32,8 +32,6 @@ from odoo import _
 
 
 class ProductExtension(models.Model):
-
-    _name = "product.template"
     _inherit = ['product.template']
     
     auto_reorder = fields.Boolean(string=_('Automatic Reorder Rule'))
