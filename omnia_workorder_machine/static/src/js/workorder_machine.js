@@ -46,6 +46,8 @@ odoo.define('omnia_workorder_machine.workorder_machine_list', function (require)
         console.log("Start working");
         var button = button.currentTarget;
         var closestTr = button.closest('tr');
+        closestTr.style.cursor ='wait';
+        button.style.display = 'none';
         var wo_id = closestTr.getElementsByClassName('wo_id');
         var route = '/web/workorder_start/';
 		ajax.jsonRpc(route, 'call', {
@@ -61,7 +63,9 @@ odoo.define('omnia_workorder_machine.workorder_machine_list', function (require)
     function pause_work1 (button) {
         console.log("Pause working");
         var button = button.currentTarget;
+        button.style.display = 'none';
         var closestTr = button.closest('tr');
+        closestTr.style.cursor ='wait';
         var wo_id = closestTr.getElementsByClassName('wo_id');
         var route = '/web/workorder_pause/';
 		ajax.jsonRpc(route, 'call', {
@@ -76,7 +80,9 @@ odoo.define('omnia_workorder_machine.workorder_machine_list', function (require)
     function resume_work1 (button) {
         console.log("Pause working");
         var button = button.currentTarget;
+        button.style.display = 'none';
         var closestTr = button.closest('tr');
+        closestTr.style.cursor ='wait';
         var wo_id = closestTr.getElementsByClassName('wo_id');
         var route = '/web/workorder_resume/';
 		ajax.jsonRpc(route, 'call', {
@@ -91,7 +97,9 @@ odoo.define('omnia_workorder_machine.workorder_machine_list', function (require)
     function stop_work1 (button) {
         console.log("Pause working");
         var button = button.currentTarget;
+        button.style.display = 'none';
         var closestTr = button.closest('tr');
+        closestTr.style.cursor ='wait';
         var wo_id = closestTr.getElementsByClassName('wo_id');
         var n_pieces_to_produce = closestTr.getElementsByClassName('n_pieces_to_produce');
         var n_pieces = closestTr.getElementsByClassName('n_pieces');
@@ -252,10 +260,12 @@ odoo.define('omnia_workorder_machine.workorder_machine_list', function (require)
 			}, false)
 	    }
 	    var user_id = document.getElementById('input_user_id');
-	    user_id.onchange = function(){
-	    	show_workorders_by_user();
-	    	update_user_name();
-	    };
+		if (user_id != null){
+		    user_id.onchange = function(){
+		    	show_workorders_by_user();
+		    	update_user_name();
+		    };
+		}
     };
 
 	document.addEventListener('DOMContentLoaded', function() {
