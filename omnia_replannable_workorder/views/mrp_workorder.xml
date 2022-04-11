@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+    <!-- Not used in 14
+    <record id="mrp_workorder_form_replannable_omnia" model="ir.ui.view">
+        <field name="name">mrp.workorder.form.replannable.omnia</field>
+        <field name="model">mrp.workorder</field>
+        <field name="inherit_id" ref="mrp.mrp_production_workcenter_form_view_inherit"/>
+        <field name="arch" type="xml">
+            <field name="move_raw_ids" position="after">
+                <label for="raw_material_name"></label>
+                <field name="raw_material_name" readonly="True"/>
+            </field>
+        </field>
+    </record>
+     -->
+    <record id="omnia_mrp_production_workorder_tree_editable_view" model="ir.ui.view">
+        <field name="name">omnia.mrp_production_workorder_tree_editable_view</field>
+        <field name="model">mrp.workorder</field>
+        <field name="inherit_id" ref="mrp.mrp_production_workorder_tree_editable_view"/>
+        <field name="arch" type="xml">
+            <field name="workcenter_id" position="before">
+            	<field name="product_id"/>
+                <field name="raw_material_name"/>
+            </field>
+        </field>
+    </record>
+
+    <record id="omnia_view_mrp_production_workorder_form_view_filter" model="ir.ui.view">
+        <field name="name">omnia.rview_mrp_production_workorder_form_view_filter</field>
+        <field name="model">mrp.workorder</field>
+        <field name="inherit_id" ref="mrp.view_mrp_production_workorder_form_view_filter"/>
+        <field name="arch" type="xml">
+            <field name="production_id" position="after">
+                <field name="raw_material_name"/>
+            </field>
+        </field>
+    </record>
+    
+	 <record id="action_server_replan_workorder" model="ir.actions.server">
+	     <field name="name">Change Raw Material</field>
+	     <field name="type">ir.actions.server</field>
+	     <field name="model_id" ref="mrp.model_mrp_workorder" />
+	     <field name="binding_model_id" ref="mrp.model_mrp_workorder" />
+	     <field name="state">code</field>
+	     <field name="code">action = env['change_product_move_wizard'].ShowWizard(env.context.get('active_ids'))  
+	     </field>
+	 </record>
+    </data>
+</odoo>

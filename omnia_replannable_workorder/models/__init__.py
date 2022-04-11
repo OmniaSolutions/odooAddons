@@ -1,7 +1,7 @@
 # -*- encoding: utf-8 -*-
 ##############################################################################
 #
-#    OmniaSolutions, Open Source Management Solution    
+#    OmniaSolutions, Open Source Management Solution
 #    Copyright (C) 2010-2011 OmniaSolutions (<http://www.omniasolutions.eu>). All Rights Reserved
 #    $Id$
 #
@@ -19,21 +19,13 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 ##############################################################################
-
 '''
-Created on Mar 22, 2018
+Created on May 16, 2018
 
 @author: daniel
 '''
 
-from odoo import models
-from odoo import fields
-from odoo import _
+from . import mrp_workorder
+from . import stock_move
 
-
-class ProductExtension(models.Model):
-
-    _inherit = 'product.template'
-    
-    production_order_use = fields.Boolean(string=_('Use for production order'))
-    auto_reorder = fields.Boolean(string=_('Automatic Reorder Rule'))
+# vim:expandtab:smartindent:tabstop=4:softtabstop=4:shiftwidth=4:

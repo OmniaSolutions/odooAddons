@@ -1,7 +1,7 @@
 # -*- encoding: utf-8 -*-
 ##############################################################################
 #
-#    OmniaSolutions, Open Source Management Solution    
+#    OmniaSolutions, Open Source Management Solution
 #    Copyright (C) 2010-2011 OmniaSolutions (<http://www.omniasolutions.eu>). All Rights Reserved
 #    $Id$
 #
@@ -19,27 +19,7 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 ##############################################################################
-{
-    'name': 'Omnia Production Reordering Rule',
-    'version': '14.0',
-    'author': 'OmniaSolutions',
-    'website': 'http://www.omniasolutions.eu',
-    'category': 'Production',
-    'sequence': 15,
-    'summary': 'Allows to create reordering rules before sale order confirmation.',
-    'images': [],
-    'depends': ['mrp'],
-    'description': """
-    """,
-    'data': [
-        'views/product_extension.xml'
-            ],
 
-    'demo': [],
-    'test': [],
-    'installable': False,
-    'application': False,
-    'auto_install': False,
-}
+from . import wizard
 
 # vim:expandtab:smartindent:tabstop=4:softtabstop=4:shiftwidth=4:

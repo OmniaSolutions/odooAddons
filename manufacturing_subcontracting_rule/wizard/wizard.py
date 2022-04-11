@@ -31,7 +31,7 @@ class TmpStockMove(models.TransientModel):
         domain=[('type', 'in', ['product', 'consu'])], index=True, required=True,
         states={'done': [('readonly', True)]})
     product_uom_qty = fields.Float('Quantity',
-                                   digits=dp.get_precision('Product Unit of Measure'),
+                                   digits='Product Unit of Measure',
                                    default=1.0, required=True, states={'done': [('readonly', True)]},
                                    help="This is the quantity of products from an inventory "
                                         "point of view. For moves in the state 'done', this is the "
@@ -117,7 +117,7 @@ class externalProductionPartner(models.TransientModel):
     default = fields.Boolean(_('Default'))
     price = fields.Float('Price',
                          default=0.0,
-                         digits=dp.get_precision('Product Price'),
+                         digits='Product Price',
                          required=True,
                          help="The price to purchase a product")
     delay = fields.Integer('Delivery Lead Time',
@@ -687,7 +687,7 @@ class externalWorkorderPartner(models.TransientModel):
     default = fields.Boolean(_('Default'))
     price = fields.Float('Price',
                          default=0.0,
-                         digits=dp.get_precision('Product Price'),
+                         digits='Product Price',
                          required=True,
                          help="The price to purchase a product")
     delay = fields.Integer('Delivery Lead Time',

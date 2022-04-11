@@ -1,7 +1,7 @@
 # -*- encoding: utf-8 -*-
 ##############################################################################
 #
-#    OmniaSolutions, Open Source Management Solution    
+#    OmniaSolutions, Open Source Management Solution
 #    Copyright (C) 2010-2011 OmniaSolutions (<http://www.omniasolutions.eu>). All Rights Reserved
 #    $Id$
 #
@@ -21,19 +21,27 @@
 ##############################################################################
 
 '''
-Created on Mar 22, 2018
+Created on May 16, 2018
 
 @author: daniel
 '''
 
 from odoo import models
 from odoo import fields
+from odoo import api
 from odoo import _
 
 
-class ProductExtension(models.Model):
+class StockMoveExtension(models.Model):
+    _name = 'stock.move'
+    _inherit = 'stock.move'
 
-    _inherit = 'product.template'
-    
-    production_order_use = fields.Boolean(string=_('Use for production order'))
-    auto_reorder = fields.Boolean(string=_('Automatic Reorder Rule'))
+    def open_related_workorder(self):
+        self.ensure_one()
+        if self.workorder_id:
+            return {
+                "type": "ir.actions.act_window",
+                "res_model": "mrp.workorder",
+                "views": [[False, "form"]],
+                "res_id": self.workorder_id.id,
+            }

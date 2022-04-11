@@ -26,20 +26,20 @@
 #
 ##############################################################################
 {
-    'name': 'Omnia Mrp Bom Cost',
-    'version': '14.0',
+    'name': 'Omnia Inventory Valuation',
+    'version': '14.0.1.1.0',
     'sequence': 1,
     'category': 'Custom',
     'description': """
-Add the bom cost to the mrp bom in order to have in real time the price of the bom based on the cost product price of each product
-The procedure work in recursive way
+
 """,
     'author': 'OmniaSolutions.eu',
     'maintainer': 'OmniaSolutions.eu',
     'website': 'http://www.OmniaSolutions.eu',
-    'depends': ['mrp'],
+    'depends': ['stock'],
     'data': [#view
-            'views/mrp_bom.xml',
+            'views/inventory_valuation.xml',
+            'security/security.xml',
     ],
     'installable': True,
     'application': False,

@@ -8,9 +8,13 @@
         <field name="type">form</field>
          <field name="arch" type="xml">
         	<div name="options" position="inside">
-                <div>
+                <div name="prod_order_use">
                     <field name="production_order_use"/>
                     <label for="production_order_use"/>
+                </div>
+                <div name="auto_reorder_use">
+                    <field name="auto_reorder"/>
+                    <label for="auto_reorder"/>
                 </div>
             </div>
         </field>

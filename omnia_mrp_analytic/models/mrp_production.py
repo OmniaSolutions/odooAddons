@@ -51,7 +51,6 @@ class MrpProduction(models.Model):
                                  string=_('Project'),
                                  help=_('Project related to this production, if set the at action plan for each workorder a new task is created'))
 
-    @api.multi
     def _total_progect_time(self):
         for production_id in self:
             total = 0.0
@@ -62,7 +61,6 @@ class MrpProduction(models.Model):
                                        string=_('Total time'),
                                        help=_('Total time spent on this manufacture'))
 
-    @api.multi
     def button_plan(self):
         res = super(MrpProduction, self).button_plan()
         for obj_prj in self:

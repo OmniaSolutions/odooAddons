@@ -18,12 +18,13 @@
             
             <t t-call-assets="web.assets_backend" />
             <t t-call-assets="web.assets_backend" />
+             <!-- 
+            <t t-call-assets="web_editor.assets_summernote" />
+            <t t-call-assets="web_editor.assets_summernote" />
             
-            <t t-call-assets="web_editor.summernote" />
-            <t t-call-assets="web_editor.summernote" />
-            
-            <t t-call-assets="web_editor.assets_editor" />
-            <t t-call-assets="web_editor.assets_editor" />
+            <t t-call-assets="website.assets_editor" />
+            <t t-call-assets="website.assets_editor" />
+             -->
         </head>
         <t t-call="web.layout">
 
@@ -46,12 +47,13 @@
             
             <t t-call-assets="web.assets_backend" />
             <t t-call-assets="web.assets_backend" />
+<!-- 
+            <t t-call-assets="web_editor.assets_summernote" />
+            <t t-call-assets="web_editor.assets_summernote" />
             
-            <t t-call-assets="web_editor.summernote" />
-            <t t-call-assets="web_editor.summernote" />
-            
-            <t t-call-assets="web_editor.assets_editor" />
-            <t t-call-assets="web_editor.assets_editor" />
+            <t t-call-assets="website.assets_editor" />
+            <t t-call-assets="website.assets_editor" />
+ -->
 		</head>
         <t t-call="web.layout">
 
@@ -133,12 +135,13 @@
             
             <t t-call-assets="web.assets_backend" />
             <t t-call-assets="web.assets_backend" />
+<!-- 
+            <t t-call-assets="web_editor.assets_summernote" />
+            <t t-call-assets="web_editor.assets_summernote" />
             
-            <t t-call-assets="web_editor.summernote" />
-            <t t-call-assets="web_editor.summernote" />
-            
-            <t t-call-assets="web_editor.assets_editor" />
-            <t t-call-assets="web_editor.assets_editor" />
+            <t t-call-assets="website.assets_editor" />
+            <t t-call-assets="website.assets_editor" />
+ -->
 		</head>
 	
 	    <table class="main_table" style="border: 3px solid black; margin:30px; width:90%">

@@ -16,8 +16,8 @@ class crm_lead(models.Model):
     '''
     _name = "crm.lead"
     _inherit = ['crm.lead']
-    sale_order_amount = fields.Float(compute='_compute_order_non_confirmed', track_visibility='always')
-    sale_order_amount_confirmed = fields.Float(compute='_compute_order_confirmed', track_visibility='always')
+    sale_order_amount = fields.Float(compute='_compute_order_non_confirmed', tracking=True)
+    sale_order_amount_confirmed = fields.Float(compute='_compute_order_confirmed', tracking=True)
     sale_probability_group = fields.Char("Probability %", default="30")
 
     def getProbabilityRange(self, value):
