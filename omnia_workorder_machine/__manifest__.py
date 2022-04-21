@@ -30,6 +30,7 @@
     'images': [],
     'depends': [
                 'web',
+                'web_editor',
                 'mrp'],
     'description': """ This module allows to update workorder using a simple web interface.""",
     'data': [
