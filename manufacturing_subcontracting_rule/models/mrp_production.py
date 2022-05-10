@@ -81,11 +81,10 @@ class MrpProduction(models.Model):
 
     def _getDefaultPartner(self):
         for mrp_production in self:
-            if mrp_production.routing_id:
-                if mrp_production.routing_id.location_id.partner_id:
-                    mrp_production.external_partner = mrp_production.routing_id.location_id.partner_id.id
-                    continue
             mrp_production.external_partner=False
+            for sb_id in mrp_production.bom_id.subcontractor_ids:
+                mrp_production.external_partner=sb_id.id
+                break
 
     state = fields.Selection(selection_add=[('external', 'External Production')])
     stock_bom_ids = fields.One2many('stock.bom',
@@ -96,9 +95,12 @@ class MrpProduction(models.Model):
     external_partner = fields.Many2one('res.partner',
                                        compute='_getDefaultPartner',
                                        string='Default External Partner',
-                                       help="""This is a computed field in order to modifier it go to Routing -> Production Place -> Set Owner of the location
+                                       help="""This is a computed field in order to modifier it go to BOM -> Subcontracting -> Set Owner of the location
                                                if you do not see the Production Place Field, be sure to be part of group stock.group_adv_location""")
-    purchase_external_id = fields.Many2one('purchase.order', string='External Purchase')
+
+    purchase_external_id = fields.Many2one('purchase.order',
+                                           string='External Purchase')
+    purchase_external_count = fields.Integer('Number of external picking', compute='_getCountExtPurchase')
     move_raw_ids_external_prod = fields.One2many('stock.move',
                                                  'raw_material_production_id',
                                                  'Raw Materials External Production',
@@ -111,9 +113,25 @@ class MrpProduction(models.Model):
                                                       copy=False,
                                                       states={'done': [('readonly', True)], 'cancel': [('readonly', True)]})
     external_pickings = fields.One2many('stock.picking', 'external_production', string='External Pikings')
+    external_pickings_count = fields.Integer('Number of external picking', compute='_getCountExtPick')
 
-    def open_external_purchase(self):
-        newContext = self.env.context.copy()
+    def _getCountExtPick(self):
+        for item in self:
+            pick_ids = item.getExtPickIds()
+            if pick_ids:
+                item.external_pickings_count = len(pick_ids)
+            else:
+                item.external_pickings_count = 0
+
+    def _getCountExtPurchase(self):
+        for item in self:
+            pick_ids = item._getExtPurchase()
+            if pick_ids:
+                item.purchase_external_count = len(pick_ids)
+            else:
+                item.purchase_external_count = 0
+                
+    def _getExtPurchase(self):
         manufacturingIds = []
         if self.purchase_external_id:
             manufacturingIds = [self.purchase_external_id.id]
@@ -123,30 +141,35 @@ class MrpProduction(models.Model):
             for purchaseLineBrws in purchaseLines:
                 purchaseList = purchaseList + purchaseLineBrws.order_id
             manufacturingIds = purchaseList.ids
+        return manufacturingIds
+
+    def open_external_purchase(self):
         return {
             'name': _("Purchase External"),
             'view_type': 'form',
             'view_mode': 'tree,form',
             'res_model': 'purchase.order',
             'type': 'ir.actions.act_window',
-            'context': newContext,
-            'domain': [('id', 'in', manufacturingIds)],
+            'context': self.env.context.copy(),
+            'domain': [('id', 'in', self._getExtPurchase())],
         }
 
-    def open_external_pickings(self):
-        newContext = self.env.context.copy()
+    def getExtPickIds(self):
         srock_picking_ids = []
         for mrp_workorder_id in self.workorder_ids:
             srock_picking_ids.extend(mrp_workorder_id.getExternalPickings().ids)
         srock_picking_ids.extend(self.external_pickings.ids)
+        return srock_picking_ids
+    
+    def open_external_pickings(self):
         return {
             'name': _("External Pickings"),
             'view_type': 'form',
             'view_mode': 'tree,form',
             'res_model': 'stock.picking',
             'type': 'ir.actions.act_window',
-            'context': newContext,
-            'domain': [('id', 'in', srock_picking_ids)],
+            'context': self.env.context.copy(),
+            'domain': [('id', 'in', self.getExtPickIds())],
         }
 
     @api.model
@@ -191,35 +214,20 @@ class MrpProduction(models.Model):
             'warehouse_id': self.location_src_id.get_warehouse().id,
             'production_id': self.id,
             'product_uom': sourceMoveObj.product_uom.id,
-            'date_expected': sourceMoveObj.date_expected,
+            'date_expected': sourceMoveObj.forecast_expected_date,
             'mrp_original_move': False,
             'workorder_id': sourceMoveObj.workorder_id.id,
             'unit_factor': sourceMoveObj.unit_factor})
 
-    def copyAndCleanLines(self, stock_move_ids, location_dest_id=None, location_source_id=None, isRawMove=False):
+
+    def copyAndCleanLines(self,
+                          brwsList,
+                          location_dest_id=None,
+                          location_source_id=None,
+                          isRawMove=False):
         outElems = []
-        foundRawMoves = False
-        evaluated = []
-        for elem in stock_move_ids:
-            if isRawMove:   # Look for raw moves
-                if elem.state == 'cancel':
-                    continue
-            prodId = elem.product_id.id
-            if not isRawMove and prodId in evaluated:
-                # Skip multiple finished lines if more than one workorder because are created too many lines
-                continue
-            foundRawMoves = True
+        for elem in brwsList:
             outElems.append(self.createTmpStockMove(elem, location_source_id, location_dest_id).id)
-            evaluated.append(prodId)
-        if not foundRawMoves and isRawMove:
-            # Create automatically raw stock move containing finished product
-            newMove = self.createTmpStockMove(elem, location_source_id, location_dest_id)
-            newMove.product_id = self.product_id.id
-            newMove.product_uom_qty = self.product_qty
-            newMove.name = self.product_id.display_name
-            newMove.note = ''
-            newMove.product_uom = self.product_uom_id.id
-            outElems.append(newMove.id)
         return outElems
 
     def checkCreatePartnerWarehouse(self, partnerBrws):
@@ -374,6 +382,8 @@ class MrpProduction(models.Model):
 
 class StockBom(models.Model):
     _name = 'stock.bom'
+    _description = 'Sub-Contracting Stock Bom'
+    
     source_product_id = fields.Integer("Source Product id")
     raw_product_id = fields.Integer("Source Product id")
     quantity = fields.Float("Product Quantity")

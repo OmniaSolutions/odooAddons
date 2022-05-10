@@ -24,7 +24,7 @@
 	        	</group>
 	        	<field name="consume_product_id" attrs="{'invisible': [('operation_type', '!=', 'consume')], 'required': [('operation_type', '=', 'consume')]}"/>
 	        	<field name="consume_bom_id" attrs="{'invisible': [('operation_type', '!=', 'consume')], 'required': [('operation_type', '=', 'consume')]}"
-	        			domain="[('product_tmpl_id', '=', consume_product_id.product_tmpl_id)]"/>
+	        			/><!--domain="[('product_tmpl_id', '=', consume_product_id.product_tmpl_id.id)]"-->
 	        			
 	            <field name="move_raw_ids" context="{'wizard_id': id}">
 	                <tree>

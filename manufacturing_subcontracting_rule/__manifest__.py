@@ -28,22 +28,24 @@
 
 
 {
-    'name': 'Omnia Manufacturing Subcontracting Rule',
-    'version': '14.0',
+    'name': 'Omnia Manufacturing Sub contracting Rule',
+    'version': '14.0.1',
     'sequence': 1,
-    'category': 'Custom',
+    'category': 'mrp',
     'description': """
-====================
+Implements the sub contracting using the mrp order 
 """,
-    'author': 'OmniaSolutions.eu',
-    'maintainer': 'OmniaSolutions.eu',
-    'website': 'http://www.OmniaSolutions.eu',
+    'author': 'OmniaSolutions.website',
+    'maintainer': 'OmniaSolutions.website',
+    'website': 'http://www.OmniaSolutions.website',
     'depends': ['stock',
                 'delivery',
                 'purchase',
-                'mrp'],
+                'mrp',
+                'mrp_subcontracting'],
     'data': [# security
              'security/ir.model.access.csv',
+             'security/secure.xml',
              #  wizard
              'wizard/wizard.xml',
              #  view
@@ -54,7 +56,7 @@
              'views/res_partner.xml',
              'views/mrp_workorder.xml',
     ],
-    'installable': False,
+    'installable': True,
     'application': False,
     'auto_install': False,
 }

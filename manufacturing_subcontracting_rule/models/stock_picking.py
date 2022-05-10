@@ -46,7 +46,14 @@ class StockPicking(models.Model):
                                                   ('close', _('Close external Production'))])
     sub_production_id = fields.Integer(string=_('Sub production Id'))
     sub_workorder_id = fields.Integer(string=_('Sub Workorder Id'))
-
+    external_operation = fields.Selection([('normal', 'Normal'),
+                                           ('parent', 'Parent'),
+                                           ('operation', 'Operation')],
+                                           default='normal',
+                                           string=_('Produce it externally automatically as'),
+                                           help="""Normal: Use the Parent object as Product for the Out Pickings and the raw material for the Out Picking
+                                                   Parent: Use the Parent product for the In Out pickings
+                                                   Operation: Use the Product that have the Operation assigned for the In Out pickings""")
     def isIncoming(self, objPick=None):
         if objPick is None:
             objPick = self

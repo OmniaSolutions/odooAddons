@@ -19,6 +19,16 @@ class MrpWorkorder(models.Model):
     state = fields.Selection(selection_add=[('external', 'External Production')])
     external_product = fields.Many2one('product.product',
                                        string=_('External Product use for external production'))
+    is_mo_produced = fields.Boolean('Is Manufacturing Produced')
+    external_operation = fields.Selection([('', ''),
+                                           ('normal', 'Normal'),
+                                           ('parent', 'Parent'),
+                                           ('operation', 'Operation')],
+                                           default='',
+                                           string=_('Produce it externally automatically as'),
+                                           help="""Normal: Use the Parent object as Product for the Out Pickings and the raw material for the Out Picking
+                                                   Parent: Use the Parent product for the In Out pickings
+                                                   Operation: Use the Product that have the Operation assigned for the In Out pickings""")
 
     def createTmpStockMove(self, sourceMoveObj, location_source_id=None, location_dest_id=None, unit_factor=1.0):
         tmpMoveObj = self.env["stock.tmp_move"]
@@ -40,7 +50,7 @@ class MrpWorkorder(models.Model):
             'warehouse_id': self.production_id.location_src_id.get_warehouse().id,
             'production_id': self.production_id.id,
             'product_uom': sourceMoveObj.product_uom.id,
-            'date_expected': sourceMoveObj.date_expected,
+            'date_expected': sourceMoveObj.forecast_expected_date,
             'mrp_original_move': False,
             'unit_factor': unit_factor})
 
@@ -130,14 +140,15 @@ class MrpWorkorder(models.Model):
     def open_external_pickings(self):
         newContext = self.env.context.copy()
         picks = self.getExternalPickings()
-        return {
-            'name': _("External Pickings"),
-            'view_type': 'form',
-            'view_mode': 'tree,form',
-            'res_model': 'stock.picking',
-            'type': 'ir.actions.act_window',
-            'context': newContext,
-            'domain': [('id', 'in', picks.ids)],
+        return {'name': _("External Pickings"),
+                'views': [(False, 'tree')],
+                'view_id': self.env.ref('stock.vpicktree').id,
+                'target': 'current',
+                'view_mode': 'tree,form',
+                'res_model': 'stock.picking',
+                'type': 'ir.actions.act_window',
+                'context': newContext,
+                'domain': [('id', 'in', picks.ids)],
         }
 
     

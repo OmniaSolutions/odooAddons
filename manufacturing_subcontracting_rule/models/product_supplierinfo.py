@@ -44,11 +44,7 @@ from odoo.tools import DEFAULT_SERVER_DATETIME_FORMAT
 
 
 class ProductSupplierinfo(models.Model):
+    _inherit = 'product.supplierinfo'
 
-    _name = "product.supplierinfo"
-    _inherit = ['product.supplierinfo']
-
-    routing_id = fields.Many2one('mrp.routing',
-                                 string=_('Routing'))
     operation_id = fields.Many2one('mrp.routing.workcenter',
                                    string=_('Phase'))

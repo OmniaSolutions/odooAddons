@@ -14,14 +14,23 @@
             </button>
             
             <div name="button_box" position="inside">
-                 <button name="open_external_purchase" type="object" class="oe_stat_button" icon="fa-shopping-cart">
+                 <button name="open_external_purchase" type="object" class="oe_stat_button" icon="fa-shopping-cart"
+                        attrs="{'invisible':[('external_pickings_count','&lt;=','1')]}">
+                    <field name="external_pickings_count"
+                           string=" "
+                           widget="statinfo"/>
                      <div class="o_form_field o_stat_info">
-                         <span class="o_stat_text">Ext. Purchase</span>
+                         <span class="o_stat_text">Ext.Purch</span>
                      </div>
                  </button>
-                 <button name="open_external_pickings" type="object" class="oe_stat_button" icon="fa-truck">
+                 <field name="external_pickings_count" invisible="True"/>
+                 <button name="open_external_pickings" type="object" class="oe_stat_button" icon="fa-truck"
+                         attrs="{'invisible':[('external_pickings_count','&lt;=','1')]}">
+                            <field name="external_pickings_count"
+                                   string=" "
+                                   widget="statinfo"/>
                      <div class="o_form_field o_stat_info">
-                         <span class="o_stat_text">Ext. Pickings</span>
+                         <span class="o_stat_text">Ext.Pick</span>
                      </div>
                  </button>
             </div>

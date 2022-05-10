@@ -76,7 +76,7 @@ class StockMove(models.Model):
         name = 'SUB: '
         if self.picking_id.sub_workorder_id:
             woBrws = self.env['mrp.workorder'].search([('id', '=', self.picking_id.sub_workorder_id)])
-            routingName = woBrws.production_id.routing_id.name
+            routingName = woBrws.operation_id.name
             phaseName = woBrws.name
             name += '[%s - %s] ' % (routingName, phaseName)
         name += self.display_name

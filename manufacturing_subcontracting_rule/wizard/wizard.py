@@ -18,10 +18,10 @@ from odoo.exceptions import UserError
 
 class TmpStockMove(models.TransientModel):
     _name = "stock.tmp_move"
-    _table = "stock_tmp_move"
+    _description = 'Sub-Contracting Template Move'
 
     name = fields.Char('Description', index=True, required=True)
-    mrp_original_move = fields.Char(_('Is genereted from orignin MO'))
+    mrp_original_move = fields.Char(_('Is generated from origin MO'))
     company_id = fields.Many2one(
         'res.company', 'Company',
         default=lambda self: self.env['res.company']._company_default_get('stock.move'),
@@ -38,13 +38,13 @@ class TmpStockMove(models.TransientModel):
                                         "quantity of products that were actually moved. For other "
                                         "moves, this is the quantity of product that is planned to "
                                         "be moved. Lowering this quantity does not generate a "
-                                        "backorder. Changing this quantity on assigned moves affects "
+                                        "back order. Changing this quantity on assigned moves affects "
                                         "the product reservation, and should be done with care.")
     unit_factor = fields.Float('Unit Factor')
     location_id = fields.Many2one(
         'stock.location', 'Source Location',
         auto_join=True, index=True, required=True, states={'done': [('readonly', True)]},
-        help="Sets a location if you produce at a fixed location. This can be a partner location if you subcontract the manufacturing operations.")
+        help="Sets a location if you produce at a fixed location. This can be a partner location if you sub contract the manufacturing operations.")
     location_dest_id = fields.Many2one(
         'stock.location', 'Destination Location',
         auto_join=True, index=True, required=True, states={'done': [('readonly', True)]},
@@ -67,14 +67,18 @@ class TmpStockMove(models.TransientModel):
     origin = fields.Char("Source Document", readonly=True)
     warehouse_id = fields.Many2one('stock.warehouse', 'Warehouse', help="Technical field depicting the warehouse to consider for the route selection on the next procurement (if any).")
     production_id = fields.Many2one(comodel_name='mrp.production', string='Production Id', readonly=True)
+    #
     # production filed
+    #
     external_prod_raw = fields.Many2one(comodel_name="mrp.production.externally.wizard",
                                         string="Raw",
                                         readonly=True)
     external_prod_finish = fields.Many2one(comodel_name="mrp.production.externally.wizard",
                                            string="Finished",
                                            readonly=True)
-    # workorder field
+    #
+    # work order field
+    #
     external_prod_workorder_raw = fields.Many2one(comodel_name="mrp.workorder.externally.wizard",
                                                   string="Raw",
                                                   readonly=True)
@@ -111,6 +115,8 @@ class TmpStockMove(models.TransientModel):
 
 class externalProductionPartner(models.TransientModel):
     _name = 'external.production.partner'
+    _description = 'Sub-Contracting External production partner'
+
     partner_id = fields.Many2one('res.partner',
                                  string=_('External Partner'),
                                  required=True)
@@ -135,6 +141,7 @@ class externalProductionPartner(models.TransientModel):
 class MrpProductionWizard(models.TransientModel):
 
     _name = "mrp.production.externally.wizard"
+    _description = 'Sub-Contracting Mrp Production Externally Wizard'
 
     external_partner = fields.One2many('external.production.partner',
                                        inverse_name='wizard_id',
@@ -170,7 +177,7 @@ class MrpProductionWizard(models.TransientModel):
     def _consume_product_id(self):
         # check if the product have bom in case not error
         # update the bom with the first one
-        # create new in move in order to get the the corrisponding out object
+        # create new in move in order to get the the corresponding out object
         pass
 
     @api.onchange('consume_product_id')
@@ -319,7 +326,7 @@ class MrpProductionWizard(models.TransientModel):
         self.cancelProductionRows(productionBrws)
         self.updateMoveLines(productionBrws)
         date_planned_finished_wo = False
-        date_planned_start_wo = False
+        date_planned_start = False
         pickingBrwsList = []
         for external_partner in self.external_partner:
             partner_id = external_partner.partner_id
@@ -327,10 +334,10 @@ class MrpProductionWizard(models.TransientModel):
             pickIn = self.createStockPickingIn(partner_id, productionBrws, workorderBrw, pick_out=pickOut)
             pickingBrwsList.extend((pickIn.id, pickOut.id))
             date_planned_finished_wo = pickIn.scheduled_date
-            date_planned_start_wo = pickOut.scheduled_date
+            date_planned_start = pickOut.scheduled_date
             self.createPurches(self.external_partner, pickIn, workorderBrw.id)
         productionBrws.date_planned_finished_wo = date_planned_finished_wo
-        productionBrws.date_planned_start_wo = date_planned_start_wo
+        productionBrws.date_planned_start = date_planned_start
         productionBrws.external_pickings = [(6, 0, pickingBrwsList)]
         movesToCancel = productionBrws.move_raw_ids.filtered(lambda m: m.mrp_original_move is False)
         movesToCancel2 = productionBrws.move_finished_ids.filtered(lambda m: m.mrp_original_move is False)
@@ -541,7 +548,7 @@ class MrpProductionWizard(models.TransientModel):
                         'warehouse_id': stock_move_id.warehouse_id.id,
                         'production_id': False,
                         'product_uom': stock_move_id.product_uom.id,
-                        'date_expected': stock_move_id.date_expected,
+                        'forecast_expected_date': stock_move_id.date_expected,
                         'mrp_original_move': False,
                         'workorder_id': originBrw.id if isWorkorder else stock_move_id.workorder_id.id,
                         'unit_factor': stock_move_id.unit_factor,
@@ -608,7 +615,7 @@ class MrpProductionWizard(models.TransientModel):
                     'state': 'draft',
                     'sub_contracting_operation': 'open',
                     'sub_production_id': self.production_id.id,
-                    'mrp_workorder_id': originBrw.id if isWorkorder else self.workorder_id.id}
+                    'sub_workorder_id': originBrw.id if isWorkorder else self.workorder_id.id}
         if isWorkorder:
             toCreate['sub_workorder_id'] = originBrw.id
         toCreate = self.updatePickOUT(toCreate,
@@ -635,11 +642,10 @@ class MrpProductionWizard(models.TransientModel):
                         'warehouse_id': tmpRow.warehouse_id.id,
                         'production_id': False,
                         'product_uom': tmpRow.product_uom.id,
-                        'date_expected': tmpRow.date_expected,
+                        'date_deadline': tmpRow.date_expected,
                         'mrp_original_move': False,
                         'workorder_id': originBrw.id if isWorkorder else tmpRow.workorder_id.id,
                         'unit_factor': tmpRow.unit_factor,
-                        'external_prod_workorder_finish': False,
                         'raw_material_production_id': False}
                 new_stock_move_id = self.env['stock.move'].create(vals)
                 new_stock_move_id.location_id = stock_location_id.id
@@ -680,7 +686,8 @@ class MrpProductionWizard(models.TransientModel):
 
 class externalWorkorderPartner(models.TransientModel):
     _name = 'external.workorder.partner'
-
+    _description = 'Sub-Contractiong External Workorder Partner'
+    
     partner_id = fields.Many2one('res.partner',
                                  string=_('External Partner'),
                                  required=True)
@@ -706,7 +713,8 @@ class externalWorkorderPartner(models.TransientModel):
 class MrpWorkorderWizard(MrpProductionWizard):
     _name = "mrp.workorder.externally.wizard"
     _inherit = ['mrp.production.externally.wizard']
-
+    _description='Sub-Contracting Mrp Production Externally wizard'
+    
     external_partner = fields.One2many('external.workorder.partner',
                                        inverse_name='wizard_id',
                                        string=_('External Partner'))
@@ -793,7 +801,7 @@ class MrpWorkorderWizard(MrpProductionWizard):
                     'warehouse_id': mrp_production_id.picking_type_id.warehouse_id.id,
                     'production_id': False,
                     'product_uom': bom_line_id.product_uom_id.category_id.id,
-                    'date_expected': self.request_date,
+                    'forecast_expected_date': self.request_date,
                     'mrp_original_move': False,
                     'workorder_id': mrp_workorder_id.id,
                     'unit_factor': 1,
@@ -864,10 +872,10 @@ class MrpWorkorderWizard(MrpProductionWizard):
                 pickOut = self.createStockPickingOut(external_partner.partner_id, mrp_production_id, mrp_workorder_id, self.is_some_product)
                 pickIn = self.createStockPickingIn(external_partner.partner_id, mrp_production_id, mrp_workorder_id, pick_out=pickOut)
         if pickIn:
-            mrp_production_id.date_planned_finished_wo = pickIn.scheduled_date
+            mrp_production_id.date_planned_finished = pickIn.scheduled_date
             self.createPurches(self.external_partner, pickIn, mrp_workorder_id.id)
-        if pickOut:
-            mrp_production_id.date_planned_start_wo = pickOut.scheduled_date
+        # if pickOut:
+        #     mrp_production_id.date_planned_start = pickOut.scheduled_date
         mrp_production_id.button_unreserve()   # Needed to evaluate picking out move
 
     def getOrigin(self, productionBrws, originBrw):
