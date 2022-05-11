@@ -15,9 +15,18 @@
                         <field name="min_qty" />
                     </tree>
 	        	</field>
-	        	<field name="operation_type"/>
-	        	<field name="request_date"/>
-	        	<group col="6">
+	        	<group col="4" colspan="4">
+		        	<field name="operation_type"/>
+		        	<field name="request_date"/>
+	        	</group>
+	        	<group col="4" colspan="4">
+		        	<field name="service_product_to_buy"/>
+		        	<field name="service_prod_type"/>
+	        		<div colspan="4" attrs="{'invisible': ['|', ('service_prod_type', '=', 'service'), ('create_purchese_order', '=', False)]}" style="color:orange;">
+	        			WARNING: This product it's not a service so it will be added to incoming picking at purchase confirm, check the BOM to change it.
+	        		</div>
+	        	</group>
+	        	<group col="6" colspan="4">
     	        	<field name="create_purchese_order"/>
     	        	<field name="merge_purchese_order"/>
     	        	<field name="confirm_purchese_order"/>

@@ -172,6 +172,14 @@ class MrpProductionWizard(models.TransientModel):
     create_purchese_order = fields.Boolean(_('Automatic create Purchase'), default=True)
     merge_purchese_order = fields.Boolean(_('Merge Purchase'), default=True)
     confirm_purchese_order = fields.Boolean(_('Confirm Purchase'), default=True)
+    
+    service_product_to_buy = fields.Many2one('product.product', string='Service Product', compute='_service_product')
+    service_prod_type = fields.Selection(related='service_product_to_buy.type')
+
+    @api.model
+    def _service_product(self):
+        _productionBrws, workorderBrw = self.getWorkorderAndManufaturing()
+        self.service_product_to_buy = self.getDefaultExternalServiceProduct(workorderBrw)
 
     @api.onchange('consume_product_id')
     def _consume_product_id(self):
@@ -249,6 +257,9 @@ class MrpProductionWizard(models.TransientModel):
             lineBrws._action_cancel()
 
     def updateMoveLines(self, productionBrws):
+        '''
+            Update MO with new stock moves
+        '''
         move_raw_ids = []
         move_finished_ids = []
         productsToCheck = []
@@ -268,7 +279,7 @@ class MrpProductionWizard(models.TransientModel):
                         'warehouse_id': lineBrws.warehouse_id.id,
                         'production_id': productionBrws.id,
                         'product_uom': lineBrws.product_uom.id,
-                        'date_expected': fields.Datetime.from_string(self.request_date),
+                        'forecast_expected_date': fields.Datetime.from_string(self.request_date),
                         'mrp_production_id': productionBrws.id,
                         'unit_factor': lineBrws.unit_factor}
                 move_finished_ids.append((0, False, vals))
@@ -289,7 +300,7 @@ class MrpProductionWizard(models.TransientModel):
                     'warehouse_id': lineBrws.warehouse_id.id,
                     'production_id': False,
                     'product_uom': lineBrws.product_uom.id,
-                    'date_expected': fields.Datetime.from_string(self.request_date) - relativedelta(days=product_delay or 0.0),
+                    'forecast_expected_date': fields.Datetime.from_string(self.request_date) - relativedelta(days=product_delay or 0.0),
                     'mrp_production_id': productionBrws.id,
                     'unit_factor': lineBrws.unit_factor
                 }
@@ -324,8 +335,8 @@ class MrpProductionWizard(models.TransientModel):
 
         productionBrws, workorderBrw = self.getWorkorderAndManufaturing()
         self.cancelProductionRows(productionBrws)
-        self.updateMoveLines(productionBrws)
-        date_planned_finished_wo = False
+        self.updateMoveLines(productionBrws) # Update MO with new stock moves
+        date_planned_finished = False
         date_planned_start = False
         pickingBrwsList = []
         for external_partner in self.external_partner:
@@ -333,10 +344,10 @@ class MrpProductionWizard(models.TransientModel):
             pickOut = self.createStockPickingOut(partner_id, productionBrws)
             pickIn = self.createStockPickingIn(partner_id, productionBrws, workorderBrw, pick_out=pickOut)
             pickingBrwsList.extend((pickIn.id, pickOut.id))
-            date_planned_finished_wo = pickIn.scheduled_date
+            date_planned_finished = pickIn.scheduled_date
             date_planned_start = pickOut.scheduled_date
-            self.createPurches(self.external_partner, pickIn, workorderBrw.id)
-        productionBrws.date_planned_finished_wo = date_planned_finished_wo
+            _po_created = self.createPurches(self.external_partner, pickIn, workorderBrw.id)
+        productionBrws.date_planned_finished = date_planned_finished
         productionBrws.date_planned_start = date_planned_start
         productionBrws.external_pickings = [(6, 0, pickingBrwsList)]
         movesToCancel = productionBrws.move_raw_ids.filtered(lambda m: m.mrp_original_move is False)
@@ -382,6 +393,7 @@ class MrpProductionWizard(models.TransientModel):
                 lineBrws.purchase_line_id = new_purchase_order_line
         if self.confirm_purchese_order:
             obj_po.button_confirm()
+        return obj_po
 
     @api.model
     def getNewExternalProductInfo(self, workorder_id=None):
@@ -418,16 +430,16 @@ class MrpProductionWizard(models.TransientModel):
         get the default external product suitable for the purchase
         """
         bom_product_product_id = self.production_id.bom_id.external_product
-        if bom_product_product_id:
-            return bom_product_product_id
-        product_vals = self.getNewExternalProductInfo()
-        newProduct = self.env['product.product'].search([('default_code', '=', product_vals.get('default_code'))])
-        if not newProduct:
-            newProduct = self.env['product.product'].create(product_vals)
-            newProduct.message_post(body=_('<div style="background-color:green;color:white;border-radius:5px"><b>Create automatically from subcontracting module</b></div>'),
-                                    message_type='notification')
-        self.production_id.bom_id.external_product = newProduct
-        return newProduct
+        if not bom_product_product_id:
+            product_vals = self.getNewExternalProductInfo()
+            bom_product_product_id = self.env['product.product'].search([('default_code', '=', product_vals.get('default_code'))])
+            if not bom_product_product_id:
+                bom_product_product_id = self.env['product.product'].create(product_vals)
+                bom_product_product_id.type = 'service'
+                bom_product_product_id.message_post(body=_('<div style="background-color:green;color:white;border-radius:5px"><b>Create automatically from subcontracting module</b></div>'),
+                                        message_type='notification')
+            self.production_id.bom_id.external_product = bom_product_product_id
+        return bom_product_product_id
 
     @api.model
     def getDefaultWorkorderServiceProduct(self, mrp_workorder_id=None):
@@ -491,74 +503,26 @@ class MrpProductionWizard(models.TransientModel):
                 incomingMoves.append(productionLineBrws)
         return incomingMoves
 
-    def createStockPickingIn(self, partner_id, productionBrws, originBrw=None, pick_out=None):
-
-        def getPickingType():
-            warehouseId = productionBrws.picking_type_id.warehouse_id.id
-            pickTypeObj = self.env['stock.picking.type']
-            for pick in pickTypeObj.search([('code', '=', 'incoming'),
-                                            ('active', '=', True),
-                                            ('warehouse_id', '=', warehouseId)]):
-                return pick.id
-            return False
-
-        isWorkorder = False
-        if originBrw:
-            isWorkorder = True
+    def createStockPickingIn(self, partner_id, mrp_production_id, originBrw=None, pick_out=None):
+        isWorkorder = self.isWorkorder(originBrw)
         stock_piking = self.env['stock.picking']
         if not pick_out:
             pick_out = stock_piking
         if not self.move_finished_ids:
             return stock_piking
-        customerProductionLocation = partner_id.location_id
-        if not customerProductionLocation:
-            raise UserError(_('Partner %s has not location setup.' % (partner_id.name)))
-        localStockLocation = productionBrws.location_src_id  # Taken from manufacturing order
-        incomingMoves = self.getIncomingTmpMoves(productionBrws, customerProductionLocation, partner_id)
-        toCreate = {'partner_id': partner_id.id,
-                    'location_id': customerProductionLocation.id,
-                    'location_dest_id': localStockLocation.id,
-                    'move_type': 'direct',
-                    'picking_type_id': getPickingType(),
-                    'origin': self.getOrigin(productionBrws, originBrw),
-                    'move_lines': [],
-                    'state': 'draft',
-                    'sub_contracting_operation': 'close',
-                    'sub_production_id': self.production_id.id,
-                    'pick_out': pick_out.id}
-        if originBrw and originBrw._table == 'mrp_workorder':  # Link picking with this workorder
-            toCreate['sub_workorder_id'] = originBrw.id
-        toCreate = self.updatePickIN(toCreate,
-                                     partner_id,
-                                     localStockLocation,
-                                     customerProductionLocation)
+        customerProductionLocation = self.getPartnerLocation(partner_id)
+        localStockLocation = mrp_production_id.location_src_id  # Taken from manufacturing order
+        incomingMoves = self.getIncomingTmpMoves(mrp_production_id, customerProductionLocation, partner_id)
+        toCreate = self.getPickingVals(partner_id, mrp_production_id, originBrw, isWorkorder, 'incoming')
+        toCreate['pick_out'] = pick_out.id
+        toCreate = self.updatePickIN(toCreate, partner_id, localStockLocation, customerProductionLocation)
         out_stock_picking_id = stock_piking.create(toCreate)
-        newStockLines = []
         if isWorkorder:
             for stock_move_id in self.move_finished_ids:
-                vals = {'name': stock_move_id.name,
-                        'company_id': stock_move_id.company_id.id,
-                        'product_id': stock_move_id.product_id.id,
-                        'product_uom_qty': stock_move_id.product_uom_qty,
-                        'location_id': stock_move_id.location_id.id,
-                        'location_dest_id': stock_move_id.location_dest_id.id,
-                        'note': stock_move_id.note,
-                        'state': 'draft',
-                        'origin': stock_move_id.origin,
-                        'warehouse_id': stock_move_id.warehouse_id.id,
-                        'production_id': False,
-                        'product_uom': stock_move_id.product_uom.id,
-                        'forecast_expected_date': stock_move_id.date_expected,
-                        'mrp_original_move': False,
-                        'workorder_id': originBrw.id if isWorkorder else stock_move_id.workorder_id.id,
-                        'unit_factor': stock_move_id.unit_factor,
-                        'raw_material_production_id': False}
+                vals = self.getStockMoveVals(stock_move_id, originBrw, isWorkorder, out_stock_picking_id)
                 new_stock_move_id = self.env['stock.move'].create(vals)
                 new_stock_move_id.location_id = customerProductionLocation.id
                 new_stock_move_id.location_dest_id = localStockLocation.id
-                newStockLines.append(new_stock_move_id.id)
-#             for outGoingMove in incomingMoves:
-#                 outGoingMove._action_cancel()
         else:
             for stock_move_id in incomingMoves:
                 new_stock_move_id = stock_move_id.copy(default={'name': stock_move_id.product_id.display_name,
@@ -569,89 +533,105 @@ class MrpProductionWizard(models.TransientModel):
                                                                 'mrp_workorder_id': originBrw.id if isWorkorder else self.workorder_id.id,
                                                                 'raw_material_production_id': False,
                                                                 'picking_id': out_stock_picking_id.id})
-                newStockLines.append(new_stock_move_id.id)
                 stock_move_id._action_cancel()
-        productionBrws.createStockMoveBom()
-        out_stock_picking_id.write({'move_lines': [(6, False, newStockLines)]})
+        mrp_production_id.createStockMoveBom()
         return out_stock_picking_id
 
-    def createStockPickingOut(self, partner_id, mrp_production_id, originBrw=None, is_some_product=False):
-        def getPickingType():
-            warehouseId = mrp_production_id.picking_type_id.warehouse_id.id
-            stock_picking_type = self.env['stock.picking.type']
-            for stock_picking_type_id in stock_picking_type.search([('code', '=', 'outgoing'),
-                                                                    ('active', '=', True),
-                                                                    ('warehouse_id', '=', warehouseId)]):
-                return stock_picking_type_id.id
-            return False
+    def getPickingType(self, mrp_production_id, picking_type):
+        '''
+            picking_type: 'incoming' | 'outgoing'
+        '''
+        warehouseId = mrp_production_id.picking_type_id.warehouse_id.id
+        stock_picking_type = self.env['stock.picking.type']
+        for stock_picking_type_id in stock_picking_type.search([('code', '=', picking_type),
+                                                                ('active', '=', True),
+                                                                ('warehouse_id', '=', warehouseId)]):
+            return stock_picking_type_id.id
+        return False
 
-        stock_picking = self.env['stock.picking']
-        if not self.move_raw_ids:
-            return stock_picking
+    def getPartnerLocation(self, partner_id):
         customerProductionLocation = partner_id.location_id
         if not customerProductionLocation:
             raise UserError(_('Partner %s has not location setup.' % (partner_id.name)))
-        stock_location_id = mrp_production_id.location_src_id  # Taken from manufacturing order
-        out_stock_move_ids = []
+        return customerProductionLocation
+
+    def isWorkorder(self, originBrw):
         isWorkorder = False
-        if originBrw:
+        if originBrw and originBrw._name == 'mrp.workorder':
             isWorkorder = True
-        if not is_some_product:
-            stock_move_ids = mrp_production_id.move_raw_ids
-        else:
-            stock_move_ids = mrp_production_id.move_finished_ids
-        for stock_move_id in stock_move_ids:
-            if not customerProductionLocation:
-                customerProductionLocation = stock_move_id.location_dest_id
-            if stock_move_id.state not in ['done', 'cancel']:  # and stock_move_id.partner_id == partner_id:
-                out_stock_move_ids.append(stock_move_id)
-        toCreate = {'partner_id': partner_id.id,
-                    'location_id': stock_location_id.id,
-                    'location_dest_id': customerProductionLocation.id,
-                    'move_type': 'direct',
-                    'picking_type_id': getPickingType(),
-                    'origin': self.getOrigin(mrp_production_id, originBrw),
-                    'move_lines': [],
-                    'state': 'draft',
-                    'sub_contracting_operation': 'open',
-                    'sub_production_id': self.production_id.id,
-                    'sub_workorder_id': originBrw.id if isWorkorder else self.workorder_id.id}
+        return isWorkorder
+
+    def getPickingVals(self, partner_id, mrp_production_id, originBrw, isWorkorder, operation_type):
+        if operation_type == 'outgoing':
+            location_dest_id = self.getPartnerLocation(partner_id)
+            location_id = mrp_production_id.location_src_id
+            sub_contracting_operation = 'close'
+        elif operation_type == 'incoming':
+            location_dest_id = mrp_production_id.location_src_id
+            location_id = self.getPartnerLocation(partner_id)
+            sub_contracting_operation = 'open'
+        vals = {
+            'partner_id': partner_id.id,
+            'location_id': location_id.id,
+            'location_dest_id': location_dest_id.id,
+            'move_type': 'direct',
+            'picking_type_id': self.getPickingType(mrp_production_id, operation_type),
+            'origin': self.getOrigin(mrp_production_id, originBrw),
+            'move_lines': [],
+            'state': 'draft',
+            'sub_contracting_operation': sub_contracting_operation,
+            'sub_production_id': self.production_id.id,
+            }
+        vals['sub_workorder_id'] = originBrw.id if isWorkorder else self.workorder_id.id
         if isWorkorder:
-            toCreate['sub_workorder_id'] = originBrw.id
-        toCreate = self.updatePickOUT(toCreate,
-                                      partner_id,
-                                      stock_location_id,
-                                      customerProductionLocation)
-        out_stock_picking_id = stock_picking.create(toCreate)
-        new_stock_move_line_ids = []
+            vals['sub_workorder_id'] = originBrw.id
+        return vals
+
+    def getStockMoveVals(self, tmpRow, originBrw, isWorkorder, out_stock_picking_id):
+        vals = {'name': tmpRow.name,
+                'company_id': tmpRow.company_id.id,
+                'product_id': tmpRow.product_id.id,
+                'product_uom_qty': tmpRow.product_uom_qty,
+                'location_id': tmpRow.location_id.id,
+                'location_dest_id': tmpRow.location_dest_id.id,
+                'note': tmpRow.note,
+                'state': 'draft',
+                'origin': tmpRow.origin,
+                'warehouse_id': tmpRow.warehouse_id.id,
+                'production_id': False,
+                'product_uom': tmpRow.product_uom.id,
+                'date_deadline': tmpRow.date_expected,
+                'mrp_original_move': False,
+                'workorder_id': originBrw.id if isWorkorder else tmpRow.workorder_id.id,
+                'unit_factor': tmpRow.unit_factor,
+                'picking_id': out_stock_picking_id.id,
+                'raw_material_production_id': False}
+        return vals
+
+    def createStockPickingOut(self, partner_id, mrp_production_id, originBrw=None, is_same_product=False):
+        stock_picking = self.env['stock.picking']
+        if not self.move_raw_ids:
+            return stock_picking
+        customerProductionLocation = self.getPartnerLocation(partner_id)
+        stock_location_id = mrp_production_id.location_src_id
+        isWorkorder = self.isWorkorder(originBrw)
+        stock_move_ids = mrp_production_id.move_raw_ids
+        if is_same_product:
+            stock_move_ids = mrp_production_id.move_finished_ids
+        out_stock_move_ids = stock_move_ids.filtered(lambda x: x.state not in ['done', 'cancel'])
+        picking_vals = self.getPickingVals(partner_id, mrp_production_id, originBrw, isWorkorder, 'outgoing')
+        picking_vals = self.updatePickOUT(picking_vals, partner_id, stock_location_id, customerProductionLocation)
+        out_stock_picking_id = stock_picking.create(picking_vals)
         if isWorkorder:
             raw_moves = self.move_raw_ids
-            if is_some_product:
+            if is_same_product:
                 raw_moves = self.move_finished_ids
             for tmpRow in raw_moves:
-                tmpRow
-                vals = {'name': tmpRow.name,
-                        'company_id': tmpRow.company_id.id,
-                        'product_id': tmpRow.product_id.id,
-                        'product_uom_qty': tmpRow.product_uom_qty,
-                        'location_id': tmpRow.location_id.id,
-                        'location_dest_id': tmpRow.location_dest_id.id,
-                        'note': tmpRow.note,
-                        'state': 'draft',
-                        'origin': tmpRow.origin,
-                        'warehouse_id': tmpRow.warehouse_id.id,
-                        'production_id': False,
-                        'product_uom': tmpRow.product_uom.id,
-                        'date_deadline': tmpRow.date_expected,
-                        'mrp_original_move': False,
-                        'workorder_id': originBrw.id if isWorkorder else tmpRow.workorder_id.id,
-                        'unit_factor': tmpRow.unit_factor,
-                        'raw_material_production_id': False}
+                vals = self.getStockMoveVals(tmpRow, originBrw, isWorkorder, out_stock_picking_id)
                 new_stock_move_id = self.env['stock.move'].create(vals)
                 new_stock_move_id.location_id = stock_location_id.id
                 new_stock_move_id.location_dest_id = customerProductionLocation.id
-                new_stock_move_line_ids.append(new_stock_move_id.id)
-            if not is_some_product:
+            if not is_same_product:
                 for outGoingMove in out_stock_move_ids:
                     outGoingMove._action_cancel()
         else:
@@ -660,12 +640,12 @@ class MrpProductionWizard(models.TransientModel):
                                                                 'production_id': False,
                                                                 'mrp_workorder_id': self.workorder_id.id,
                                                                 'raw_material_production_id': False,
-                                                                'unit_factor': stock_move_id.unit_factor})
+                                                                'unit_factor': stock_move_id.unit_factor,
+                                                                'picking_id': out_stock_picking_id.id,
+                                                                })
                 new_stock_move_id.location_id = stock_location_id.id
                 new_stock_move_id.location_dest_id = customerProductionLocation.id
                 new_stock_move_id.sale_line_id = stock_move_id.sale_line_id.id
-                new_stock_move_line_ids.append(new_stock_move_id.id)
-        out_stock_picking_id.write({'move_lines': [(6, False, new_stock_move_line_ids)]})
         return out_stock_picking_id
 
     

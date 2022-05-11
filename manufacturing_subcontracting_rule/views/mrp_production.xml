@@ -14,9 +14,10 @@
             </button>
             
             <div name="button_box" position="inside">
+            	 <field name="purchase_external_count" invisible="True"/>
                  <button name="open_external_purchase" type="object" class="oe_stat_button" icon="fa-shopping-cart"
                         attrs="{'invisible':[('external_pickings_count','&lt;=','1')]}">
-                    <field name="external_pickings_count"
+                    <field name="purchase_external_count"
                            string=" "
                            widget="statinfo"/>
                      <div class="o_form_field o_stat_info">

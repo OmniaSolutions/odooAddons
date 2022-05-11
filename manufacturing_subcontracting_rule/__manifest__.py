@@ -49,9 +49,9 @@ Implements the sub contracting using the mrp order
              #  wizard
              'wizard/wizard.xml',
              #  view
-             'views/mrp_production_extension.xml',
+             'views/mrp_production.xml',
              'views/mrp_routing_workcenter.xml',
-             'views/purchase_extension.xml',
+             'views/purchase.xml',
              'views/mrp_bom.xml',
              'views/res_partner.xml',
              'views/mrp_workorder.xml',

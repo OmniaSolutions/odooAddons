@@ -9,6 +9,7 @@
             <field name="perm_create" eval="1"/>
             <field name="perm_unlink" eval="1"/>
         </record>
+        
         <record id="id_omniasolutions_2" model="ir.model.access">
             <field name="name">sw_2</field>
             <field name="model_id" ref="model_external_workorder_partner"/>
@@ -17,6 +18,15 @@
             <field name="perm_create" eval="1"/>
             <field name="perm_unlink" eval="1"/>
         </record>        
+
+        <record id="ext_prod_partner_full_access" model="ir.model.access">
+            <field name="name">External Production Partner Full Access</field>
+            <field name="model_id" ref="model_external_production_partner"/>
+            <field name="perm_read" eval="1"/>
+            <field name="perm_write" eval="1"/>
+            <field name="perm_create" eval="1"/>
+            <field name="perm_unlink" eval="1"/>
+        </record>     
         
     </data>
 </odoo>
