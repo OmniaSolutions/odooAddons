@@ -1,5 +1,5 @@
 <odoo> 
-        <record id="mrp_production_externally_view_wizard" model="ir.ui.view">
+        <record id="stock_tmp_merge_pick_wizard" model="ir.ui.view">
         <field name="name">Merge wizard</field>
         <field name="model">stock.tmp_merge_pick</field>
         <field name="arch" type="xml">
