@@ -65,23 +65,24 @@ class StockPicking(models.Model):
         return objPick.picking_type_code == 'outgoing'
 
     
-    def action_done(self):
-        res = super(StockPicking, self).action_done()
+    def button_validate(self):
+        res = super(StockPicking, self).button_validate()
         purchase_order_line = self.env['purchase.order.line']
         if self.isIncoming():
             objProduction = self.env['mrp.production'].search([('id', '=', self.sub_production_id)])
             if objProduction and objProduction.state == 'external':
-                for line in self.move_lines:
-                    if line.mrp_production_id == objProduction.id:
-                        line.subContractingProduce(objProduction)
+                for stock_move_picking in self.move_lines:
+                    if stock_move_picking.mrp_production_id == objProduction.id:
+                        subcontract_finished_move = stock_move_picking.subcontractFinishedProduct()
+                        stock_move_picking.subcontractRawProducts(subcontract_finished_move, objProduction)
                 if objProduction.isPicksInDone():
                     objProduction.button_mark_done()
             production_recorded = False
-            for line in self.move_lines:
-                if line.workorder_id.id == self.sub_workorder_id and line.product_id.id == line.workorder_id.product_id.id:
-                    line.subContractingProduce(line.workorder_id)
-                if line.product_id.id == line.workorder_id.product_id.id and not production_recorded and line.workorder_id.state != 'done':
-                    line.workorder_id.record_production()
+            for stock_move_picking in self.move_lines:
+                if stock_move_picking.workorder_id.id == self.sub_workorder_id and stock_move_picking.product_id.id == stock_move_picking.workorder_id.product_id.id:
+                    stock_move_picking.subContractingProduce(stock_move_picking.workorder_id)
+                if stock_move_picking.product_id.id == stock_move_picking.workorder_id.product_id.id and not production_recorded and stock_move_picking.workorder_id.state != 'done':
+                    stock_move_picking.workorder_id.record_production()
                     production_recorded = True
             for stock_move_id in self.move_line_ids:
                 mrp_workorder_id = stock_move_id.move_id.workorder_id

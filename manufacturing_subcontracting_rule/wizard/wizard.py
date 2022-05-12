@@ -94,6 +94,27 @@ class TmpStockMove(models.TransientModel):
     qty_available = fields.Float(_('Qty available'))
     location_available = fields.Many2one('stock.location', string=_('Qty Location'))
 
+    operation_type = fields.Selection([
+        ('deliver', _('Deliver')),
+        ('consume', _('Consume')),
+        ('deliver_consume', _('Deliver and Consume')),
+        ],
+        default='deliver_consume',
+        help="""
+Deliver:   Send to subcontractor location
+Stock -> Subcontractor
+
+Consume:   Consume from subcontractor location
+Subcontractor -> Subcontract location
+
+Deliver and Consume:  Send to subcontractor location + Consume from subcontractor location
+Stock -> Subcontractor
+Subcontractor -> Subcontract location
+        """
+    )
+    unit_factor_message = fields.Boolean(_('Unit Factor Message'))
+    mo_source_move = fields.Many2one('stock.move', string=_('Source MO stock move.'))
+
     @api.model
     def default_get(self, fields_list):
         context = self.env.context
@@ -213,9 +234,12 @@ class MrpProductionWizard(models.TransientModel):
 
     @api.onchange('operation_type')
     def operationTypeChanged(self):
+        prodObj = self.env['mrp.production']
         resObj = self.getParentObjectBrowse()
         if resObj._name == 'mrp.workorder':
             prodObj = resObj.production_id
+        elif resObj._name == 'mrp.production':
+            prodObj = resObj
         wBrws = self.getWizardBrws()
         cleanRelInfos = {'raw_material_production_id': False,
                          'origin': ''}
@@ -228,6 +252,7 @@ class MrpProductionWizard(models.TransientModel):
             self.move_raw_ids = [(6, 0, manOrderRawLines)]
             self.move_finished_ids = [(6, 0, manOrderFinishedLines)]
         elif self.operation_type == 'consume':
+            raise UserError('Cannot compute consume raw ids for the new bom')
             _boms, lines = self.consume_bom_id.explode(self.consume_product_id, 1, picking_type=self.consume_bom_id.picking_type_id)
             moves = prodObj._generate_raw_moves(lines)
             moves.write(cleanRelInfos)
@@ -355,7 +380,7 @@ class MrpProductionWizard(models.TransientModel):
         movesToCancel += movesToCancel2
         movesToCancel._do_unreserve()
         movesToCancel._action_cancel()
-
+        productionBrws.state = 'external'
     
     def createPurches(self, toCreatePurchese, picking, workorder):
         if not self.create_purchese_order:
@@ -570,6 +595,16 @@ class MrpProductionWizard(models.TransientModel):
             location_dest_id = mrp_production_id.location_src_id
             location_id = self.getPartnerLocation(partner_id)
             sub_contracting_operation = 'open'
+        elif operation_type == 'subcontracting_out':
+            operation_type = 'outgoing'
+            location_dest_id = self.env['stock.location'].getSubcontractiongLocation().id
+            location_id = self.getPartnerLocation(partner_id)
+            sub_contracting_operation = 'close'
+        elif operation_type == 'subcontracting_in':
+            operation_type = 'incoming'
+            location_dest_id = self.getPartnerLocation(partner_id)
+            location_id = self.env['stock.location'].getSubcontractiongLocation()
+            sub_contracting_operation = 'close'
         vals = {
             'partner_id': partner_id.id,
             'location_id': location_id.id,
@@ -610,7 +645,7 @@ class MrpProductionWizard(models.TransientModel):
 
     def createStockPickingOut(self, partner_id, mrp_production_id, originBrw=None, is_same_product=False):
         stock_picking = self.env['stock.picking']
-        if not self.move_raw_ids:
+        if not self.move_raw_ids or not self.move_raw_ids.filtered(lambda x: x.product_uom_qty > 0):
             return stock_picking
         customerProductionLocation = self.getPartnerLocation(partner_id)
         stock_location_id = mrp_production_id.location_src_id
@@ -622,20 +657,24 @@ class MrpProductionWizard(models.TransientModel):
         picking_vals = self.getPickingVals(partner_id, mrp_production_id, originBrw, isWorkorder, 'outgoing')
         picking_vals = self.updatePickOUT(picking_vals, partner_id, stock_location_id, customerProductionLocation)
         out_stock_picking_id = stock_picking.create(picking_vals)
-        if isWorkorder:
-            raw_moves = self.move_raw_ids
-            if is_same_product:
-                raw_moves = self.move_finished_ids
-            for tmpRow in raw_moves:
-                vals = self.getStockMoveVals(tmpRow, originBrw, isWorkorder, out_stock_picking_id)
-                new_stock_move_id = self.env['stock.move'].create(vals)
-                new_stock_move_id.location_id = stock_location_id.id
-                new_stock_move_id.location_dest_id = customerProductionLocation.id
-            if not is_same_product:
-                for outGoingMove in out_stock_move_ids:
-                    outGoingMove._action_cancel()
-        else:
-            for stock_move_id in out_stock_move_ids:
+        # if isWorkorder:
+        #     raw_moves = self.move_raw_ids
+        #     if is_same_product:
+        #         raw_moves = self.move_finished_ids
+        #     for tmpRow in raw_moves:
+        #         vals = self.getStockMoveVals(tmpRow, originBrw, isWorkorder, out_stock_picking_id)
+        #         new_stock_move_id = self.env['stock.move'].create(vals)
+        #         new_stock_move_id.location_id = stock_location_id.id
+        #         new_stock_move_id.location_dest_id = customerProductionLocation.id
+        #     if not is_same_product:
+        #         for outGoingMove in out_stock_move_ids:
+        #             outGoingMove._action_cancel()
+        # else:
+        #     self.setupPickOutMoves(out_stock_move_ids, stock_location_id, customerProductionLocation, out_stock_picking_id)
+        # return out_stock_picking_id
+
+        for stock_move_id in out_stock_move_ids:
+            if stock_move_id.operation_type in ['deliver', 'deliver_consume']: # Create picking Stock -> Partner Location
                 new_stock_move_id = stock_move_id.copy(default={'name': stock_move_id.product_id.display_name,
                                                                 'production_id': False,
                                                                 'mrp_workorder_id': self.workorder_id.id,
@@ -646,9 +685,22 @@ class MrpProductionWizard(models.TransientModel):
                 new_stock_move_id.location_id = stock_location_id.id
                 new_stock_move_id.location_dest_id = customerProductionLocation.id
                 new_stock_move_id.sale_line_id = stock_move_id.sale_line_id.id
+                new_stock_move_id.operation_type = stock_move_id.operation_type
+            if stock_move_id.operation_type == 'consume': # Subcontract partner loc _> subcontracting loc
+                picking_vals = self.getPickingVals(partner_id, mrp_production_id, originBrw, isWorkorder, 'subcontracting_out')
+                new_stock_move_id = stock_move_id.copy(default={'name': stock_move_id.product_id.display_name,
+                                                                'production_id': False,
+                                                                'mrp_workorder_id': self.workorder_id.id,
+                                                                'raw_material_production_id': False,
+                                                                'unit_factor': stock_move_id.unit_factor,
+                                                                'picking_id': out_stock_picking_id.id,
+                                                                })
+                new_stock_move_id.location_id = customerProductionLocation.id
+                new_stock_move_id.location_dest_id = self.env['stock.location'].getSubcontractiongLocation().id
+                new_stock_move_id.sale_line_id = stock_move_id.sale_line_id.id
+                new_stock_move_id.operation_type = stock_move_id.operation_type
         return out_stock_picking_id
 
-    
     def write(self, vals):
         return super(MrpProductionWizard, self).write(vals)
 

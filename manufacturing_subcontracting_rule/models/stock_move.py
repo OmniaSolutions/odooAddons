@@ -53,6 +53,24 @@ class StockMove(models.Model):
     purchase_order_line_subcontracting_id = fields.Integer(_('Original Purchase line Id'))
     subcontracting_source_stock_move_id = fields.Integer(_('Original Production ID'))
     subcontracting_move_id = fields.Integer(_('Original move id'))
+    operation_type = fields.Selection([
+        ('deliver', _('Deliver')),
+        ('consume', _('Consume')),
+        ('deliver_consume', _('Deliver and Consume')),
+        ],
+        default='deliver_consume',
+        help="""
+Deliver:   Send to subcontractor location
+Stock -> Subcontractor
+
+Consume:   Consume from subcontractor location
+Subcontractor -> Subcontract location
+
+Deliver and Consume:  Send to subcontractor location + Consume from subcontractor location
+Stock -> Subcontractor
+Subcontractor -> Subcontract location
+        """
+    )
 
     @api.model
     def moveQty(self, qty):
@@ -101,38 +119,44 @@ class StockMove(models.Model):
         moveQty = qty * (move_to.unit_factor or 1)
         return moveQty, False
 
-    def subContractingProduce(self, objProduction):
+    def subcontractFinishedProduct(self):
+        '''
+            Move finished product from subcontracting location to customer location to balance customer stock
+        '''
         move_date = self.date
         subcontracting_location = self.env['stock.location'].getSubcontractiongLocation()
-        production_move = self.subcontractingMove(subcontracting_location, self.location_id, self.id)
-        production_move.moveQty(production_move.product_qty)  # Implicit call done action
-        production_move.date = move_date
-        if production_move.move_line_ids:
-            production_move.move_line_ids.date = move_date
-        #
-        # manage raw material
-        #
-        # TODO:    Check for partial picking in / out and pick_out link
-        qty = self.quantity_done
-        if self.state == 'cancel':
-            return
-        pick_out = self.picking_id.pick_out
-        # ++ back work compatibility
-        if not pick_out:
+        subcontract_finished_move = self.subcontractingMove(subcontracting_location, self.location_id, self.id)
+        subcontract_finished_move.moveQty(self.quantity_done)  # Implicit call done action
+        subcontract_finished_move.date = move_date
+        if subcontract_finished_move.move_line_ids:
+            subcontract_finished_move.move_line_ids.date = move_date
+        return subcontract_finished_move
+
+    def getRelatedSucontractPickOut(self, objProduction):
+        pick_out_subcontracting = self.picking_id.pick_out
+        if not pick_out_subcontracting:
             for pick in objProduction.external_pickings:
                 if pick.isOutGoing():
-                    pick_out = pick
-        # --
-        if pick_out:
-            # upload raw material to production directory
-            for move in pick_out.move_lines:
-                moveQty, stop = self.subContractingFilterRow(objProduction, production_move, move, qty)
-                if stop:
-                    continue
+                    pick_out_subcontracting = pick
+                    break
+        return pick_out_subcontracting
+        
+    def subcontractRawProducts(self, subcontract_finished_move, objProduction):
+        '''
+            Generate raw materials subcontraction moves from partner location to subcontraction location to balance customer location
+        '''
+        if subcontract_finished_move.state == 'cancel':
+            return
+        subcontracting_location = self.env['stock.location'].getSubcontractiongLocation()
+        move_date = subcontract_finished_move.date
+        pick_out_subcontracting = self.getRelatedSucontractPickOut(objProduction)
+        if not pick_out_subcontracting:
+            logging.warning('Cannot find subcontracting picking out for production %r' % (objProduction.display_name))
+            return
+        for move in pick_out_subcontracting.move_lines:
+            if move.operation_type in ['deliver_consume']:
                 raw_move = move.subcontractingMove(move.location_dest_id, subcontracting_location, self.id)
-                raw_move.ordered_qty = moveQty
-                raw_move.product_uom_qty = moveQty
-                raw_move.moveQty(moveQty)  # Implicit call done action
+                raw_move.moveQty(raw_move.product_qty)  # Implicit call done action
                 raw_move.date = self.date
                 for lineBrws in raw_move.move_line_ids:
                     lineBrws.date = move_date
@@ -143,7 +167,7 @@ class StockMove(models.Model):
         subcontracting_location = self.env['stock.location'].getSubcontractiongLocation()
         production_move = self.subcontractingMove(subcontracting_location, self.location_id, self.id)
         production_move.product_uom_qty = pick_in_product_qty
-        production_move.ordered_qty = pick_in_product_qty
+        production_move.should_consume_qty = pick_in_product_qty
         production_move.date = move_date
         return production_move
 

@@ -217,7 +217,9 @@ class MrpProduction(models.Model):
             'date_expected': sourceMoveObj.forecast_expected_date,
             'mrp_original_move': False,
             'workorder_id': sourceMoveObj.workorder_id.id,
-            'unit_factor': sourceMoveObj.unit_factor})
+            'unit_factor': sourceMoveObj.unit_factor,
+            'mo_source_move': sourceMoveObj.id,
+            })
 
 
     def copyAndCleanLines(self,

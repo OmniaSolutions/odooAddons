@@ -8,7 +8,7 @@
 #
 #    Author : Smerghetto Daniel  (Omniasolutions)
 #    mail:daniel.smerghetto@omniasolutions.eu
-#    Copyright (c) 2014 Omniasolutions (http://www.omniasolutions.eu) 
+#    Copyright (c) 2018 Omniasolutions (http://www.omniasolutions.eu)
 #    All Right Reserved
 #
 #    This program is free software: you can redistribute it and/or modify
@@ -31,17 +31,10 @@ Created on Dec 18, 2017
 
 @author: daniel
 '''
+from odoo import models
+from odoo import api
+from odoo import fields
+from odoo import _
 
-from . import mrp_production
-from . import stock_picking
-from . import mrp_workorder
-from . import mrp_routing_workcenter
-from . import stock_move
-from . import purchase_order
-from . import mrp_bom
-from . import res_partner
-from . import stock_location
-from . import change_production_qty
-from . import product_supplierinfo
-from . import purchase_order_line
-from . import stock_immediate_transfer
+class StockImmediateTransfer(models.TransientModel):
+    _inherit = 'stock.immediate.transfer'
