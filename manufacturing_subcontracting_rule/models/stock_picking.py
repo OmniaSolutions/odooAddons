@@ -76,7 +76,7 @@ class StockPicking(models.Model):
                         subcontract_finished_move = stock_move_picking.subcontractFinishedProduct()
                         stock_move_picking.subcontractRawProducts(subcontract_finished_move, objProduction)
                 if objProduction.isPicksInDone():
-                    objProduction.button_mark_done()
+                    objProduction.state = 'done'
             production_recorded = False
             for stock_move_picking in self.move_lines:
                 if stock_move_picking.workorder_id.id == self.sub_workorder_id and stock_move_picking.product_id.id == stock_move_picking.workorder_id.product_id.id:
