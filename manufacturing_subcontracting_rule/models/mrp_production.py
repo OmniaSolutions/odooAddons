@@ -381,6 +381,14 @@ class MrpProduction(models.Model):
                 error.append("Unreserve pick %r Error %r " % (mrp_production.id, ex))
         return error
 
+    def copy(self, default={}):
+        if self.external_partner or self.purchase_external_id or self.external_pickings:
+            default['move_raw_ids'] = []
+            default['move_finished_ids'] = []
+        ret = super(MrpProduction, self).copy(default=default)
+        ret._create_update_move_finished()
+        return ret
+
 
 class StockBom(models.Model):
     _name = 'stock.bom'

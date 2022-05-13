@@ -178,3 +178,10 @@ Subcontractor -> Subcontract location
                 for subMove in self.search([('subcontracting_source_stock_move_id', '=', move.id)]):
                     subMove.quantity_done = value['quantity_done']
         return super(StockMove, self).write(value)
+
+    @api.model
+    def create(self, vals):
+        return super(StockMove, self).create(vals)
+
+    def update(self, values):
+        return super(StockMove, self).update(values)

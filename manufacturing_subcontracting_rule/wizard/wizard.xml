@@ -43,6 +43,7 @@
 	                    <field name="product_uom_qty" />
 	                    <field name="state" />
 	                    <field name="origin" />
+	                    <field name="partner_id" />
 	                    <field name="date_expected" />
 	                    <field name="operation_type" />
 	                </tree>
@@ -51,6 +52,7 @@
 	                	<group>
 	                		<field name="name" />
 		                    <field name="product_id"/>
+		                    <field name="partner_id" required="True" domain="[('location_id', '!=', False)]"/>
 		                    <field name="unit_factor" attrs="{'invisible': [('operation_type', '!=', 'deliver_consume')]}"/>
 		                    <field name="product_uom_qty"/>
 		                    <field name="unit_factor_message" invisible="True"/>
@@ -87,16 +89,18 @@
 	                    <field name="product_uom_qty" />
 	                    <field name="state" />
 	                    <field name="origin" />
+	                    <field name="partner_id" readonly="1"/>
 	                    <field name="date_expected" />
 	                    <field name="operation_type" />
 	                </tree>
 	                <form>
 	                	<group>
+		                    <field name="name" />
 		                    <field name="product_id"/>
+		                    <field name="partner_id" required="True" domain="[('location_id', '!=', False)]"/>
 		                    <field name="unit_factor" />
 		                    <field name="product_uom_qty"/>
 		                    <field name="product_uom" />
-		                    <field name="name" />
 		                    <field name="location_id" groups='base.group_no_one'/>
 		                    <field name="location_dest_id" groups='base.group_no_one'/>
 		                    <field name="state" />
