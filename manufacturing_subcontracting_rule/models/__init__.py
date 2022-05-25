@@ -44,4 +44,4 @@ from . import stock_location
 from . import change_production_qty
 from . import product_supplierinfo
 from . import purchase_order_line
-from . import stock_immediate_transfer
+from . import product_product

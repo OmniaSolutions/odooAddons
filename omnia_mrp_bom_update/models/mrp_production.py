@@ -60,7 +60,6 @@ class MrpProduction(models.Model):
                                     bomLineQty = bom_line_id.product_qty * mrp_production_id.product_qty
                                     move_line_id.product_uom_qty = bomLineQty
                                     move_line_id.should_consume_qty = bomLineQty
-                                    move_line_id.unit_factor = bomLineQty
                                     if reserve:
                                         move_line_id.action_assign()
                             else:

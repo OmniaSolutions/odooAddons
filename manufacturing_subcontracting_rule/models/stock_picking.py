@@ -41,7 +41,6 @@ class StockPicking(models.Model):
     _inherit = 'stock.picking'
 
     external_production = fields.Many2one('mrp.production')
-    pick_out = fields.Many2one('stock.picking', string=_('Reference Stock pick out'))
     sub_contracting_operation = fields.Selection([('open', _('Open external Production')),
                                                   ('close', _('Close external Production'))])
     sub_production_id = fields.Integer(string=_('Sub production Id'))
@@ -67,6 +66,8 @@ class StockPicking(models.Model):
     
     def button_validate(self):
         res = super(StockPicking, self).button_validate()
+        if isinstance(res, dict) and res.get('type', '') == 'ir.actions.act_window':
+            return res
         purchase_order_line = self.env['purchase.order.line']
         if self.isIncoming():
             objProduction = self.env['mrp.production'].search([('id', '=', self.sub_production_id)])
@@ -79,18 +80,18 @@ class StockPicking(models.Model):
                     objProduction.state = 'done'
             production_recorded = False
             for stock_move_picking in self.move_lines:
-                if stock_move_picking.workorder_id.id == self.sub_workorder_id and stock_move_picking.product_id.id == stock_move_picking.workorder_id.product_id.id:
-                    stock_move_picking.subContractingProduce(stock_move_picking.workorder_id)
+                # if stock_move_picking.workorder_id.id == self.sub_workorder_id and stock_move_picking.product_id.id == stock_move_picking.workorder_id.product_id.id:
+                #     stock_move_picking.subContractingProduce(stock_move_picking.workorder_id)
                 if stock_move_picking.product_id.id == stock_move_picking.workorder_id.product_id.id and not production_recorded and stock_move_picking.workorder_id.state != 'done':
                     stock_move_picking.workorder_id.record_production()
                     production_recorded = True
             for stock_move_id in self.move_line_ids:
                 mrp_workorder_id = stock_move_id.move_id.workorder_id
-                if mrp_workorder_id:
-                    mrp_workorder_id.qty_producing = stock_move_id.qty_done
-                    mrp_workorder_id.record_production()
-                    for purchese_order_line_id in self.env['purchase.order.line'].search([('workorder_external_id', '=', mrp_workorder_id.id)]):
-                        purchese_order_line_id.qty_received += stock_move_id.qty_done
+                # if mrp_workorder_id:
+                #     mrp_workorder_id.qty_producing = stock_move_id.qty_done
+                #     mrp_workorder_id.record_production()
+                #     for purchese_order_line_id in self.env['purchase.order.line'].search([('workorder_external_id', '=', mrp_workorder_id.id)]):
+                #         purchese_order_line_id.qty_received += stock_move_id.qty_done
                     # TODO: mettere il tempo di lavorazione calcolato fra pick in e pick put
                 if stock_move_id.move_id.purchase_order_line_subcontracting_id:
                     purchase_order_line_id = purchase_order_line.search([('id', '=', stock_move_id.move_id.purchase_order_line_subcontracting_id)])

@@ -8,7 +8,7 @@
 #
 #    Author : Smerghetto Daniel  (Omniasolutions)
 #    mail:daniel.smerghetto@omniasolutions.eu
-#    Copyright (c) 2014 Omniasolutions (http://www.omniasolutions.eu)
+#    Copyright (c) 2014 Omniasolutions (http://www.omniasolutions.eu) 
 #    All Right Reserved
 #
 #    This program is free software: you can redistribute it and/or modify
@@ -26,39 +26,4 @@
 #
 ##############################################################################
 
-
-{
-    'name': 'Omnia Manufacturing Sub contracting Rule',
-    'version': '14.0.1',
-    'sequence': 1,
-    'category': 'mrp',
-    'description': """
-Implements the sub contracting using the mrp order 
-""",
-    'author': 'OmniaSolutions.website',
-    'maintainer': 'OmniaSolutions.website',
-    'website': 'http://www.OmniaSolutions.website',
-    'depends': ['stock',
-                'delivery',
-                'purchase',
-                'mrp',
-                'mrp_subcontracting',
-                'l10n_it_fatturapa_in'
-                ],
-    'data': [# security
-             'security/ir.model.access.csv',
-             'security/secure.xml',
-             #  wizard
-             'wizard/wizard.xml',
-             #  view
-             'views/mrp_production.xml',
-             'views/mrp_routing_workcenter.xml',
-             'views/purchase.xml',
-             'views/mrp_bom.xml',
-             'views/res_partner.xml',
-             'views/mrp_workorder.xml',
-    ],
-    'installable': True,
-    'application': False,
-    'auto_install': False,
-}
+from . import test_subcontracting_production_1

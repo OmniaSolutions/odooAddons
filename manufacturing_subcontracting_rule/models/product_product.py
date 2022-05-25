@@ -39,3 +39,9 @@ class ProductProduct(models.Model):
 
     def getSubContractingProduct(self):
         return self.bom_id.external_product
+
+    def _get_description(self, picking_type_id):
+        ret = super(ProductProduct, self)._get_description(picking_type_id)
+        if not ret:
+            ret = self.name
+        return ret

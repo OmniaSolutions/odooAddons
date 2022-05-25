@@ -30,7 +30,7 @@ class MrpWorkorder(models.Model):
                                                    Parent: Use the Parent product for the In Out pickings
                                                    Operation: Use the Product that have the Operation assigned for the In Out pickings""")
 
-    def createTmpStockMove(self, sourceMoveObj, location_source_id=None, location_dest_id=None, unit_factor=1.0):
+    def createTmpStockMove(self, sourceMoveObj, location_source_id=None, location_dest_id=None):
         tmpMoveObj = self.env["stock.tmp_move"]
         if not location_source_id:
             location_source_id = sourceMoveObj.location_id.id
@@ -51,15 +51,14 @@ class MrpWorkorder(models.Model):
             'production_id': self.production_id.id,
             'product_uom': sourceMoveObj.product_uom.id,
             'date_expected': sourceMoveObj.forecast_expected_date,
-            'mrp_original_move': False,
-            'unit_factor': unit_factor})
+            'mrp_original_move': False})
 
     @api.model
     def createWizard(self):
         values = self.production_id.get_wizard_value()
         partner = self.operation_id.default_supplier
-        if not partner:
-            raise UserError("No Partner set to Routing Operation")
+        # if not partner:
+        #     raise UserError("No Partner set to Routing Operation")
         values['consume_product_id'] = self.product_id.id
         values['consume_bom_id'] = self.production_id.bom_id.id
         #values['external_warehouse_id'] = self.production_id.location_src_id.get_warehouse().id

@@ -16,7 +16,7 @@ class StockLocation(models.Model):
     _inherit = ['stock.location']
 
     @api.model
-    def getSubcontractiongLocation(self):
+    def getSubcontractingLocation(self):
         for stock_location in self.search([('name', '=', 'Subcontracting')]):
             return stock_location
         return self.create({'usage': 'production',

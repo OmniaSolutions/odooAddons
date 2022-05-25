@@ -90,56 +90,55 @@ Subcontractor -> Subcontract location
                     self._action_done()
 
     @api.model
-    def subcontractingMove(self, from_location, to_location, source_id=False):
+    def subcontractingMove(self, from_location, to_location, product_id, qty):
         name = 'SUB: '
-        if self.picking_id.sub_workorder_id:
-            woBrws = self.env['mrp.workorder'].search([('id', '=', self.picking_id.sub_workorder_id)])
-            routingName = woBrws.operation_id.name
-            phaseName = woBrws.name
-            name += '[%s - %s] ' % (routingName, phaseName)
-        name += self.display_name
-        return self.copy(default={'name': name,
-                                  'location_id': from_location.id,
-                                  'location_dest_id': to_location.id,
-                                  'sale_line_id': False,
-                                  'production_id': False,
-                                  'raw_material_production_id': False,
-                                  'picking_id': False,
-                                  'subcontracting_move_id': source_id,
-                                  'subcontracting_source_stock_move_id': source_id})
-
-    @api.model
-    def subContractingFilterRow(self, production_id, move_from_id, move_to, qty):
-        # This Function must be overloaded in order to perform custom behaviour
-        production_id = move_to.mrp_production_id
-        workorder_id = move_to.mrp_workorder_id or move_to.workorder_id.id
-        if not production_id:
-            if not workorder_id:
-                return 0, True
-        moveQty = qty * (move_to.unit_factor or 1)
-        return moveQty, False
+        # if self.picking_id.sub_workorder_id:
+        #     woBrws = self.env['mrp.workorder'].search([('id', '=', self.picking_id.sub_workorder_id)])
+        #     routingName = woBrws.operation_id.name
+        #     phaseName = woBrws.name
+        #     name += '[%s - %s] ' % (routingName, phaseName)
+        name += product_id.display_name
+        move_vals = {
+            'name': name,
+            'production_id': False,
+            'mrp_workorder_id': False,
+            'raw_material_production_id': False,
+            'picking_id': False,
+            'product_uom': product_id.uom_id.id,
+            'location_id': from_location.id,
+            'location_dest_id': to_location.id,
+            'sale_line_id': False,
+            'operation_type': False,
+            'product_id': product_id.id,
+            'product_uom_qty': qty,
+            # 'subcontracting_move_id': source_move_id, Used only for deletion
+            #'subcontracting_source_stock_move_id': source_move_id Used by write
+            } 
+        return self.create(move_vals)
 
     def subcontractFinishedProduct(self):
         '''
             Move finished product from subcontracting location to customer location to balance customer stock
         '''
         move_date = self.date
-        subcontracting_location = self.env['stock.location'].getSubcontractiongLocation()
-        subcontract_finished_move = self.subcontractingMove(subcontracting_location, self.location_id, self.id)
+        subcontracting_location = self.env['stock.location'].getSubcontractingLocation()
+        subcontract_finished_move = self.subcontractingMove(subcontracting_location, self.location_id, self.product_id, self.product_uom_qty)
         subcontract_finished_move.moveQty(self.quantity_done)  # Implicit call done action
         subcontract_finished_move.date = move_date
         if subcontract_finished_move.move_line_ids:
             subcontract_finished_move.move_line_ids.date = move_date
         return subcontract_finished_move
 
-    def getRelatedSucontractPickOut(self, objProduction):
-        pick_out_subcontracting = self.picking_id.pick_out
-        if not pick_out_subcontracting:
-            for pick in objProduction.external_pickings:
-                if pick.isOutGoing():
-                    pick_out_subcontracting = pick
-                    break
-        return pick_out_subcontracting
+    def getRawSubcontractQty(self, production_id):
+        out = []
+        for moves in production_id.move_raw_ids:
+            for move in moves:
+                if move.mrp_production_id in (0, False):
+                    prod_mo_qty = move.product_uom_qty
+                    mo_qty = production_id.product_qty
+                    qty = prod_mo_qty / mo_qty
+                    out.append((move.product_id, qty))
+        return out
         
     def subcontractRawProducts(self, subcontract_finished_move, objProduction):
         '''
@@ -147,37 +146,23 @@ Subcontractor -> Subcontract location
         '''
         if subcontract_finished_move.state == 'cancel':
             return
-        subcontracting_location = self.env['stock.location'].getSubcontractiongLocation()
         move_date = subcontract_finished_move.date
-        pick_out_subcontracting = self.getRelatedSucontractPickOut(objProduction)
-        if not pick_out_subcontracting:
-            logging.warning('Cannot find subcontracting picking out for production %r' % (objProduction.display_name))
-            return
-        for move in pick_out_subcontracting.move_lines:
-            if move.operation_type in ['deliver_consume']:
-                raw_move = move.subcontractingMove(move.location_dest_id, subcontracting_location, self.id)
-                raw_move.moveQty(raw_move.product_qty)  # Implicit call done action
-                raw_move.date = self.date
-                for lineBrws in raw_move.move_line_ids:
-                    lineBrws.date = move_date
-
-    
-    def subContractingProduce2(self, pick_in_product_qty):
-        move_date = self.date
-        subcontracting_location = self.env['stock.location'].getSubcontractiongLocation()
-        production_move = self.subcontractingMove(subcontracting_location, self.location_id, self.id)
-        production_move.product_uom_qty = pick_in_product_qty
-        production_move.should_consume_qty = pick_in_product_qty
-        production_move.date = move_date
-        return production_move
-
-    
-    def write(self, value):
-        for move in self:
-            if 'quantity_done' in list(value.keys()):
-                for subMove in self.search([('subcontracting_source_stock_move_id', '=', move.id)]):
-                    subMove.quantity_done = value['quantity_done']
-        return super(StockMove, self).write(value)
+        finished_qty = subcontract_finished_move.product_uom_qty
+        to_subcontract = self.getRawSubcontractQty(objProduction)
+        for product, unit_qty in to_subcontract:
+            qty_to_subcontract = finished_qty * unit_qty
+            raw_move = self.subcontractingMove(subcontract_finished_move.location_dest_id, subcontract_finished_move.location_id, product, qty_to_subcontract)
+            raw_move.moveQty(qty_to_subcontract)  # Implicit call done action
+            raw_move.date = self.date
+            for lineBrws in raw_move.move_line_ids:
+                lineBrws.date = move_date
+    #
+    # def write(self, value):
+    #     for move in self:
+    #         if 'quantity_done' in list(value.keys()):
+    #             for subMove in self.search([('subcontracting_source_stock_move_id', '=', move.id)]):
+    #                 subMove.quantity_done = value['quantity_done']
+    #     return super(StockMove, self).write(value)
 
     @api.model
     def create(self, vals):
@@ -185,3 +170,11 @@ Subcontractor -> Subcontract location
 
     def update(self, values):
         return super(StockMove, self).update(values)
+
+    def _merge_moves(self, merge_into=False):
+        to_merge = self.env[self._name]
+        for move in self:
+            if move.mrp_production_id or move.mrp_workorder_id:
+                continue
+            to_merge += move
+        return super(StockMove, to_merge)._merge_moves(merge_into)

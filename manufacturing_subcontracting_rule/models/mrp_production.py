@@ -193,7 +193,7 @@ class MrpProduction(models.Model):
             return lock.id
         return False
 
-    def createTmpStockMove(self, sourceMoveObj, location_source_id=None, location_dest_id=None, unit_factor=1.0):
+    def createTmpStockMove(self, sourceMoveObj, location_source_id=None, location_dest_id=None):
         tmpMoveObj = self.env["stock.tmp_move"]
         if not location_source_id:
             location_source_id = sourceMoveObj.location_id.id
@@ -217,7 +217,6 @@ class MrpProduction(models.Model):
             'date_expected': sourceMoveObj.forecast_expected_date,
             'mrp_original_move': False,
             'workorder_id': sourceMoveObj.workorder_id.id,
-            'unit_factor': sourceMoveObj.unit_factor,
             'mo_source_move': sourceMoveObj.id,
             })
 
@@ -278,9 +277,9 @@ class MrpProduction(models.Model):
         values = self.get_wizard_value()
         values['consume_product_id'] = self.product_id.id
         values['consume_bom_id'] = self.bom_id.id
-        #values['external_warehouse_id'] = self.location_src_id.get_warehouse().id
         obj_id = self.env['mrp.production.externally.wizard'].create(values)
         obj_id.create_vendors()
+        obj_id._request_date()
         self.env.cr.commit()
         return {
             'type': 'ir.actions.act_window',

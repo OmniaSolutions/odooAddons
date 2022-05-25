@@ -7,6 +7,11 @@
         <field name="arch" type="xml">
         <form>
             <group>
+	        	<group col="4" colspan="4">
+		        	<field name="operation_type"/>
+		        	<field name="request_date"/>
+	        	</group>
+            	<div col="4" colspan="4" style="font-size: larger;font-weight: bold;">Subcontractors</div>
 	        	<field name="external_partner">
 	        	    <tree>
                         <field name="partner_id"/>
@@ -15,10 +20,92 @@
                         <field name="min_qty" />
                     </tree>
 	        	</field>
-	        	<group col="4" colspan="4">
-		        	<field name="operation_type"/>
-		        	<field name="request_date"/>
-	        	</group>
+	        	<field name="consume_product_id" attrs="{'invisible': [('operation_type', '!=', 'consume')], 'required': [('operation_type', '=', 'consume')]}"/>
+	        	<field name="consume_bom_id" attrs="{'invisible': [('operation_type', '!=', 'consume')], 'required': [('operation_type', '=', 'consume')]}"
+	        			/><!--domain="[('product_tmpl_id', '=', consume_product_id.product_tmpl_id.id)]"-->
+	        	
+	        	<div col="4" colspan="4" style="font-size: larger;font-weight: bold;">Raw Products (Send to Subcontractor)</div>
+	            <field name="move_raw_ids" context="{'wizard_id': id}">
+	                <tree>
+	                    <field name="product_id"/>
+	                    <field name="product_uom_qty" />
+	                    <field name="origin" />
+	                    <field name="partner_id" string="Partner"/>
+	                    <field name="date_expected" />
+	                    <field name="operation_type" />
+	                    <field name="state" invisible="True"/>
+	                    <field name="qty_available"/>
+	                </tree>
+	                
+	                <form>
+	                	<group>
+							<field name="operation_type" required='True'/>
+		                    <div class="alert-warning" style="text-align: center; font-size: 18px" colspan="2"
+		                        attrs="{'invisible': [('operation_type', '!=', 'deliver_consume')]}">
+		                        <br/>Delivery and Consume will consume manufacturing order and will delivery material.
+		                    </div>
+						</group>
+	                	<group string="Product">
+		                    <field name="product_id"/>
+		                    <field name="qty_available" readonly='True'/>
+		                    <field name="product_uom_qty"/>
+		                    <field name="product_uom" />
+		                    <field name="date_expected"/>
+		                </group>
+		                <group string="Partner and Locations">
+		                    <field name="partner_id" required="True" domain="[('location_id', '!=', False)]"  string="Partner"/>
+		                    <field name="location_id"/>
+		                    <field name="location_dest_id"/>
+	                		<field name="name" />
+		                </group>
+		                <group string="Extra Info">
+		                    <field name="state" />
+		                    <field name="origin" />
+		                    <field name="external_prod_finish"  groups='base.group_no_one'/>
+		                    <field name="external_prod_raw"  groups='base.group_no_one'/>
+		                    <field name="mo_source_move"  groups='base.group_no_one'/>
+		                </group>
+	                </form>
+	            </field>
+	            <div col="4" colspan="4" style="font-size: larger;font-weight: bold;">Finished Products (Receive from Subcontractor)</div>
+	            <field name="move_finished_ids"  context="{'wizard_id': id}">
+	                <tree>
+	                    <field name="product_id"/>
+	                    <field name="product_uom_qty" />
+	                    <field name="origin" />
+	                    <field name="partner_id" string="Partner"/>
+	                    <field name="date_expected" />
+	                    <field name="operation_type" />
+	                    <field name="state" invisible="True"/>
+	                    <field name="qty_available"/>
+	                </tree>
+	                <form>
+	                	<group>
+							<field name="operation_type" required='True' readonly="True"/>
+						</group>
+	                	<group string="Product">
+		                    <field name="product_id"/>
+		                    <field name="qty_available" readonly='True'/>
+		                    <field name="product_uom_qty"/>
+		                    <field name="product_uom" />
+		                    <field name="date_expected"/>
+		                </group>
+		                <group string="Partner and Locations">
+		                    <field name="partner_id" required="True" domain="[('location_id', '!=', False)]"  string="Partner"/>
+		                    <field name="location_id"/>
+		                    <field name="location_dest_id"/>
+	                		<field name="name" />
+		                </group>
+		                <group string="Extra Info">
+		                    <field name="state" />
+		                    <field name="origin" />
+		                    <field name="external_prod_finish"  groups='base.group_no_one'/>
+		                    <field name="external_prod_raw"  groups='base.group_no_one'/>
+		                    <field name="mo_source_move"  groups='base.group_no_one'/>
+		                </group>
+	                </form>
+	            </field>
+	            <div col="4" colspan="4" style="font-size: larger;font-weight: bold;">Purchase</div>
 	        	<group col="4" colspan="4">
 		        	<field name="service_product_to_buy"/>
 		        	<field name="service_prod_type"/>
@@ -31,90 +118,6 @@
     	        	<field name="merge_purchese_order"/>
     	        	<field name="confirm_purchese_order"/>
 	        	</group>
-	        	<field name="consume_product_id" attrs="{'invisible': [('operation_type', '!=', 'consume')], 'required': [('operation_type', '=', 'consume')]}"/>
-	        	<field name="consume_bom_id" attrs="{'invisible': [('operation_type', '!=', 'consume')], 'required': [('operation_type', '=', 'consume')]}"
-	        			/><!--domain="[('product_tmpl_id', '=', consume_product_id.product_tmpl_id.id)]"-->
-	        	
-	        	<div col="4" colspan="4" style="font-size: larger;font-weight: bold;">Raw Products (Send to Subcontractor)</div>
-	            <field name="move_raw_ids" context="{'wizard_id': id}">
-	                <tree>
-	                    <field name="product_id"/>
-	                    <field name="unit_factor" />
-	                    <field name="product_uom_qty" />
-	                    <field name="state" />
-	                    <field name="origin" />
-	                    <field name="partner_id" />
-	                    <field name="date_expected" />
-	                    <field name="operation_type" />
-	                </tree>
-	                
-	                <form>
-	                	<group>
-	                		<field name="name" />
-		                    <field name="product_id"/>
-		                    <field name="partner_id" required="True" domain="[('location_id', '!=', False)]"/>
-		                    <field name="unit_factor" attrs="{'invisible': [('operation_type', '!=', 'deliver_consume')]}"/>
-		                    <field name="product_uom_qty"/>
-		                    <field name="unit_factor_message" invisible="True"/>
-		                    <div class="alert-danger" style="text-align: center; font-size: 18px" colspan="2"
-		                        attrs="{'invisible': ['|', ('unit_factor_message','=', False), ('operation_type', '!=', 'deliver_consume')]}">
-		                        <br/>Changing unit factor you will change production quantities.
-		        				<br/>Ex: 10 units to produce and unit factor of 3 will produce 10 X 3 = 30 units.
-		                    </div>
-
-							<field name="operation_type" required='True'/>
-		                    <div class="alert-danger" style="text-align: center; font-size: 18px" colspan="2"
-		                        attrs="{'invisible': [('operation_type', '!=', 'deliver_consume')]}">
-		                        <br/>Delivery and Consume will consume manufacturing order and will delivery material.
-		                    </div>
-		                    <field name="product_uom" />
-		                    <field name="location_id" groups='base.group_no_one'/>
-		                    <field name="location_dest_id" groups='base.group_no_one'/>
-		                    <field name="state" />
-		                    <field name="origin" />
-		                    <field name="date_expected" />
-		                    <field name="location_available" readonly='True'/>
-		                    <field name="qty_available" readonly='True'/>
-		                    <field name="external_prod_finish"  groups='base.group_no_one'/>
-		                    <field name="external_prod_raw"  groups='base.group_no_one'/>
-		                    <field name="mo_source_move"  groups='base.group_no_one'/>
-		                </group>
-	                </form>
-	            </field>
-	            <div col="4" colspan="4" style="font-size: larger;font-weight: bold;">Finished Products (Receive from Subcontractor)</div>
-	            <field name="move_finished_ids"  context="{'wizard_id': id}">
-	                <tree>
-	                    <field name="product_id"/>
-	                    <field name="unit_factor" />
-	                    <field name="product_uom_qty" />
-	                    <field name="state" />
-	                    <field name="origin" />
-	                    <field name="partner_id" readonly="1"/>
-	                    <field name="date_expected" />
-	                    <field name="operation_type" />
-	                </tree>
-	                <form>
-	                	<group>
-		                    <field name="name" />
-		                    <field name="product_id"/>
-		                    <field name="partner_id" required="True" domain="[('location_id', '!=', False)]"/>
-		                    <field name="unit_factor" />
-		                    <field name="product_uom_qty"/>
-		                    <field name="product_uom" />
-		                    <field name="location_id" groups='base.group_no_one'/>
-		                    <field name="location_dest_id" groups='base.group_no_one'/>
-		                    <field name="state" />
-		                    <field name="origin" />
-		                    <field name="date_expected" />
-		                    <field name="location_available" readonly='True'/>
-		                    <field name="qty_available" readonly='True'/>
-		                    <field name="operation_type" readonly='True'/>
-		                    <field name="external_prod_finish" groups='base.group_no_one'/>
-		                    <field name="external_prod_raw" groups='base.group_no_one'/>
-		                    <field name="mo_source_move"  groups='base.group_no_one'/>
-		                </group>
-	                </form>
-	            </field>
 			</group>
             <separator string=""/>
             <footer>
