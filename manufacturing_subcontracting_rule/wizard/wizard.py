@@ -195,9 +195,13 @@ class MrpProductionWizard(models.TransientModel):
                                         string=_('Finished Products'),
                                         inverse_name='external_prod_finish',
                                         domain=[('scrapped', '=', False)])
-    operation_type = fields.Selection(selection=[('normal', _('Normal')), ('consume', _('Consume'))],
-                                      string=_('Operation'),
-                                      default='normal')
+    operation_type = fields.Selection(selection=[
+        ('deliver', _('Deliver')),
+        ('consume', _('Consume')),
+        ('deliver_consume', _('Deliver and Consume')),
+        ],
+        string=_('Operation'),
+        default='deliver_consume')
     consume_bom_id = fields.Many2one(comodel_name='mrp.bom',
                                      string=_('BOM To Consume'))
     production_id = fields.Many2one('mrp.production',
@@ -285,16 +289,13 @@ class MrpProductionWizard(models.TransientModel):
         for move in self.move_finished_ids:
             move.date_expected = self.request_date
 
-    @api.onchange('consume_bom_id')
-    def changeBOMId(self):
-        self.operationTypeChanged()
-
     def getWizardBrws(self):
         return self.browse(self._context.get('wizard_id', False))
 
     @api.onchange('operation_type')
     def operationTypeChanged(self):
-        pass
+        for move in self.move_raw_ids:
+            move.operation_type = self.operation_type
     
     def getParentObjectBrowse(self):
         model = self.env.context.get('active_model', '')
@@ -443,8 +444,9 @@ class MrpProductionWizard(models.TransientModel):
             new_purchase_order_line.product_qty = lineBrws.product_uom_qty
             lineBrws.purchase_order_line_subcontracting_id = new_purchase_order_line.id
             lineBrws.purchase_line_id = new_purchase_order_line
-        if self.confirm_purchese_order:
+        if self.confirm_purchese_order and len(self.external_partner) == 1:
             obj_po.button_confirm()
+        obj_po._compute_picking()
         return obj_po
 
     def setupSupplierinfo(self, product):

@@ -82,15 +82,29 @@ class StockPicking(models.Model):
                 if stock_move_id.move_id.purchase_order_line_subcontracting_id:
                     purchase_order_line_id = purchase_order_line.search([('id', '=', stock_move_id.move_id.purchase_order_line_subcontracting_id)])
                     purchase_order_line_id._compute_qty_received()
+            self.cancel_other_partners_picks(self.partner_id, self.sub_production_id)
         return res
 
+    def cancel_other_partners_picks(self, partner_id, production_id):
+        if production_id:
+            stock_pick = self.env['stock.picking']
+            purchase_order = self.env['purchase.order']
+            objProduction = self.env['mrp.production'].search([('id', '=', production_id)])
+            ext_pickings = objProduction.getExtPickIds()
+            ext_purchase = objProduction._getExtPurchase()
+            for picking_id in stock_pick.browse(ext_pickings):
+                if picking_id.partner_id != partner_id:
+                    picking_id.action_cancel()
+            for purchase_order_id in purchase_order.browse(ext_purchase):
+                if purchase_order_id.partner_id != partner_id:
+                    purchase_order_id.button_cancel()
     
-    def action_cancel(self):
-        ref = super(StockPicking, self).action_cancel()
-        for stock_picking in self:
-            if stock_picking.isIncoming():
-                objProduction = self.env['mrp.production'].search([('id', '=', stock_picking.sub_production_id)])
-                if objProduction.state == 'external':
-                    if objProduction.isPicksInDone():
-                        objProduction.button_mark_done()
-        return ref
+    # def action_cancel(self):
+    #     ref = super(StockPicking, self).action_cancel()
+    #     for stock_picking in self:
+    #         if stock_picking.isIncoming():
+    #             objProduction = self.env['mrp.production'].search([('id', '=', stock_picking.sub_production_id)])
+    #             if objProduction.state == 'external':
+    #                 if objProduction.isPicksInDone():
+    #                     objProduction.button_mark_done()
+    #     return ref

@@ -8,7 +8,6 @@
         <form>
             <group>
 	        	<group col="4" colspan="4">
-		        	<field name="operation_type"/>
 		        	<field name="request_date"/>
 	        	</group>
             	<div col="4" colspan="4" style="font-size: larger;font-weight: bold;">Subcontractors</div>
@@ -20,8 +19,11 @@
                         <field name="min_qty" />
                     </tree>
 	        	</field>
-	        	<field name="consume_bom_id" attrs="{'invisible': [('operation_type', '!=', 'consume')], 'required': [('operation_type', '=', 'consume')]}"/>
 	        	<div col="4" colspan="4" style="font-size: larger;font-weight: bold;">Raw Products (Send to Subcontractor)</div>
+	            <group>
+	            	<field name="operation_type"/>
+	            	<field name="consume_bom_id" readonly="True"/>
+	            </group>
 	            <field name="move_raw_ids" context="{'wizard_id': id}">
 	                <tree>
 	                    <field name="product_id"/>
@@ -132,7 +134,6 @@
         <form>
             <group>
 	        	<group col="4" colspan="4">
-		        	<field name="operation_type"/>
 		        	<field name="request_date"/>
 		        	<field name="workorder_id" invisible="True"/>
 	        	</group>
@@ -145,10 +146,11 @@
                         <field name="min_qty" />
                     </tree>
 	        	</field>
-	        	<field name="consume_bom_id" attrs="{'invisible': [('operation_type', '!=', 'consume')], 'required': [('operation_type', '=', 'consume')]}"
-	        			/>
-	        	
 	        	<div col="4" colspan="4" style="font-size: larger;font-weight: bold;">Raw Products (Send to Subcontractor)</div>
+	            <group>
+	            	<field name="operation_type"/>
+	            	<field name="consume_bom_id" readonly="True"/>
+	            </group>
 	            <field name="move_raw_ids" context="{'wizard_id': id, 'default_workorder_id': workorder_id}">
 	                <tree>
 	                    <field name="product_id"/>
