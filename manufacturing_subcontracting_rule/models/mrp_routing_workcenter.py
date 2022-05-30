@@ -18,12 +18,3 @@ class MrpWorkorder(models.Model):
                                        string='Default Supplier')
     external_product = fields.Many2one('product.product',
                                        string=_('External Product use for external production'))
-
-    external_operation = fields.Selection([('', ''),
-                                           ('normal', 'Normal'),
-                                           ('parent', 'Parent'),
-                                           ('operation', 'Operation')],
-                                           string=_('Produce it externally automatically as'),
-                                           help="""Normal: Use the Parent object as Product for the Out Pickings and the raw material for the Out Picking
-                                                   Parent: Use the Parent product for the In Out pickings
-                                                   Operation: Use the Product that have the Operation assigned for the In Out pickings""")

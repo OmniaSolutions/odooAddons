@@ -51,12 +51,6 @@ class MrpProduction(models.Model):
         for mrp_workorder_id in mrp_workorder_ids:
             if mrp_workorder_id.operation_id.external_product:
                 mrp_workorder_id.external_product = mrp_workorder_id.operation_id.external_product
-            if mrp_workorder_id.operation_id.external_operation:
-                ctx = self.env.context.copy()
-                ctx.update({'active_model': 'mrp.workorder',
-                            'active_ids': [mrp_workorder_id.id]})
-                objWiz = mrp_workorder_id.createWizard()
-                objWiz.with_context(ctx).button_produce_externally()
         return mrp_workorder_ids
 
     @api.model
@@ -155,11 +149,11 @@ class MrpProduction(models.Model):
         }
 
     def getExtPickIds(self):
-        srock_picking_ids = []
+        stock_picking_ids = []
         for mrp_workorder_id in self.workorder_ids:
-            srock_picking_ids.extend(mrp_workorder_id.getExternalPickings().ids)
-        srock_picking_ids.extend(self.external_pickings.ids)
-        return srock_picking_ids
+            stock_picking_ids.extend(mrp_workorder_id.getExternalPickings().ids)
+        stock_picking_ids.extend(self.external_pickings.ids)
+        return list(set(stock_picking_ids))
     
     def open_external_pickings(self):
         return {
@@ -275,7 +269,6 @@ class MrpProduction(models.Model):
 
     def button_produce_externally(self):
         values = self.get_wizard_value()
-        values['consume_product_id'] = self.product_id.id
         values['consume_bom_id'] = self.bom_id.id
         obj_id = self.env['mrp.production.externally.wizard'].create(values)
         obj_id.create_vendors()

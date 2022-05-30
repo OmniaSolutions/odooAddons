@@ -133,6 +133,9 @@ Subcontractor -> Subcontract location
     @api.onchange('product_id')
     def changeProduct(self):
         if not self.name and self.product_id:
+            if self.workorder_id:
+                if self.workorder_id.production_id.product_id == self.product_id:
+                    raise UserError('You cannot use finished product in the workorder external production. Produce externally the manufacturing order instead.')
             self.name = 'Subcontracting extra move %s' % (self.product_id.display_name)
 
     @api.onchange('partner_id')
@@ -195,8 +198,6 @@ class MrpProductionWizard(models.TransientModel):
     operation_type = fields.Selection(selection=[('normal', _('Normal')), ('consume', _('Consume'))],
                                       string=_('Operation'),
                                       default='normal')
-    consume_product_id = fields.Many2one(comodel_name='product.product',
-                                         string=_('Product To Consume'))
     consume_bom_id = fields.Many2one(comodel_name='mrp.bom',
                                      string=_('BOM To Consume'))
     production_id = fields.Many2one('mrp.production',
@@ -219,13 +220,12 @@ class MrpProductionWizard(models.TransientModel):
 
     @api.model
     def _service_product(self):
-        _productionBrws, workorderBrw = self.getWorkorderAndManufaturing()
-        self.service_product_to_buy = self.getDefaultExternalServiceProduct(workorderBrw)
+        self.service_product_to_buy = self.getDefaultProductionServiceProduct()
 
     @api.onchange('external_partner')
-    def changeExternalPartner(self):
+    def changeExternalPartner(self, external_partner_model='external.production.partner'):
         active_partners = self.env['res.partner']
-        ext_partners = self.env['external.production.partner']
+        ext_partners = self.env[external_partner_model]
         for partner_suppl_info in self.external_partner:
             ext_partners += partner_suppl_info
             partner_id = partner_suppl_info.partner_id
@@ -268,13 +268,14 @@ class MrpProductionWizard(models.TransientModel):
                                 new_finish_move.location_id = partner_location_id
                                 new_finish_move.partner_id = partner_id.id
                         break
-        for line in self.move_raw_ids:
-            if line.partner_id not in active_partners:
-                line.unlink()
-        for line in self.move_finished_ids:
-            if line.partner_id not in active_partners:
-                line.unlink()
-        self.external_partner = [(6, 0, list(set(ext_partners.ids)))]
+        if active_partners:
+            for line in self.move_raw_ids:
+                if line.partner_id not in active_partners:
+                    line.unlink()
+            for line in self.move_finished_ids:
+                if line.partner_id not in active_partners:
+                    line.unlink()
+        self.external_partner = ext_partners
 
     @api.onchange('request_date')
     def _request_date(self):
@@ -406,37 +407,42 @@ class MrpProductionWizard(models.TransientModel):
         movesToCancel._do_unreserve()
         movesToCancel._action_cancel()
         productionBrws.state = 'external'
-    
-    def createPurchase(self, toCreatePurchese, picking):
+
+    def getPurchaseVals(self, external_partner):
+        return {'partner_id': external_partner.partner_id.id,
+                'date_planned': self.request_date,
+                'production_external_id': self.production_id.id,
+                'workorder_external_id': False,
+                }
+
+    def getPurchaseLineVals(self, product, purchase, move_line):
+        return {'product_id': product.id,
+                'name': self.getPurcheseName(product),
+                'product_qty': move_line.product_uom_qty,
+                'product_uom': product.uom_po_id.id,
+                'price_unit': product.price,
+                'date_planned': self.request_date,
+                'order_id': purchase.id,
+                'production_external_id': self.production_id.id,
+                'workorder_external_id': False,
+                'sub_move_line': move_line.id,
+                }
+
+    def createPurchase(self, external_partner, picking):
         if not self.create_purchese_order:
-            return
+            return 
         obj_product_product = self.getDefaultProductionServiceProduct()
-        obj_po = self.env['purchase.order'].create({'partner_id': toCreatePurchese.partner_id.id,
-                                                    'date_planned': self.request_date,
-                                                    'production_external_id': self.production_id.id,
-                                                    'workorder_external_id': False,
-                                                    })
-        target_prod = self.production_id.product_id.id
+        purchase_vals = self.getPurchaseVals(external_partner)
+        obj_po = self.env['purchase.order'].create(purchase_vals)
         for lineBrws in picking.move_lines:
-            if lineBrws.product_id.id == target_prod:
-                self.setupSupplierinfo(obj_product_product)
-                values = {'product_id': obj_product_product.id,
-                          'name': self.getPurcheseName(obj_product_product),
-                          'product_qty': lineBrws.product_uom_qty,
-                          'product_uom': obj_product_product.uom_po_id.id,
-                          'price_unit': obj_product_product.price,
-                          'date_planned': self.request_date,
-                          'order_id': obj_po.id,
-                          'production_external_id': self.production_id.id,
-                          'workorder_external_id': False,
-                          'sub_move_line': lineBrws.id,
-                          }
-                new_purchase_order_line = self.env['purchase.order.line'].create(values)
-                new_purchase_order_line.onchange_product_id()
-                new_purchase_order_line.date_planned = self.request_date
-                new_purchase_order_line.product_qty = lineBrws.product_uom_qty
-                lineBrws.purchase_order_line_subcontracting_id = new_purchase_order_line.id
-                lineBrws.purchase_line_id = new_purchase_order_line
+            self.setupSupplierinfo(obj_product_product)
+            values = self.getPurchaseLineVals(obj_product_product, obj_po, lineBrws)
+            new_purchase_order_line = self.env['purchase.order.line'].create(values)
+            new_purchase_order_line.onchange_product_id()
+            new_purchase_order_line.date_planned = self.request_date
+            new_purchase_order_line.product_qty = lineBrws.product_uom_qty
+            lineBrws.purchase_order_line_subcontracting_id = new_purchase_order_line.id
+            lineBrws.purchase_line_id = new_purchase_order_line
         if self.confirm_purchese_order:
             obj_po.button_confirm()
         return obj_po
@@ -463,7 +469,7 @@ class MrpProductionWizard(models.TransientModel):
                         })
     
     @api.model
-    def getNewExternalProductInfo(self, workorder_id=None):
+    def getNewExternalProductInfo(self):
         """
         this method could be overloaded as per customer needs
         """
@@ -472,24 +478,11 @@ class MrpProductionWizard(models.TransientModel):
             default_code = self.production_id.product_id.default_code
         new_default_code = "S-" + default_code
         new_name = "S-" + self.production_id.product_id.name
-        if workorder_id:
-            new_default_code = new_default_code + "-" + workorder_id.name
-            new_name = new_name + "-" + workorder_id.name
         val = {'default_code': new_default_code,
                'type': 'service',
                'purchase_ok': True,
                'name': new_name}
         return val
-
-    @api.model
-    def getDefaultExternalServiceProduct(self, mrp_workorder_id=None):
-        """
-        get the default external product suitable for the purchase
-        """
-        if not mrp_workorder_id:
-            return self.getDefaultProductionServiceProduct()
-        else:
-            return self.getDefaultWorkorderServiceProduct(mrp_workorder_id)
 
     @api.model
     def getDefaultProductionServiceProduct(self):
@@ -507,25 +500,6 @@ class MrpProductionWizard(models.TransientModel):
                                         message_type='notification')
             self.production_id.bom_id.external_product = bom_product_product_id
         return bom_product_product_id
-
-    @api.model
-    def getDefaultWorkorderServiceProduct(self, mrp_workorder_id=None):
-        """
-        get the default external product suitable for the purchase
-        """
-        mrp_workorder_id = self.env['mrp.workorder'].browse([mrp_workorder_id])
-        if mrp_workorder_id.external_product:
-            return mrp_workorder_id.external_product
-        product_vals = self.getNewExternalProductInfo(mrp_workorder_id)
-        newProduct = self.env['product.product'].search([('default_code', '=', product_vals.get('default_code'))])
-        if not newProduct:
-            newProduct = self.env['product.product'].create(product_vals)
-            newProduct.message_post(body=_('<div style="background-color:green;color:white;border-radius:5px"><b>Create automatically from subcontracting module</b></div>'),
-                                    message_type='notification')
-
-        mrp_workorder_id.external_product = newProduct
-        mrp_workorder_id.operation_id.external_product = newProduct
-        return newProduct
 
     @api.model
     def getPurcheseName(self, product_product):
@@ -546,7 +520,7 @@ class MrpProductionWizard(models.TransientModel):
     def getOrigin(self, productionBrws):
         return productionBrws.name
 
-    def getIncomingTmpMoves(self, productionBrws, customerProductionLocation, partner_id, isWorkorder=False):
+    def getIncomingTmpMoves(self, customerProductionLocation, partner_id, isWorkorder=False):
         incomingMoves = self.env['stock.tmp_move']
         lines = self.move_finished_ids
         if isWorkorder:
@@ -558,19 +532,20 @@ class MrpProductionWizard(models.TransientModel):
                 incomingMoves += productionLineBrws
         return incomingMoves.filtered(lambda x: x.partner_id.id == partner_id.id)
 
-    def createStockPickingIn(self, partner_id, mrp_production_id):
+    def createStockPickingIn(self, partner_id, mrp_production_id, cancel_source_moves=True):
         stock_piking = self.env['stock.picking']
         if not self.move_finished_ids:
             return stock_piking
         customerProductionLocation = self.getPartnerLocation(partner_id)
         localStockLocation = mrp_production_id.location_src_id  # Taken from manufacturing order
-        incomingMoves = self.getIncomingTmpMoves(mrp_production_id, customerProductionLocation, partner_id)
+        incomingMoves = self.getIncomingTmpMoves(customerProductionLocation, partner_id)
         toCreate = self.getPickingVals(partner_id, mrp_production_id, 'incoming')
         out_stock_picking_id = stock_piking.create(toCreate)
         for stock_move_id in incomingMoves:
             stock_move_vals = self.getStockMoveVals(stock_move_id, mrp_production_id, out_stock_picking_id, customerProductionLocation, localStockLocation)
             self.env['stock.move'].create(stock_move_vals)
-            mrp_production_id.move_finished_ids._action_cancel()
+            if cancel_source_moves:
+                mrp_production_id.move_finished_ids._action_cancel()
         mrp_production_id.createStockMoveBom()
         return out_stock_picking_id
 
@@ -597,12 +572,6 @@ class MrpProductionWizard(models.TransientModel):
         if not ret:
             raise UserError(_('Cannot get subcontracting location %s.' % (ret)))
         return ret
-
-    def isWorkorder(self, originBrw):
-        isWorkorder = False
-        if originBrw and originBrw._name == 'mrp.workorder':
-            isWorkorder = True
-        return isWorkorder
 
     def getPickingVals(self, partner_id, mrp_production_id, operation_type):
         subcontract_loc = self.getSubcontractingLocation()
@@ -662,15 +631,13 @@ class MrpProductionWizard(models.TransientModel):
                 }
         return vals
 
-    def createStockPickingOut(self, partner_id, mrp_production_id, originBrw=None, is_same_product=False):
+    def createStockPickingOut(self, partner_id, mrp_production_id, cancel_source_moves=True):
         stock_picking = self.env['stock.picking']
         if not self.move_raw_ids or not self.move_raw_ids.filtered(lambda x: x.product_uom_qty > 0):
             return stock_picking
         customerProductionLocation = self.getPartnerLocation(partner_id)
         stock_location_id = mrp_production_id.location_src_id
         stock_move_ids = self.move_raw_ids
-        if is_same_product:
-            stock_move_ids = self.move_finished_ids
         out_stock_move_ids = stock_move_ids.filtered(lambda x: x.state not in ['done', 'cancel'])
         picking_vals = self.getPickingVals(partner_id, mrp_production_id, 'outgoing')
         out_stock_picking_id = stock_picking.create(picking_vals)
@@ -684,7 +651,8 @@ class MrpProductionWizard(models.TransientModel):
                 picking_vals = self.getPickingVals(partner_id, mrp_production_id, 'subcontracting_out')
                 stock_move_vals = self.getStockMoveVals(stock_move_id, mrp_production_id, out_stock_picking_id, customerProductionLocation, subcontracting_loc)
                 new_stock_move_id = new_stock_move_id.create(stock_move_vals)
-            mrp_production_id.move_raw_ids._action_cancel()
+            if cancel_source_moves:
+                mrp_production_id.move_raw_ids._action_cancel()
         return out_stock_picking_id
 
     def write(self, vals):
@@ -748,15 +716,85 @@ class MrpWorkorderWizard(MrpProductionWizard):
                                         inverse_name='external_prod_workorder_finish',
                                         domain=[('scrapped', '=', False)])
 
-    is_some_product = fields.Boolean(default=True,
-                                     string="Some Product",
-                                     help="Use same product for in and out picking")
+    def getPickingVals(self, partner_id, mrp_production_id, operation_type):
+        ret = super(MrpWorkorderWizard, self).getPickingVals(partner_id, mrp_production_id, operation_type)
+        ret['sub_workorder_id'] = self.getWo().id
+        return ret
 
-    is_by_operation = fields.Boolean(default=False,
-                                     string="Is computed by operation",
-                                     help="""Push out and pull in only the product that have operation""")
+    def getOrigin(self, productionBrws):
+        mrp_workorder_id = self.getWo()
+        return "%s - %s - %s" % (productionBrws.name, mrp_workorder_id.name, mrp_workorder_id.external_partner.name)
 
+    def getStockMoveVals(self, stock_move_id, mrp_production_id, out_stock_picking_id, location_id, location_dest_id):
+        ret = super(MrpWorkorderWizard, self).getStockMoveVals(stock_move_id, mrp_production_id, out_stock_picking_id, location_id, location_dest_id)
+        ret['mrp_workorder_id'] = self.getWo().id
+        ret['workorder_id'] = self.getWo().id
+        return ret
+
+    def getPurchaseVals(self, external_partner):
+        ret = super(MrpWorkorderWizard, self).getPurchaseVals(external_partner)
+        ret['workorder_external_id'] = self.getWo().id
+        return ret
+
+    def getPurchaseLineVals(self, product, purchase, move_line):
+        ret = super(MrpWorkorderWizard, self).getPurchaseLineVals(product, purchase, move_line)
+        ret['workorder_external_id'] = self.getWo().id
+        return ret
+
+    def getDefaultProductionServiceProduct(self):
+        mrp_workorder_id = self.getWo()
+        if mrp_workorder_id.external_product:
+            return mrp_workorder_id.external_product
+        product_vals = self.getNewExternalProductInfo()
+        newProduct = self.env['product.product'].search([('default_code', '=', product_vals.get('default_code'))])
+        if not newProduct:
+            newProduct = self.env['product.product'].create(product_vals)
+            newProduct.message_post(body=_('<div style="background-color:green;color:white;border-radius:5px"><b>Create automatically from subcontracting module</b></div>'),
+                                    message_type='notification')
+            newProduct.type = 'service'
+        mrp_workorder_id.external_product = newProduct
+        mrp_workorder_id.operation_id.external_product = newProduct
+        return newProduct
     
+    @api.model
+    def getNewExternalProductInfo(self):
+        ret = super(MrpWorkorderWizard, self).getNewExternalProductInfo()
+        workorder_id = self.getWo()
+        ret['default_code'] = ret['default_code'] + "-" + workorder_id.name
+        ret['name'] = ret['name'] + "-" + workorder_id.name
+        return ret
+
+    def getWo(self):
+        out = self.env['mrp.workorder']
+        model = self.env.context.get('active_model', '')
+        objIds = self.env.context.get('active_ids', [])
+        relObj = self.env[model]
+        if model == 'mrp.workorder':
+            out = relObj.browse(objIds)
+        return out
+        
+    def button_produce_externally(self):
+        if not self.external_partner:
+            raise UserError(_("No partner selected"))
+        pickingBrwsList = []
+        mrp_workorder_id = self.getWo()
+        mrp_workorder_id.write({'external_partner': self.external_partner.partner_id.id,
+                                'state': 'external'})
+        mrp_production_id = mrp_workorder_id.production_id
+        for external_partner in self.external_partner:
+            pickOut = self.createStockPickingOut(external_partner.partner_id, mrp_production_id, False)
+            pickIn = self.createStockPickingIn(external_partner.partner_id, mrp_production_id, False)
+            pickingBrwsList.extend((pickIn.id, pickOut.id))
+            date_planned_finished = pickIn.scheduled_date
+            date_planned_start = pickOut.scheduled_date
+            _po_created = self.createPurchase(external_partner, pickIn)
+        mrp_workorder_id.state = 'pending'
+        mrp_workorder_id.date_planned_finished = date_planned_finished
+        mrp_workorder_id.date_planned_start = date_planned_start
+        mrp_production_id.external_pickings = [(6, 0, pickingBrwsList)]
+        mrp_workorder_id.state = 'external'
+
+
     def create_vendors_from(self, partner_id):
         external_production_partner = self.env['external.workorder.partner']
         vals = {'partner_id': partner_id.id,
@@ -765,136 +803,9 @@ class MrpWorkorderWizard(MrpProductionWizard):
                 'min_qty': 0.0,
                 'wizard_id': self.id
                 }
-        return external_production_partner.create(vals)
+        ret = external_production_partner.create(vals)
+        self.changeExternalPartner('external.workorder.partner')
+        return ret
 
-    def createStockPickingWorkorder(self,
-                                    partner_id,
-                                    mrp_production_id,
-                                    mrp_workorder_id,
-                                    products,
-                                    location_id,
-                                    location_dest_id,
-                                    picking_type_str):
-        def getPickingType():
-            warehouseId = mrp_production_id.picking_type_id.warehouse_id.id
-            pickTypeObj = self.env['stock.picking.type']
-            for pick in pickTypeObj.search([('code', '=', picking_type_str),  # 'incoming', 'outgoing'
-                                            ('active', '=', True),
-                                            ('warehouse_id', '=', warehouseId)]):
-                return pick.id
-            return False
 
-        toCreate = {'partner_id': partner_id.id,
-                    'location_id': location_id.id,
-                    'location_dest_id': location_dest_id.id,
-                    'move_type': 'direct',
-                    'picking_type_id': getPickingType(),
-                    'origin': self.getOrigin(mrp_production_id, mrp_workorder_id),
-                    'move_lines': [],
-                    'state': 'draft',
-                    'sub_contracting_operation': 'open',
-                    'sub_production_id': self.production_id.id,
-                    'mrp_workorder_id': mrp_workorder_id.id,
-                    'sub_workorder_id': mrp_workorder_id.id}
-        if picking_type_str == 'outgoing':
-            toCreate = self.updatePickOUT(toCreate,
-                                          partner_id,
-                                          location_id,
-                                          location_dest_id)
-        else:
-            toCreate = self.updatePickIN(toCreate,
-                                         partner_id,
-                                         location_id,
-                                         location_dest_id)
-        out_stock_picking_id = self.env['stock.picking'].create(toCreate)
-        new_stock_move_line_ids = []
-        for bom_line_id in products:
-            vals = {'name': '',
-                    'company_id': mrp_production_id.company_id.id,
-                    'product_id': bom_line_id.product_id.id,
-                    'product_uom_qty': bom_line_id.product_qty * mrp_production_id.product_qty,
-                    'location_id': location_id.id,
-                    'location_dest_id': location_dest_id.id,
-                    'state': 'draft',
-                    'origin': "%s-%s" % (mrp_production_id, mrp_workorder_id.name),
-                    'warehouse_id': mrp_production_id.picking_type_id.warehouse_id.id,
-                    'production_id': False,
-                    'product_uom': bom_line_id.product_uom_id.category_id.id,
-                    'forecast_expected_date': self.request_date,
-                    'mrp_original_move': False,
-                    'workorder_id': mrp_workorder_id.id,
-                    'external_prod_workorder_finish': False,
-                    'raw_material_production_id': False}
-            new_stock_move_id = self.env['stock.move'].create(vals)
-            new_stock_move_id.location_id = location_id.id
-            new_stock_move_id.location_dest_id = location_dest_id.id
-            new_stock_move_line_ids.append(new_stock_move_id.id)
-        out_stock_picking_id.write({'move_lines': [(6, False, new_stock_move_line_ids)]})
-        return out_stock_picking_id
 
-    @api.model
-    def getWorkorderProductsByOperation(self, mrp_production_id, mrp_workorder_id):
-        out = []
-        for bom_line_id in mrp_production_id.bom_id.bom_line_ids:
-            if bom_line_id.operation_id == mrp_workorder_id.operation_id:
-                out.append(bom_line_id)
-        return out
-
-    @api.model
-    def getPicksByOperation(self, partner_id, mrp_production_id, mrp_workorder_id):
-        location_dest_id = partner_id.location_id
-        location_id = mrp_production_id.location_src_id
-        products = self.getWorkorderProductsByOperation(mrp_production_id, mrp_workorder_id)
-        stock_picking_in = self.createStockPickingWorkorder(partner_id,
-                                                            mrp_production_id,
-                                                            mrp_workorder_id,
-                                                            products,
-                                                            location_dest_id,
-                                                            location_id,
-                                                            picking_type_str='incoming')
-        stock_picking_out = self.createStockPickingWorkorder(partner_id,
-                                                             mrp_production_id,
-                                                             mrp_workorder_id,
-                                                             products,
-                                                             location_id,
-                                                             location_dest_id,
-                                                             picking_type_str='outgoing')
-        return stock_picking_in, stock_picking_out
-
-    
-    def button_produce_externally(self):
-        if not self.external_partner:
-            raise UserError(_("No partner selected"))
-        model = self.env.context.get('active_model', '')
-        objIds = self.env.context.get('active_ids', [])
-        relObj = self.env[model]
-        mrp_workorder_id = relObj.browse(objIds)
-        mrp_workorder_id.write({'external_partner': self.external_partner.partner_id.id,
-                                'state': 'external'})
-        # this is in case of automatic operation
-        if mrp_workorder_id.operation_id.external_operation == 'parent':
-            self.is_some_product = True
-            self.is_by_operation = False
-        elif mrp_workorder_id.operation_id.external_operation == 'operation':
-            self.is_by_operation = True
-            self.is_some_product = True
-        elif mrp_workorder_id.operation_id.external_operation == 'normal':
-            self.is_by_operation = False
-            self.is_some_product = False
-        #
-        mrp_production_id = mrp_workorder_id.production_id
-        for external_partner in self.external_partner:
-            if self.is_by_operation:
-                pickOut, pickIn = self.getPicksByOperation(external_partner.partner_id, mrp_production_id, mrp_workorder_id)
-            else:
-                pickOut = self.createStockPickingOut(external_partner.partner_id, mrp_production_id, mrp_workorder_id, self.is_some_product)
-                pickIn = self.createStockPickingIn(external_partner.partner_id, mrp_production_id, mrp_workorder_id)
-        if pickIn:
-            mrp_production_id.date_planned_finished = pickIn.scheduled_date
-            self.createPurchase(self.external_partner, pickIn, mrp_workorder_id.id)
-        # if pickOut:
-        #     mrp_production_id.date_planned_start = pickOut.scheduled_date
-        mrp_production_id.button_unreserve()   # Needed to evaluate picking out move
-
-    def getOrigin(self, productionBrws, originBrw):
-        return "%s - %s - %s" % (productionBrws.name, originBrw.name, originBrw.external_partner.name)

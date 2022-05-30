@@ -20,15 +20,6 @@ class MrpWorkorder(models.Model):
     external_product = fields.Many2one('product.product',
                                        string=_('External Product use for external production'))
     is_mo_produced = fields.Boolean('Is Manufacturing Produced')
-    external_operation = fields.Selection([('', ''),
-                                           ('normal', 'Normal'),
-                                           ('parent', 'Parent'),
-                                           ('operation', 'Operation')],
-                                           default='',
-                                           string=_('Produce it externally automatically as'),
-                                           help="""Normal: Use the Parent object as Product for the Out Pickings and the raw material for the Out Picking
-                                                   Parent: Use the Parent product for the In Out pickings
-                                                   Operation: Use the Product that have the Operation assigned for the In Out pickings""")
 
     def createTmpStockMove(self, sourceMoveObj, location_source_id=None, location_dest_id=None):
         tmpMoveObj = self.env["stock.tmp_move"]
@@ -51,29 +42,54 @@ class MrpWorkorder(models.Model):
             'production_id': self.production_id.id,
             'product_uom': sourceMoveObj.product_uom.id,
             'date_expected': sourceMoveObj.forecast_expected_date,
-            'mrp_original_move': False})
+            'mrp_original_move': False,
+            'workorder_id': self.id,
+            })
 
-    @api.model
-    def createWizard(self):
-        values = self.production_id.get_wizard_value()
-        partner = self.operation_id.default_supplier
-        # if not partner:
-        #     raise UserError("No Partner set to Routing Operation")
-        values['consume_product_id'] = self.product_id.id
-        values['consume_bom_id'] = self.production_id.bom_id.id
-        #values['external_warehouse_id'] = self.production_id.location_src_id.get_warehouse().id
+    def get_wizard_value(self):
+        values = {}
+        raw_lines = []
+        finish_lines = []
+        production = self.production_id
+        for raw_move in self.production_id.move_raw_ids:
+            if raw_move.bom_line_id.operation_id == self.operation_id:
+                location_source_id = raw_move.location_id.id
+                location_dest_id = raw_move.location_dest_id.id
+                raw_move_new = production.createTmpStockMove(
+                    raw_move,
+                    location_source_id,
+                    location_dest_id
+                    )
+                raw_lines.append(raw_move_new.id)
+                finish_move_new = production.createTmpStockMove(
+                    raw_move,
+                    location_dest_id,
+                    location_source_id,
+                    )
+                finish_lines.append(finish_move_new.id)
+        values['move_raw_ids'] = [(6, 0, raw_lines)]
+        values['move_finished_ids'] = [(6, 0, finish_lines)]
+        values['production_id'] = production.id
+        values['consume_bom_id'] = production.bom_id.id
         values['workorder_id'] = self.id
-        mrp_workorder_externally_wizard_id = self.env['mrp.workorder.externally.wizard'].create(values)
-        mrp_workorder_externally_wizard_id.create_vendors_from(partner)
-        return mrp_workorder_externally_wizard_id
+        return values
 
     def button_produce_externally(self):
+        values = self.get_wizard_value()
+        obj_id = self.env["mrp.workorder.externally.wizard"].create(values)
+        partner = self.operation_id.default_supplier
+        if not partner:
+            raise UserError("No Partner set to Routing Operation")
+        obj_id.create_vendors_from(partner)
+        obj_id._request_date()
+        self.env.cr.commit()
         return {
             'type': 'ir.actions.act_window',
             'res_model': 'mrp.workorder.externally.wizard',
             'view_mode': 'form,tree',
             'view_type': 'form',
-            'res_id': self.createWizard().id,
+            'res_id': obj_id.id,
+            'context': {'wizard_id': obj_id.id},
             'target': 'new',
         }
 
