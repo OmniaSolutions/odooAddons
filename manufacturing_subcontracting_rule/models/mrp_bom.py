@@ -46,5 +46,15 @@ class MrpBom(models.Model):
 
     _name = "mrp.bom"
     _inherit = ['mrp.bom']
+
     external_product = fields.Many2one('product.product',
                                        string=_('External Product use for external production'))
+    ext_prod_warning = fields.Html(string='External Product Warning')
+
+    @api.onchange('external_product')
+    def changeExternalProduct(self):
+        for bom in self:
+            bom.ext_prod_warning = ''
+            if bom.external_product and not bom.external_product.seller_ids:
+                bom.ext_prod_warning = '<div style="color: crimson;font-size:large;">No vendors setup in the external product!</div>'
+
