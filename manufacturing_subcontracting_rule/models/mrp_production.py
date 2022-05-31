@@ -187,14 +187,14 @@ class MrpProduction(models.Model):
             return lock.id
         return False
 
-    def createTmpStockMove(self, sourceMoveObj, location_source_id=None, location_dest_id=None):
+    def createTmpStockMove(self, sourceMoveObj, location_source_id=None, location_dest_id=None, isRawMove=False):
         tmpMoveObj = self.env["stock.tmp_move"]
         if not location_source_id:
             location_source_id = sourceMoveObj.location_id.id
         if not location_dest_id:
             location_dest_id = sourceMoveObj.location_dest_id.id
         product_product_id = sourceMoveObj.product_id.id
-        return tmpMoveObj.create({
+        ret = tmpMoveObj.create({
             'name': sourceMoveObj.name,
             'company_id': sourceMoveObj.company_id.id,
             'product_id': product_product_id,
@@ -213,7 +213,7 @@ class MrpProduction(models.Model):
             'workorder_id': sourceMoveObj.workorder_id.id,
             'mo_source_move': sourceMoveObj.id,
             })
-
+        return ret
 
     def copyAndCleanLines(self,
                           brwsList,
@@ -222,7 +222,7 @@ class MrpProduction(models.Model):
                           isRawMove=False):
         outElems = []
         for elem in brwsList:
-            outElems.append(self.createTmpStockMove(elem, location_source_id, location_dest_id).id)
+            outElems.append(self.createTmpStockMove(elem, location_source_id, location_dest_id, isRawMove).id)
         return outElems
 
     def checkCreatePartnerWarehouse(self, partnerBrws):
@@ -273,6 +273,9 @@ class MrpProduction(models.Model):
         obj_id = self.env['mrp.production.externally.wizard'].create(values)
         obj_id.create_vendors()
         obj_id._request_date()
+        for raw_move in obj_id.move_raw_ids:
+            if raw_move.qty_available >= raw_move.product_uom_qty:
+                raw_move.operation_type = 'consume'
         self.env.cr.commit()
         return {
             'type': 'ir.actions.act_window',

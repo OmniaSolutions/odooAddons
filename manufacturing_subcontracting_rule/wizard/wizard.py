@@ -113,6 +113,7 @@ Subcontractor -> Subcontract location
     )
     mo_source_move = fields.Many2one('stock.move', string=_('Source MO stock move.'))
 
+
     @api.depends('location_dest_id', 'location_id')
     def _compute_qty_available(self):
         for move in self:
