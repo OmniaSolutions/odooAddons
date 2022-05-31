@@ -189,7 +189,7 @@ class TestSubcontracting(TransactionCase):
             raise Exception('No pickings created')
         out_pick = self.env['stock.picking']
         in_pick = self.env['stock.picking']
-        for pick in pick_model.browse(ext_picks):
+        for pick in ext_picks:
             if pick.picking_type_code == 'outgoing':
                 if partner_id and pick.partner_id == partner_id:
                     out_pick += pick
@@ -202,14 +202,24 @@ class TestSubcontracting(TransactionCase):
             raise Exception('In picking not created')
         return out_pick, in_pick
 
-    def validatePicking(self, pick):
+    def validatePicking(self, pick, force_qty=False):
         pick.action_confirm()
         pick.action_assign()
+        if force_qty:
+            for line in pick.move_line_ids_without_package:
+                line.qty_done = force_qty
         res = pick.button_validate()
         if isinstance(res, dict) and res['res_model'] == 'stock.immediate.transfer':
             immediate_transfer_form = Form(self.env[res['res_model']].with_context(res['context']))
             immediate_transfer = immediate_transfer_form.save()
             immediate_transfer.process()
+        if isinstance(res, dict) and res['res_model'] == 'stock.backorder.confirmation':
+            immediate_transfer_form = Form(self.env[res['res_model']].with_context(res['context']))
+            immediate_transfer = immediate_transfer_form.save()
+            immediate_transfer.process()
+
+    def cancelMo(self, production):
+        production.button_cancel_produce_externally()
 
     def createTmpStockMove(self, name, product_id, qty, location_id, location_dest_id, partner_id, origin, production_id, external_prod_raw, external_prod_finish, product_uom, operation_type, obj='mrp.production'):
         tmp_move_env = self.env["stock.tmp_move"]
@@ -272,7 +282,7 @@ class TestSubcontracting(TransactionCase):
     #     self.updateStartingStockQty(self.raw_2, self.stock_location, 1000)
     #     ext_wizard = self.execProduceExternallyMO(self.test_production)
     #     ext_wizard.button_produce_externally()
-    #     out_pick, in_pick = self.getExtPickings(self.test_production)
+    #     out_pick, in_pick = self.getExtPickings(self.test_production, self.external_partner1)
     #     self.validatePicking(out_pick)
     #     self.checkQuantQty(self.raw_1, self.subcontract_loc_1, 2, 'out')
     #     self.checkQuantQty(self.raw_2, self.subcontract_loc_1, 5, 'out')
@@ -326,7 +336,7 @@ class TestSubcontracting(TransactionCase):
     #                             self.finished.uom_id, 
     #                             'deliver_consume')
     #     ext_wizard.button_produce_externally()
-    #     out_pick, in_pick = self.getExtPickings(self.test_production)
+    #     out_pick, in_pick = self.getExtPickings(self.test_production, self.external_partner1)
     #     self.validatePicking(out_pick)
     #     self.checkQuantQty(self.raw_1, self.subcontract_loc_1, 2, 'out')
     #     self.checkQuantQty(self.raw_2, self.subcontract_loc_1, 15, 'out')
@@ -370,7 +380,7 @@ class TestSubcontracting(TransactionCase):
     #                             self.raw_2.uom_id, 
     #                             'consume')
     #     ext_wizard.button_produce_externally()
-    #     out_pick, in_pick = self.getExtPickings(self.test_production)
+    #     out_pick, in_pick = self.getExtPickings(self.test_production, self.external_partner1)
     #     self.validatePicking(out_pick)
     #     self.checkQuantQty(self.raw_1, self.subcontract_loc_1, 2, 'out')
     #     self.checkQuantQty(self.raw_2, self.subcontract_loc_1, 5, 'out')
@@ -406,7 +416,7 @@ class TestSubcontracting(TransactionCase):
     #         if move.product_id == self.raw_2:
     #             move.product_uom_qty = 3 # 5
     #     ext_wizard.button_produce_externally()
-    #     out_pick, in_pick = self.getExtPickings(self.test_production)
+    #     out_pick, in_pick = self.getExtPickings(self.test_production, self.external_partner1)
     #     self.validatePicking(out_pick)
     #     self.checkQuantQty(self.raw_1, self.subcontract_loc_1, 1, 'out')
     #     self.checkQuantQty(self.raw_2, self.subcontract_loc_1, 3, 'out')
@@ -444,7 +454,7 @@ class TestSubcontracting(TransactionCase):
     #             wo_raw_2 = wo
     #     ext_wizard = self.execProduceExternallyWO(wo_raw_1)
     #     ext_wizard.button_produce_externally()
-    #     out_pick, in_pick = self.getExtPickings(self.test_production)
+    #     out_pick, in_pick = self.getExtPickings(self.test_production, self.external_partner1)
     #     self.validatePicking(out_pick)
     #     self.checkQuantQty(self.raw_1, self.subcontract_loc_1, 6, 'out')
     #     self.checkQuantQty(self.raw_1, self.stock_location, 994, 'out')
@@ -453,7 +463,7 @@ class TestSubcontracting(TransactionCase):
     #     self.checkQuantQty(self.raw_1, self.stock_location, 1000, 'out')
     #     ext_wizard = self.execProduceExternallyWO(wo_raw_2)
     #     ext_wizard.button_produce_externally()
-    #     out_pick_2, in_pick_2 = self.getExtPickings(self.test_production)
+    #     out_pick_2, in_pick_2 = self.getExtPickings(self.test_production, self.external_partner1)
     #     self.validatePicking(out_pick_2 - out_pick)
     #     self.checkQuantQty(self.raw_2, self.subcontract_loc_1, 15, 'out')
     #     self.checkQuantQty(self.raw_2, self.stock_location, 985, 'out')
@@ -504,7 +514,7 @@ class TestSubcontracting(TransactionCase):
     #                             'deliver',
     #                             'mrp.workorder')
     #     ext_wizard.button_produce_externally()
-    #     out_pick, in_pick = self.getExtPickings(self.test_production)
+    #     out_pick, in_pick = self.getExtPickings(self.test_production, self.external_partner1)
     #     self.validatePicking(out_pick)
     #     self.checkQuantQty(self.raw_1, self.subcontract_loc_1, 6, 'out')
     #     self.checkQuantQty(self.raw_1, self.stock_location, 994, 'out')
@@ -514,7 +524,7 @@ class TestSubcontracting(TransactionCase):
     #     ext_wizard = self.execProduceExternallyWO(wo_raw_2)
     #     ext_wizard.button_produce_externally()
     #     self.checkQuantQty(self.raw_2, self.subcontract_loc_1, 100, 'out')
-    #     out_pick_2, in_pick_2 = self.getExtPickings(self.test_production)
+    #     out_pick_2, in_pick_2 = self.getExtPickings(self.test_production, self.external_partner1)
     #     self.validatePicking(out_pick_2 - out_pick)
     #     self.checkQuantQty(self.raw_2, self.subcontract_loc_1, 115, 'out')
     #     self.checkQuantQty(self.raw_2, self.stock_location, 885, 'out')
@@ -568,7 +578,7 @@ class TestSubcontracting(TransactionCase):
     #                             'consume',
     #                             'mrp.workorder')
     #     ext_wizard.button_produce_externally()
-    #     out_pick, in_pick = self.getExtPickings(self.test_production)
+    #     out_pick, in_pick = self.getExtPickings(self.test_production, self.external_partner1)
     #     self.validatePicking(out_pick)
     #     self.checkQuantQty(self.raw_1, self.subcontract_loc_1, 6, 'out')
     #     self.checkQuantQty(self.raw_1, self.stock_location, 994, 'out')
@@ -577,7 +587,7 @@ class TestSubcontracting(TransactionCase):
     #     self.checkQuantQty(self.raw_1, self.stock_location, 1000, 'out')
     #     ext_wizard = self.execProduceExternallyWO(wo_raw_2)
     #     ext_wizard.button_produce_externally()
-    #     out_pick_2, in_pick_2 = self.getExtPickings(self.test_production)
+    #     out_pick_2, in_pick_2 = self.getExtPickings(self.test_production, self.external_partner1)
     #     self.validatePicking(out_pick_2 - out_pick)
     #     self.checkQuantQty(self.raw_2, self.subcontract_loc_1, 15, 'in')
     #     self.checkQuantQty(self.raw_2, self.stock_location, 985, 'in')
@@ -630,4 +640,83 @@ class TestSubcontracting(TransactionCase):
     #     if purchase_ids.state != 'cancel':
     #         raise Exception('Second purchase not cancelled.')
     #     logging.info('End test_08_subcontracting_more_purchase_validate_only_one.')
+    #     self.assertEqual(1, 1)
+
+    # def test_09_subcontracting_MO_backorders(self):
+    #     logging.info('Start test_09_subcontracting_MO_backorders.')
+    #     finished_to_produce = 3
+    #     self.createSubcontractLocation1()
+    #     self.createExternalPartner1()
+    #     self.createProducts()
+    #     self.createBom()
+    #     self.createProduction(finished_to_produce)
+    #     self.createSupplierInfo1()
+    #     self.updateStartingStockQty(self.raw_1, self.stock_location, 1000)
+    #     self.updateStartingStockQty(self.raw_2, self.stock_location, 1000)
+    #     ext_wizard = self.execProduceExternallyMO(self.test_production)
+    #     ext_wizard.button_produce_externally()
+    #     out_pick, in_pick = self.getExtPickings(self.test_production, self.external_partner1)
+    #     self.validatePicking(out_pick)
+    #     self.checkQuantQty(self.raw_1, self.subcontract_loc_1, 6, 'out')
+    #     self.checkQuantQty(self.raw_2, self.subcontract_loc_1, 15, 'out')
+    #     self.checkQuantQty(self.raw_1, self.stock_location, 994, 'in')
+    #     self.checkQuantQty(self.raw_2, self.stock_location, 985, 'in')
+    #     self.validatePicking(in_pick, 1)
+    #     self.checkQuantQty(self.finished, self.subcontract_loc_1, 0, 'in')
+    #     self.checkQuantQty(self.finished, self.stock_location, 1, 'in')
+    #     self.checkQuantQty(self.raw_1, self.subcontract_loc_1, 4, 'in')
+    #     self.checkQuantQty(self.raw_1, self.stock_location, 994, 'in')
+    #     self.checkQuantQty(self.raw_2, self.subcontract_loc_1, 10, 'in')
+    #     self.checkQuantQty(self.raw_2, self.stock_location, 985, 'in')
+    #     backorder_pick = self.env['stock.picking'].search([('backorder_id', '=', in_pick.id)])
+    #     self.validatePicking(backorder_pick, 2)
+    #     self.checkQuantQty(self.finished, self.subcontract_loc_1, 0, 'in')
+    #     self.checkQuantQty(self.finished, self.stock_location, 3, 'in')
+    #     self.checkQuantQty(self.raw_1, self.subcontract_loc_1, 0, 'in')
+    #     self.checkQuantQty(self.raw_1, self.stock_location, 994, 'in')
+    #     self.checkQuantQty(self.raw_2, self.subcontract_loc_1, 0, 'in')
+    #     self.checkQuantQty(self.raw_2, self.stock_location, 985, 'in')
+    #     purchase_ids = self.getPurchase(self.external_partner1, self.test_production)
+    #     self.checkPurchase(purchase_ids, finished_to_produce)
+    #     logging.info('End test_09_subcontracting_MO_backorders.')
+    #     self.assertEqual(1, 1)
+
+    # def test_10_subcontracting_MO_cancel(self):
+    #     logging.info('Start test_10_subcontracting_MO_cancel.')
+    #     finished_to_produce = 3
+    #     self.createSubcontractLocation1()
+    #     self.createExternalPartner1()
+    #     self.createProducts()
+    #     self.createBom()
+    #     self.createProduction(finished_to_produce)
+    #     self.createSupplierInfo1()
+    #     self.updateStartingStockQty(self.raw_1, self.stock_location, 1000)
+    #     self.updateStartingStockQty(self.raw_2, self.stock_location, 1000)
+    #     ext_wizard = self.execProduceExternallyMO(self.test_production)
+    #     ext_wizard.button_produce_externally()
+    #     out_pick, in_pick = self.getExtPickings(self.test_production, self.external_partner1)
+    #     self.validatePicking(out_pick)
+    #     self.checkQuantQty(self.raw_1, self.subcontract_loc_1, 6, 'out')
+    #     self.checkQuantQty(self.raw_2, self.subcontract_loc_1, 15, 'out')
+    #     self.checkQuantQty(self.raw_1, self.stock_location, 994, 'in')
+    #     self.checkQuantQty(self.raw_2, self.stock_location, 985, 'in')
+    #     self.cancelMo(self.test_production)
+    #     for pick in out_pick:
+    #         if pick.state != 'done':
+    #             pick.action_cancel()
+    #     for pick in in_pick:
+    #         pick.action_cancel()
+    #         if pick.state != 'cancel':
+    #             raise Exception('Picking in %r not cancelled.' % (pick.display_name))
+    #     #self.checkQuantQty(self.finished, self.subcontract_loc_1, 0, 'in')
+    #     #self.checkQuantQty(self.finished, self.stock_location, 0, 'in')
+    #     self.checkQuantQty(self.raw_1, self.subcontract_loc_1, 6, 'out')
+    #     self.checkQuantQty(self.raw_2, self.subcontract_loc_1, 15, 'out')
+    #     self.checkQuantQty(self.raw_1, self.stock_location, 994, 'in')
+    #     self.checkQuantQty(self.raw_2, self.stock_location, 985, 'in')
+    #     purchase_ids = self.getPurchase(self.external_partner1, self.test_production)
+    #     for purchase in purchase_ids:
+    #         if purchase.state != 'cancel':
+    #             raise Exception('Cancel purchase wrong')
+    #     logging.info('End test_10_subcontracting_MO_cancel.')
     #     self.assertEqual(1, 1)

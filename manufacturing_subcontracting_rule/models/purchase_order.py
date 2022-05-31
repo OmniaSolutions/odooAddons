@@ -62,15 +62,15 @@ class PurchaseOrder(models.Model):
             'domain': [('id', 'in', manufacturingIds)],
         }
 
-    @api.depends('order_line.move_ids')
-    def _compute_picking(self):
-        super(PurchaseOrder, self)._compute_picking()
-        for order in self:
-            pickingsToAppend = self.env['stock.picking']
-            for purchaseLineBrws in order.order_line:
-                if purchaseLineBrws.production_external_id:
-                    for pick in purchaseLineBrws.production_external_id.external_pickings:
-                        if order.partner_id == pick.partner_id:
-                            pickingsToAppend = pickingsToAppend + pick
-            order.picking_ids = order.picking_ids + pickingsToAppend
-            order.picking_count = len(order.picking_ids)
+    # @api.depends('order_line.move_ids')
+    # def _compute_picking(self):
+    #     super(PurchaseOrder, self)._compute_picking()
+    #     for order in self:
+    #         pickingsToAppend = self.env['stock.picking']
+    #         for purchaseLineBrws in order.order_line:
+    #             if purchaseLineBrws.production_external_id:
+    #                 for pick in purchaseLineBrws.production_external_id.external_pickings:
+    #                     if order.partner_id == pick.partner_id and pick.picking_type_code == 'incoming':
+    #                         pickingsToAppend = pickingsToAppend + pick
+    #         order.picking_ids = order.picking_ids + pickingsToAppend
+    #         order.picking_count = len(order.picking_ids)

@@ -445,6 +445,7 @@ class MrpProductionWizard(models.TransientModel):
             new_purchase_order_line.product_qty = lineBrws.product_uom_qty
             lineBrws.purchase_order_line_subcontracting_id = new_purchase_order_line.id
             lineBrws.purchase_line_id = new_purchase_order_line
+            new_purchase_order_line.move_ids = lineBrws
         if self.confirm_purchese_order and len(self.external_partner) == 1:
             obj_po.button_confirm()
         obj_po._compute_picking()

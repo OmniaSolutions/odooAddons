@@ -20,6 +20,7 @@ class MrpWorkorder(models.Model):
     external_product = fields.Many2one('product.product',
                                        string=_('External Product use for external production'))
     is_mo_produced = fields.Boolean('Is Manufacturing Produced')
+    before_state = fields.Char('Before state')
 
     def createTmpStockMove(self, sourceMoveObj, location_source_id=None, location_dest_id=None):
         tmpMoveObj = self.env["stock.tmp_move"]
@@ -82,6 +83,7 @@ class MrpWorkorder(models.Model):
             raise UserError("No Partner set to Routing Operation")
         obj_id.create_vendors_from(partner)
         obj_id._request_date()
+        self.before_state = self.state
         self.env.cr.commit()
         return {
             'type': 'ir.actions.act_window',
@@ -94,25 +96,18 @@ class MrpWorkorder(models.Model):
         }
 
     def button_cancel_produce_externally(self):
-        stock_move = self.env['stock.move']
         for mrp_workorder_id in self:
-            picking_ids = []
-            if mrp_workorder_id.state != 'external':
-                continue
-            stock_move_ids = stock_move.search(['|', ('mrp_workorder_id', '=', mrp_workorder_id.id), ('workorder_id', '=', mrp_workorder_id.id)])
-            for stock_move_id in stock_move_ids:
-                if stock_move_id.state not in ['done', 'cancel']:
-                    stock_move_id._do_unreserve()
-                    stock_move_id._action_cancel()
-                    picking_ids.append(stock_move_id.picking_id)
-            for stock_picking_id in picking_ids:
-                stock_picking_id.do_unreserve()
-                stock_picking_id.action_cancel()
-            purchase_ids = self.env['purchase.order'].search([('workorder_external_id', '=', mrp_workorder_id.id)])
-            for purchase in purchase_ids:
-                purchase.button_cancel()
-                purchase.unlink()
-            mrp_workorder_id.write({'state': 'ready'})
+            pickings = mrp_workorder_id.getExternalPickings()
+            for pick in pickings:
+                if pick.state in ('assigned', 'confirmed', 'partially_available', 'draft', 'waiting'):
+                    pick.action_cancel()
+            ext_purchase = mrp_workorder_id.getExternalPurchase()
+            for purchase in ext_purchase:
+                if purchase.state in ('draft', 'to_approve', 'sent', 'purchase'):
+                    purchase._compute_picking()
+                    purchase.button_cancel()
+            mrp_workorder_id.state = mrp_workorder_id.before_state or 'draft'
+            mrp_workorder_id.before_state = ''
 
     def copyAndCleanLines(self, stock_move_ids, location_dest_id=None, location_source_id=None):
         outElems = []
@@ -166,12 +161,15 @@ class MrpWorkorder(models.Model):
                 'domain': [('id', 'in', picks.ids)],
         }
 
-    
-    def open_external_purchase(self):
-        newContext = self.env.context.copy()
+    def getExternalPurchase(self):
         picks = self.env['purchase.order']
         for woBrws in self:
             picks = picks.search([('workorder_external_id', '=', woBrws.id)])
+        return picks
+    
+    def open_external_purchase(self):
+        newContext = self.env.context.copy()
+        picks = self.getExternalPurchase()
         return {
             'name': _("External Pickings"),
             'view_type': 'form',

@@ -108,10 +108,12 @@ class MrpProduction(models.Model):
                                                       states={'done': [('readonly', True)], 'cancel': [('readonly', True)]})
     external_pickings = fields.One2many('stock.picking', 'external_production', string='External Pikings')
     external_pickings_count = fields.Integer('Number of external picking', compute='_getCountExtPick')
+    before_state = fields.Char('Before state')
 
     def _getCountExtPick(self):
         for item in self:
             pick_ids = item.getExtPickIds()
+            item.external_pickings = pick_ids
             if pick_ids:
                 item.external_pickings_count = len(pick_ids)
             else:
@@ -149,11 +151,18 @@ class MrpProduction(models.Model):
         }
 
     def getExtPickIds(self):
-        stock_picking_ids = []
-        for mrp_workorder_id in self.workorder_ids:
-            stock_picking_ids.extend(mrp_workorder_id.getExternalPickings().ids)
-        stock_picking_ids.extend(self.external_pickings.ids)
-        return list(set(stock_picking_ids))
+        picking_env = self.env['stock.picking']
+        stock_picking_ids = self.env['stock.picking']
+        for production in self:
+            production_picks = picking_env.search([
+                ('sub_production_id', '=', production.id)
+                ])
+            stock_picking_ids += production_picks
+            wo_picks = picking_env.search([
+                ('sub_workorder_id', '=', production.id)
+                ])
+            stock_picking_ids += wo_picks
+        return stock_picking_ids.union()
     
     def open_external_pickings(self):
         return {
@@ -163,7 +172,7 @@ class MrpProduction(models.Model):
             'res_model': 'stock.picking',
             'type': 'ir.actions.act_window',
             'context': self.env.context.copy(),
-            'domain': [('id', 'in', self.getExtPickIds())],
+            'domain': [('id', 'in', self.getExtPickIds().ids)],
         }
 
     @api.model
@@ -276,6 +285,7 @@ class MrpProduction(models.Model):
         for raw_move in obj_id.move_raw_ids:
             if raw_move.qty_available >= raw_move.product_uom_qty:
                 raw_move.operation_type = 'consume'
+        self.before_state = self.state
         self.env.cr.commit()
         return {
             'type': 'ir.actions.act_window',
@@ -288,29 +298,17 @@ class MrpProduction(models.Model):
         }
 
     def button_cancel_produce_externally(self):
-        stockPickingObj = self.env['stock.picking']
         purchaseOrderObj = self.env['purchase.order']
         for manOrderBrws in self:
-            moves = self.env['stock.move']
-            stockPickList = stockPickingObj.search([('origin', '=', manOrderBrws.name)])
-            stockPickList += stockPickingObj.search([('sub_production_id', '=', manOrderBrws.id)])
-            for pickBrws in list(set(stockPickList)):
-                pickBrws.action_cancel()
-                moves += pickBrws.move_lines
-            manOrderBrws.write({'state': 'confirmed'})
-            movesToCancel = self.env['stock.move'].search([('subcontracting_move_id', 'in', moves.ids)])
-            movesToCancel += manOrderBrws.move_raw_ids + manOrderBrws.move_finished_ids
-            for move_line in movesToCancel:
-                if move_line.mrp_original_move is False:
-                    move_line._action_cancel()
-                if move_line.state in ('draft', 'cancel'):
-                    if move_line.mrp_original_move:
-                        move_line.state = move_line.mrp_original_move
-                    else:
-                        move_line.unlink()
-            for purchese in purchaseOrderObj.search([('production_external_id', '=', self.id)]):
-                purchese.button_cancel()
-                purchese.unlink()
+            for purchase in purchaseOrderObj.browse(manOrderBrws._getExtPurchase()):
+                if purchase.state in ('draft', 'to_approve', 'sent', 'purchase'):
+                    purchase.button_cancel()
+            for pick in manOrderBrws.getExtPickIds():
+                if pick.state in ('assigned', 'confirmed', 'partially_available', 'draft', 'waiting'):
+                    pick.action_cancel()
+            manOrderBrws.state = manOrderBrws.before_state or 'draft'
+            manOrderBrws.before_state = ''
+
 
     def checkCreateReorderRule(self, prodBrws, warehouse):
         if warehouse:
