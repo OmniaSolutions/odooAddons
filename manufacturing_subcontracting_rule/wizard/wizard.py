@@ -305,8 +305,13 @@ class MrpProductionWizard(models.TransientModel):
         return relObj.browse(objIds)
 
     def cancelProductionRows(self, prodObj):
+        '''
+            Don't unify these for loops! _action_cancel do cancel of finished moves before to set mrp_original_move field.
+            In case of cancel manufacturin order it causes unable to complete MO!
+        '''
         for lineBrws in prodObj.move_raw_ids + prodObj.move_finished_ids:
             lineBrws.mrp_original_move = lineBrws.state
+        for lineBrws in prodObj.move_raw_ids + prodObj.move_finished_ids:
             lineBrws._action_cancel()
 
     def updateMoLinesWithNew(self, productionBrws):

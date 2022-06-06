@@ -306,9 +306,14 @@ class MrpProduction(models.Model):
             for pick in manOrderBrws.getExtPickIds():
                 if pick.state in ('assigned', 'confirmed', 'partially_available', 'draft', 'waiting'):
                     pick.action_cancel()
+            for raw_move in manOrderBrws.move_raw_ids:
+                if raw_move.mrp_original_move:
+                    raw_move.state = raw_move.mrp_original_move
+            for finished_move in manOrderBrws.move_finished_ids:
+                if finished_move.mrp_original_move:
+                    finished_move.state = finished_move.mrp_original_move
             manOrderBrws.state = manOrderBrws.before_state or 'draft'
             manOrderBrws.before_state = ''
-
 
     def checkCreateReorderRule(self, prodBrws, warehouse):
         if warehouse:

@@ -113,13 +113,13 @@ class TestSubcontracting(TransactionCase):
         self.op1 = routing_workcenter.create({
             'name': 'op1',
             'workcenter_id': 1,
-            'default_supplier': self.external_partner.id,
+            'default_supplier': partner.id,
             'bom_id': bom_id.id,
             })
         self.op2 = routing_workcenter.create({
             'name': 'op2',
             'workcenter_id': 1,
-            'default_supplier': self.external_partner.id,
+            'default_supplier': partner.id,
             'bom_id': bom_id.id,
             })
 
@@ -183,7 +183,6 @@ class TestSubcontracting(TransactionCase):
         return ext_wizard
 
     def getExtPickings(self, production, partner_id=False):
-        pick_model = self.env['stock.picking']
         ext_picks = production.getExtPickIds()
         if not ext_picks:
             raise Exception('No pickings created')
@@ -268,7 +267,17 @@ class TestSubcontracting(TransactionCase):
         for qty in products.values():
             if qty != finished_to_produce:
                 raise Exception('Wrong qty to purchase')
-        
+
+    def getWorkorders(self, production, op1, op2):
+        wo_raw_1 = self.env['mrp.workorder']
+        wo_raw_2 = self.env['mrp.workorder']
+        for wo in production.workorder_ids:
+            if wo.operation_id == op1:
+                wo_raw_1 = wo
+            elif wo.operation_id == op2:
+                wo_raw_2 = wo
+        return wo_raw_1, wo_raw_2
+
     # def test_01_subcontracting_simple_1(self):
     #     logging.info('Start test_01_subcontracting_simple_1.')
     #     finished_to_produce = 1
@@ -680,7 +689,7 @@ class TestSubcontracting(TransactionCase):
     #     self.checkPurchase(purchase_ids, finished_to_produce)
     #     logging.info('End test_09_subcontracting_MO_backorders.')
     #     self.assertEqual(1, 1)
-
+    #
     # def test_10_subcontracting_MO_cancel(self):
     #     logging.info('Start test_10_subcontracting_MO_cancel.')
     #     finished_to_produce = 3
@@ -718,5 +727,41 @@ class TestSubcontracting(TransactionCase):
     #     for purchase in purchase_ids:
     #         if purchase.state != 'cancel':
     #             raise Exception('Cancel purchase wrong')
+
     #     logging.info('End test_10_subcontracting_MO_cancel.')
     #     self.assertEqual(1, 1)
+
+    def test_11_subcontracting_cancel_produce_externally_and_resume_production(self):
+        logging.info('Start test_11_subcontracting_cancel_produce_externally_and_resume_production.')
+        self.createSubcontractLocation1()
+        self.createExternalPartner1()
+        self.createProducts()
+        self.createBom()
+        self.createOperations(self.test_bom, self.external_partner1)
+        self.setupConsumedInOperation(self.test_bom_line1, self.op1)
+        self.setupConsumedInOperation(self.test_bom_line2, self.op2)
+        self.createSupplierInfo1()
+        self.createProduction(3)
+        wo_raw_1, wo_raw_2 = self.getWorkorders(self.test_production, self.op1, self.op2)
+        self.updateStartingStockQty(self.raw_1, self.stock_location, 1000)
+        self.updateStartingStockQty(self.raw_2, self.stock_location, 1000)
+        ext_wizard = self.execProduceExternallyMO(self.test_production)
+        ext_wizard.button_produce_externally()
+        self.cancelMo(self.test_production)
+
+        self.test_production.action_confirm()
+        wo_raw_1.button_start()
+        wo_raw_1.button_finish()
+        wo_raw_2.button_start()
+        wo_raw_2.button_finish()
+        self.test_production.action_assign()
+        for raw in self.test_production.move_raw_ids:
+            if raw.state == 'assigned':
+                for raw_line in raw.move_line_ids:
+                    raw_line.qty_done = raw_line.product_uom_qty
+        self.test_production.button_mark_done()
+        if self.test_production.state != 'done':
+            raise Exception('Cancel production externally MO and go back with normal flow not working')
+        logging.info('End test_11_subcontracting_cancel_produce_externally_and_resume_production.')
+        self.assertEqual(1, 1)
+    
