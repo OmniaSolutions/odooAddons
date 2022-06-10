@@ -31,4 +31,7 @@ Created on Dec 18, 2017
 
 @author: daniel
 '''
-from . import wizard
+from . import stock_tmp_move
+from . import external_partner
+from . import wizard_production
+from . import wizard_workorder

@@ -282,9 +282,6 @@ class MrpProduction(models.Model):
         obj_id = self.env['mrp.production.externally.wizard'].create(values)
         obj_id.create_vendors()
         obj_id._request_date()
-        for raw_move in obj_id.move_raw_ids:
-            if raw_move.qty_available >= raw_move.product_uom_qty:
-                raw_move.operation_type = 'consume'
         self.before_state = self.state
         self.env.cr.commit()
         return {

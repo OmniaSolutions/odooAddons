@@ -53,24 +53,6 @@ class StockMove(models.Model):
     purchase_order_line_subcontracting_id = fields.Integer(_('Original Purchase line Id'))
     subcontracting_source_stock_move_id = fields.Integer(_('Original Production ID'))
     subcontracting_move_id = fields.Integer(_('Original move id'))
-    operation_type = fields.Selection([
-        ('deliver', _('Deliver')),
-        ('consume', _('Consume')),
-        ('deliver_consume', _('Deliver and Consume')),
-        ],
-        default='deliver_consume',
-        help="""
-Deliver:   Send to subcontractor location
-Stock -> Subcontractor
-
-Consume:   Consume from subcontractor location
-Subcontractor -> Subcontract location
-
-Deliver and Consume:  Send to subcontractor location + Consume from subcontractor location
-Stock -> Subcontractor
-Subcontractor -> Subcontract location
-        """
-    )
 
     @api.model
     def moveQty(self, qty):
@@ -108,7 +90,6 @@ Subcontractor -> Subcontract location
             'location_id': from_location.id,
             'location_dest_id': to_location.id,
             'sale_line_id': False,
-            'operation_type': False,
             'product_id': product_id.id,
             'product_uom_qty': qty,
             # 'subcontracting_move_id': source_move_id, Used only for deletion

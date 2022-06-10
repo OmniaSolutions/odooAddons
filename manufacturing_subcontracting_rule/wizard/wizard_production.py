@@ -16,170 +16,6 @@ from odoo.addons import decimal_precision as dp
 from odoo.exceptions import UserError
 
 
-class TmpStockMove(models.TransientModel):
-    _name = "stock.tmp_move"
-    _description = 'Sub-Contracting Template Move'
-
-    name = fields.Char('Description', index=True, required=True)
-    mrp_original_move = fields.Char(_('Is generated from origin MO'))
-    company_id = fields.Many2one(
-        'res.company', 'Company',
-        default=lambda self: self.env['res.company']._company_default_get('stock.move'),
-        index=True, required=True)
-    product_id = fields.Many2one(
-        'product.product', 'Product',
-        domain=[('type', 'in', ['product', 'consu'])], index=True, required=True,
-        states={'done': [('readonly', True)]})
-    product_uom_qty = fields.Float('Quantity',
-                                   digits='Product Unit of Measure',
-                                   default=1.0, required=True, states={'done': [('readonly', True)]},
-                                   help="This is the quantity of products from an inventory "
-                                        "point of view. For moves in the state 'done', this is the "
-                                        "quantity of products that were actually moved. For other "
-                                        "moves, this is the quantity of product that is planned to "
-                                        "be moved. Lowering this quantity does not generate a "
-                                        "back order. Changing this quantity on assigned moves affects "
-                                        "the product reservation, and should be done with care.")
-    location_id = fields.Many2one(
-        'stock.location', 'Source Location',
-        auto_join=True, index=True, required=True, states={'done': [('readonly', True)]},
-        help="Sets a location if you produce at a fixed location. This can be a partner location if you sub contract the manufacturing operations.")
-    location_dest_id = fields.Many2one(
-        'stock.location', 'Destination Location',
-        auto_join=True, index=True, required=True, states={'done': [('readonly', True)]},
-        help="Location where the system will stock the finished products.")
-    partner_id = fields.Many2one(
-        'res.partner', 'Destination Address ',
-        states={'done': [('readonly', True)]},
-        help="Optional address where goods are to be delivered, specifically used for allotment")
-    note = fields.Text('Notes')
-    state = fields.Selection([
-        ('draft', 'New'), ('cancel', 'Cancelled'),
-        ('waiting', 'Waiting Another Move'), ('confirmed', 'Waiting Availability'),
-        ('assigned', 'Available'), ('done', 'Done')], string='Status',
-        copy=False, default='draft', index=True, readonly=True,
-        help="* New: When the stock move is created and not yet confirmed.\n"
-             "* Waiting Another Move: This state can be seen when a move is waiting for another one, for example in a chained flow.\n"
-             "* Waiting Availability: This state is reached when the procurement resolution is not straight forward. It may need the scheduler to run, a component to be manufactured...\n"
-             "* Available: When products are reserved, it is set to \'Available\'.\n"
-             "* Done: When the shipment is processed, the state is \'Done\'.")
-    origin = fields.Char("Source Document", readonly=True)
-    warehouse_id = fields.Many2one('stock.warehouse', 'Warehouse', help="Technical field depicting the warehouse to consider for the route selection on the next procurement (if any).")
-    production_id = fields.Many2one(comodel_name='mrp.production', string='Production Id', readonly=True)
-    #
-    # production filed
-    #
-    external_prod_raw = fields.Many2one(comodel_name="mrp.production.externally.wizard",
-                                        string="Raw",
-                                        readonly=True)
-    external_prod_finish = fields.Many2one(comodel_name="mrp.production.externally.wizard",
-                                           string="Finished",
-                                           readonly=True)
-    #
-    # work order field
-    #
-    external_prod_workorder_raw = fields.Many2one(comodel_name="mrp.workorder.externally.wizard",
-                                                  string="Raw",
-                                                  readonly=True)
-    external_prod_workorder_finish = fields.Many2one(comodel_name="mrp.workorder.externally.wizard",
-                                                     string="Finished",
-                                                     readonly=True)
-    scrapped = fields.Boolean('Scrapped', related='location_dest_id.scrap_location', readonly=True, store=True)
-    product_uom = fields.Many2one(
-        'uom.uom', 'Unit of Measure', required=True, states={'done': [('readonly', True)]}, default=lambda self: self.env['uom.uom'].search([], limit=1, order='id'))
-    date_expected = fields.Datetime('Scheduled date')
-    workorder_id = fields.Many2one(comodel_name='mrp.workorder', string='Workorder Id', readonly=True)
-
-    qty_available = fields.Float(_('Qty available'), compute='_compute_qty_available')
-    location_available = fields.Many2one('stock.location', string=_('Qty Location'))
-
-    operation_type = fields.Selection([
-        ('deliver', _('Deliver')),
-        ('consume', _('Consume')),
-        ('deliver_consume', _('Deliver and Consume')),
-        ],
-        default='deliver_consume',
-        help="""
-Deliver:   Send to subcontractor location
-Stock -> Subcontractor
-
-Consume:   Consume from subcontractor location
-Subcontractor -> Subcontract location
-
-Deliver and Consume:  Send to subcontractor location + Consume from subcontractor location
-Stock -> Subcontractor
-Subcontractor -> Subcontract location
-        """
-    )
-    mo_source_move = fields.Many2one('stock.move', string=_('Source MO stock move.'))
-
-
-    @api.depends('location_dest_id', 'location_id')
-    def _compute_qty_available(self):
-        for move in self:
-            move.qty_available = 0
-            if move.product_id and move.location_dest_id:
-                move.qty_available = move.checkQuantQty(move.product_id, move.location_dest_id)
-
-    def checkQuantQty(self, product, location):
-        stock_quant_model = self.env['stock.quant']
-        stock_quants = stock_quant_model.search([
-            ('product_id', '=', product.id),
-            ('location_id', '=', location.id)
-            ])
-        for quant in stock_quants:
-            return quant.quantity
-        return 0
-
-    @api.onchange('product_id')
-    def changeProduct(self):
-        if not self.name and self.product_id:
-            if self.workorder_id:
-                if self.workorder_id.production_id.product_id == self.product_id:
-                    raise UserError('You cannot use finished product in the workorder external production. Produce externally the manufacturing order instead.')
-            self.name = 'Subcontracting extra move %s' % (self.product_id.display_name)
-
-    @api.onchange('partner_id')
-    def changePartner(self):
-        if self.partner_id:
-            partner_location_id = self.external_prod_raw.getPartnerLocation(self.partner_id)
-            if self.external_prod_raw:
-                self.location_id = self.external_prod_raw.production_id.location_src_id.id
-                self.location_dest_id = partner_location_id.id
-            elif self.external_prod_finish:
-                self.location_id = partner_location_id.id
-                self.location_dest_id = self.external_prod_finish.production_id.location_src_id.id
-
-    @api.model
-    def create(self, vals):
-        return super(TmpStockMove, self).create(vals)
-
-
-class externalProductionPartner(models.TransientModel):
-    _name = 'external.production.partner'
-    _description = 'Sub-Contracting External production partner'
-
-    partner_id = fields.Many2one('res.partner',
-                                 string=_('External Partner'),
-                                 required=True)
-    default = fields.Boolean(_('Default'))
-    price = fields.Float('Price',
-                         default=0.0,
-                         digits='Product Price',
-                         required=True,
-                         help="The price to purchase a product")
-    delay = fields.Integer('Delivery Lead Time',
-                           default=1,
-                           required=True,
-                           help="Lead time in days between the confirmation of the purchase order and the receipt of the products in your warehouse. Used by the scheduler for automatic computation of the purchase order planning.")
-    min_qty = fields.Float('Minimal Quantity',
-                           default=0.0,
-                           required=True,
-                           help="The minimal quantity to purchase from this vendor, expressed in the vendor Product Unit of Measure if not any, in the default unit of measure of the product otherwise.")
-    wizard_id = fields.Many2one('mrp.production.externally.wizard',
-                                string="Vendors")
-
-
 class MrpProductionWizard(models.TransientModel):
 
     _name = "mrp.production.externally.wizard"
@@ -196,13 +32,6 @@ class MrpProductionWizard(models.TransientModel):
                                         string=_('Finished Products'),
                                         inverse_name='external_prod_finish',
                                         domain=[('scrapped', '=', False)])
-    operation_type = fields.Selection(selection=[
-        ('deliver', _('Deliver')),
-        ('consume', _('Consume')),
-        ('deliver_consume', _('Deliver and Consume')),
-        ],
-        string=_('Operation'),
-        default='deliver_consume')
     consume_bom_id = fields.Many2one(comodel_name='mrp.bom',
                                      string=_('BOM To Consume'))
     production_id = fields.Many2one('mrp.production',
@@ -292,11 +121,6 @@ class MrpProductionWizard(models.TransientModel):
 
     def getWizardBrws(self):
         return self.browse(self._context.get('wizard_id', False))
-
-    @api.onchange('operation_type')
-    def operationTypeChanged(self):
-        for move in self.move_raw_ids:
-            move.operation_type = self.operation_type
     
     def getParentObjectBrowse(self):
         model = self.env.context.get('active_model', '')
@@ -627,7 +451,6 @@ class MrpProductionWizard(models.TransientModel):
                 'location_id': location_id.id,#stock_move_id.location_id.id,
                 'location_dest_id': location_dest_id.id,#stock_move_id.location_dest_id.id,
                 'sale_line_id': stock_move_id.mo_source_move.sale_line_id.id,
-                'operation_type': stock_move_id.operation_type,
                 'product_id': stock_move_id.product_id.id,
                 'product_uom_qty': stock_move_id.product_uom_qty,
                 'company_id': stock_move_id.company_id.id,
@@ -652,14 +475,8 @@ class MrpProductionWizard(models.TransientModel):
         out_stock_picking_id = stock_picking.create(picking_vals)
         for stock_move_id in out_stock_move_ids.filtered(lambda x: x.partner_id.id == partner_id.id):
             new_stock_move_id = self.env['stock.move']
-            if stock_move_id.operation_type in ['deliver', 'deliver_consume']: # Create picking Stock -> Partner Location
-                stock_move_vals = self.getStockMoveVals(stock_move_id, mrp_production_id, out_stock_picking_id, stock_location_id, customerProductionLocation)
-                new_stock_move_id = new_stock_move_id.create(stock_move_vals)
-            if stock_move_id.operation_type == 'consume': # Subcontract partner loc _> subcontracting loc
-                subcontracting_loc = self.getSubcontractingLocation()
-                picking_vals = self.getPickingVals(partner_id, mrp_production_id, 'subcontracting_out')
-                stock_move_vals = self.getStockMoveVals(stock_move_id, mrp_production_id, out_stock_picking_id, customerProductionLocation, subcontracting_loc)
-                new_stock_move_id = new_stock_move_id.create(stock_move_vals)
+            stock_move_vals = self.getStockMoveVals(stock_move_id, mrp_production_id, out_stock_picking_id, stock_location_id, customerProductionLocation)
+            new_stock_move_id = new_stock_move_id.create(stock_move_vals)
             if cancel_source_moves:
                 mrp_production_id.move_raw_ids._action_cancel()
         return out_stock_picking_id
@@ -678,143 +495,3 @@ class MrpProductionWizard(models.TransientModel):
                     'wizard_id': self.id}
             external_production_partner.create(vals)
         self.changeExternalPartner()
-
-
-class externalWorkorderPartner(models.TransientModel):
-    _name = 'external.workorder.partner'
-    _description = 'Sub-Contractiong External Workorder Partner'
-    
-    partner_id = fields.Many2one('res.partner',
-                                 string=_('External Partner'),
-                                 required=True)
-    default = fields.Boolean(_('Default'))
-    price = fields.Float('Price',
-                         default=0.0,
-                         digits='Product Price',
-                         required=True,
-                         help="The price to purchase a product")
-    delay = fields.Integer('Delivery Lead Time',
-                           default=1,
-                           required=True,
-                           help="Lead time in days between the confirmation of the purchase order and the receipt of the products in your warehouse. Used by the scheduler for automatic computation of the purchase order planning.")
-    min_qty = fields.Float('Minimal Quantity',
-                           default=0.0,
-                           required=True,
-                           help="The minimal quantity to purchase from this vendor, expressed in the vendor Product Unit of Measure if not any, in the default unit of measure of the product otherwise.")
-
-    wizard_id = fields.Many2one('mrp.workorder.externally.wizard',
-                                string="Vendors")
-
-
-class MrpWorkorderWizard(MrpProductionWizard):
-    _name = "mrp.workorder.externally.wizard"
-    _inherit = ['mrp.production.externally.wizard']
-    _description='Sub-Contracting Mrp Production Externally wizard'
-    
-    external_partner = fields.One2many('external.workorder.partner',
-                                       inverse_name='wizard_id',
-                                       string=_('External Partner'))
-
-    move_raw_ids = fields.One2many('stock.tmp_move',
-                                   string='Raw Materials',
-                                   inverse_name='external_prod_workorder_raw',
-                                   domain=[('scrapped', '=', False)])
-
-    move_finished_ids = fields.One2many('stock.tmp_move',
-                                        string='Finished Products',
-                                        inverse_name='external_prod_workorder_finish',
-                                        domain=[('scrapped', '=', False)])
-
-    def getPickingVals(self, partner_id, mrp_production_id, operation_type):
-        ret = super(MrpWorkorderWizard, self).getPickingVals(partner_id, mrp_production_id, operation_type)
-        ret['sub_workorder_id'] = self.getWo().id
-        return ret
-
-    def getOrigin(self, productionBrws):
-        mrp_workorder_id = self.getWo()
-        return "%s - %s - %s" % (productionBrws.name, mrp_workorder_id.name, mrp_workorder_id.external_partner.name)
-
-    def getStockMoveVals(self, stock_move_id, mrp_production_id, out_stock_picking_id, location_id, location_dest_id):
-        ret = super(MrpWorkorderWizard, self).getStockMoveVals(stock_move_id, mrp_production_id, out_stock_picking_id, location_id, location_dest_id)
-        ret['mrp_workorder_id'] = self.getWo().id
-        ret['workorder_id'] = self.getWo().id
-        return ret
-
-    def getPurchaseVals(self, external_partner):
-        ret = super(MrpWorkorderWizard, self).getPurchaseVals(external_partner)
-        ret['workorder_external_id'] = self.getWo().id
-        return ret
-
-    def getPurchaseLineVals(self, product, purchase, move_line):
-        ret = super(MrpWorkorderWizard, self).getPurchaseLineVals(product, purchase, move_line)
-        ret['workorder_external_id'] = self.getWo().id
-        return ret
-
-    def getDefaultProductionServiceProduct(self):
-        mrp_workorder_id = self.getWo()
-        if mrp_workorder_id.external_product:
-            return mrp_workorder_id.external_product
-        product_vals = self.getNewExternalProductInfo()
-        newProduct = self.env['product.product'].search([('default_code', '=', product_vals.get('default_code'))])
-        if not newProduct:
-            newProduct = self.env['product.product'].create(product_vals)
-            newProduct.message_post(body=_('<div style="background-color:green;color:white;border-radius:5px"><b>Create automatically from subcontracting module</b></div>'),
-                                    message_type='notification')
-            newProduct.type = 'service'
-        mrp_workorder_id.external_product = newProduct
-        mrp_workorder_id.operation_id.external_product = newProduct
-        return newProduct
-    
-    @api.model
-    def getNewExternalProductInfo(self):
-        ret = super(MrpWorkorderWizard, self).getNewExternalProductInfo()
-        workorder_id = self.getWo()
-        ret['default_code'] = ret['default_code'] + "-" + workorder_id.name
-        ret['name'] = ret['name'] + "-" + workorder_id.name
-        return ret
-
-    def getWo(self):
-        out = self.env['mrp.workorder']
-        model = self.env.context.get('active_model', '')
-        objIds = self.env.context.get('active_ids', [])
-        relObj = self.env[model]
-        if model == 'mrp.workorder':
-            out = relObj.browse(objIds)
-        return out
-        
-    def button_produce_externally(self):
-        if not self.external_partner:
-            raise UserError(_("No partner selected"))
-        pickingBrwsList = []
-        mrp_workorder_id = self.getWo()
-        mrp_workorder_id.write({'external_partner': self.external_partner.partner_id.id,
-                                'state': 'external'})
-        mrp_production_id = mrp_workorder_id.production_id
-        for external_partner in self.external_partner:
-            pickOut = self.createStockPickingOut(external_partner.partner_id, mrp_production_id, False)
-            pickIn = self.createStockPickingIn(external_partner.partner_id, mrp_production_id, False)
-            pickingBrwsList.extend((pickIn.id, pickOut.id))
-            date_planned_finished = pickIn.scheduled_date
-            date_planned_start = pickOut.scheduled_date
-            _po_created = self.createPurchase(external_partner, pickIn)
-        mrp_workorder_id.state = 'pending'
-        mrp_workorder_id.date_planned_finished = date_planned_finished
-        mrp_workorder_id.date_planned_start = date_planned_start
-        mrp_production_id.external_pickings = [(6, 0, pickingBrwsList)]
-        mrp_workorder_id.state = 'external'
-
-
-    def create_vendors_from(self, partner_id):
-        external_production_partner = self.env['external.workorder.partner']
-        vals = {'partner_id': partner_id.id,
-                'price': 0.0,
-                'delay': 0.0,
-                'min_qty': 0.0,
-                'wizard_id': self.id
-                }
-        ret = external_production_partner.create(vals)
-        self.changeExternalPartner('external.workorder.partner')
-        return ret
-
-
-

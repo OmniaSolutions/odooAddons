@@ -11,17 +11,19 @@
 		        	<field name="request_date"/>
 	        	</group>
             	<div col="4" colspan="4" style="font-size: larger;font-weight: bold;">Subcontractors</div>
-	        	<field name="external_partner">
-	        	    <tree>
+	        	<field name="external_partner" context="{'current_wizard': id}" >
+	        	    <tree editable="bottom">
                         <field name="partner_id"/>
                         <field name="price" />
                         <field name="delay" />
                         <field name="min_qty" />
+                        <field name="wizard_id" invisible="True"/>
+                        <field name="id" invisible="True"/>
+                        <field name="subcontract_to" domain="[('wizard_id', '=', wizard_id), ('id', '!=', id)]"/>
                     </tree>
 	        	</field>
 	        	<div col="4" colspan="4" style="font-size: larger;font-weight: bold;">Raw Products (Send to Subcontractor)</div>
 	            <group>
-	            	<field name="operation_type"/>
 	            	<field name="consume_bom_id" readonly="True"/>
 	            </group>
 	            <field name="move_raw_ids" context="{'wizard_id': id}">
@@ -31,19 +33,11 @@
 	                    <field name="origin" />
 	                    <field name="partner_id" string="Partner"/>
 	                    <field name="date_expected" />
-	                    <field name="operation_type" />
 	                    <field name="state" invisible="True"/>
 	                    <field name="qty_available"/>
 	                </tree>
 	                
 	                <form>
-	                	<group>
-							<field name="operation_type" required='True'/>
-		                    <div class="alert-warning" style="text-align: center; font-size: 18px" colspan="2"
-		                        attrs="{'invisible': [('operation_type', '!=', 'deliver_consume')]}">
-		                        <br/>Delivery and Consume will consume manufacturing order and will delivery material.
-		                    </div>
-						</group>
 	                	<group string="Product">
 		                    <field name="product_id"/>
 		                    <field name="qty_available" readonly='True'/>
@@ -74,14 +68,10 @@
 	                    <field name="origin" />
 	                    <field name="partner_id" string="Partner"/>
 	                    <field name="date_expected" />
-	                    <field name="operation_type" />
 	                    <field name="state" invisible="True"/>
 	                    <field name="qty_available"/>
 	                </tree>
 	                <form>
-	                	<group>
-							<field name="operation_type" required='True' readonly="True"/>
-						</group>
 	                	<group string="Product">
 		                    <field name="product_id"/>
 		                    <field name="qty_available" readonly='True'/>
@@ -144,11 +134,11 @@
                         <field name="price" />
                         <field name="delay" />
                         <field name="min_qty" />
+                        <field name="subcontract_to"/>
                     </tree>
 	        	</field>
 	        	<div col="4" colspan="4" style="font-size: larger;font-weight: bold;">Raw Products (Send to Subcontractor)</div>
 	            <group>
-	            	<field name="operation_type"/>
 	            	<field name="consume_bom_id" readonly="True"/>
 	            </group>
 	            <field name="move_raw_ids" context="{'wizard_id': id, 'default_workorder_id': workorder_id}">
@@ -158,19 +148,11 @@
 	                    <field name="origin" />
 	                    <field name="partner_id" string="Partner"/>
 	                    <field name="date_expected" />
-	                    <field name="operation_type" />
 	                    <field name="state" invisible="True"/>
 	                    <field name="qty_available"/>
 	                </tree>
 	                
 	                <form>
-	                	<group>
-							<field name="operation_type" required='True'/>
-		                    <div class="alert-warning" style="text-align: center; font-size: 18px" colspan="2"
-		                        attrs="{'invisible': [('operation_type', '!=', 'deliver_consume')]}">
-		                        <br/>Delivery and Consume will consume manufacturing order and will delivery material.
-		                    </div>
-						</group>
 	                	<group string="Product">
 		                    <field name="product_id"/>
 		                    <field name="qty_available" readonly='True'/>
@@ -201,14 +183,10 @@
 	                    <field name="origin" />
 	                    <field name="partner_id" string="Partner"/>
 	                    <field name="date_expected" />
-	                    <field name="operation_type" />
 	                    <field name="state" invisible="True"/>
 	                    <field name="qty_available"/>
 	                </tree>
 	                <form>
-	                	<group>
-							<field name="operation_type" required='True' readonly="True"/>
-						</group>
 	                	<group string="Product">
 		                    <field name="product_id"/>
 		                    <field name="qty_available" readonly='True'/>
