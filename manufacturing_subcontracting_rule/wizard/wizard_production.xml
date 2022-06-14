@@ -9,17 +9,18 @@
             <group>
 	        	<group col="4" colspan="4">
 		        	<field name="request_date"/>
+		        	<field name="is_dropship" widget="boolean_toggle"/>
 	        	</group>
             	<div col="4" colspan="4" style="font-size: larger;font-weight: bold;">Subcontractors</div>
 	        	<field name="external_partner" context="{'current_wizard': id}" >
 	        	    <tree editable="bottom">
-                        <field name="partner_id"/>
+	        	    	<field name="sequence" widget="handle"/>
+                        <field name="partner_id" domain="[('location_id', '!=', False)]"/>
                         <field name="price" />
                         <field name="delay" />
                         <field name="min_qty" />
                         <field name="wizard_id" invisible="True"/>
                         <field name="id" invisible="True"/>
-                        <field name="subcontract_to" domain="[('wizard_id', '=', wizard_id), ('id', '!=', id)]"/>
                     </tree>
 	        	</field>
 	        	<div col="4" colspan="4" style="font-size: larger;font-weight: bold;">Raw Products (Send to Subcontractor)</div>
@@ -117,118 +118,4 @@
         </field>
     </record>
 
-    <record id="mrp_workorder_externally_view_wizard" model="ir.ui.view">
-        <field name="name">mrp.workorder.externally.view.wizard</field>
-        <field name="model">mrp.workorder.externally.wizard</field>
-        <field name="arch" type="xml">
-        <form>
-            <group>
-	        	<group col="4" colspan="4">
-		        	<field name="request_date"/>
-		        	<field name="workorder_id" invisible="True"/>
-	        	</group>
-            	<div col="4" colspan="4" style="font-size: larger;font-weight: bold;">Subcontractors</div>
-	        	<field name="external_partner">
-	        	    <tree>
-                        <field name="partner_id"/>
-                        <field name="price" />
-                        <field name="delay" />
-                        <field name="min_qty" />
-                        <field name="subcontract_to"/>
-                    </tree>
-	        	</field>
-	        	<div col="4" colspan="4" style="font-size: larger;font-weight: bold;">Raw Products (Send to Subcontractor)</div>
-	            <group>
-	            	<field name="consume_bom_id" readonly="True"/>
-	            </group>
-	            <field name="move_raw_ids" context="{'wizard_id': id, 'default_workorder_id': workorder_id}">
-	                <tree>
-	                    <field name="product_id"/>
-	                    <field name="product_uom_qty" />
-	                    <field name="origin" />
-	                    <field name="partner_id" string="Partner"/>
-	                    <field name="date_expected" />
-	                    <field name="state" invisible="True"/>
-	                    <field name="qty_available"/>
-	                </tree>
-	                
-	                <form>
-	                	<group string="Product">
-		                    <field name="product_id"/>
-		                    <field name="qty_available" readonly='True'/>
-		                    <field name="product_uom_qty"/>
-		                    <field name="product_uom" />
-		                    <field name="date_expected"/>
-		                </group>
-		                <group string="Partner and Locations">
-		                    <field name="partner_id" required="True" domain="[('location_id', '!=', False)]"  string="Partner"/>
-		                    <field name="location_id"/>
-		                    <field name="location_dest_id"/>
-	                		<field name="name" />
-		                </group>
-		                <group string="Extra Info">
-		                    <field name="state" />
-		                    <field name="origin" />
-		                    <field name="external_prod_finish"  groups='base.group_no_one'/>
-		                    <field name="external_prod_raw"  groups='base.group_no_one'/>
-		                    <field name="mo_source_move"  groups='base.group_no_one'/>
-		                </group>
-	                </form>
-	            </field>
-	            <div col="4" colspan="4" style="font-size: larger;font-weight: bold;">Finished Products (Receive from Subcontractor)</div>
-	            <field name="move_finished_ids"  context="{'wizard_id': id, 'default_workorder_id': workorder_id}">
-	                <tree>
-	                    <field name="product_id"/>
-	                    <field name="product_uom_qty" />
-	                    <field name="origin" />
-	                    <field name="partner_id" string="Partner"/>
-	                    <field name="date_expected" />
-	                    <field name="state" invisible="True"/>
-	                    <field name="qty_available"/>
-	                </tree>
-	                <form>
-	                	<group string="Product">
-		                    <field name="product_id"/>
-		                    <field name="qty_available" readonly='True'/>
-		                    <field name="product_uom_qty"/>
-		                    <field name="product_uom" />
-		                    <field name="date_expected"/>
-		                </group>
-		                <group string="Partner and Locations">
-		                    <field name="partner_id" required="True" domain="[('location_id', '!=', False)]"  string="Partner"/>
-		                    <field name="location_id"/>
-		                    <field name="location_dest_id"/>
-	                		<field name="name" />
-		                </group>
-		                <group string="Extra Info">
-		                    <field name="state" />
-		                    <field name="origin" />
-		                    <field name="external_prod_finish"  groups='base.group_no_one'/>
-		                    <field name="external_prod_raw"  groups='base.group_no_one'/>
-		                    <field name="mo_source_move"  groups='base.group_no_one'/>
-		                </group>
-	                </form>
-	            </field>
-	            <div col="4" colspan="4" style="font-size: larger;font-weight: bold;">Purchase</div>
-	        	<group col="4" colspan="4">
-		        	<field name="service_product_to_buy"/>
-		        	<field name="service_prod_type"/>
-	        		<div colspan="4" attrs="{'invisible': ['|', ('service_prod_type', '=', 'service'), ('create_purchese_order', '=', False)]}" style="color:orange;">
-	        			WARNING: This product it's not a service so it will be added to incoming picking at purchase confirm, check the BOM to change it.
-	        		</div>
-	        	</group>
-	        	<group col="6" colspan="4">
-    	        	<field name="create_purchese_order"/>
-    	        	<field name="merge_purchese_order"/>
-    	        	<field name="confirm_purchese_order"/>
-	        	</group>
-			</group>
-            <separator string=""/>
-            <footer>
-                <button special="cancel" string="Cancel"/>
-                <button string="Produce Externally" name="button_produce_externally" type="object"/>
-            </footer>
-        </form>
-        </field>
-    </record>
 </odoo>

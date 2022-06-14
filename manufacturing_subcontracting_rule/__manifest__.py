@@ -58,6 +58,7 @@ Implements the sub contracting using the mrp order
              'views/mrp_bom.xml',
              'views/res_partner.xml',
              'views/mrp_workorder.xml',
+             'views/stock_picking.xml',
     ],
     'installable': True,
     'application': False,
