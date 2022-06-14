@@ -88,6 +88,7 @@ class StockPicking(models.Model):
                         subcontract_finished_move = stock_move_picking.subcontractFinishedProduct()
                     for stock_move_picking in wh_out_dropship.move_lines:
                         stock_move_picking.subcontractRawProducts(subcontract_finished_move, objProduction)
+                        break
                     self.recomputePurchaseQty(wh_out_dropship)
                     self.recomputePurchaseQty(first_dropship)
                 if objProduction.isPicksInDone():
