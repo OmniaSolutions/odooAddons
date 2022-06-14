@@ -15,9 +15,17 @@ from odoo.tests import SavepointCase
 class TestSubcontracting(TransactionCase):
 
     def setUp(self):
-        self.do_tests = False
-        if not self.do_tests:
-            logging.warning('SUBCONTRACTING TEST DISABLED.')
+        self.test_01 = True
+        self.test_02 = True
+        self.test_03 = True
+        self.test_04 = True
+        self.test_05 = True
+        self.test_06 = True
+        self.test_07 = True
+        self.test_08 = True
+        self.test_09 = True
+        self.test_10 = True
+        self.test_11 = True
         super(TestSubcontracting, self).setUp()
 
     def createProduction(self, finish_qty=1):
@@ -285,7 +293,7 @@ class TestSubcontracting(TransactionCase):
 
     def test_01_subcontracting_simple_1(self):
         logging.info('Start test_01_subcontracting_simple_1.')
-        if self.do_tests:
+        if self.test_01:
             finished_to_produce = 1
             self.createSubcontractLocation1()
             self.createExternalPartner1()
@@ -315,7 +323,7 @@ class TestSubcontracting(TransactionCase):
     
     def test_02_subcontracting_send_more(self):
         logging.info('Start test_02_subcontracting_send_more.')
-        if self.do_tests:
+        if self.test_02:
             finished_to_produce = 1
             self.createSubcontractLocation1()
             self.createExternalPartner1()
@@ -366,9 +374,9 @@ class TestSubcontracting(TransactionCase):
         logging.info('End test_02_subcontracting_send_more.')
         self.assertEqual(1, 1)
     
-    def test_04_subcontracting_receive_less(self):
+    def test_03_subcontracting_receive_less(self):
         logging.info('Start test_04_subcontracting_receive_less.')
-        if self.do_tests:
+        if self.test_03:
             finished_to_produce = 3
             self.createSubcontractLocation1()
             self.createExternalPartner1()
@@ -403,9 +411,9 @@ class TestSubcontracting(TransactionCase):
         logging.info('End test_04_subcontracting_receive_less.')
         self.assertEqual(1, 1)
     
-    def test_05_subcontracting_workorder(self):
+    def test_04_subcontracting_workorder(self):
         logging.info('Start test_05_subcontracting_workorder.')
-        if self.do_tests:
+        if self.test_04:
             self.createSubcontractLocation1()
             self.createExternalPartner1()
             self.createProducts()
@@ -450,9 +458,9 @@ class TestSubcontracting(TransactionCase):
         logging.info('End test_05_subcontracting_workorder.')
         self.assertEqual(1, 1)
     
-    def test_06_subcontracting_workorder_deliver_more(self):
+    def test_05_subcontracting_workorder_deliver_more(self):
         logging.info('Start test_06_subcontracting_workorder_deliver_more.')
-        if self.do_tests:
+        if self.test_05:
             self.createSubcontractLocation1()
             self.createExternalPartner1()
             self.createProducts()
@@ -511,9 +519,9 @@ class TestSubcontracting(TransactionCase):
         logging.info('End test_06_subcontracting_workorder_deliver_more.')
         self.assertEqual(1, 1)
     
-    def test_08_subcontracting_more_purchase_validate_only_one(self):
+    def test_06_subcontracting_more_purchase_validate_only_one(self):
         logging.info('Start test_08_subcontracting_more_purchase_validate_only_one.')
-        if self.do_tests:
+        if self.test_06:
             self.createSubcontractLocation1()
             self.createSubcontractLocation2()
             self.createExternalPartner1()
@@ -552,9 +560,9 @@ class TestSubcontracting(TransactionCase):
         logging.info('End test_08_subcontracting_more_purchase_validate_only_one.')
         self.assertEqual(1, 1)
     
-    def test_09_subcontracting_MO_backorders(self):
+    def test_07_subcontracting_MO_backorders(self):
         logging.info('Start test_09_subcontracting_MO_backorders.')
-        if self.do_tests:
+        if self.test_07:
             finished_to_produce = 3
             self.createSubcontractLocation1()
             self.createExternalPartner1()
@@ -592,9 +600,9 @@ class TestSubcontracting(TransactionCase):
         logging.info('End test_09_subcontracting_MO_backorders.')
         self.assertEqual(1, 1)
     
-    def test_10_subcontracting_MO_cancel(self):
+    def test_08_subcontracting_MO_cancel(self):
         logging.info('Start test_10_subcontracting_MO_cancel.')
-        if self.do_tests:
+        if self.test_08:
             finished_to_produce = 3
             self.createSubcontractLocation1()
             self.createExternalPartner1()
@@ -633,9 +641,9 @@ class TestSubcontracting(TransactionCase):
         logging.info('End test_10_subcontracting_MO_cancel.')
         self.assertEqual(1, 1)
     
-    def test_11_subcontracting_cancel_produce_externally_and_resume_production(self):
+    def test_09_subcontracting_cancel_produce_externally_and_resume_production(self):
         logging.info('Start test_11_subcontracting_cancel_produce_externally_and_resume_production.')
-        if self.do_tests:
+        if self.test_09:
             self.createSubcontractLocation1()
             self.createExternalPartner1()
             self.createProducts()
@@ -668,9 +676,9 @@ class TestSubcontracting(TransactionCase):
         logging.info('End test_11_subcontracting_cancel_produce_externally_and_resume_production.')
         self.assertEqual(1, 1)
     
-    def test_12_subcontracting_cancel_produce_externally_wo_and_resume_production(self):
+    def test_10_subcontracting_cancel_produce_externally_wo_and_resume_production(self):
         logging.info('Start test_12_subcontracting_cancel_produce_externally_wo_and_resume_production.')
-        if self.do_tests:
+        if self.test_10:
             self.createSubcontractLocation1()
             self.createExternalPartner1()
             self.createProducts()
