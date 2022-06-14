@@ -83,26 +83,23 @@ class StockPicking(models.Model):
                             subcontract_finished_move = stock_move_picking.subcontractFinishedProduct()
                             stock_move_picking.subcontractRawProducts(subcontract_finished_move, objProduction)
                 else:
-                    first_dropship = wh_out_dropship.dropship_pick
-                    for stock_move_picking in first_dropship.move_lines:
-                        subcontract_finished_move = stock_move_picking.subcontractFinishedProduct()
-                    for stock_move_picking in wh_out_dropship.move_lines:
-                        stock_move_picking.subcontractRawProducts(subcontract_finished_move, objProduction)
-                        break
-                    self.recomputePurchaseQty(wh_out_dropship)
-                    self.recomputePurchaseQty(first_dropship)
+                    self.button_validate_dropship(wh_out_dropship, objProduction)
                 if objProduction.isPicksInDone():
                     objProduction.state = 'done'
             production_recorded = False
-            for stock_move_picking in self.move_lines:
-                if stock_move_picking.product_id.id == stock_move_picking.workorder_id.product_id.id and not production_recorded and stock_move_picking.workorder_id.state != 'done':
-                    before_state = objProduction.state
-                    stock_move_picking.workorder_id.button_finish()
-                    production_recorded = True
-                    objProduction.state = before_state
             self.recomputePurchaseQty(self)
             self.cancel_other_partners_picks(self.partner_id, self.sub_production_id)
         return res
+
+    def button_validate_dropship(self, wh_out_dropship, objProduction):
+        first_dropship = wh_out_dropship.dropship_pick
+        for stock_move_picking in first_dropship.move_lines:
+            subcontract_finished_move = stock_move_picking.subcontractFinishedProduct()
+        for stock_move_picking in wh_out_dropship.move_lines:
+            stock_move_picking.subcontractRawProducts(subcontract_finished_move, objProduction)
+            break
+        self.recomputePurchaseQty(wh_out_dropship)
+        self.recomputePurchaseQty(first_dropship)
 
     def recomputePurchaseQty(self, pick):
         purchase_order_line = self.env['purchase.order.line']

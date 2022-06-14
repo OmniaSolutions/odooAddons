@@ -15,16 +15,16 @@ from odoo.tests import SavepointCase
 class TestSubcontracting(TransactionCase):
 
     def setUp(self):
-        self.test_01 = False
-        self.test_02 = False
-        self.test_03 = False
-        self.test_04 = False
-        self.test_05 = False
-        self.test_06 = False
-        self.test_07 = False
-        self.test_08 = False
-        self.test_09 = False
-        self.test_10 = False
+        self.test_01 = True
+        self.test_02 = True
+        self.test_03 = True
+        self.test_04 = True
+        self.test_05 = True
+        self.test_06 = True
+        self.test_07 = True
+        self.test_08 = True
+        self.test_09 = True
+        self.test_10 = True
         self.test_11 = True
         super(TestSubcontracting, self).setUp()
 
@@ -216,37 +216,27 @@ class TestSubcontracting(TransactionCase):
         manuf_pick = self.env['stock.picking']
         dropship_pick = self.env['stock.picking']
         internal_pick = self.env['stock.picking']
+        
+        def do_job(pick, target_type, partner_id, where_append):
+            if pick.picking_type_id == target_type:
+                if partner_id:
+                    if pick.partner_id == partner_id:
+                        where_append += pick
+                else:
+                    where_append += pick
+            return where_append
+            
         for pick in ext_picks:
-            if pick.picking_type_id == outgoing_type:
-                if partner_id and pick.partner_id == partner_id:
-                    out_pick += pick
-                else:
-                    out_pick += pick
-            elif pick.picking_type_id == incoming_type:
-                if partner_id and pick.partner_id == partner_id:
-                    in_pick += pick
-                else:
-                    in_pick += pick
-            elif pick.picking_type_id == manufacture_type:
-                if partner_id and pick.partner_id == partner_id:
-                    manuf_pick += pick
-                else:
-                    manuf_pick += pick
-            elif pick.picking_type_id == dropship_type:
-                if partner_id and pick.partner_id == partner_id:
-                    dropship_pick += pick
-                else:
-                    dropship_pick += pick
-            elif pick.picking_type_id == internal_type:
-                if partner_id and pick.partner_id == partner_id:
-                    internal_pick += pick
-                else:
-                    internal_pick += pick
+            out_pick += do_job(pick, outgoing_type, partner_id, out_pick)
+            in_pick += do_job(pick, incoming_type, partner_id, in_pick)
+            manuf_pick += do_job(pick, manufacture_type, partner_id, manuf_pick)
+            dropship_pick += do_job(pick, dropship_type, partner_id, dropship_pick)
+            internal_pick += do_job(pick, internal_type, partner_id, internal_pick)
         if not out_pick:
             raise Exception('Out picking not created')
         if not in_pick:
             raise Exception('In picking not created')
-        return out_pick, in_pick, manuf_pick, dropship_pick, internal_pick
+        return out_pick.union(), in_pick.union(), manuf_pick.union(), dropship_pick.union(), internal_pick.union()
 
     def validatePicking(self, pick, force_qty=False):
         pick.action_confirm()
