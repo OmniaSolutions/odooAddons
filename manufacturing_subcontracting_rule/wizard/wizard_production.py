@@ -85,11 +85,11 @@ class MrpProductionWizard(models.TransientModel):
                         for move_raw in self.move_raw_ids:
                             move_raw.location_dest_id = partner_location_id
                             move_raw.location_id = self.production_id.location_src_id
-                            move_raw.partner_id = partner_id.id
+                        self.move_raw_ids.partner_id = partner_id.id
                         for finish_move in self.move_finished_ids:
                             finish_move.location_dest_id = self.production_id.location_src_id
                             finish_move.location_id = partner_location_id
-                            finish_move.partner_id = partner_id.id
+                        self.move_finished_ids.partner_id = partner_id.id
                     for partner in partner_ids:
                         if partner != partner_id:
                             for move_raw in self.move_raw_ids.filtered(lambda x:x.partner_id.id == partner.id):
@@ -114,7 +114,23 @@ class MrpProductionWizard(models.TransientModel):
 
     @api.onchange('is_dropship')
     def change_is_dropship(self):
-        pass
+        ext_partners = self.external_partner.sorted('sequence')
+        if self.is_dropship:
+            for line in self.move_raw_ids:
+                if line.partner_id != ext_partners[0].partner_id:
+                    line.unlink()
+            for line in self.move_finished_ids:
+                if line.partner_id != ext_partners[-1].partner_id:
+                    line.unlink()
+        else:
+            wizard_values = self.production_id.get_wizard_value()
+            self.write({
+                'move_raw_ids': wizard_values.get('move_raw_ids', []),
+                'move_finished_ids': wizard_values.get('move_finished_ids', [])
+                })
+            self.move_finished_ids.partner_id = ext_partners[0].partner_id
+            self.changeExternalPartner()
+            self._request_date()
 
     @api.onchange('request_date')
     def _request_date(self):

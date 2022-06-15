@@ -15,17 +15,18 @@ from odoo.tests import SavepointCase
 class TestSubcontracting(TransactionCase):
 
     def setUp(self):
-        self.test_01 = True
-        self.test_02 = True
-        self.test_03 = True
-        self.test_04 = True
-        self.test_05 = True
-        self.test_06 = True
-        self.test_07 = True
-        self.test_08 = True
-        self.test_09 = True
-        self.test_10 = True
-        self.test_11 = True
+        all_setup = False
+        self.test_01 = all_setup
+        self.test_02 = all_setup
+        self.test_03 = all_setup
+        self.test_04 = all_setup
+        self.test_05 = all_setup
+        self.test_06 = all_setup
+        self.test_07 = all_setup
+        self.test_08 = all_setup
+        self.test_09 = all_setup
+        self.test_10 = all_setup
+        self.test_11 = all_setup
         super(TestSubcontracting, self).setUp()
 
     def createProduction(self, finish_qty=1):

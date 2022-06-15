@@ -39,8 +39,6 @@ class externalProductionPartner(models.TransientModel):
                            help="The minimal quantity to purchase from this vendor, expressed in the vendor Product Unit of Measure if not any, in the default unit of measure of the product otherwise.")
     wizard_id = fields.Many2one('mrp.production.externally.wizard',
                                 string="Vendors")
-    wizard_id_workorder = fields.Many2one('mrp.workorder.externally.wizard',
-                                string="Vendors")
     sequence = fields.Integer(string=_('Sequence'))
 
     def name_get(self):
@@ -79,5 +77,10 @@ class externalWorkorderPartner(models.TransientModel):
                            help="The minimal quantity to purchase from this vendor, expressed in the vendor Product Unit of Measure if not any, in the default unit of measure of the product otherwise.")
     wizard_id = fields.Many2one('mrp.workorder.externally.wizard',
                                 string="Vendors")
-    subcontract_to = fields.Many2one('external.workorder.partner',
-                                     string=_('Subcontract to'))
+
+    def name_get(self):
+        out = []
+        for ext_partner in self:
+            to_see = '%s | %s' % (ext_partner.partner_id.display_name, ext_partner.price)
+            out.append((ext_partner.id, to_see))
+        return out
