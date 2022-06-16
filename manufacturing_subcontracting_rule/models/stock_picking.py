@@ -86,13 +86,6 @@ class StockPicking(models.Model):
                     self.button_validate_dropship(wh_out_dropship, objProduction)
                 if objProduction.isPicksInDone():
                     objProduction.state = 'done'
-            production_recorded = False
-            # for stock_move_picking in self.move_lines:
-            #     if stock_move_picking.product_id.id == stock_move_picking.workorder_id.product_id.id and not production_recorded and stock_move_picking.workorder_id.state != 'done':
-            #         before_state = objProduction.state
-            #         stock_move_picking.workorder_id.button_finish()
-            #         production_recorded = True
-            #         objProduction.state = before_state
             self.recomputePurchaseQty(self)
             self.cancel_other_partners_picks(self.partner_id, self.sub_production_id)
         return res

@@ -42,7 +42,6 @@ import datetime
 
 class StockMove(models.Model):
 
-    _name = "stock.move"
     _inherit = ['stock.move']
 
     mrp_original_move = fields.Char(_('Is genereted from orignin MO'))
@@ -50,6 +49,7 @@ class StockMove(models.Model):
                                        help="""source Mrp Production Subcontracting id""")
     mrp_workorder_id = fields.Integer(string=_('Original Mrp Work Order id'),
                                       help="""source Mrp Workorder Subcontracting id""")
+    workorder_id = fields.Many2one('mrp.workorder', _('workorder'))
     purchase_order_line_subcontracting_id = fields.Integer(_('Original Purchase line Id'))
     subcontracting_source_stock_move_id = fields.Integer(_('Original Production ID'))
     subcontracting_move_id = fields.Integer(_('Original move id'))
@@ -137,20 +137,6 @@ class StockMove(models.Model):
             raw_move.date = self.date
             for lineBrws in raw_move.move_line_ids:
                 lineBrws.date = move_date
-    #
-    # def write(self, value):
-    #     for move in self:
-    #         if 'quantity_done' in list(value.keys()):
-    #             for subMove in self.search([('subcontracting_source_stock_move_id', '=', move.id)]):
-    #                 subMove.quantity_done = value['quantity_done']
-    #     return super(StockMove, self).write(value)
-
-    @api.model
-    def create(self, vals):
-        return super(StockMove, self).create(vals)
-
-    def update(self, values):
-        return super(StockMove, self).update(values)
 
     def _merge_moves(self, merge_into=False):
         to_merge = self.env[self._name]
