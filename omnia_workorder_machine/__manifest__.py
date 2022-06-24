@@ -34,7 +34,8 @@
                 'mrp'],
     'description': """ This module allows to update workorder using a simple web interface.""",
     'data': [
-        'views/templates.xml',
+        'views/templates_wo_simple.xml',
+        'views/templates_by_user.xml',
         'views/mrp_workorder.xml',
         'views/mrp_workcenter.xml',
         ],

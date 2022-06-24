@@ -16,7 +16,7 @@ var getValue = function(){
 	var val = document.getElementById("input_workorder_id").value;
 	$.ajax({
 	  type: 'POST',
-	  url: "/mrp/workorder_simple_post/?workorder_id="+val,
+	  url: "/mrp_omnia/workorder_simple_post/?workorder_id="+val,
 	  data: JSON.stringify(val),
 	  success: function(data){
 		  showtmpMessage("ok_done");
@@ -46,7 +46,7 @@ var replace_element = function(from_name, to_element){
 var update_table_active_workorder = function(){
 	$.ajax({
 		  type: 'GET',
-		  url: "/mrp/active_workorder_simple",
+		  url: "/mrp_omnia/active_workorder_simple",
 		  success: function(data){
 			  replace_element("active_workorder_table", data)
 		  },
@@ -59,7 +59,7 @@ var update_table_active_workorder = function(){
 var update_table_ready_workorder = function(){
 	$.ajax({
 		  type: 'GET',
-		  url: "/mrp/ready_workorder_simple",
+		  url: "/mrp_omnia/ready_workorder_simple",
 		  success: function(data){
 			  replace_element("ready_workorder_table", data)
 		  },
@@ -78,7 +78,7 @@ var update_tables = function(){
 var get_workcenter = function(){
 	$.ajax({
 		  type: 'GET',
-		  url: "/mrp/workcenter_name",
+		  url: "/mrp_omnia/workcenter_name",
 		  success: function(data){
 			  replace_element("workcenter_name", '<div id="workcenter_name">' + data + '</div>')
 		  },

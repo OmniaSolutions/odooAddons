@@ -20,7 +20,7 @@ class MrpProductionWCLine(models.Model):
     def getDictWorkorder(self, woBrwsList):
         out = []
         for woBrws in woBrwsList:
-            if woBrws.production_id.state in ['confirm', 'planned', 'progress']:
+            if woBrws.production_id.state in ['confirmed', 'planned', 'progress', 'confirm']:
                 woDict = {
                     'wo_id': woBrws.id,
                     'wo_name': woBrws.name,
@@ -29,7 +29,7 @@ class MrpProductionWCLine(models.Model):
                     'product_name': woBrws.product_id.name,
                     'product_default_code': woBrws.product_id.default_code or '',
                     'wo_state': woBrws.state,
-                    'qty': "%s / %s %s" %(woBrws.qty_produced, woBrws.qty_production, woBrws.product_uom_id.name),
+                    'qty': "%s %s" %(woBrws.component_remaining_qty, woBrws.product_uom_id.name),
                     'date_planned': woBrws.date_planned_start or '',
                     'is_user_working': woBrws.is_user_working,
                     }
@@ -80,7 +80,7 @@ class MrpProductionWCLine(models.Model):
                     dictRes.get('qty', 0),
                     dictRes.get('date_planned', ''),
                     str(dictRes.get('is_user_working', False)),
-                    str(r"/web/mrp/get_worksheet/" + str(dictRes.get('wo_id', '')))
+                    str(r"/mrp_omnia/get_worksheet/" + str(dictRes.get('wo_id', '')))
                 ])
         return lines
 
@@ -131,8 +131,15 @@ class MrpProductionWCLine(models.Model):
                     n_scrap=0.0):
         for work_order_id in self:
             if n_pieces > 0:
-                work_order_id.qty_producing = n_pieces
-                work_order_id.record_production()
+                work_order_id.qty_done = n_pieces
+                if n_pieces <= work_order_id.component_remaining_qty:
+                    work_order_id.action_continue()
+                if not work_order_id.component_remaining_qty:
+                    work_order_id.action_next()
+                    work_order_id.do_finish()
+            elif n_pieces == 0 and not work_order_id.component_remaining_qty:
+                work_order_id.action_next()
+                work_order_id.do_finish()
             if n_scrap > 0:
                 work_order_id.o_do_scrap(n_scrap)
         return False

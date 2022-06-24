@@ -1,0 +1,94 @@
+th.header_table {
+	border: none;
+	padding: 10px;
+	background-color: #875A7B;
+	text-align: left;
+	color: white;
+}
+
+td.table_checkbox {
+    background-color: #aac4f3;
+    padding:13px;
+}
+
+td.table_value {
+    border-bottom: 2px solid #875A7B;
+    padding: 10px;
+}
+
+td.table_button {
+    border-bottom: 2px solid black;
+    padding: 10px;
+    background-color: #aac4f3;
+}
+
+div.main_check_button {
+    padding: 10px; margin:30px;
+}
+div.user_logged {
+	font-weight: bold;
+    font-size: large;
+    background-color: chartreuse;
+    padding: 10;
+    width: 20%;
+}
+div.user_not_logged {
+	font-weight: bold;
+    font-size: large;
+    background-color: orange;
+    padding: 10;
+    width: 20%;
+}
+div.main_div {
+	background-color: white;
+	padding: 10px;
+}
+table.main_table {
+	border: 4px solid #875A7B;
+	margin:30px;
+	width:90%
+}
+input.pause_work {
+	display: block;
+	color: #212529;
+	background-color: #F0AD4E;
+	border: none;
+	padding: 6px;
+}
+input.start_work {
+	display: block;
+	color: #FFFFFF;
+	background-color: #00A04A;
+	border: none;
+	padding: 6px;
+}
+#customer_image{
+	text-align:center;
+	width: 250px;
+    box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+    text-align: center;
+    border: solid 1px;
+    border-radius: 5px;
+    border-color: lightgray;
+}
+input.resume_work {
+	display: block;
+	color: #212529;
+	background-color: #F0AD4E;
+	border: none;
+	padding: 6px;
+}
+input.stop_work {
+	display: block;
+	color: #FFFFFF;
+	background-color: #DC6965;
+	border: none;
+	padding: 6px;
+}
+input.print_label {
+	display: block;
+	color: #FFFFFF;
+	background-color: #875A7B;
+	border: none;
+	padding: 6px;
+}

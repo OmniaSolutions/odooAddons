@@ -27,7 +27,7 @@ odoo.define('omnia_workorder_machine.workorder_machine_list', function (require)
         var button = button.currentTarget;
         var closestTr = button.closest('tr');
         var internal_ref = closestTr.getElementsByClassName('internal_ref');
-        var route = '/web/print_label/' + internal_ref[0].textContent;
+        var route = '/mrp_omnia/print_label/' + internal_ref[0].textContent;
 
         var xhr = new XMLHttpRequest();
         xhr.open('GET', route, true);
@@ -49,7 +49,7 @@ odoo.define('omnia_workorder_machine.workorder_machine_list', function (require)
         closestTr.style.cursor ='wait';
         button.style.display = 'none';
         var wo_id = closestTr.getElementsByClassName('wo_id');
-        var route = '/web/workorder_start/';
+        var route = '/mrp_omnia/workorder_start/';
 		ajax.jsonRpc(route, 'call', {
 			'wo_id' : wo_id[0].textContent,
 		}).then(function (data) {
@@ -67,7 +67,7 @@ odoo.define('omnia_workorder_machine.workorder_machine_list', function (require)
         var closestTr = button.closest('tr');
         closestTr.style.cursor ='wait';
         var wo_id = closestTr.getElementsByClassName('wo_id');
-        var route = '/web/workorder_pause/';
+        var route = '/mrp_omnia/workorder_pause/';
 		ajax.jsonRpc(route, 'call', {
 			'wo_id' : wo_id[0].textContent,
 		}).then(function (data) {
@@ -84,7 +84,7 @@ odoo.define('omnia_workorder_machine.workorder_machine_list', function (require)
         var closestTr = button.closest('tr');
         closestTr.style.cursor ='wait';
         var wo_id = closestTr.getElementsByClassName('wo_id');
-        var route = '/web/workorder_resume/';
+        var route = '/mrp_omnia/workorder_resume/';
 		ajax.jsonRpc(route, 'call', {
 			'wo_id' : wo_id[0].textContent,
 		}).then(function (data) {
@@ -107,7 +107,7 @@ odoo.define('omnia_workorder_machine.workorder_machine_list', function (require)
         var pieces_to_produce = parseFloat(n_pieces_to_produce[0].textContent);
         var n_scrap_ui = closestTr.getElementsByClassName('n_scrap');
         var n_scrap = n_scrap_ui[0].valueAsNumber;
-        var route = '/web/workorder_record/';
+        var route = '/mrp_omnia/workorder_record/';
 		ajax.jsonRpc(route, 'call', {
 			'wo_id' : wo_id[0].textContent,
 			'n_pieces': pieces,
@@ -161,7 +161,7 @@ odoo.define('omnia_workorder_machine.workorder_machine_list', function (require)
     
     function show_workorders_by_user(){
     	var user_id = document.getElementById('input_user_id').valueAsNumber;
-		var route = '/web/render_workorder_by_user/' + user_id;
+		var route = '/mrp_omnia/render_workorder_by_user/' + user_id;
 		ajax.jsonRpc(route, 'call', {}).then(function (data) {
 			updete_workorder(data);
 		});
@@ -181,7 +181,7 @@ odoo.define('omnia_workorder_machine.workorder_machine_list', function (require)
 	        if (isNaN(wc_id)){
 	        	wc_id = 0
 	    	}
-			var route = '/web/workorder_machine/' + wc_id + '/' + wo_id;
+			var route = '/mrp_omnia/workorder_machine/' + wc_id + '/' + wo_id;
 	
 			ajax.jsonRpc(route, 'call', {}).then(function (data) {
 				updete_workorder(data);
@@ -237,7 +237,7 @@ odoo.define('omnia_workorder_machine.workorder_machine_list', function (require)
     var update_user_name = function(){
     	var user_id = document.getElementById('input_user_id')
     	var user_id_n = user_id.valueAsNumber
-    	var route = '/web/get_user_name/' + user_id_n;
+    	var route = '/mrp_omnia/get_user_name/' + user_id_n;
 		ajax.jsonRpc(route, 'call', {}).then(function (data) {
 			var p_user_name = document.getElementById('user_name');
 			p_user_name.innerHTML = data
