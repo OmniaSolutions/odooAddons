@@ -138,6 +138,8 @@ class SaleOrder(models.Model):
     def setupAnalyticLines(self, newBaseName):
         count = 1
         for line in self.order_line:
+            if line.product_id.parent_product:
+                continue
             if self.getProductCategoryName(line) == 'MACHINE':
                 for _elem in range(int(line.product_uom_qty)):
                     oldProdBrws = line.product_id
