@@ -26,13 +26,18 @@
 	            <form style="display: -webkit-inline-box;margin-left: 35px;width:100%">
 	            	<table style="width: 90%;">
 	            		<tr>
-	            			<td>User Id: </td><td><input id="input_user_id" type="number" class="user_id"/></td>
+	            		   <td t-if="hide_user != True" id="td_user_id">User Id: </td>
+	            		   <td t-if="hide_user != True"><input id="input_user_id" type="number" class="user_id"/></td>
+	            		   
+	            		   <td t-if="hide_user == True" id="td_employee_id">Employee Id: </td>
+	            		   <td t-if="hide_user == True"><input id="input_employee_id" type="number" class="employee_id"/></td>
+	            		   
 				           <td align="right" rowspan="2" style="width: 80%;">
 				               <div id="customer_image"><img  src="/web/binary/company_logo"/></div>
 				           </td>
 	            		</tr>
 	            		<tr>
-	            			<td>User Name :</td><td><span id="user_name"/></td>
+	            			<td id="td_user_name">User Name :</td><td><span id="user_name"/></td>
 	            		</tr>
 	            	</table>
 	            </form>
@@ -94,8 +99,8 @@
 	                <td class="table_value"><t t-esc="line[3]"/></td>
 	                <td class="table_value"><t t-esc="line[4]"/></td>
 	                <td class="table_value n_pieces_to_produce"><t t-esc="line[7]"/></td>
-	                <td class="table_value"><input type="number" name="n_pieces" class="n_pieces" step="0.001" value="0" /></td>
-	                <td class="table_value"><input type="number" name="n_scrap" class="n_scrap" step="0.001" value="0" /></td>
+	                <td class="table_value"><input id="input_n_pieces" type="number" name="n_pieces" class="n_pieces" step="0.001" value="0" /></td>
+	                <td class="table_value"><input id="input_n_scrap" type="number" name="n_scrap" class="n_scrap" step="0.001" value="0" /></td>
 	                <td class="table_value">
 	                	<div style="display: block ruby;">
 	                		<input class="start_work" type='button' value='Start'/>

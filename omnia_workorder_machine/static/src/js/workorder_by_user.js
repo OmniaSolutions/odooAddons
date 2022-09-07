@@ -126,35 +126,49 @@ odoo.define('omnia_workorder_machine.workorder_machine_list', function (require)
     	var el_pause_work = closestTr.getElementsByClassName('pause_work');
     	var el_resume_work = closestTr.getElementsByClassName('resume_work');
     	var el_stop_work = closestTr.getElementsByClassName('stop_work');
+    	
+    	var input_qty = closestTr.getElementsByClassName('n_pieces')[0];
+    	var scrap_qty = closestTr.getElementsByClassName('n_scrap')[0];
+    	
     	if ($.inArray(tdElem.textContent, ['draft', 'ready']) != -1) {
     		el_start_work[0].style.display = 'block';
     		el_pause_work[0].style.display = 'none';
     		el_resume_work[0].style.display = 'none';
     		el_stop_work[0].style.display = 'none';
+    		input_qty.style.display = 'none';
+    		scrap_qty.style.display = 'none';
     	}
     	else if ($.inArray(tdElem.textContent, ["startworking"]) != -1){
     		el_start_work[0].style.display = 'none';
     		el_pause_work[0].style.display = 'block';
     		el_resume_work[0].style.display = 'none';
     		el_stop_work[0].style.display = 'block';
+    		input_qty.style.display = 'block';
+    		scrap_qty.style.display = 'block';
     	}
     	else if ($.inArray(tdElem.textContent, ['progress']) != -1 & el_user_working[0].textContent == 'True'){
     		el_start_work[0].style.display = 'none';
     		el_pause_work[0].style.display = 'block';
     		el_resume_work[0].style.display = 'none';
     		el_stop_work[0].style.display = 'block';
+    		input_qty.style.display = 'block';
+    		scrap_qty.style.display = 'block';
     	}
     	else if ($.inArray(tdElem.textContent, ['pause', 'progress']) != -1 & el_user_working[0].textContent == 'False'){
     		el_start_work[0].style.display = 'none';
     		el_pause_work[0].style.display = 'none';
     		el_resume_work[0].style.display = 'block';
     		el_stop_work[0].style.display = 'none';
+    		input_qty.style.display = 'block';
+    		scrap_qty.style.display = 'block';
     	}
     	else {
     		el_start_work[0].style.display = 'none';
     		el_pause_work[0].style.display = 'none';
     		el_resume_work[0].style.display = 'none';
     		el_stop_work[0].style.display = 'none';
+    		input_qty.style.display = 'block';
+    		scrap_qty.style.display = 'block';
     	}
     	
     }
@@ -166,7 +180,16 @@ odoo.define('omnia_workorder_machine.workorder_machine_list', function (require)
 			updete_workorder(data);
 		});
     }
-    
+  
+    function show_workorders_by_employee(){
+    	var user_id = document.getElementById('input_employee_id').valueAsNumber;
+		var route = '/mrp_omnia/render_workorder_by_employee/' + user_id;
+		ajax.jsonRpc(route, 'call', {}).then(function (data) {
+			updete_workorder(data);
+		});
+    }
+  
+  
     function filter_res (button){
 		console.log("clicked button")
         wo_id = document.getElementById('input_search_workorder_id');
@@ -234,6 +257,7 @@ odoo.define('omnia_workorder_machine.workorder_machine_list', function (require)
 	    	stop_work_butt_list[i4].onclick = stop_work1
 	    }
     };
+
     var update_user_name = function(){
     	var user_id = document.getElementById('input_user_id')
     	var user_id_n = user_id.valueAsNumber
@@ -243,6 +267,17 @@ odoo.define('omnia_workorder_machine.workorder_machine_list', function (require)
 			p_user_name.innerHTML = data
 		});
     }
+
+    var update_employee_name = function(){
+    	var user_id = document.getElementById('input_employee_id')
+    	var user_id_n = user_id.valueAsNumber
+    	var route = '/mrp_omnia/get_employee_name/' + user_id_n;
+		ajax.jsonRpc(route, 'call', {}).then(function (data) {
+			var p_user_name = document.getElementById('user_name');
+			p_user_name.innerHTML = data
+		});
+    }
+
     window.onload = function() {
 	    console.log("omnia_workorder_machine.workorder_machine_list loaded")
 	    var _t = core._t;
@@ -264,6 +299,13 @@ odoo.define('omnia_workorder_machine.workorder_machine_list', function (require)
 	    user_id.onchange = function(){
 	    	show_workorders_by_user();
 	    	update_user_name();
+	    };
+		}
+	    var employee_id = document.getElementById('input_employee_id');
+        if(employee_id){
+	    employee_id.onchange = function(){
+	    	show_workorders_by_employee();
+	    	update_employee_name();
 	    };
 		}
     };

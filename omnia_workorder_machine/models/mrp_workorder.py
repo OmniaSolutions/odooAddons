@@ -16,6 +16,7 @@ class MrpProductionWCLine(models.Model):
     _inherit = 'mrp.workorder'
     
     user_ids = fields.Many2many('res.users', string='Users')
+    employee_ids = fields.Many2many('hr.employee', string='Employees')
     
     def getDictWorkorder(self, woBrwsList):
         out = []
@@ -29,7 +30,7 @@ class MrpProductionWCLine(models.Model):
                     'product_name': woBrws.product_id.name,
                     'product_default_code': woBrws.product_id.default_code or '',
                     'wo_state': woBrws.state,
-                    'qty': "%s %s" %(woBrws.component_remaining_qty, woBrws.product_uom_id.name),
+                    'qty': "%s %s" %(woBrws.qty_remaining, woBrws.product_uom_id.name),
                     'date_planned': woBrws.date_planned_start or '',
                     'is_user_working': woBrws.is_user_working,
                     }
@@ -60,6 +61,20 @@ class MrpProductionWCLine(models.Model):
         logging.info('Getting Work Orders with search %r' % (searchFilter))
         woBrwsList = self.search(searchFilter, order='date_planned_start ASC,id ASC')
         woBrwsList = woBrwsList.filtered(lambda x: user_id in x.user_ids.ids or x.user_id.id == user_id)
+        out = self.getDictWorkorder(woBrwsList)
+        if listify:
+            out = self.listifyForInterface(out)
+        return out
+
+    @api.model
+    def getWorkordersByEmployee(self, employee_id, listify=False):
+        employee_id = int(employee_id)
+        if employee_id == 0:
+            return []
+        searchFilter = [('state', 'in', ['ready', 'progress'])]
+        logging.info('Getting Work Orders with search %r' % (searchFilter))
+        woBrwsList = self.search(searchFilter, order='date_planned_start ASC,id ASC')
+        woBrwsList = woBrwsList.filtered(lambda x: employee_id in x.employee_ids.ids)
         out = self.getDictWorkorder(woBrwsList)
         if listify:
             out = self.listifyForInterface(out)
@@ -115,7 +130,7 @@ class MrpProductionWCLine(models.Model):
             return False
         woLine = self.browse(self.listify(workorder))
         for woBrws in woLine:
-            return woBrws.button_start()
+            return woBrws.action_continue()
         return False
     
     @api.model
@@ -201,3 +216,11 @@ class MrpProductionWCLine(models.Model):
                 mrp_workorder_id._recordWork(mrp_workorder_id.qty_production - mrp_workorder_id.qty_produced)
             if mrp_workorder_id.state in ['ready']:
                 mrp_workorder_id.button_start()
+
+    def getUserId(self):
+        out = self.env.ref('base.user_admin').id
+        try:
+            out = int(self.env['ir.config_parameter'].sudo().get_param('WORKORDER_MACHINE_UID'))
+        except Exception as ex:
+            logging.error(ex)
+        return out

@@ -20,25 +20,20 @@
 #
 ##############################################################################
 {
-    'name': 'Omnia Workorder Machine',
+    'name': 'Omnia Workorder Machine Employee',
     'version': '14.0',
     'author': 'OmniaSolutions',
     'website': 'http://www.omniasolutions.eu',
     'category': 'report',
     'sequence': 15,
-    'summary': 'Omnia Workorder Machine',
+    'summary': 'Omnia Workorder Machine Employee',
     'images': [],
     'depends': [
-                'web',
-                'web_editor',
-                'mrp'],
+                'omnia_workorder_machine'],
     'description': """ This module allows to update workorder using a simple web interface.""",
     'data': [
-        'views/templates_wo_simple.xml',
-        'views/templates_by_user.xml',
-        'views/mrp_workorder.xml',
-        'views/mrp_workcenter.xml',
         'views/ir_config_parameter.xml',
+        'views/mrp_workorder.xml'
         ],
     'demo': [],
     'test': [],

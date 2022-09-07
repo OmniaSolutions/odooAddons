@@ -29,12 +29,21 @@ class WebsiteWorkorderControllerByUser(Controller):
     def workorderByUser(self, **post):
         logging.info('WorkorderMachine called')
         values = post
+        values['hide_user'] = False
         return self.renderTemplate('omnia_workorder_machine.by_user', values)
 
     @http.route(['/mrp_omnia/render_workorder_by_user/<int:user_id>'], type='json')
     def render_workorder_by_user(self, user_id, **post):
         values = post
         lines = request.env['mrp.workorder'].getWorkordersByUser(user_id, listify=True)
+        logging.info("Lines %r" % lines)
+        values['wo_lines'] = lines
+        return self.forceRender('omnia_workorder_machine.template_workorder_machine_table', values)
+
+    @http.route(['/mrp_omnia/render_workorder_by_employee/<int:employee_id>'], type='json')
+    def render_workorder_by_employee(self, employee_id, **post):
+        values = post
+        lines = request.env['mrp.workorder'].getWorkordersByEmployee(employee_id, listify=True)
         logging.info("Lines %r" % lines)
         values['wo_lines'] = lines
         return self.forceRender('omnia_workorder_machine.template_workorder_machine_table', values)
@@ -57,6 +66,19 @@ class WebsiteWorkorderControllerByUser(Controller):
                 return msg
         else:
             return "<b>No User For id: %r</b>" % user_id
+
+    @http.route(['/mrp_omnia/get_employee_name/<int:employee_id>'], type='json')
+    def get_employee_name(self, employee_id):
+        employee_id = request.env['hr.employee'].sudo().browse(employee_id)
+        if employee_id and employee_id.exists():
+            try:
+                return "<b>%s %s</b>" % (employee_id.lastname, employee_id.firstname)
+            except Exception as ex:
+                logging.error(ex)
+                msg = "<b>%s</b>" % (employee_id.name)
+                return msg
+        else:
+            return "<b>No User For id: %r</b>" % employee_id
 
     @http.route(['/mrp_omnia/workorder_machine/<int:workcenter_id>/<int:workorder_id>'], type='json')
     def workoder_machine_wc_wo(self, workcenter_id, workorder_id, **post):

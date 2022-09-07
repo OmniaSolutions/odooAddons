@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+        <record id="workorder_machine_user_id" model="ir.config_parameter">
+            <field name="key">WORKORDER_MACHINE_UID</field>
+            <field name="value">1</field>
+        </record>
+
+</odoo>
