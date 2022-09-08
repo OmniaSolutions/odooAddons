@@ -32,7 +32,6 @@
                 'omnia_workorder_machine'],
     'description': """ This module allows to update workorder using a simple web interface.""",
     'data': [
-        'views/ir_config_parameter.xml',
         'views/mrp_workorder.xml'
         ],
     'demo': [],

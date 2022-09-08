@@ -42,6 +42,25 @@ odoo.define('omnia_workorder_machine.workorder_machine_list', function (require)
         xhr.send();
     }
 
+	function get_user_id(){
+		var user_id_num = 0;
+        var user_id = document.getElementById('input_user_id');
+        if (user_id != null){
+			user_id_num = user_id.valueAsNumber;
+		}
+		return user_id_num
+	}
+
+	function show_clock(){
+        var clock = document.getElementById('waiting_clock');
+        clock.style.display = 'block';
+	}
+
+	function hide_clock(){
+        var clock = document.getElementById('waiting_clock');
+        clock.style.display = 'none';
+	}
+
     function start_work1 (button) {
         console.log("Start working");
         var button = button.currentTarget;
@@ -50,9 +69,12 @@ odoo.define('omnia_workorder_machine.workorder_machine_list', function (require)
         button.style.display = 'none';
         var wo_id = closestTr.getElementsByClassName('wo_id');
         var route = '/mrp_omnia/workorder_start/';
+        show_clock();
 		ajax.jsonRpc(route, 'call', {
 			'wo_id' : wo_id[0].textContent,
+			'user_id': get_user_id(),
 		}).then(function (data) {
+			hide_clock();
 			filter_res(null);
 		   }
 	    );
@@ -68,9 +90,12 @@ odoo.define('omnia_workorder_machine.workorder_machine_list', function (require)
         closestTr.style.cursor ='wait';
         var wo_id = closestTr.getElementsByClassName('wo_id');
         var route = '/mrp_omnia/workorder_pause/';
+        show_clock();
 		ajax.jsonRpc(route, 'call', {
 			'wo_id' : wo_id[0].textContent,
+			'user_id': get_user_id(),
 		}).then(function (data) {
+			hide_clock();
 			filter_res(null);
 		   }
 	    );
@@ -85,9 +110,12 @@ odoo.define('omnia_workorder_machine.workorder_machine_list', function (require)
         closestTr.style.cursor ='wait';
         var wo_id = closestTr.getElementsByClassName('wo_id');
         var route = '/mrp_omnia/workorder_resume/';
+        show_clock();
 		ajax.jsonRpc(route, 'call', {
 			'wo_id' : wo_id[0].textContent,
+			'user_id': get_user_id(),
 		}).then(function (data) {
+			hide_clock();
 			filter_res(null);
 		   }
 	    );
@@ -108,11 +136,14 @@ odoo.define('omnia_workorder_machine.workorder_machine_list', function (require)
         var n_scrap_ui = closestTr.getElementsByClassName('n_scrap');
         var n_scrap = n_scrap_ui[0].valueAsNumber;
         var route = '/mrp_omnia/workorder_record/';
+        show_clock();
 		ajax.jsonRpc(route, 'call', {
 			'wo_id' : wo_id[0].textContent,
 			'n_pieces': pieces,
 			'n_scrap': n_scrap,
+			'user_id': get_user_id(),
 		}).then(function (data) {
+			hide_clock();
 			filter_res(null);
 		   }
 	    );
@@ -130,7 +161,8 @@ odoo.define('omnia_workorder_machine.workorder_machine_list', function (require)
     	var input_qty = closestTr.getElementsByClassName('n_pieces')[0];
     	var scrap_qty = closestTr.getElementsByClassName('n_scrap')[0];
     	
-    	if ($.inArray(tdElem.textContent, ['draft', 'ready']) != -1) {
+    	// Start work
+    	if ($.inArray(tdElem.textContent, ['ready']) != -1) {
     		el_start_work[0].style.display = 'block';
     		el_pause_work[0].style.display = 'none';
     		el_resume_work[0].style.display = 'none';
@@ -138,14 +170,8 @@ odoo.define('omnia_workorder_machine.workorder_machine_list', function (require)
     		input_qty.style.display = 'none';
     		scrap_qty.style.display = 'none';
     	}
-    	else if ($.inArray(tdElem.textContent, ["startworking"]) != -1){
-    		el_start_work[0].style.display = 'none';
-    		el_pause_work[0].style.display = 'block';
-    		el_resume_work[0].style.display = 'none';
-    		el_stop_work[0].style.display = 'block';
-    		input_qty.style.display = 'block';
-    		scrap_qty.style.display = 'block';
-    	}
+    	
+    	// Pause work
     	else if ($.inArray(tdElem.textContent, ['progress']) != -1 & el_user_working[0].textContent == 'True'){
     		el_start_work[0].style.display = 'none';
     		el_pause_work[0].style.display = 'block';
@@ -154,11 +180,22 @@ odoo.define('omnia_workorder_machine.workorder_machine_list', function (require)
     		input_qty.style.display = 'block';
     		scrap_qty.style.display = 'block';
     	}
+    	
+    	// Resume Work
     	else if ($.inArray(tdElem.textContent, ['pause', 'progress']) != -1 & el_user_working[0].textContent == 'False'){
     		el_start_work[0].style.display = 'none';
     		el_pause_work[0].style.display = 'none';
     		el_resume_work[0].style.display = 'block';
     		el_stop_work[0].style.display = 'none';
+    		input_qty.style.display = 'none';
+    		scrap_qty.style.display = 'none';
+    	}
+
+    	else if ($.inArray(tdElem.textContent, ["startworking"]) != -1){
+    		el_start_work[0].style.display = 'none';
+    		el_pause_work[0].style.display = 'block';
+    		el_resume_work[0].style.display = 'none';
+    		el_stop_work[0].style.display = 'block';
     		input_qty.style.display = 'block';
     		scrap_qty.style.display = 'block';
     	}
@@ -176,7 +213,9 @@ odoo.define('omnia_workorder_machine.workorder_machine_list', function (require)
     function show_workorders_by_user(){
     	var user_id = document.getElementById('input_user_id').valueAsNumber;
 		var route = '/mrp_omnia/render_workorder_by_user/' + user_id;
+		show_clock();
 		ajax.jsonRpc(route, 'call', {}).then(function (data) {
+			hide_clock();
 			updete_workorder(data);
 		});
     }
@@ -184,7 +223,9 @@ odoo.define('omnia_workorder_machine.workorder_machine_list', function (require)
     function show_workorders_by_employee(){
     	var user_id = document.getElementById('input_employee_id').valueAsNumber;
 		var route = '/mrp_omnia/render_workorder_by_employee/' + user_id;
+		show_clock();
 		ajax.jsonRpc(route, 'call', {}).then(function (data) {
+			hide_clock();
 			updete_workorder(data);
 		});
     }
@@ -210,8 +251,13 @@ odoo.define('omnia_workorder_machine.workorder_machine_list', function (require)
 				updete_workorder(data);
 			});
 		}else{
-			show_workorders_by_user();
-			
+			var user_id = document.getElementById('input_user_id');
+			if (user_id == null){
+				show_workorders_by_employee();
+			}
+			else{
+				show_workorders_by_user();
+			}
 		}
 	};
 	

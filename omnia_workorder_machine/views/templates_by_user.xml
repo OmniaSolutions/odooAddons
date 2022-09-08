@@ -26,13 +26,15 @@
 	            <form style="display: -webkit-inline-box;margin-left: 35px;width:100%">
 	            	<table style="width: 90%;">
 	            		<tr>
-	            		   <td t-if="hide_user != True" id="td_user_id">User Id: </td>
-	            		   <td t-if="hide_user != True"><input id="input_user_id" type="number" class="user_id"/></td>
+	            		   <td t-if="hide_user != True" id="td_user_id" style="width:8%;">User Id: </td>
+	            		   <td t-if="hide_user != True" style="width:15%;"><input id="input_user_id" type="number" class="user_id"/></td>
 	            		   
-	            		   <td t-if="hide_user == True" id="td_employee_id">Employee Id: </td>
-	            		   <td t-if="hide_user == True"><input id="input_employee_id" type="number" class="employee_id"/></td>
+	            		   <td t-if="hide_user == True" style="width:8%;" id="td_employee_id">Employee Id: </td>
+	            		   <td t-if="hide_user == True" style="width:15%;"><input id="input_employee_id" type="number" class="employee_id"/></td>
 	            		   
-				           <td align="right" rowspan="2" style="width: 80%;">
+	            		   <td  style="text-align: center;"><img id="waiting_clock" style="display:none;width: 280px;" src="/omnia_workorder_machine/static/src/images/clock.gif"/></td>
+	            		   
+				           <td align="right" rowspan="2" style="width: 25%;">
 				               <div id="customer_image"><img  src="/web/binary/company_logo"/></div>
 				           </td>
 	            		</tr>

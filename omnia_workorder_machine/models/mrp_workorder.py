@@ -22,6 +22,8 @@ class MrpProductionWCLine(models.Model):
         out = []
         for woBrws in woBrwsList:
             if woBrws.production_id.state in ['confirmed', 'planned', 'progress', 'confirm']:
+                # user_id = self.getUserId()
+                # woBrws = woBrws.with_user(user_id)
                 woDict = {
                     'wo_id': woBrws.id,
                     'wo_name': woBrws.name,
@@ -30,7 +32,7 @@ class MrpProductionWCLine(models.Model):
                     'product_name': woBrws.product_id.name,
                     'product_default_code': woBrws.product_id.default_code or '',
                     'wo_state': woBrws.state,
-                    'qty': "%s %s" %(woBrws.qty_remaining, woBrws.product_uom_id.name),
+                    'qty': "%s %s" %(woBrws.component_remaining_qty or woBrws.qty_remaining, woBrws.product_uom_id.name),
                     'date_planned': woBrws.date_planned_start or '',
                     'is_user_working': woBrws.is_user_working,
                     }
@@ -61,7 +63,9 @@ class MrpProductionWCLine(models.Model):
         logging.info('Getting Work Orders with search %r' % (searchFilter))
         woBrwsList = self.search(searchFilter, order='date_planned_start ASC,id ASC')
         woBrwsList = woBrwsList.filtered(lambda x: user_id in x.user_ids.ids or x.user_id.id == user_id)
-        out = self.getDictWorkorder(woBrwsList)
+        if not user_id:
+            user_id = self.getUserId()
+        out = self.with_user(user_id).getDictWorkorder(woBrwsList.with_user(user_id))
         if listify:
             out = self.listifyForInterface(out)
         return out
@@ -75,7 +79,8 @@ class MrpProductionWCLine(models.Model):
         logging.info('Getting Work Orders with search %r' % (searchFilter))
         woBrwsList = self.search(searchFilter, order='date_planned_start ASC,id ASC')
         woBrwsList = woBrwsList.filtered(lambda x: employee_id in x.employee_ids.ids)
-        out = self.getDictWorkorder(woBrwsList)
+        user_id = self.getUserId()
+        out = self.getDictWorkorder(woBrwsList.with_user(user_id))
         if listify:
             out = self.listifyForInterface(out)
         return out
@@ -107,39 +112,51 @@ class MrpProductionWCLine(models.Model):
         return []
 
     @api.model
-    def startWork(self, workorder):
+    def startWork(self, workorder, user_id=0):
         if not workorder:
             return False
         woLine = self.browse(self.listify(workorder))
+        if not user_id:
+            user_id = self.getUserId()
+        woLine = woLine.with_user(user_id)
         for woBrws in woLine:
             return woBrws.button_start()
         return False
 
     @api.model
-    def pauseWork(self, workorder):
+    def pauseWork(self, workorder, user_id=0):
         if not workorder:
             return False
         woLine = self.browse(self.listify(workorder))
+        if not user_id:
+            user_id = self.getUserId()
+        woLine = woLine.with_user(user_id)
         for woBrws in woLine:
             return woBrws.button_pending()
         return False
     
     @api.model
-    def resumeWork(self, workorder):
+    def resumeWork(self, workorder, user_id=0):
         if not workorder:
             return False
         woLine = self.browse(self.listify(workorder))
+        if not user_id:
+            user_id = self.getUserId()
+        woLine = woLine.with_user(user_id)
         for woBrws in woLine:
-            return woBrws.action_continue()
+            return woBrws.button_start()
         return False
     
     @api.model
-    def recordWork(self, workorder, n_pieces=0, n_scrap=0.0):
+    def recordWork(self, workorder, n_pieces=0, n_scrap=0.0, user_id=0):
         if not workorder:
             return False
         work_order_ids = self.browse(self.listify(workorder))
-        work_order_ids._recordWork(n_pieces,
-                                   n_scrap)
+        if not user_id:
+            user_id = self.getUserId()
+        work_order_ids = work_order_ids.with_user(user_id)
+        return work_order_ids._recordWork(n_pieces,
+                                          n_scrap)
         
     def _recordWork(self,
                     n_pieces=0,
