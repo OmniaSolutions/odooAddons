@@ -21,6 +21,7 @@ class MrpProductionWCLine(models.Model):
     def getDictWorkorder(self, woBrwsList):
         out = []
         for woBrws in woBrwsList:
+            woBrws = woBrws.sudo()
             if woBrws.production_id.state in ['confirmed', 'planned', 'progress', 'confirm']:
                 # user_id = self.getUserId()
                 # woBrws = woBrws.with_user(user_id)
@@ -112,51 +113,46 @@ class MrpProductionWCLine(models.Model):
         return []
 
     @api.model
-    def startWork(self, workorder, user_id=0):
+    def preliminaryWork(self, workorder, user_id=0, employee_id=0):
         if not workorder:
             return False
         woLine = self.browse(self.listify(workorder))
         if not user_id:
             user_id = self.getUserId()
         woLine = woLine.with_user(user_id)
+        if employee_id:
+            woLine = woLine.with_context(employee_mrp_id=employee_id)
+        return woLine
+
+    @api.model
+    def startWork(self, workorder, user_id=0, employee_id=0):
+        woLine = self.preliminaryWork(workorder, user_id, employee_id)
         for woBrws in woLine:
             return woBrws.button_start()
         return False
 
     @api.model
-    def pauseWork(self, workorder, user_id=0):
-        if not workorder:
-            return False
-        woLine = self.browse(self.listify(workorder))
-        if not user_id:
-            user_id = self.getUserId()
-        woLine = woLine.with_user(user_id)
+    def pauseWork(self, workorder, user_id=0, employee_id=0):
+        woLine = self.preliminaryWork(workorder, user_id, employee_id)
         for woBrws in woLine:
             return woBrws.button_pending()
         return False
     
     @api.model
-    def resumeWork(self, workorder, user_id=0):
-        if not workorder:
-            return False
-        woLine = self.browse(self.listify(workorder))
-        if not user_id:
-            user_id = self.getUserId()
-        woLine = woLine.with_user(user_id)
+    def resumeWork(self, workorder, user_id=0, employee_id=0):
+        woLine = self.preliminaryWork(workorder, user_id, employee_id)
         for woBrws in woLine:
             return woBrws.button_start()
         return False
     
     @api.model
-    def recordWork(self, workorder, n_pieces=0, n_scrap=0.0, user_id=0):
-        if not workorder:
-            return False
-        work_order_ids = self.browse(self.listify(workorder))
-        if not user_id:
-            user_id = self.getUserId()
-        work_order_ids = work_order_ids.with_user(user_id)
-        return work_order_ids._recordWork(n_pieces,
-                                          n_scrap)
+    def recordWork(self, workorder, n_pieces=0, n_scrap=0.0, user_id=0, employee_id=0):
+        woLine = self.preliminaryWork(workorder, user_id, employee_id)
+        ret = False
+        for woBrws in woLine:
+            ret = woBrws._recordWork(n_pieces,
+                                     n_scrap)
+        return ret
         
     def _recordWork(self,
                     n_pieces=0,

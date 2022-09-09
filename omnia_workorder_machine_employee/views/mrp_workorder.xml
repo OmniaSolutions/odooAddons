@@ -11,6 +11,12 @@
                     	<field name ="employee_ids" widget="many2many_tags"/>
                    	</group>
                 </field>
+	            <xpath expr="//field[@name='time_ids']/tree//field[@name='user_id']" position="before">
+	                <field name="employee_mrp_id"/>
+	            </xpath>
+	            <xpath expr="//field[@name='time_ids']/form//field[@name='user_id']" position="before">
+	                <field name="employee_mrp_id"/>
+	            </xpath>
             </field>
         </record>
 

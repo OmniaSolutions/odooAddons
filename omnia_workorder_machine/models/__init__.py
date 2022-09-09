@@ -27,3 +27,4 @@ Created on Sep 17, 2018
 
 from . import mrp_workorder
 from . import mrp_workcenter
+from . import mrp_workcenter_productivity

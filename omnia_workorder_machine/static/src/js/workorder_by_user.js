@@ -51,6 +51,15 @@ odoo.define('omnia_workorder_machine.workorder_machine_list', function (require)
 		return user_id_num
 	}
 
+	function get_employee_id(){
+		var user_id_num = 0;
+        var user_id = document.getElementById('input_employee_id');
+        if (user_id != null){
+			user_id_num = user_id.valueAsNumber;
+		}
+		return user_id_num
+	}
+
 	function show_clock(){
         var clock = document.getElementById('waiting_clock');
         clock.style.display = 'block';
@@ -73,6 +82,7 @@ odoo.define('omnia_workorder_machine.workorder_machine_list', function (require)
 		ajax.jsonRpc(route, 'call', {
 			'wo_id' : wo_id[0].textContent,
 			'user_id': get_user_id(),
+			'employee_id': get_employee_id(),
 		}).then(function (data) {
 			hide_clock();
 			filter_res(null);
@@ -94,6 +104,7 @@ odoo.define('omnia_workorder_machine.workorder_machine_list', function (require)
 		ajax.jsonRpc(route, 'call', {
 			'wo_id' : wo_id[0].textContent,
 			'user_id': get_user_id(),
+			'employee_id': get_employee_id(),
 		}).then(function (data) {
 			hide_clock();
 			filter_res(null);
@@ -114,6 +125,7 @@ odoo.define('omnia_workorder_machine.workorder_machine_list', function (require)
 		ajax.jsonRpc(route, 'call', {
 			'wo_id' : wo_id[0].textContent,
 			'user_id': get_user_id(),
+			'employee_id': get_employee_id(),
 		}).then(function (data) {
 			hide_clock();
 			filter_res(null);
@@ -142,6 +154,7 @@ odoo.define('omnia_workorder_machine.workorder_machine_list', function (require)
 			'n_pieces': pieces,
 			'n_scrap': n_scrap,
 			'user_id': get_user_id(),
+			'employee_id': get_employee_id(),
 		}).then(function (data) {
 			hide_clock();
 			filter_res(null);

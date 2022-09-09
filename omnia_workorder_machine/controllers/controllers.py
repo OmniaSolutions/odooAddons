@@ -109,7 +109,8 @@ class WebsiteWorkorderControllerByUser(Controller):
         if wo_id:
             wo_id = int(wo_id)
             user_id = post.get('user_id', 0)
-            res = request.env['mrp.workorder'].startWork(wo_id, user_id)
+            employee_id = post.get('employee_id', 0)
+            res = request.env['mrp.workorder'].startWork(wo_id, user_id, employee_id)
         return res
 
     @http.route(['/mrp_omnia/workorder_pause'], auth='public', type='json')
@@ -119,7 +120,8 @@ class WebsiteWorkorderControllerByUser(Controller):
         if wo_id:
             wo_id = int(wo_id)
             user_id = post.get('user_id', 0)
-            res = request.env['mrp.workorder'].pauseWork(wo_id, user_id)
+            employee_id = post.get('employee_id', 0)
+            res = request.env['mrp.workorder'].pauseWork(wo_id, user_id, employee_id)
         return res
 
     @http.route(['/mrp_omnia/workorder_resume'], auth='public', type='json')
@@ -129,7 +131,8 @@ class WebsiteWorkorderControllerByUser(Controller):
         if wo_id:
             wo_id = int(wo_id)
             user_id = post.get('user_id', 0)
-            res = request.env['mrp.workorder'].resumeWork(wo_id, user_id)
+            employee_id = post.get('employee_id', 0)
+            res = request.env['mrp.workorder'].resumeWork(wo_id, user_id, employee_id)
         return res
 
     @http.route(['/mrp_omnia/workorder_record'], auth='public', type='json')
@@ -139,7 +142,8 @@ class WebsiteWorkorderControllerByUser(Controller):
         if wo_id:
             wo_id = int(wo_id)
             user_id = post.get('user_id', 0)
-            res = request.env['mrp.workorder'].recordWork(wo_id, n_pieces, n_scrap, user_id)
+            employee_id = post.get('employee_id', 0)
+            res = request.env['mrp.workorder'].recordWork(wo_id, n_pieces, n_scrap, user_id, employee_id)
         return res
 
     @http.route('/mrp_omnia/get_worksheet/<int:mrp_workorder_id>', type='http')

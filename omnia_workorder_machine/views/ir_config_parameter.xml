@@ -1,9 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
 
+	<data noupdate="1">
         <record id="workorder_machine_user_id_2" model="ir.config_parameter">
             <field name="key">WORKORDER_MACHINE_UID</field>
             <field name="value">1</field>
         </record>
-
+	</data>
+        
 </odoo>

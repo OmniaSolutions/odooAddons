@@ -19,8 +19,10 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 ##############################################################################
+'''
+Created on Sep 17, 2018
 
-from . import controllers
-from . import models
+@author: daniel
+'''
 
-# vim:expandtab:smartindent:tabstop=4:softtabstop=4:shiftwidth=4:
+from . import mrp_workorder
