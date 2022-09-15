@@ -3,6 +3,7 @@ Created on Sep 17, 2018
 
 @author: daniel
 '''
+from odoo.exceptions import UserError
 from odoo.tools import DEFAULT_SERVER_DATETIME_FORMAT
 from odoo import models
 from odoo import api
@@ -153,20 +154,24 @@ class MrpProductionWCLine(models.Model):
             ret = woBrws._recordWork(n_pieces,
                                      n_scrap)
         return ret
-        
+
     def _recordWork(self,
                     n_pieces=0,
                     n_scrap=0.0):
         for work_order_id in self:
             if n_pieces > 0:
-                work_order_id.qty_done = n_pieces
-                if n_pieces <= work_order_id.component_remaining_qty:
-                    work_order_id.action_continue()
-                if not work_order_id.component_remaining_qty:
-                    work_order_id.action_next()
-                    work_order_id.do_finish()
-            elif n_pieces == 0 and not work_order_id.component_remaining_qty:
-                work_order_id.action_next()
+                if work_order_id.is_first_started_wo:
+                    work_order_id.qty_producing = n_pieces
+                    if n_pieces <= work_order_id.qty_remaining:
+                        work_order_id.record_production()
+                else:
+                    work_order_id.qty_produced += n_pieces
+                    if work_order_id.qty_produced >= work_order_id.qty_production:
+                        work_order_id.record_production()
+                    else:
+                        work_order_id.end_previous()
+                        work_order_id.button_start()
+            elif n_pieces == 0 and not work_order_id.qty_remaining:
                 work_order_id.do_finish()
             if n_scrap > 0:
                 work_order_id.o_do_scrap(n_scrap)
@@ -237,3 +242,164 @@ class MrpProductionWCLine(models.Model):
         except Exception as ex:
             logging.error(ex)
         return out
+
+    def getRecordProductionAction(self, work_order_id):
+        '''
+<button name="action_menu" type="object" class="btn-secondary o_workorder_icon_btn" string="" icon="fa-bars" aria-label="Dropdown menu" title="Dropdown menu"/>
+<button name="button_pending" type="object" class="btn-secondary mr8" attrs="{'invisible': ['|', ('is_user_working', '=', False), ('working_state', '=', 'blocked')]}" barcode_trigger="pause" string="Pause"/>
+<button name="button_start" type="object" class="btn-warning" attrs="{'invisible': ['|', '|', ('is_user_working', '=', True), ('working_state', '=', 'blocked'), ('state', '=', 'done')]}" barcode_trigger="pause" string="Continue"/>
+<button name="button_unblock" type="object" context="{'default_workcenter_id': workcenter_id}" attrs="{'invisible': [('working_state', '!=', 'blocked')]}" string="Unblock" class="btn-danger"/>
+<button name="action_previous" type="object" class="btn-secondary" string="Previous" icon="fa-chevron-left o_workorder_btn_icon_small" attrs="{'invisible': [('is_first_step', '=', True)]}" barcode_trigger="prev"/>
+<button disabled="1" class="btn-secondary" string="Previous" icon="fa-chevron-left o_workorder_btn_icon_small" attrs="{'invisible': [('is_first_step', '=', False)]}"/>
+<button name="action_skip" type="object" class="btn-secondary" string="Skip" icon="fa-chevron-right float-right o_workorder_btn_icon_small" attrs="{'invisible': [('is_last_step', '=', True)]}" barcode_trigger="skip"/>
+<button disabled="1" class="btn-secondary" string="Skip" icon="fa-chevron-right float-right o_workorder_btn_icon_small" attrs="{'invisible': [('is_last_step', '=', False)]}"/>
+
+
+
+<button name="action_next" type="object" class="btn-primary" attrs="{'invisible': ['|', ('is_user_working', '=', False),'|', ('is_last_step', '=', True), '&amp;', '|', ('quality_state', '=', 'none'), ('test_type', '!=', 'passfail'), ('test_type', '!=', 'instructions')]}" barcode_trigger="next" string="Next"/>
+<button name="action_next" type="object" class="btn-secondary" attrs="{'invisible': ['|', '|', '|', '|', ('is_user_working', '=', False), ('is_last_step', '=', True), ('test_type', 'not in', ['register_consumed_materials', 'register_byproducts', 'picture']), ('consumption', '=', 'strict'), '&amp;', ('consumption', 'in', ['flexible', 'warning']), ('component_qty_to_do', '&gt;=', 0)]}" barcode_trigger="next" string="VALIDATE"/>
+<button name="action_next" type="object" class="btn-primary" attrs="{'invisible': ['|', '|', '|', ('is_user_working', '=', False), ('is_last_step', '=', True), ('test_type', 'not in', ['register_consumed_materials', 'register_byproducts', 'picture']), ('component_qty_to_do', '&lt;', 0)]}" barcode_trigger="next" string="VALIDATE"/>
+
+<button name="action_continue" type="object" class="btn-primary" attrs="{'invisible': ['|', '|', '|', ('is_user_working', '=', False), ('is_last_step', '=', True), ('test_type', '!=', 'register_byproducts'), ('component_qty_to_do', '&gt;=', 0)]}" barcode_trigger="continue" string="CONTINUE PRODUCTION"/>
+<button name="action_continue" type="object" class="btn-secondary" attrs="{'invisible': ['|', '|', '|', '|', ('is_user_working', '=', False), ('is_last_step', '=', True), ('test_type', '!=', 'register_byproducts'), ('consumption', '=', 'strict'), '&amp;', ('consumption', 'in', ['flexible', 'warning']), ('component_qty_to_do', '&lt;', 0)]}" barcode_trigger="continue" string="CONTINUE PRODUCTION"/>
+<button name="action_continue" type="object" class="btn-primary" attrs="{'invisible': ['|', '|', '|', ('is_user_working', '=', False), ('is_last_step', '=', True), ('test_type', '!=', 'register_consumed_materials'), ('component_qty_to_do', '&gt;=', 0)]}" barcode_trigger="continue" string="CONTINUE CONSUMPTION"/>
+<button name="action_continue" type="object" class="btn-secondary" attrs="{'invisible': ['|', '|', '|', '|', ('is_user_working', '=', False), ('is_last_step', '=', True), ('test_type', '!=', 'register_consumed_materials'), ('consumption', '=', 'strict'), '&amp;', ('consumption', 'in', ['flexible', 'warning']), ('component_qty_to_do', '&lt;', 0)]}" barcode_trigger="continue" string="CONTINUE CONSUMPTION"/>
+
+<button name="action_print" type="object" class="btn-primary" attrs="{'invisible': [('test_type', '!=', 'print_label')]}" barcode_trigger="print" string="Print Labels"/>
+
+<button name="record_production" type="object" string="Record production" attrs="{'invisible': ['|', '|', '|', '|', ('is_user_working', '=', False), ('is_last_step', '!=', True), ('skipped_check_ids', '!=', []), ('is_last_unfinished_wo', '=', True), ('is_last_lot', '=', True)]}" barcode_trigger="record" class="btn-primary"/>
+
+<button name="do_finish" type="object" string="Mark as Done" icon="fa-check" attrs="{'invisible': ['|', '|', '|', ('is_user_working', '=', False), ('is_last_step', '!=', True), ('skipped_check_ids', '!=', []), '&amp;', ('is_last_unfinished_wo', '=', False), ('is_last_lot', '=', False)]}" class="btn-primary" barcode_trigger="cloWO"/>
+
+<button name="action_open_manufacturing_order" type="object" string="Mark as Done and Close MO" icon="fa-check" attrs="{'invisible': ['|', '|', '|', ('is_user_working', '=', False), ('is_last_step', '!=', True), ('skipped_check_ids', '!=', []), ('is_last_unfinished_wo', '=', False)]}" class="btn-primary" barcode_trigger="cloMO"/>
+<button name="action_first_skipped_step" type="object" string="Finish steps" attrs="{'invisible': ['|', '|', '|', ('is_user_working', '=', False), ('is_last_step', '!=', True), ('state', '!=', 'progress'), ('skipped_check_ids', '=', [])]}" class="btn-primary" barcode_trigger="finish"/>
+        '''
+
+        if not (
+            not work_order_id.is_user_working or (
+                work_order_id.is_last_step or (
+                    (work_order_id.quality_state == 'none' or work_order_id.test_type != 'passfail') and work_order_id.test_type != 'instructions')
+                )):
+            return self.action_next
+        elif not (
+                (
+                    (   
+                        (not work_order_id.is_user_working or work_order_id.is_last_step) 
+                    or
+                        work_order_id.test_type not in ['register_consumed_materials', 'register_byproducts', 'picture']
+                    )
+                or
+                    work_order_id.consumption == 'strict'
+                )
+            or
+                (
+                    (work_order_id.consumption in ['flexible', 'warning'])
+                and
+                    (work_order_id.component_qty_to_do >= 0)
+                )
+            ):
+            return self.action_next
+        elif not (
+                (
+                    (not work_order_id.is_user_working or work_order_id.is_last_step)
+                or 
+                    (work_order_id.test_type not in ['register_consumed_materials', 'register_byproducts', 'picture'])
+                )
+            or
+                work_order_id.component_qty_to_do < 0
+            ):
+            return self.action_next
+        elif not (
+                (
+                    (not work_order_id.is_user_working or work_order_id.is_last_step)
+                or
+                    (work_order_id.test_type != 'register_byproducts')    
+                )
+            or
+                work_order_id.component_qty_to_do > 0
+            ):
+            return self.action_continue
+        elif not (
+                (
+                    (
+                        (not work_order_id.is_user_working or work_order_id.is_last_step)
+                    or
+                        (work_order_id.test_type != 'register_byproducts')    
+                    )
+                or
+                    work_order_id.consumption == 'strict'
+                )
+            or
+                (
+                    (work_order_id.consumption in ['flexible', 'warning'])
+                and
+                    (work_order_id.component_qty_to_do < 0)
+                )
+            ):
+            return self.action_continue
+        elif not (
+                (
+                    (not work_order_id.is_user_working or work_order_id.is_last_step)
+                or
+                    (work_order_id.test_type != 'register_consumed_materials')
+                )
+            or
+                (work_order_id.component_qty_to_do >= 0)
+            ):
+            return self.action_continue
+        elif not (
+                (
+                    (
+                        (not work_order_id.is_user_working or work_order_id.is_last_step)
+                    or
+                        (work_order_id.test_type != 'register_consumed_materials')
+                    )
+                or
+                    (work_order_id.consumption == 'strict')
+                )
+            or
+                (
+                    (work_order_id.consumption in ['flexible', 'warning'])
+                and
+                    (work_order_id.component_qty_to_do < 0)
+                )
+            ):
+            return self.action_continue
+        elif not (
+                (
+                    (
+                        (not work_order_id.is_user_working or work_order_id.is_last_step != True)
+                    or
+                        work_order_id.skipped_check_ids != []
+                    )
+                or
+                    work_order_id.is_last_unfinished_wo == True
+                )
+            or
+                work_order_id.is_last_lot == True
+            ):
+            return self.record_production
+        elif not (
+            # '''
+            # ['|', 
+            #     '|', 
+            #         '|',
+            #             ('is_user_working', '=', False), 
+            #             ('is_last_step', '!=', True), 
+            #         ('skipped_check_ids', '!=', []), 
+            #     '&', ('is_last_unfinished_wo', '=', False), ('is_last_lot', '=', False)]
+            # '''
+                (
+                    (not work_order_id.is_user_working or work_order_id.is_last_step != True)
+                or
+                    work_order_id.skipped_check_ids != []
+                )
+            or
+                (
+                    work_order_id.is_last_unfinished_wo == False
+                and
+                    work_order_id.is_last_lot == False
+                )
+            ):
+            return self.do_finish
+        
