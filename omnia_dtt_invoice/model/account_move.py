@@ -45,7 +45,7 @@ class OmniaDdtAccountIvoice(models.Model):
                                   'Trasporto a Cura di')
     peso_lordo = fields.Float(_('Peso Lordo'))
     peso_netto = fields.Float(_('Peso Netto'))
-    unita_misura_peso = fields.Many2one('product.uom', string="Unita' di misura")
+    unita_misura_peso = fields.Many2one('uom.uom', string="Unita' di misura")
     volume = fields.Char('Volume', size=64)
     number_of_packages = fields.Integer(string='Number of Packages', copy=False)
     notes_invoice = fields.Char(string='Annotazioni')
