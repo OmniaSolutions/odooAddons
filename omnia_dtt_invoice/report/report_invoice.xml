@@ -2,7 +2,7 @@
 <odoo>
 
 <template id="ddt_invoice">
-       	<table class="table_title_bottom" id="ddt_info4">
+       	<table class="table_title_bottom" id="ddt_info4" style="width:100%">
         	<colgroup>
        	 		<col width="25%"/>
              	<col width="25%"/>

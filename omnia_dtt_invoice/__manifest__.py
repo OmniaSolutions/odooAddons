@@ -39,7 +39,7 @@ deliver a Fattura Accompagnatoria
     'website': 'http://www.OmniaSolutions.website',
     'depends': ['account','stock', 'delivery'],
     'data': [# view
-             'view/acc_invoice_view_ddt.xml',
+             'view/account_move.xml',
              # report
              'report/report_invoice.xml',
 
