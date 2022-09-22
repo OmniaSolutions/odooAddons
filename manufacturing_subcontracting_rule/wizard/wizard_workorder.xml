@@ -24,6 +24,9 @@
 	            <group>
 	            	<field name="consume_bom_id" readonly="True"/>
 	            </group>
+	            <group col="4" colspan="4">
+	            	<field name="warnings_msg" nolabel="1" readonly="True" attrs="{'invisible': [('warnings_msg', 'in', [False, ''])]}"/>
+	            </group>
 	            <field name="move_raw_ids" context="{'wizard_id': id, 'default_workorder_id': workorder_id}">
 	                <tree>
 	                    <field name="product_id"/>

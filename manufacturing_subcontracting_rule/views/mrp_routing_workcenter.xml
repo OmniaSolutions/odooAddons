@@ -6,7 +6,7 @@
 	        <field name="inherit_id" ref="mrp.mrp_routing_workcenter_form_view"/>
 	        <field name="arch" type="xml">
 	           <xpath expr="//field[@name='sequence']" position="after">
-	                <field name="default_supplier" domain="{'search_default_supplier': 1,'default_customer': 0,'default_supplier': 1}"/>
+	                <field name="default_supplier" domain="[('location_id', '!=', False)]"/>
 	                <field name="external_product"/>
 	            </xpath>
 	        </field>
@@ -17,7 +17,7 @@
             <field name="inherit_id" ref="mrp.mrp_routing_workcenter_tree_view"/>
             <field name="arch" type="xml">
                 <field name="workcenter_id" position="after">
-                    <field name="default_supplier"/>
+                    <field name="default_supplier" domain="[('location_id', '!=', False)]"/>
                     <field name="external_product"/>
                 </field>
             </field>
