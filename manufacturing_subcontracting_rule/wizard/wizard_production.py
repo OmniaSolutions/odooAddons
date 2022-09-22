@@ -329,6 +329,11 @@ class MrpProductionWizard(models.TransientModel):
             new_purchase_order_line.move_ids = lineBrws
         if self.confirm_purchese_order and len(self.external_partner) == 1:
             obj_po.button_confirm()
+            for po_line in obj_po.order_line:
+                for move in po_line.move_ids:
+                    if move.product_id == po_line.product_id:
+                        move._action_cancel()
+                        move.unlink()
         obj_po._compute_picking()
         return obj_po
 
