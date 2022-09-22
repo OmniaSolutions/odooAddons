@@ -48,7 +48,7 @@ class MrpWorkorderExtension(models.Model):
                 if len(out_raw) > 0:
                     out_raw += ","
                 out_raw += stock_move.product_id.display_name
-            mrp_workorder.raw_material_name = out_raw
+            mrp_workorder.raw_material_name = out_raw or '-'
 
     raw_material_name = fields.Char("Raw material",
                                     compute="get_raw_material",
