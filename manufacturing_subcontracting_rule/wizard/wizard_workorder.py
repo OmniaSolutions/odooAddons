@@ -34,6 +34,7 @@ class MrpWorkorderWizard(models.TransientModel):
                                         string='Finished Products',
                                         inverse_name='external_prod_workorder_finish',
                                         domain=[('scrapped', '=', False)])
+    warnings_msg = fields.Html('Warning')
 
     def getPickingVals(self, partner_id, mrp_production_id, operation_type):
         ret = super(MrpWorkorderWizard, self).getPickingVals(partner_id, mrp_production_id, operation_type)

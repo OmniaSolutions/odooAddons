@@ -48,7 +48,7 @@ class MrpWorkorder(models.Model):
             })
 
     def get_wizard_value(self):
-        values = {}
+        values = {'warnings_msg': ''}
         raw_lines = []
         finish_lines = []
         production = self.production_id
@@ -68,6 +68,24 @@ class MrpWorkorder(models.Model):
                     location_source_id,
                     )
                 finish_lines.append(finish_move_new.id)
+            elif not raw_move.bom_line_id.operation_id:
+                values['warnings_msg'] += '''
+                <div style="color:#ff5400;">
+                Bom line %r has not "Consumed in operation" field setup.
+                </div>
+                ''' % (raw_move.bom_line_id.display_name)
+            else:
+                values['warnings_msg'] += '''
+                <div style="color:#ff5400;">
+                Bom line operation [%s] %s and workorder operation [%s] %s are different for line %s
+                </div>''' % (self.operation_id.id,
+                             self.operation_id.display_name,
+                             raw_move.bom_line_id.operation_id.id,
+                             raw_move.bom_line_id.operation_id.display_name,
+                             raw_move.bom_line_id.display_name,
+                             )
+        if raw_lines or finish_lines:
+            values['warnings_msg'] = ''
         values['move_raw_ids'] = [(6, 0, raw_lines)]
         values['move_finished_ids'] = [(6, 0, finish_lines)]
         values['production_id'] = production.id
