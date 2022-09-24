@@ -19,26 +19,26 @@ class MrpProductionWCLine(models.Model):
     user_ids = fields.Many2many('res.users', string='Users')
     employee_ids = fields.Many2many('hr.employee', string='Employees')
     
+    def _getWorkOrderDict(self):
+        return {
+               'wo_id': self.id,
+               'wo_name': self.name,
+               'wo_description': '',
+               'production_name': self.production_id.name,
+               'product_name': self.product_id.name,
+               'product_default_code': self.product_id.default_code or '',
+               'wo_state': self.state,
+               'qty': "%s %s" %(self.component_remaining_qty or self.qty_remaining, self.product_uom_id.name),
+               'date_planned': self.date_planned_start or '',
+               'is_user_working': self.is_user_working,
+               }
+    
     def getDictWorkorder(self, woBrwsList):
         out = []
         for woBrws in woBrwsList:
             woBrws = woBrws.sudo()
             if woBrws.production_id.state in ['confirmed', 'planned', 'progress', 'confirm']:
-                # user_id = self.getUserId()
-                # woBrws = woBrws.with_user(user_id)
-                woDict = {
-                    'wo_id': woBrws.id,
-                    'wo_name': woBrws.name,
-                    'wo_description': '',
-                    'production_name': woBrws.production_id.name,
-                    'product_name': woBrws.product_id.name,
-                    'product_default_code': woBrws.product_id.default_code or '',
-                    'wo_state': woBrws.state,
-                    'qty': "%s %s" %(woBrws.component_remaining_qty or woBrws.qty_remaining, woBrws.product_uom_id.name),
-                    'date_planned': woBrws.date_planned_start or '',
-                    'is_user_working': woBrws.is_user_working,
-                    }
-                out.append(woDict)
+                out.append(woBrws._getWorkOrderDict())
         return out
     
     @api.model
