@@ -2,7 +2,6 @@
         <record model="ir.ui.view" id="sale_order_proforma">
             <field name="name">sale.order.proforma</field>
             <field name="model">sale.order</field>
-            <field name="type">form</field>
             <field name="inherit_id" ref="sale.view_order_form"/>
             <field name="arch" type="xml"> 
                 <xpath expr="//div[@class='oe_title']/h1" position="after">
@@ -10,6 +9,36 @@
                         <field name="proforma_number"/>
                         <button name="assign_pro_forma_number" icon="fa-magic" type="object"/>
                     </div>
+                </xpath>
+            </field>
+        </record>
+        
+        <record model="ir.ui.view" id="sale_order_proforma_tree">
+            <field name="name">sale.order.proforma.tree</field>
+            <field name="model">sale.order</field>
+            <field name="inherit_id" ref="sale.view_quotation_tree"/>
+            <field name="arch" type="xml"> 
+                <field name="name" position="after">
+                    <field name="proforma_number" />
+                </field>
+            </field>
+        </record>        
+        
+        <record id="proforma_sale_order_view_search_inherit_sale" model="ir.ui.view">
+            <field name="name">proforma.sale.order.search.inherit.sale</field>
+            <field name="model">sale.order</field>
+            <field name="mode">primary</field>
+            <field name="inherit_id" ref="sale.view_sales_order_filter"/>
+            <field name="arch" type="xml">
+	            <field name="user_id" positin="after">
+                    <field name="proforma_number"/>
+	            </field>
+                <xpath expr="//filter[@name='my_sale_orders_filter']" position="after">
+                    <separator/>
+	                   <filter name="proforma"
+	                           string="Proforma"
+	                           domain="[('proforma_number','!=',False)]"/>
+
                 </xpath>
             </field>
         </record>

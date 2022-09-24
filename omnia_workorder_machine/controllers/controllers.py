@@ -48,7 +48,7 @@ class WebsiteWorkorderControllerByUser(Controller):
         values['wo_lines'] = lines
         return self.forceRender('omnia_workorder_machine.template_workorder_machine_table', values)
 
-    @http.route(['/mrp_omnia/workorder_machine/<int:workcenter_id>'], auth='public')
+    @http.route(['/mrp_omnia/workorder_machine/<int:workcenter_id>'])
     def workoder_machine_wc(self, workcenter_id, **post):
         logging.info('WorkorderMachine with workcenter %r called' % (workcenter_id))
         values = post
@@ -71,12 +71,8 @@ class WebsiteWorkorderControllerByUser(Controller):
     def get_employee_name(self, employee_id):
         employee_id = request.env['hr.employee'].sudo().browse(employee_id)
         if employee_id and employee_id.exists():
-            try:
-                return "<b>%s %s</b>" % (employee_id.lastname, employee_id.firstname)
-            except Exception as ex:
-                logging.error(ex)
-                msg = "<b>%s</b>" % (employee_id.name)
-                return msg
+            msg = "<b>%s</b>" % (employee_id.name)
+            return msg
         else:
             return "<b>No User For id: %r</b>" % employee_id
 
