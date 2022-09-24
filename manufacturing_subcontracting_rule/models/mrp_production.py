@@ -98,7 +98,6 @@ class MrpProduction(models.Model):
     move_raw_ids_external_prod = fields.One2many('stock.move',
                                                  'raw_material_production_id',
                                                  'Raw Materials External Production',
-                                                 oldname='move_lines',
                                                  copy=False,
                                                  states={'done': [('readonly', True)], 'cancel': [('readonly', True)]})
     move_finished_ids_external_prod = fields.One2many('stock.move',
