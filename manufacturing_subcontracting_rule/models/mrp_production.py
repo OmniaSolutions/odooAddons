@@ -380,13 +380,10 @@ class MrpProduction(models.Model):
             default['move_raw_ids'] = False
             default['move_finished_ids'] = False
         ret = super(MrpProduction, self).copy(default=default)
-        ret.move_finished_ids = False
-        ret.move_raw_ids = False
-        ret.bom_id = False
-        #ret.onchange_product_id()
-        #ret._onchange_bom_id()
-        ret._create_update_move_finished()
-        #ret.createStockMoveBom()
+        if self.external_partner or self.purchase_external_id or self.external_pickings:
+            ret.move_raw_ids = False
+            ret.move_finished_ids = False
+            ret.onchange_product_id()
         return ret
 
 
