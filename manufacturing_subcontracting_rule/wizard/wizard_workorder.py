@@ -131,22 +131,39 @@ class MrpWorkorderWizard(models.TransientModel):
     def change_parent_in_out(self):
         # Available but not use for mrp production
         product = self.env['product.product']
-        qty = 0
+        qty = None
         if self.parent_in_out:
             product = self.production_id.product_id
             qty = self.production_id.product_uom_qty
+            if not self.move_raw_ids or not self.move_finished_ids:
+                wizard_vals = self.production_id.get_wizard_value(self.production_id.move_finished_ids[0],
+                                                                  self.production_id.move_finished_ids[0])
+                self.move_raw_ids = wizard_vals['move_raw_ids']
+                self.move_finished_ids = wizard_vals['move_finished_ids']
+                self.changeExternalPartner()
+                self._request_date()
         else:
             for raw_move in self.production_id.move_raw_ids:
                 if raw_move.bom_line_id.operation_id == self.workorder_id.operation_id:
                     product = raw_move.product_id
                     qty = raw_move.product_uom_qty
                     break
-        if product and qty:
+        if product and qty is not None:
             self.move_finished_ids.product_id = product.id
             self.move_finished_ids.product_uom_qty = qty
             self.move_raw_ids.product_id = product.id
             self.move_raw_ids.product_uom_qty = qty
+        else:
+            self.move_raw_ids = [(6, 0, [])]
+            self.move_finished_ids = [(6, 0, [])]
 
     @api.onchange('external_partner')
-    def changeExternalPartner(self, external_partner_model='external.production.partner'):
-        return super(MrpWorkorderWizard, self).changeExternalPartner(external_partner_model='external.workorder.partner')
+    def changeExternalPartner(self, external_partner_model='external.production.partner', raw_moves=False, finished_moves=False, ext_partner=False):
+        ext_partners, raw_moves, finished_moves = super(MrpWorkorderWizard, self)._changeExternalPartner(external_partner_model='external.workorder.partner',
+                                                                     raw_moves=self.move_raw_ids,
+                                                                     finished_moves=self.move_finished_ids,
+                                                                     ext_partner=self.external_partner)
+        self.external_partner = ext_partners
+        self.move_raw_ids = raw_moves
+        self.move_finished_ids = finished_moves
+        

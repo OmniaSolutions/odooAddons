@@ -230,7 +230,10 @@ class MrpProduction(models.Model):
                           isRawMove=False):
         outElems = []
         for elem in brwsList:
-            outElems.append(self.createTmpStockMove(elem, location_source_id, location_dest_id, isRawMove).id)
+            outElems.append(self.createTmpStockMove(elem,
+                                                    location_source_id,
+                                                    location_dest_id,
+                                                    isRawMove).id)
         return outElems
 
     def checkCreatePartnerWarehouse(self, partnerBrws):
@@ -262,13 +265,17 @@ class MrpProduction(models.Model):
             locBrws = locationObj.create(vals)
         return locBrws
 
-    def get_wizard_value(self):
+    def get_wizard_value(self, move_raw_ids=False, move_finished_ids=False):
         values = {}
-        values['move_raw_ids'] = [(6, 0, self.copyAndCleanLines(self.move_raw_ids,
+        if not move_raw_ids:
+            move_raw_ids = self.move_raw_ids
+        if not move_finished_ids:
+            move_finished_ids = self.move_finished_ids
+        values['move_raw_ids'] = [(6, 0, self.copyAndCleanLines(move_raw_ids,
                                                                 location_source_id=self.location_src_id.id,
                                                                 isRawMove=True
                                                                 ))]
-        values['move_finished_ids'] = [(6, 0, self.copyAndCleanLines(self.move_finished_ids,
+        values['move_finished_ids'] = [(6, 0, self.copyAndCleanLines(move_finished_ids,
                                                                      location_dest_id=self.location_src_id.id,
                                                                      isRawMove=False))]
         values['production_id'] = self.id

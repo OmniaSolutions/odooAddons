@@ -59,59 +59,67 @@ class MrpProductionWizard(models.TransientModel):
         self.service_product_to_buy = self.getDefaultProductionServiceProduct()
 
     @api.onchange('external_partner')
-    def changeExternalPartner(self, external_partner_model='external.production.partner'):
+    def changeExternalPartner(self, external_partner_model='external.production.partner', raw_moves=False, finished_moves=False, ext_partner=False):
+        ext_partners, raw_moves, finished_moves = self._changeExternalPartner(external_partner_model, raw_moves, finished_moves, ext_partner)
+        self.external_partner = ext_partners
+        
+    def _changeExternalPartner(self, external_partner_model='external.production.partner', raw_moves=False, finished_moves=False, ext_partner=False):
         active_partners = self.env['res.partner']
         ext_partners = self.env[external_partner_model]
-        for partner_suppl_info in self.external_partner:
+        if not raw_moves:
+            raw_moves = self.move_raw_ids
+        if not finished_moves:
+            finished_moves = self.move_finished_ids
+        if not ext_partner:
+            ext_partner = self.external_partner
+        for partner_suppl_info in ext_partner:
             ext_partners += partner_suppl_info
             partner_id = partner_suppl_info.partner_id
             active_partners += partner_id
             partner_location_id = self.getPartnerLocation(partner_id)
-            if len(self.external_partner) == 1:
-                for move_raw in self.move_raw_ids:
-                    move_raw.location_dest_id = partner_location_id
-                    move_raw.location_id = self.production_id.location_src_id
+            if len(ext_partner) == 1:
+                raw_moves.location_dest_id = partner_location_id.id
+                raw_moves.location_id = self.production_id.location_src_id.id
+                for move_raw in raw_moves:
                     if not move_raw.partner_id:
                         move_raw.partner_id = partner_id.id
-                for finish_move in self.move_finished_ids:
-                    finish_move.location_dest_id = self.production_id.location_src_id
-                    finish_move.location_id = partner_location_id
+                finished_moves.location_dest_id = self.production_id.location_src_id
+                finished_moves.location_id = partner_location_id
+                for finish_move in finished_moves:
                     if not finish_move.partner_id:
                         finish_move.partner_id = partner_id.id
             else:
-                existing_raw_moves = self.move_raw_ids.filtered(lambda x:x.partner_id.id == partner_id.id)
+                existing_raw_moves = raw_moves.filtered(lambda x:x.partner_id.id == partner_id.id)
                 if not existing_raw_moves:
-                    partner_ids = self.move_raw_ids.mapped('partner_id')
+                    partner_ids = raw_moves.mapped('partner_id')
                     if not partner_ids:
-                        for move_raw in self.move_raw_ids:
-                            move_raw.location_dest_id = partner_location_id
-                            move_raw.location_id = self.production_id.location_src_id
-                        self.move_raw_ids.partner_id = partner_id.id
-                        for finish_move in self.move_finished_ids:
-                            finish_move.location_dest_id = self.production_id.location_src_id
-                            finish_move.location_id = partner_location_id
-                        self.move_finished_ids.partner_id = partner_id.id
+                        raw_moves.location_dest_id = partner_location_id.id
+                        raw_moves.location_id = self.production_id.location_src_id.id
+                        raw_moves.partner_id = partner_id.id
+                        finished_moves.location_dest_id = self.production_id.location_src_id
+                        finished_moves.location_id = partner_location_id
+                        finished_moves.partner_id = partner_id.id
                     for partner in partner_ids:
                         if partner != partner_id:
-                            for move_raw in self.move_raw_ids.filtered(lambda x:x.partner_id.id == partner.id):
+                            for move_raw in raw_moves.filtered(lambda x:x.partner_id.id == partner.id):
                                 new_raw_move = move_raw.copy()
                                 new_raw_move.location_dest_id = partner_location_id
                                 new_raw_move.location_id = self.production_id.location_src_id
                                 new_raw_move.partner_id = partner_id.id
-                            for finish_move in self.move_finished_ids.filtered(lambda x:x.partner_id.id == partner.id):
+                            for finish_move in finished_moves.filtered(lambda x:x.partner_id.id == partner.id):
                                 new_finish_move = finish_move.copy()
                                 new_finish_move.location_dest_id = self.production_id.location_src_id
                                 new_finish_move.location_id = partner_location_id
                                 new_finish_move.partner_id = partner_id.id
                         break
         if active_partners:
-            for line in self.move_raw_ids:
+            for line in raw_moves:
                 if line.partner_id not in active_partners:
                     line.unlink()
-            for line in self.move_finished_ids:
+            for line in finished_moves:
                 if line.partner_id not in active_partners:
                     line.unlink()
-        self.external_partner = ext_partners
+        return ext_partners, raw_moves, finished_moves
 
     @api.onchange('is_dropship')
     def change_is_dropship(self):
