@@ -127,5 +127,26 @@ class MrpWorkorderWizard(models.TransientModel):
         self.changeExternalPartner('external.workorder.partner')
         return ret
 
+    @api.onchange('parent_in_out')
+    def change_parent_in_out(self):
+        # Available but not use for mrp production
+        product = self.env['product.product']
+        qty = 0
+        if self.parent_in_out:
+            product = self.production_id.product_id
+            qty = self.production_id.product_uom_qty
+        else:
+            for raw_move in self.production_id.move_raw_ids:
+                if raw_move.bom_line_id.operation_id == self.workorder_id.operation_id:
+                    product = raw_move.product_id
+                    qty = raw_move.product_uom_qty
+                    break
+        if product and qty:
+            self.move_finished_ids.product_id = product.id
+            self.move_finished_ids.product_uom_qty = qty
+            self.move_raw_ids.product_id = product.id
+            self.move_raw_ids.product_uom_qty = qty
 
-
+    @api.onchange('external_partner')
+    def changeExternalPartner(self, external_partner_model='external.production.partner'):
+        return super(MrpWorkorderWizard, self).changeExternalPartner(external_partner_model='external.workorder.partner')

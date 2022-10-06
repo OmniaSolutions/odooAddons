@@ -52,6 +52,7 @@ class MrpProductionWizard(models.TransientModel):
                                              )
     service_prod_type = fields.Selection(related='service_product_to_buy.type', string=_('Service Product Type'))
     is_dropship = fields.Boolean(string=_('Is Dropship'))
+    parent_in_out = fields.Boolean(string=_('Partner In - Out'))
 
     @api.model
     def _service_product(self):
@@ -311,12 +312,28 @@ class MrpProductionWizard(models.TransientModel):
                 'sub_move_line': move_line.id,
                 }
 
+    def getExisistingPO(self, purchase_vals):
+        purchase = self.env['purchase.order']
+        purchase_ids = purchase.search([
+            ('partner_id', '=', purchase_vals['partner_id']),
+            ('state', '=', 'draft')
+            ], order='id DESC', limit=1)
+        return purchase_ids
+
+    def getPo(self, purchase_vals):
+        obj_po = self.env['purchase.order']
+        if self.merge_purchese_order:
+            obj_po = self.getExisistingPO(purchase_vals)
+        if not obj_po:
+            obj_po = obj_po.create(purchase_vals)
+        return obj_po
+
     def createPurchase(self, external_partner, picking):
         if not self.create_purchese_order:
             return 
         obj_product_product = self.getDefaultProductionServiceProduct()
         purchase_vals = self.getPurchaseVals(external_partner)
-        obj_po = self.env['purchase.order'].create(purchase_vals)
+        obj_po = self.getPo(purchase_vals)
         for lineBrws in picking.move_lines:
             self.setupSupplierinfo(obj_product_product)
             values = self.getPurchaseLineVals(obj_product_product, obj_po, lineBrws)
@@ -382,12 +399,15 @@ class MrpProductionWizard(models.TransientModel):
         bom_product_product_id = self.production_id.bom_id.external_product
         if not bom_product_product_id:
             product_vals = self.getNewExternalProductInfo()
-            bom_product_product_id = self.env['product.product'].search([('default_code', '=', product_vals.get('default_code'))])
+            default_code = product_vals.get('default_code')
+            bom_product_product_id = self.env['product.product'].search([('default_code', '=', default_code)])
             if not bom_product_product_id:
                 bom_product_product_id = self.env['product.product'].create(product_vals)
                 bom_product_product_id.type = 'service'
                 bom_product_product_id.message_post(body=_('<div style="background-color:green;color:white;border-radius:5px"><b>Create automatically from subcontracting module</b></div>'),
                                         message_type='notification')
+            elif len(bom_product_product_id) > 1:
+                raise UserError('You have more than one product with default code %r' % (default_code))
             self.production_id.bom_id.external_product = bom_product_product_id
         return bom_product_product_id
 
@@ -400,7 +420,6 @@ class MrpProductionWizard(models.TransientModel):
             return product_product.default_code + " - " + product_product.name
         else:
             return product_product.name
-
     
     def button_close_wizard(self):
         self.move_raw_ids.unlink()

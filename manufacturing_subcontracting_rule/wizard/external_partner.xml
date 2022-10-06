@@ -1,0 +1,66 @@
+<odoo>
+    <data>
+
+    <record id="external_partner_form_mo" model="ir.ui.view">
+        <field name="name">External Partner Form Mo</field>
+        <field name="model">external.production.partner</field>
+        <field name="arch" type="xml">
+        <form>
+            <group>
+                <field name="partner_id" domain="[('location_id', '!=', False)]"/>
+                <field name="price" />
+                <field name="delay" />
+                <field name="min_qty" />
+                <field name="sequence" />
+			</group>
+        </form>
+        </field>
+    </record>
+
+    <record id="external_partner_tree_mo" model="ir.ui.view">
+        <field name="name">External Partner Tree Mo</field>
+        <field name="model">external.production.partner</field>
+        <field name="arch" type="xml">
+        <tree>
+	    	<field name="sequence" widget="handle"/>
+            <field name="partner_id" domain="[('location_id', '!=', False)]"/>
+            <field name="price" />
+            <field name="delay" />
+            <field name="min_qty" />
+            <field name="wizard_id" invisible="True"/>
+            <field name="id" invisible="True"/>
+        </tree>
+        </field>
+    </record>
+
+    <record id="external_partner_form_wo" model="ir.ui.view">
+        <field name="name">External Partner Form Wo</field>
+        <field name="model">external.workorder.partner</field>
+        <field name="arch" type="xml">
+        <form>
+            <group>
+                <field name="partner_id" domain="[('location_id', '!=', False)]"/>
+                <field name="price" />
+                <field name="delay" />
+                <field name="min_qty" />
+			</group>
+        </form>
+        </field>
+    </record>
+
+    <record id="external_partner_tree_wo" model="ir.ui.view">
+        <field name="name">External Partner Tree Wo</field>
+        <field name="model">external.workorder.partner</field>
+        <field name="arch" type="xml">
+        <tree>
+            <field name="partner_id" domain="[('location_id', '!=', False)]"/>
+            <field name="price" />
+            <field name="delay" />
+            <field name="min_qty" />
+            <field name="id" invisible="True"/>
+        </tree>
+        </field>
+    </record>
+
+    </data>
+</odoo>
