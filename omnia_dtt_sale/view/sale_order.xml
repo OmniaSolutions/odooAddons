@@ -1,0 +1,30 @@
+<odoo>
+	<data>
+		<record id="omnia_ddt_sale_view" model="ir.ui.view">
+            <field name="name">omnia.ddt.sale.view</field>
+            <field name="model">sale.order</field>
+            <field name="inherit_id" ref="sale.view_order_form"/>
+            <field name="arch" type="xml">
+            	<xpath expr="//page[@name='customer_signature']" position="after">
+                    <page string="Dettagli di trasporto">
+                        <group>
+                            <field name="carrier_id"/>
+                            <field name="data_ritiro"/>
+                            <field name="data_consegna"/>
+						    <field name="carriage_condition_id"/>
+						    <field name="goods_description_id"/>
+						    <field name="transportation_reason_id"/>
+						    <field name="ddt_reason"/>
+						    <field name="peso_lordo"/>
+						    <field name="peso_netto"/>
+						    <field name="unita_misura_peso"/>
+						    <field name="volume"/>
+						    <field name="number_of_packages"/>
+                        </group>
+                    </page>
+	            </xpath>
+            </field>
+        </record>
+    </data>
+</odoo>
+	
