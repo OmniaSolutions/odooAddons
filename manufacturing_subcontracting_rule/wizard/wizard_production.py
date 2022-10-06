@@ -52,6 +52,7 @@ class MrpProductionWizard(models.TransientModel):
                                              )
     service_prod_type = fields.Selection(related='service_product_to_buy.type', string=_('Service Product Type'))
     is_dropship = fields.Boolean(string=_('Is Dropship'))
+    parent_in_out = fields.Boolean(string=_('Partner In - Out'))
 
     @api.model
     def _service_product(self):

@@ -12,17 +12,11 @@
 		        	<field name="workorder_id" invisible="True"/>
 	        	</group>
             	<div col="4" colspan="4" style="font-size: larger;font-weight: bold;">Subcontractors</div>
-	        	<field name="external_partner">
-	        	    <tree>
-                        <field name="partner_id" domain="[('location_id', '!=', False)]"/>
-                        <field name="price" />
-                        <field name="delay" />
-                        <field name="min_qty" />
-                    </tree>
-	        	</field>
+	        	<field name="external_partner"></field>
 	        	<div col="4" colspan="4" style="font-size: larger;font-weight: bold;">Raw Products (Send to Subcontractor)</div>
 	            <group>
 	            	<field name="consume_bom_id" readonly="True"/>
+	            	<field name="parent_in_out"  widget="boolean_toggle"/>
 	            </group>
 	            <group col="4" colspan="4">
 	            	<field name="warnings_msg" nolabel="1" readonly="True" attrs="{'invisible': [('warnings_msg', 'in', [False, ''])]}"/>
