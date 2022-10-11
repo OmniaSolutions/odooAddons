@@ -94,6 +94,7 @@ class MrpWorkorderWizard(models.TransientModel):
         return out
         
     def button_produce_externally(self):
+        self.changeExternalPartner() # Fix to have the partner in out, value is lost after onchange
         if not self.external_partner:
             raise UserError(_("No partner selected"))
         pickingBrwsList = []
