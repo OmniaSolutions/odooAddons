@@ -42,16 +42,10 @@ class MrpProduction(models.Model):
         report_vals = report_forecast._get_report_data(False, [product_id.id])
         for line in report_vals.get('lines', []):
             replenishment_filled = line.get('replenishment_filled', False)
-            #move_out = line.get('move_out', self.env['stock.move'])
             sale_order = line.get('document_out', self.env['sale.order'])
             quantity = line.get('quantity', 0)
             if not replenishment_filled and quantity:
                 origin += ' | %s[%s]' % (sale_order.display_name, quantity)
-                # reserved_qty = move_out.reserved_availability
-                # qty_demand = move_out.product_uom_qty
-                # qty_to_produce = qty_demand - reserved_qty
-                # if qty_to_produce:
-                #     vals['origin'] += ' | %s[%s]' % (sale_order.display_name, qty_to_produce)
         return origin
 
     @api.model
