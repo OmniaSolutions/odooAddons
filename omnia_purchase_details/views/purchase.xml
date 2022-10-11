@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+     <record id="omnia_purchase_order_line_filter" model="ir.ui.view">
+        <field name="name">omnia.purchase.order.line.filter</field>
+        <field name="model">purchase.order.line</field>
+        <field name="inherit_id" ref="purchase.purchase_order_line_search"/>
+        <field name="arch" type="xml">
+            <xpath expr="//filter[@name='hide_cancelled']" position="before">
+                <filter string="In late" domain="[('date_planned', '&lt;=', datetime.date.today().strftime('%Y-%m-%d')), ('delivery_state', '=', 'not delivered')]" name="in_late_me"/>
+            </xpath>
+        </field>
+    </record>
+
+        <record model="ir.ui.view" id="purchase_order__line_calendar">
+            <field name="name">purchase.order.line.calendar</field>
+            <field name="model">purchase.order.line</field>
+            <field name="priority" eval="2"/>
+            <field name="arch" type="xml">
+                <calendar string="Calendar View" date_start="date_planned" color="partner_id">
+                    <field name="product_id"/>
+                    <field name="account_analytic_id"/>
+                    <field name="partner_id"/>
+                    <field name="order_id"/>
+                </calendar>
+            </field>
+        </record>
+        
+        <record model="ir.ui.view" id="purchase_order_line_pivot">
+            <field name="name">purchase.order.pivot</field>
+            <field name="model">purchase.order.line</field>
+            <field name="arch" type="xml">
+                <pivot string="Purchase Order Line" display_quantity="True">
+                    <field name="order_id" type="row"/>
+                    <field name="date_planned"/>
+                    <field name="account_analytic_id"/>
+                </pivot>
+            </field>
+        </record>
+        
+        <record model="ir.ui.view" id="purchase_order_line_tree">
+            <field name="name">purchase.order.tree</field>
+            <field name="model">purchase.order.line</field>
+            <field name="arch" type="xml">
+                <tree string="Purchase Order Line">
+                    <field name="currency_id" invisible="1"/>
+                    <field name="state"/>
+                    <field name="sequence" widget="handle"/>
+                    <field name="product_id" attrs="{'readonly': [('state', 'in', ('purchase', 'to approve','done', 'cancel'))]}" context="{'partner_id':parent.partner_id, 'quantity':product_qty,'uom':product_uom, 'company_id': parent.company_id}"/>
+                    <field name="name"/>
+                    <field name="date_planned"/>
+                    <field name="account_analytic_id" context="{'default_partner_id':parent.partner_id}" groups="purchase.group_analytic_accounting"/>
+                    <field name="product_qty"/>
+                    <field name="qty_received"/>
+                    <field name="qty_invoiced"/>
+                    <field name="product_uom" groups="product.group_uom" attrs="{'readonly': [('state', 'in', ('purchase', 'done', 'cancel'))]}"/>
+                    <field name="price_unit"/>
+                    <field name="delivery_state"/>
+                    <field name="price_subtotal" widget="monetary"/>
+                </tree>
+            </field>
+        </record>
+
+      <record id="purchase_line_form_action" model="ir.actions.act_window">
+          <field name="name">Purchase Order Lines</field>
+          <field name="type">ir.actions.act_window</field>
+          <field name="res_model">purchase.order.line</field>
+          <field name="view_mode">tree,pivot,graph,calendar</field>
+          <field name="context">{'search_default_todo':1, 'show_purchase': True}</field>
+          <field name="domain">[('state','=', 'purchase')]</field> 
+          <field name="view_ids"
+               eval="[(5, 0, 0),
+                      (0, 0, {'view_mode': 'tree', 'view_id': ref('omnia_purchase_details.purchase_order_line_tree')}),
+                      (0, 0, {'view_mode': 'calendar', 'view_id': ref('omnia_purchase_details.purchase_order__line_calendar')}),
+                      (0, 0, {'view_mode': 'pivot', 'view_id': ref('omnia_purchase_details.purchase_order_line_pivot')})
+                      ]"/>
+          <field name="help" type="html">
+            <p class="oe_view_nocontent_create">
+              Click to check the purchase order line 
+            </p><p>
+                 Use this view in order to see the purchase order lines
+            </p>
+          </field>
+      </record>
+
+      <menuitem action="purchase_line_form_action"
+          name="Purchase Report"
+          id="menu_purchase_line_form_action"
+          parent="purchase.menu_procurement_management"
+          sequence="100"/>
+</odoo>
