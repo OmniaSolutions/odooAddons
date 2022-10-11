@@ -247,12 +247,12 @@ class MrpProductionWizard(models.TransientModel):
         for external_partner in ext_partners:
             partner_id = external_partner.partner_id
             if external_partner == ext_partners[0]:
-                next_dropship = self.createStockPickingIn(partner_id, productionBrws)
+                next_dropship = self.createStockPickingIn(self.move_finished_ids, partner_id, productionBrws)
                 pickingBrwsList += next_dropship
                 date_planned_finished = next_dropship.scheduled_date
                 self.createPurchase(external_partner, next_dropship)
             elif external_partner == ext_partners[-1]:
-                pick_out = self.createStockPickingOut(partner_id, productionBrws)
+                pick_out = self.createStockPickingOut(self.move_raw_ids, partner_id, productionBrws)
                 pickingBrwsList += pick_out
                 date_planned_start = pick_out.scheduled_date
             if external_partner != ext_partners[0]:
@@ -283,8 +283,8 @@ class MrpProductionWizard(models.TransientModel):
         else:
             for external_partner in self.external_partner:
                 partner_id = external_partner.partner_id
-                pickOut = self.createStockPickingOut(partner_id, productionBrws)
-                pickIn = self.createStockPickingIn(partner_id, productionBrws)
+                pickOut = self.createStockPickingOut(self.move_raw_ids, partner_id, productionBrws)
+                pickIn = self.createStockPickingIn(self.move_finished_ids, partner_id, productionBrws)
                 pickingBrwsList.extend((pickIn.id, pickOut.id))
                 date_planned_finished = pickIn.scheduled_date
                 date_planned_start = pickOut.scheduled_date
@@ -449,9 +449,9 @@ class MrpProductionWizard(models.TransientModel):
                 incomingMoves += productionLineBrws
         return incomingMoves.filtered(lambda x: x.partner_id.id == partner_id.id)
 
-    def createStockPickingIn(self, partner_id, mrp_production_id, cancel_source_moves=True):
+    def createStockPickingIn(self, move_finished_ids, partner_id, mrp_production_id, cancel_source_moves=True):
         stock_piking = self.env['stock.picking']
-        if not self.move_finished_ids:
+        if not move_finished_ids:
             return stock_piking
         customerProductionLocation = self.getPartnerLocation(partner_id)
         localStockLocation = mrp_production_id.location_src_id  # Taken from manufacturing order
@@ -567,13 +567,12 @@ class MrpProductionWizard(models.TransientModel):
             new_stock_move_id = new_stock_move_id.create(stock_move_vals)
         return out_stock_picking_id
 
-    def createStockPickingOut(self, partner_id, mrp_production_id, cancel_source_moves=True):
+    def createStockPickingOut(self, stock_move_ids, partner_id, mrp_production_id, cancel_source_moves=True):
         stock_picking = self.env['stock.picking']
-        if not self.move_raw_ids or not self.move_raw_ids.filtered(lambda x: x.product_uom_qty > 0):
+        if not stock_move_ids or not stock_move_ids.filtered(lambda x: x.product_uom_qty > 0):
             return stock_picking
         customerProductionLocation = self.getPartnerLocation(partner_id)
         stock_location_id = mrp_production_id.location_src_id
-        stock_move_ids = self.move_raw_ids
         out_stock_move_ids = stock_move_ids.filtered(lambda x: x.state not in ['done', 'cancel'])
         picking_vals = self.getPickingVals(partner_id, mrp_production_id, 'outgoing')
         out_stock_picking_id = stock_picking.create(picking_vals)
