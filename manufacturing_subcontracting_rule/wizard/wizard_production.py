@@ -577,7 +577,7 @@ class MrpProductionWizard(models.TransientModel):
         out_stock_move_ids = stock_move_ids.filtered(lambda x: x.state not in ['done', 'cancel'])
         picking_vals = self.getPickingVals(partner_id, mrp_production_id, 'outgoing')
         out_stock_picking_id = stock_picking.create(picking_vals)
-        logging.info('Subcontracting create stock picking out with out_stock_move_ids %r' % (out_stock_move_ids))
+        logging.info('Subcontracting create stock picking out with out_stock_move_ids %r partner_id %r out_stock_move_ids mapped %r' % (out_stock_move_ids, partner_id, out_stock_move_ids.mapped('partner_id')))
         for stock_move_id in out_stock_move_ids.filtered(lambda x: x.partner_id.id == partner_id.id):
             logging.info('Subcontracting create stock picking out 2 with stock_move_id %r' % (stock_move_id))
             new_stock_move_id = self.env['stock.move']
