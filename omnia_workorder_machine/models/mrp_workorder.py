@@ -29,10 +29,15 @@ class MrpProductionWCLine(models.Model):
                'product_default_code': self.product_id.default_code or '',
                'wo_state': self.state,
                'qty': "%s %s" %(self.component_remaining_qty or self.qty_remaining, self.product_uom_id.name),
-               'date_planned': self.date_planned_start or '',
+               'date_planned': self.cleanDT(self.date_planned_start),
                'is_user_working': self.is_user_working,
                }
-    
+
+    def cleanDT(self, dt):
+        if not dt:
+            return ''
+        return dt.replace(microsecond=0)
+
     def getDictWorkorder(self, woBrwsList):
         out = []
         for woBrws in woBrwsList:
