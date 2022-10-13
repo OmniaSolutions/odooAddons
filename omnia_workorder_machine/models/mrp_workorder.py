@@ -10,6 +10,8 @@ from odoo import api
 from odoo import fields
 from odoo import _
 import logging
+import pytz
+import odoo
 from datetime import datetime
 
 
@@ -29,7 +31,7 @@ class MrpProductionWCLine(models.Model):
                'product_default_code': self.product_id.default_code or '',
                'wo_state': self.state,
                'qty': "%s %s" %(self.component_remaining_qty or self.qty_remaining, self.product_uom_id.name),
-               'date_planned': self.cleanDT(self.date_planned_start),
+               'date_planned': self.formatDatetimeTimezone(self.cleanDT(self.date_planned_start)),
                'is_user_working': self.is_user_working,
                }
 
@@ -37,6 +39,22 @@ class MrpProductionWCLine(models.Model):
         if not dt:
             return ''
         return dt.replace(microsecond=0)
+
+    def formatDatetimeTimezone(self, value, tz=False):
+        if not value:
+            return ''
+        if isinstance(value, str):
+            timestamp = odoo.fields.Datetime.from_string(value)
+        else:
+            timestamp = value
+        tz_name = tz or self.env.user.tz or 'UTC'
+        utc_datetime = pytz.utc.localize(timestamp, is_dst=False)
+        try:
+            context_tz = pytz.timezone(tz_name)
+            localized_datetime = utc_datetime.astimezone(context_tz)
+        except Exception:
+            localized_datetime = utc_datetime
+        return localized_datetime.replace(tzinfo=None)
 
     def getDictWorkorder(self, woBrwsList):
         out = []
