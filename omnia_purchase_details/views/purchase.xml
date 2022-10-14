@@ -42,7 +42,11 @@
             <field name="name">purchase.order.tree</field>
             <field name="model">purchase.order.line</field>
             <field name="arch" type="xml">
-                <tree string="Purchase Order Line">
+                <tree string="Purchase Order Line"
+                	decoration-success="qty_received == product_qty"
+                	decoration-danger="delivery_state=='not delivered'"
+                	decoration-warning="delivery_state=='over delivered'"
+                	>
                     <field name="currency_id" invisible="1"/>
                     <field name="state"/>
                     <field name="sequence" widget="handle"/>
