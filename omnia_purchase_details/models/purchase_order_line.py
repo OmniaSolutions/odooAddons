@@ -34,9 +34,9 @@ class PurchaseOrderLine(models.Model):
         for purcase_order_line_id in self:
             if purcase_order_line_id.product_qty > purcase_order_line_id.qty_received:
                 purcase_order_line_id.delivery_state = 'not delivered'
-            if purcase_order_line_id.product_qty == purcase_order_line_id.qty_received:
+            elif purcase_order_line_id.product_qty == purcase_order_line_id.qty_received:
                 purcase_order_line_id.delivery_state = 'delivered'
-            if purcase_order_line_id.product_qty < purcase_order_line_id.qty_received:
+            elif purcase_order_line_id.product_qty < purcase_order_line_id.qty_received:
                 purcase_order_line_id.delivery_state = 'over delivered'
     
     delivery_state = fields.Char(compute=compute_delivery_state, store=True)

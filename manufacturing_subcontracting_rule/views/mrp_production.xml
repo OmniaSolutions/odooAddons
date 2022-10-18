@@ -9,7 +9,7 @@
         <field name="arch" type="xml">
          	
             <button name="button_mark_done" position="after">
-                <button name="button_produce_externally" attrs="{'invisible': [('state', '!=', 'draft')]}" string="Produce Externally" type="object"/>
+                <button name="button_produce_externally" attrs="{'invisible': [('state', 'not in', ['draft', 'confirmed'])]}" string="Produce Externally" type="object"/>
                 <button name="button_cancel_produce_externally" attrs="{'invisible': [('state', '!=', 'external')]}" string="Cancel Produce Externally" type="object"/>
             </button>
             
