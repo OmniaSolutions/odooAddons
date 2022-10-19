@@ -186,11 +186,11 @@ class MrpProductionWCLine(models.Model):
                 if work_order_id.is_first_started_wo:
                     work_order_id.qty_producing = n_pieces
                     if n_pieces <= work_order_id.qty_remaining:
-                        work_order_id.record_production()
+                        work_order_id.with_context(no_start_next=True).record_production()
                 else:
                     work_order_id.qty_produced += n_pieces
                     if work_order_id.qty_produced >= work_order_id.qty_production:
-                        work_order_id.record_production()
+                        work_order_id.with_context(no_start_next=True).record_production()
                     else:
                         work_order_id.end_previous()
                         work_order_id.button_start()

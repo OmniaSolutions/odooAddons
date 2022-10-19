@@ -58,7 +58,5 @@ class MrpBom(models.Model):
                 else:
                     totale_cost = totale_cost + bom_line.product_id.standard_price * bom_line.product_qty
             bom.standard_price = totale_cost
+
     standard_price = fields.Float(compute=_compute_bom_cost)
-
-
-
