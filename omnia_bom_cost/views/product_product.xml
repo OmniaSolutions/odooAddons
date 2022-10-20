@@ -1,0 +1,29 @@
+<odoo>
+    <data>
+
+	    <record id="product_product_view_form_normal_inherit_extended_omnia_bom_cost" model="ir.ui.view">
+	        <field name="name">product.product.view.form.normal.inherit.extended.omnia.bom.cost</field>
+	        <field name="model">product.product</field>
+	        <field name="inherit_id" ref="mrp_account.product_product_view_form_normal_inherit_extended"/>
+	        <field name="arch" type="xml">
+				<xpath expr="//button[@name='button_bom_cost']" position="before">
+					<label for="price_calc_skip"/>
+                    <field name="price_calc_skip"/>
+				</xpath>
+	        </field>
+	    </record>
+	    
+	    <record id="product_variant_easy_edit_view_bom_inherit_omnia_bom_cost" model="ir.ui.view">
+	        <field name="name">product.product.product.view.form.easy.bom.inherit.omnia.bom.cost</field>
+	        <field name="model">product.product</field>
+	        <field name="inherit_id" ref="mrp_account.product_variant_easy_edit_view_bom_inherit"/>
+	        <field name="arch" type="xml">
+				<xpath expr="//button[@name='button_bom_cost']" position="before">
+					<label for="price_calc_skip"/>
+                    <field name="price_calc_skip"/>
+				</xpath>
+	        </field>
+	    </record>
+	    
+    </data>
+</odoo>

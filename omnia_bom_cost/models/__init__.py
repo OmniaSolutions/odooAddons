@@ -33,3 +33,7 @@ Created on Dec 18, 2017
 '''
 from . import mrp_bom
 from . import mrp_bom_line
+from . import res_config_settings
+from . import product_product
+from . import product_template
+from . import product_category

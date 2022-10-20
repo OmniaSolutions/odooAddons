@@ -1,0 +1,17 @@
+<odoo>
+    <data>
+    	
+	    <record id="product_product_ext_form_view2_omnia_bom_cost" model="ir.ui.view">
+	        <field name="name">product_extended.product.form.view.omnia.bom.cost</field>
+	        <field name="model">product.template</field>
+	        <field name="inherit_id" ref="mrp_account.product_product_ext_form_view2"/>
+	        <field name="arch" type="xml">
+				<xpath expr="//button[@name='button_bom_cost']" position="before">
+					<label for="price_calc_skip"/>
+                    <field name="price_calc_skip"/>
+				</xpath>
+	        </field>
+	    </record>
+	    
+    </data>
+</odoo>

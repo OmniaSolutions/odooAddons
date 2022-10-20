@@ -38,25 +38,9 @@ from odoo import api
 from odoo import _
 import logging
 import datetime
-from datetime import timedelta
-from odoo.tools import DEFAULT_SERVER_DATETIME_FORMAT
 
 
-class MrpBom(models.Model):
-    _inherit = 'mrp.bom'
+class ProductTemplate(models.Model):
+    _inherit = 'product.template'
 
-    def _compute_bom_cost(self):
-        for bom in self:
-            totale_cost = 0.0
-            for bom_line in bom.bom_line_ids:
-                if bom_line.related_bom_ids:
-                    for sub_bom in bom_line.related_bom_ids:
-                        if bom.type in [sub_bom.type, 'phantom']:
-                            if sub_bom:
-                                totale_cost = totale_cost + sub_bom.standard_price * bom_line.product_qty
-                                break
-                else:
-                    totale_cost += bom_line.product_id.uom_id._compute_price(bom_line.product_id.standard_price, bom_line.product_uom_id) * bom_line.product_qty
-            bom.standard_price = totale_cost
-
-    standard_price = fields.Float(compute=_compute_bom_cost)
+    price_calc_skip = fields.Boolean(_('Skip Calc.'))
