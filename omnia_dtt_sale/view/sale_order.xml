@@ -6,7 +6,7 @@
             <field name="inherit_id" ref="sale.view_order_form"/>
             <field name="arch" type="xml">
             	<xpath expr="//page[@name='customer_signature']" position="after">
-                    <page string="Dettagli di trasporto">
+                    <page string="Dettagli di trasporto" id="shipping_details_ddt">
                         <group>
                             <field name="carrier_id"/>
                             <field name="data_ritiro"/>
