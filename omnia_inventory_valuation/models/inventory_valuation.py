@@ -161,7 +161,9 @@ class InventoryValuation(models.TransientModel):
                     categ_name  = category_cache.get(categ)
                     if not categ_name:
                         category_cache[categ] = categ.display_name
-                    average_unit_cost = sum(prod_vals['unit_costs']) / prod_vals['qty']
+                    average_unit_cost = 0
+                    if prod_vals['qty'] and prod_vals['unit_costs']:
+                        average_unit_cost = sum(prod_vals['unit_costs']) / prod_vals['qty']
                     prod_name = product_product.display_name
                     worksheet.cell(row=row_counter, column=1).value = location_name
                     worksheet.cell(row=row_counter, column=2).value = categ_name
@@ -176,7 +178,7 @@ class InventoryValuation(models.TransientModel):
         with open(full_path, 'rb') as f:
             fileContent = f.read()
             if fileContent:
-                self.datas = base64.encodestring(fileContent)
+                self.datas = base64.b64encode(fileContent)
         return {'name': _('Inventory Valuation'),
                 'view_type': 'form',
                 "view_mode": 'form',
