@@ -275,8 +275,8 @@ class MrpProductionWizard(models.TransientModel):
         productionBrws, _workorderBrw = self.getWorkorderAndManufaturing()
         self.cancelProductionRows(productionBrws)
         self.updateMoLinesWithNew(productionBrws) # Update MO with new stock moves
-        date_planned_finished = False
-        date_planned_start = False
+        date_planned_finished = productionBrws.date_planned_start
+        date_planned_start = productionBrws.date_planned_start
         pickingBrwsList = []
         if self.is_dropship:
             pickingBrwsList, date_planned_start, date_planned_finished = self.generateDropship(self.external_partner, productionBrws)
@@ -290,8 +290,10 @@ class MrpProductionWizard(models.TransientModel):
                 date_planned_start = pickOut.scheduled_date
                 _po_created = self.createPurchase(external_partner, pickIn)
         productionBrws.state = 'draft'
-        productionBrws.date_planned_finished = date_planned_finished
-        productionBrws.date_planned_start = date_planned_start
+        if date_planned_finished:
+            productionBrws.date_planned_finished = date_planned_finished
+        if date_planned_start:
+            productionBrws.date_planned_start = date_planned_start
         productionBrws.external_pickings = [(6, 0, pickingBrwsList)]
         movesToCancel = productionBrws.move_raw_ids.filtered(lambda m: m.mrp_original_move is False)
         movesToCancel2 = productionBrws.move_finished_ids.filtered(lambda m: m.mrp_original_move is False)

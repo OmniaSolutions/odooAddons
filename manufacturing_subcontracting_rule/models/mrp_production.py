@@ -392,8 +392,26 @@ class MrpProduction(models.Model):
             ret.move_finished_ids = False
             ret.onchange_product_id()
         return ret
+    
+    def update_mo_from_delivery(self):
+        for production_id in self:
+            qty_done = 0.0
+            confirm_prod = True
+            if production_id.state == 'external':
+                for pick_id in self.external_pickings.filtered(lambda x: x.state!='cancel'):
+                    if pick_id.state!='done':
+                        confirm_prod=False
+                    for move_id in pick_id.move_line_ids:
+                        if move_id.product_id.id==production_id.product_id.id:
+                            qty_done+=move_id.qty_done
+            if confirm_prod:
+                production_id.qty_producing = qty_done
+                production_id.action_assign()
+                production_id.action_confirm()
 
-
+    def write(self, vals):
+        return super(MrpProduction, self).write(vals)
+        
 class StockBom(models.Model):
     _name = 'stock.bom'
     _description = 'Sub-Contracting Stock Bom'
