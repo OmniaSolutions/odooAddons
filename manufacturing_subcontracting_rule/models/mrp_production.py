@@ -404,10 +404,10 @@ class MrpProduction(models.Model):
                     for move_id in pick_id.move_line_ids:
                         if move_id.product_id.id==production_id.product_id.id:
                             qty_done+=move_id.qty_done
-            if confirm_prod:
-                production_id.qty_producing = qty_done
-                production_id.action_assign()
-                production_id.action_confirm()
+                if confirm_prod:
+                    production_id.qty_producing = qty_done
+                    production_id.action_assign()
+                    production_id.action_confirm()
 
     def write(self, vals):
         return super(MrpProduction, self).write(vals)
