@@ -25,11 +25,10 @@ Created on Jul 21, 2017
 
 @author: daniel
 '''
-from odoo.tools import DEFAULT_SERVER_DATETIME_FORMAT
 from odoo import models
 from odoo import api
-from odoo import fields
 from odoo import _
+import logging
 
 
 class MrpProduction(models.Model):
@@ -50,9 +49,22 @@ class MrpProduction(models.Model):
 
     @api.model
     def create(self, vals):
+        origin = vals.get('origin', '')
         from_orderpoint = self.env.context.get('from_orderpoint', False)
         if from_orderpoint:
-            vals['origin'] = self.recomputeOrigin(vals['product_id'], vals.get('origin', ''))
+            vals['origin'] = self.recomputeOrigin(vals['product_id'], origin)
+        elif origin:
+            productions = self.env['mrp.production'].search([('name', '=', origin)])
+            for production in productions:
+                tokens = production.origin.split(' | ')
+                if len(tokens) > 0:
+                    sale_info = tokens[-1]
+                    sale_order = sale_info.split('[')[0]
+                    logging.debug('Search sale order %r' % (sale_order))
+                    sales = self.env['sale.order'].search([('name', '=', sale_order)])
+                    for _sale_id in sales:
+                        vals['origin'] = '%s | %s' % (vals['origin'], sale_order)
+                        break
         return super(MrpProduction, self).create(vals)
 
 # vim:expandtab:smartindent:tabstop=4:softtabstop=4:shiftwidth=4:
