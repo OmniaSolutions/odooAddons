@@ -56,7 +56,8 @@ class MrpProduction(models.Model):
         elif origin:
             productions = self.env['mrp.production'].search([('name', '=', origin)])
             for production in productions:
-                tokens = production.origin.split(' | ')
+                prod_origin = production.origin or ''
+                tokens = prod_origin.split(' | ')
                 if len(tokens) > 0:
                     sale_info = tokens[-1]
                     sale_order = sale_info.split('[')[0]
