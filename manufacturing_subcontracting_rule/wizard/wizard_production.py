@@ -288,7 +288,9 @@ class MrpProductionWizard(models.TransientModel):
                 pickingBrwsList.extend((pickIn.id, pickOut.id))
                 date_planned_finished = pickIn.scheduled_date
                 date_planned_start = pickOut.scheduled_date
-                _po_created = self.createPurchase(external_partner, pickIn)
+                po_created = self.createPurchase(external_partner, pickIn)
+                if po_created:
+                    pickIn.origin += ' | %s' % po_created.name
         productionBrws.state = 'draft'
         if date_planned_finished:
             productionBrws.date_planned_finished = date_planned_finished
