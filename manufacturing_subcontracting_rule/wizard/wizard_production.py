@@ -309,6 +309,7 @@ class MrpProductionWizard(models.TransientModel):
                 'date_planned': self.request_date,
                 'production_external_id': self.production_id.id,
                 'workorder_external_id': False,
+                'payment_term_id': external_partner.partner_id.property_supplier_payment_term_id.id
                 }
 
     def getPurchaseLineVals(self, product, purchase, move_line):
