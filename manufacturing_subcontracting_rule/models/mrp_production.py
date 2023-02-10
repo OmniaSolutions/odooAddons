@@ -83,8 +83,8 @@ class MrpProduction(models.Model):
     state = fields.Selection(selection_add=[('external', 'External Production')])
     stock_bom_ids = fields.One2many('stock.bom',
                                     'mrp_production_id',
-                                    string='Stock Boms',
-                                    ondelete="cascade")
+                                    string='Stock Boms')
+                                    
 
     external_partner = fields.Many2one('res.partner',
                                        compute='_getDefaultPartner',

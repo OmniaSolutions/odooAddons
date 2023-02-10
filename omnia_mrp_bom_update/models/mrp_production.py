@@ -60,7 +60,7 @@ class MrpProduction(models.Model):
                                     move_line_id.product_uom_qty = bomLineQty
                                     move_line_id.should_consume_qty = bomLineQty
                                     if reserve:
-                                        move_line_id.action_assign()
+                                        move_line_id._action_assign()
                             else:
                                 mrp_production_id.message_post(body= """<b>Unable to update product: %r due to the move status in: %r</b></br>""" % (move_line_id.product_id.name, move_line_id.state))
                             addLine=False

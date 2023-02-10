@@ -288,7 +288,9 @@ class MrpProductionWizard(models.TransientModel):
                 pickingBrwsList.extend((pickIn.id, pickOut.id))
                 date_planned_finished = pickIn.scheduled_date
                 date_planned_start = pickOut.scheduled_date
-                _po_created = self.createPurchase(external_partner, pickIn)
+                po_created = self.createPurchase(external_partner, pickIn)
+                if po_created:
+                    pickIn.origin += ' | %s' % po_created.name
         productionBrws.state = 'draft'
         if date_planned_finished:
             productionBrws.date_planned_finished = date_planned_finished
@@ -308,6 +310,7 @@ class MrpProductionWizard(models.TransientModel):
                 'date_planned': self.request_date,
                 'production_external_id': self.production_id.id,
                 'workorder_external_id': False,
+                'payment_term_id': external_partner.partner_id.property_supplier_payment_term_id.id
                 }
 
     def getPurchaseLineVals(self, product, purchase, move_line):
@@ -336,6 +339,7 @@ class MrpProductionWizard(models.TransientModel):
         if self.merge_purchese_order:
             obj_po = self.getExisistingPO(purchase_vals)
         if not obj_po:
+            
             obj_po = obj_po.create(purchase_vals)
         return obj_po
 
