@@ -6,9 +6,9 @@
 #    Copyright (C) 2010-2012 OpenERP s.a. (<http://openerp.com>).
 #
 #
-#    Author : Smerghetto Daniel  (Omniasolutions)
-#    mail:daniel.smerghetto@omniasolutions.eu
-#    Copyright (c) 2014 Omniasolutions (http://www.omniasolutions.eu) 
+#    Author : Matteo Boscolo  (Omniasolutions)
+#    mail:matteo.boscolo@omniasolutions.eu
+#    Copyright (c) 2022 Omniasolutions (http://www.omniasolutions.website) 
 #    All Right Reserved
 #
 #    This program is free software: you can redistribute it and/or modify
@@ -25,15 +25,27 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 ##############################################################################
+{
+    'name': 'omnia_ddt_sale',
+    'version': '14.0.1',
+    'sequence': 1,
+    'category': 'Custom',
+    'description': """
+New field on sale order to extend
+=================================
+""",
+    'author': 'info@omniasolutions.eu',
+    'maintainer': 'info@omniasolutions.eu',
+    'website': 'http://www.OmniaSolutions.website',
+    'depends': ['account','stock', 'delivery'],
+    'data': [# view
+             'view/sale_order.xml',
+             # report
+             'report/report_sale.xml',
 
-'''
-Created on Dec 18, 2017
+    ],
+    'installable': True,
+    'application': False,
+    'auto_install': False,
+}
 
-@author: daniel
-'''
-from . import mrp_bom
-from . import mrp_bom_line
-from . import res_config_settings
-from . import product_product
-from . import product_template
-from . import product_category

@@ -52,65 +52,74 @@ class MrpProductionWizard(models.TransientModel):
                                              )
     service_prod_type = fields.Selection(related='service_product_to_buy.type', string=_('Service Product Type'))
     is_dropship = fields.Boolean(string=_('Is Dropship'))
+    parent_in_out = fields.Boolean(string=_('Partner In - Out'))
 
     @api.model
     def _service_product(self):
         self.service_product_to_buy = self.getDefaultProductionServiceProduct()
 
     @api.onchange('external_partner')
-    def changeExternalPartner(self, external_partner_model='external.production.partner'):
+    def changeExternalPartner(self, external_partner_model='external.production.partner', raw_moves=False, finished_moves=False, ext_partner=False):
+        ext_partners, raw_moves, finished_moves = self._changeExternalPartner(external_partner_model, raw_moves, finished_moves, ext_partner)
+        self.external_partner = ext_partners
+        
+    def _changeExternalPartner(self, external_partner_model='external.production.partner', raw_moves=False, finished_moves=False, ext_partner=False):
         active_partners = self.env['res.partner']
         ext_partners = self.env[external_partner_model]
-        for partner_suppl_info in self.external_partner:
+        if not raw_moves:
+            raw_moves = self.move_raw_ids
+        if not finished_moves:
+            finished_moves = self.move_finished_ids
+        if not ext_partner:
+            ext_partner = self.external_partner
+        for partner_suppl_info in ext_partner:
             ext_partners += partner_suppl_info
             partner_id = partner_suppl_info.partner_id
             active_partners += partner_id
             partner_location_id = self.getPartnerLocation(partner_id)
-            if len(self.external_partner) == 1:
-                for move_raw in self.move_raw_ids:
-                    move_raw.location_dest_id = partner_location_id
-                    move_raw.location_id = self.production_id.location_src_id
+            if len(ext_partner) == 1:
+                raw_moves.location_dest_id = partner_location_id.id
+                raw_moves.location_id = self.production_id.location_src_id.id
+                for move_raw in raw_moves:
                     if not move_raw.partner_id:
                         move_raw.partner_id = partner_id.id
-                for finish_move in self.move_finished_ids:
-                    finish_move.location_dest_id = self.production_id.location_src_id
-                    finish_move.location_id = partner_location_id
+                finished_moves.location_dest_id = self.production_id.location_src_id
+                finished_moves.location_id = partner_location_id
+                for finish_move in finished_moves:
                     if not finish_move.partner_id:
                         finish_move.partner_id = partner_id.id
             else:
-                existing_raw_moves = self.move_raw_ids.filtered(lambda x:x.partner_id.id == partner_id.id)
+                existing_raw_moves = raw_moves.filtered(lambda x:x.partner_id.id == partner_id.id)
                 if not existing_raw_moves:
-                    partner_ids = self.move_raw_ids.mapped('partner_id')
+                    partner_ids = raw_moves.mapped('partner_id')
                     if not partner_ids:
-                        for move_raw in self.move_raw_ids:
-                            move_raw.location_dest_id = partner_location_id
-                            move_raw.location_id = self.production_id.location_src_id
-                        self.move_raw_ids.partner_id = partner_id.id
-                        for finish_move in self.move_finished_ids:
-                            finish_move.location_dest_id = self.production_id.location_src_id
-                            finish_move.location_id = partner_location_id
-                        self.move_finished_ids.partner_id = partner_id.id
+                        raw_moves.location_dest_id = partner_location_id.id
+                        raw_moves.location_id = self.production_id.location_src_id.id
+                        raw_moves.partner_id = partner_id.id
+                        finished_moves.location_dest_id = self.production_id.location_src_id
+                        finished_moves.location_id = partner_location_id
+                        finished_moves.partner_id = partner_id.id
                     for partner in partner_ids:
                         if partner != partner_id:
-                            for move_raw in self.move_raw_ids.filtered(lambda x:x.partner_id.id == partner.id):
+                            for move_raw in raw_moves.filtered(lambda x:x.partner_id.id == partner.id):
                                 new_raw_move = move_raw.copy()
                                 new_raw_move.location_dest_id = partner_location_id
                                 new_raw_move.location_id = self.production_id.location_src_id
                                 new_raw_move.partner_id = partner_id.id
-                            for finish_move in self.move_finished_ids.filtered(lambda x:x.partner_id.id == partner.id):
+                            for finish_move in finished_moves.filtered(lambda x:x.partner_id.id == partner.id):
                                 new_finish_move = finish_move.copy()
                                 new_finish_move.location_dest_id = self.production_id.location_src_id
                                 new_finish_move.location_id = partner_location_id
                                 new_finish_move.partner_id = partner_id.id
                         break
         if active_partners:
-            for line in self.move_raw_ids:
+            for line in raw_moves:
                 if line.partner_id not in active_partners:
                     line.unlink()
-            for line in self.move_finished_ids:
+            for line in finished_moves:
                 if line.partner_id not in active_partners:
                     line.unlink()
-        self.external_partner = ext_partners
+        return ext_partners, raw_moves, finished_moves
 
     @api.onchange('is_dropship')
     def change_is_dropship(self):
@@ -238,12 +247,12 @@ class MrpProductionWizard(models.TransientModel):
         for external_partner in ext_partners:
             partner_id = external_partner.partner_id
             if external_partner == ext_partners[0]:
-                next_dropship = self.createStockPickingIn(partner_id, productionBrws)
+                next_dropship = self.createStockPickingIn(self.move_finished_ids, partner_id, productionBrws)
                 pickingBrwsList += next_dropship
                 date_planned_finished = next_dropship.scheduled_date
                 self.createPurchase(external_partner, next_dropship)
             elif external_partner == ext_partners[-1]:
-                pick_out = self.createStockPickingOut(partner_id, productionBrws)
+                pick_out = self.createStockPickingOut(self.move_raw_ids, partner_id, productionBrws)
                 pickingBrwsList += pick_out
                 date_planned_start = pick_out.scheduled_date
             if external_partner != ext_partners[0]:
@@ -266,23 +275,27 @@ class MrpProductionWizard(models.TransientModel):
         productionBrws, _workorderBrw = self.getWorkorderAndManufaturing()
         self.cancelProductionRows(productionBrws)
         self.updateMoLinesWithNew(productionBrws) # Update MO with new stock moves
-        date_planned_finished = False
-        date_planned_start = False
+        date_planned_finished = productionBrws.date_planned_start
+        date_planned_start = productionBrws.date_planned_start
         pickingBrwsList = []
         if self.is_dropship:
             pickingBrwsList, date_planned_start, date_planned_finished = self.generateDropship(self.external_partner, productionBrws)
         else:
             for external_partner in self.external_partner:
                 partner_id = external_partner.partner_id
-                pickOut = self.createStockPickingOut(partner_id, productionBrws)
-                pickIn = self.createStockPickingIn(partner_id, productionBrws)
+                pickOut = self.createStockPickingOut(self.move_raw_ids, partner_id, productionBrws)
+                pickIn = self.createStockPickingIn(self.move_finished_ids, partner_id, productionBrws)
                 pickingBrwsList.extend((pickIn.id, pickOut.id))
                 date_planned_finished = pickIn.scheduled_date
                 date_planned_start = pickOut.scheduled_date
-                _po_created = self.createPurchase(external_partner, pickIn)
+                po_created = self.createPurchase(external_partner, pickIn)
+                if po_created:
+                    pickIn.origin += ' | %s' % po_created.name
         productionBrws.state = 'draft'
-        productionBrws.date_planned_finished = date_planned_finished
-        productionBrws.date_planned_start = date_planned_start
+        if date_planned_finished:
+            productionBrws.date_planned_finished = date_planned_finished
+        if date_planned_start:
+            productionBrws.date_planned_start = date_planned_start
         productionBrws.external_pickings = [(6, 0, pickingBrwsList)]
         movesToCancel = productionBrws.move_raw_ids.filtered(lambda m: m.mrp_original_move is False)
         movesToCancel2 = productionBrws.move_finished_ids.filtered(lambda m: m.mrp_original_move is False)
@@ -296,6 +309,7 @@ class MrpProductionWizard(models.TransientModel):
                 'date_planned': self.request_date,
                 'production_external_id': self.production_id.id,
                 'workorder_external_id': False,
+                'payment_term_id': external_partner.partner_id.property_supplier_payment_term_id.id
                 }
 
     def getPurchaseLineVals(self, product, purchase, move_line):
@@ -311,12 +325,28 @@ class MrpProductionWizard(models.TransientModel):
                 'sub_move_line': move_line.id,
                 }
 
+    def getExisistingPO(self, purchase_vals):
+        purchase = self.env['purchase.order']
+        purchase_ids = purchase.search([
+            ('partner_id', '=', purchase_vals['partner_id']),
+            ('state', '=', 'draft')
+            ], order='id DESC', limit=1)
+        return purchase_ids
+
+    def getPo(self, purchase_vals):
+        obj_po = self.env['purchase.order']
+        if self.merge_purchese_order:
+            obj_po = self.getExisistingPO(purchase_vals)
+        if not obj_po:
+            obj_po = obj_po.create(purchase_vals)
+        return obj_po
+
     def createPurchase(self, external_partner, picking):
         if not self.create_purchese_order:
             return 
         obj_product_product = self.getDefaultProductionServiceProduct()
         purchase_vals = self.getPurchaseVals(external_partner)
-        obj_po = self.env['purchase.order'].create(purchase_vals)
+        obj_po = self.getPo(purchase_vals)
         for lineBrws in picking.move_lines:
             self.setupSupplierinfo(obj_product_product)
             values = self.getPurchaseLineVals(obj_product_product, obj_po, lineBrws)
@@ -382,12 +412,15 @@ class MrpProductionWizard(models.TransientModel):
         bom_product_product_id = self.production_id.bom_id.external_product
         if not bom_product_product_id:
             product_vals = self.getNewExternalProductInfo()
-            bom_product_product_id = self.env['product.product'].search([('default_code', '=', product_vals.get('default_code'))])
+            default_code = product_vals.get('default_code')
+            bom_product_product_id = self.env['product.product'].search([('default_code', '=', default_code)])
             if not bom_product_product_id:
                 bom_product_product_id = self.env['product.product'].create(product_vals)
                 bom_product_product_id.type = 'service'
                 bom_product_product_id.message_post(body=_('<div style="background-color:green;color:white;border-radius:5px"><b>Create automatically from subcontracting module</b></div>'),
                                         message_type='notification')
+            elif len(bom_product_product_id) > 1:
+                raise UserError('You have more than one product with default code %r' % (default_code))
             self.production_id.bom_id.external_product = bom_product_product_id
         return bom_product_product_id
 
@@ -400,7 +433,6 @@ class MrpProductionWizard(models.TransientModel):
             return product_product.default_code + " - " + product_product.name
         else:
             return product_product.name
-
     
     def button_close_wizard(self):
         self.move_raw_ids.unlink()
@@ -422,9 +454,9 @@ class MrpProductionWizard(models.TransientModel):
                 incomingMoves += productionLineBrws
         return incomingMoves.filtered(lambda x: x.partner_id.id == partner_id.id)
 
-    def createStockPickingIn(self, partner_id, mrp_production_id, cancel_source_moves=True):
+    def createStockPickingIn(self, move_finished_ids, partner_id, mrp_production_id, cancel_source_moves=True):
         stock_piking = self.env['stock.picking']
-        if not self.move_finished_ids:
+        if not move_finished_ids:
             return stock_piking
         customerProductionLocation = self.getPartnerLocation(partner_id)
         localStockLocation = mrp_production_id.location_src_id  # Taken from manufacturing order
@@ -540,17 +572,18 @@ class MrpProductionWizard(models.TransientModel):
             new_stock_move_id = new_stock_move_id.create(stock_move_vals)
         return out_stock_picking_id
 
-    def createStockPickingOut(self, partner_id, mrp_production_id, cancel_source_moves=True):
+    def createStockPickingOut(self, stock_move_ids, partner_id, mrp_production_id, cancel_source_moves=True):
         stock_picking = self.env['stock.picking']
-        if not self.move_raw_ids or not self.move_raw_ids.filtered(lambda x: x.product_uom_qty > 0):
+        if not stock_move_ids or not stock_move_ids.filtered(lambda x: x.product_uom_qty > 0):
             return stock_picking
         customerProductionLocation = self.getPartnerLocation(partner_id)
         stock_location_id = mrp_production_id.location_src_id
-        stock_move_ids = self.move_raw_ids
         out_stock_move_ids = stock_move_ids.filtered(lambda x: x.state not in ['done', 'cancel'])
         picking_vals = self.getPickingVals(partner_id, mrp_production_id, 'outgoing')
         out_stock_picking_id = stock_picking.create(picking_vals)
+        logging.info('Subcontracting create stock picking out with out_stock_move_ids %r partner_id %r out_stock_move_ids mapped %r' % (out_stock_move_ids, partner_id, out_stock_move_ids.mapped('partner_id')))
         for stock_move_id in out_stock_move_ids.filtered(lambda x: x.partner_id.id == partner_id.id):
+            logging.info('Subcontracting create stock picking out 2 with stock_move_id %r' % (stock_move_id))
             new_stock_move_id = self.env['stock.move']
             stock_move_vals = self.getStockMoveVals(stock_move_id, mrp_production_id, out_stock_picking_id, stock_location_id, customerProductionLocation)
             new_stock_move_id = new_stock_move_id.create(stock_move_vals)

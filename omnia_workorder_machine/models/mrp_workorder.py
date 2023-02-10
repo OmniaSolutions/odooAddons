@@ -10,6 +10,8 @@ from odoo import api
 from odoo import fields
 from odoo import _
 import logging
+import pytz
+import odoo
 from datetime import datetime
 
 
@@ -19,26 +21,47 @@ class MrpProductionWCLine(models.Model):
     user_ids = fields.Many2many('res.users', string='Users')
     employee_ids = fields.Many2many('hr.employee', string='Employees')
     
+    def _getWorkOrderDict(self):
+        return {
+               'wo_id': self.id,
+               'wo_name': self.name,
+               'wo_description': '',
+               'production_name': self.production_id.name,
+               'product_name': self.product_id.name,
+               'product_default_code': self.product_id.default_code or '',
+               'wo_state': self.state,
+               'qty': "%s %s" %(self.component_remaining_qty or self.qty_remaining, self.product_uom_id.name),
+               'date_planned': self.formatDatetimeTimezone(self.cleanDT(self.date_planned_start)),
+               'is_user_working': self.is_user_working,
+               }
+
+    def cleanDT(self, dt):
+        if not dt:
+            return ''
+        return dt.replace(microsecond=0)
+
+    def formatDatetimeTimezone(self, value, tz=False):
+        if not value:
+            return ''
+        if isinstance(value, str):
+            timestamp = odoo.fields.Datetime.from_string(value)
+        else:
+            timestamp = value
+        tz_name = tz or self.env.user.tz or 'UTC'
+        utc_datetime = pytz.utc.localize(timestamp, is_dst=False)
+        try:
+            context_tz = pytz.timezone(tz_name)
+            localized_datetime = utc_datetime.astimezone(context_tz)
+        except Exception:
+            localized_datetime = utc_datetime
+        return localized_datetime.replace(tzinfo=None)
+
     def getDictWorkorder(self, woBrwsList):
         out = []
         for woBrws in woBrwsList:
             woBrws = woBrws.sudo()
             if woBrws.production_id.state in ['confirmed', 'planned', 'progress', 'confirm']:
-                # user_id = self.getUserId()
-                # woBrws = woBrws.with_user(user_id)
-                woDict = {
-                    'wo_id': woBrws.id,
-                    'wo_name': woBrws.name,
-                    'wo_description': '',
-                    'production_name': woBrws.production_id.name,
-                    'product_name': woBrws.product_id.name,
-                    'product_default_code': woBrws.product_id.default_code or '',
-                    'wo_state': woBrws.state,
-                    'qty': "%s %s" %(woBrws.component_remaining_qty or woBrws.qty_remaining, woBrws.product_uom_id.name),
-                    'date_planned': woBrws.date_planned_start or '',
-                    'is_user_working': woBrws.is_user_working,
-                    }
-                out.append(woDict)
+                out.append(woBrws._getWorkOrderDict())
         return out
     
     @api.model
@@ -163,11 +186,11 @@ class MrpProductionWCLine(models.Model):
                 if work_order_id.is_first_started_wo:
                     work_order_id.qty_producing = n_pieces
                     if n_pieces <= work_order_id.qty_remaining:
-                        work_order_id.record_production()
+                        work_order_id.with_context(no_start_next=True).record_production()
                 else:
                     work_order_id.qty_produced += n_pieces
                     if work_order_id.qty_produced >= work_order_id.qty_production:
-                        work_order_id.record_production()
+                        work_order_id.with_context(no_start_next=True).record_production()
                     else:
                         work_order_id.end_previous()
                         work_order_id.button_start()

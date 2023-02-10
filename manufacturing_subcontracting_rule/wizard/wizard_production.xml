@@ -26,6 +26,7 @@
 	        	<div col="4" colspan="4" style="font-size: larger;font-weight: bold;">Raw Products (Send to Subcontractor)</div>
 	            <group>
 	            	<field name="consume_bom_id" readonly="True"/>
+	            	<field name="parent_in_out" widget="boolean_toggle" invisible="True"/>
 	            </group>
 	            <field name="move_raw_ids" context="{'wizard_id': id}">
 	                <tree>

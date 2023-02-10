@@ -94,6 +94,7 @@ class MrpWorkorderWizard(models.TransientModel):
         return out
         
     def button_produce_externally(self):
+        self.changeExternalPartner() # Fix to have the partner in out, value is lost after onchange
         if not self.external_partner:
             raise UserError(_("No partner selected"))
         pickingBrwsList = []
@@ -102,12 +103,14 @@ class MrpWorkorderWizard(models.TransientModel):
                                 'state': 'external'})
         mrp_production_id = mrp_workorder_id.production_id
         for external_partner in self.external_partner:
-            pickOut = self.createStockPickingOut(external_partner.partner_id, mrp_production_id, False)
-            pickIn = self.createStockPickingIn(external_partner.partner_id, mrp_production_id, False)
+            pickOut = self.createStockPickingOut(self.move_raw_ids, external_partner.partner_id, mrp_production_id, False)
+            pickIn = self.createStockPickingIn(self.move_finished_ids, external_partner.partner_id, mrp_production_id, False)
             pickingBrwsList.extend((pickIn.id, pickOut.id))
             date_planned_finished = pickIn.scheduled_date
             date_planned_start = pickOut.scheduled_date
-            _po_created = self.createPurchase(external_partner, pickIn)
+            po_created = self.createPurchase(external_partner, pickIn)
+            if po_created:
+                pickIn.origin += ' | %s' % po_created.name
         mrp_workorder_id.state = 'pending'
         mrp_workorder_id.date_planned_finished = date_planned_finished
         mrp_workorder_id.date_planned_start = date_planned_start
@@ -127,5 +130,43 @@ class MrpWorkorderWizard(models.TransientModel):
         self.changeExternalPartner('external.workorder.partner')
         return ret
 
+    @api.onchange('parent_in_out')
+    def change_parent_in_out(self):
+        # Available but not use for mrp production
+        product = self.env['product.product']
+        qty = None
+        if self.parent_in_out:
+            product = self.production_id.product_id
+            qty = self.production_id.product_uom_qty
+            if not self.move_raw_ids or not self.move_finished_ids:
+                wizard_vals = self.production_id.get_wizard_value(self.production_id.move_finished_ids[0],
+                                                                  self.production_id.move_finished_ids[0])
+                self.move_raw_ids = wizard_vals['move_raw_ids']
+                self.move_finished_ids = wizard_vals['move_finished_ids']
+                self.changeExternalPartner()
+                self._request_date()
+        else:
+            for raw_move in self.production_id.move_raw_ids:
+                if raw_move.bom_line_id.operation_id == self.workorder_id.operation_id:
+                    product = raw_move.product_id
+                    qty = raw_move.product_uom_qty
+                    break
+        if product and qty is not None:
+            self.move_finished_ids.product_id = product.id
+            self.move_finished_ids.product_uom_qty = qty
+            self.move_raw_ids.product_id = product.id
+            self.move_raw_ids.product_uom_qty = qty
+        else:
+            self.move_raw_ids = [(6, 0, [])]
+            self.move_finished_ids = [(6, 0, [])]
 
-
+    @api.onchange('external_partner')
+    def changeExternalPartner(self, external_partner_model='external.production.partner', raw_moves=False, finished_moves=False, ext_partner=False):
+        ext_partners, raw_moves, finished_moves = super(MrpWorkorderWizard, self)._changeExternalPartner(external_partner_model='external.workorder.partner',
+                                                                     raw_moves=self.move_raw_ids,
+                                                                     finished_moves=self.move_finished_ids,
+                                                                     ext_partner=self.external_partner)
+        self.external_partner = ext_partners
+        self.move_raw_ids = raw_moves
+        self.move_finished_ids = finished_moves
+        

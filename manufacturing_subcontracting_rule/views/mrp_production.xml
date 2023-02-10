@@ -9,14 +9,14 @@
         <field name="arch" type="xml">
          	
             <button name="button_mark_done" position="after">
-                <button name="button_produce_externally" attrs="{'invisible': [('state', '!=', 'draft')]}" string="Produce Externally" type="object"/>
+                <button name="button_produce_externally" attrs="{'invisible': [('state', 'not in', ['draft', 'confirmed'])]}" string="Produce Externally" type="object"/>
                 <button name="button_cancel_produce_externally" attrs="{'invisible': [('state', '!=', 'external')]}" string="Cancel Produce Externally" type="object"/>
             </button>
             
             <div name="button_box" position="inside">
             	 <field name="purchase_external_count" invisible="True"/>
                  <button name="open_external_purchase" type="object" class="oe_stat_button" icon="fa-shopping-cart"
-                        attrs="{'invisible':[('external_pickings_count','&lt;=','1')]}">
+                        attrs="{'invisible':[('external_pickings_count','&lt;','1')]}">
                     <field name="purchase_external_count"
                            string=" "
                            widget="statinfo"/>
@@ -26,7 +26,7 @@
                  </button>
                  <field name="external_pickings_count" invisible="True"/>
                  <button name="open_external_pickings" type="object" class="oe_stat_button" icon="fa-truck"
-                         attrs="{'invisible':[('external_pickings_count','&lt;=','1')]}">
+                         attrs="{'invisible':[('external_pickings_count','&lt;','1')]}">
                             <field name="external_pickings_count"
                                    string=" "
                                    widget="statinfo"/>
@@ -67,5 +67,16 @@
             </filter>
         </field>
     </record>
+    
+    
+   <record id="act_update_done_external" model="ir.actions.server">
+        <field name="name">Update Qty from external production</field>
+        <field name="model_id" ref="mrp.model_mrp_production"/>
+        <field name="binding_model_id" ref="mrp.model_mrp_production"/>
+        <field name="binding_view_types">form,list</field>
+        <field name="state">code</field>
+        <field name="code">records.update_mo_from_delivery()</field>
+    </record>
+
  	</data>
 </odoo>

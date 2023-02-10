@@ -275,8 +275,8 @@ odoo.define('omnia_workorder_machine.workorder_machine_list', function (require)
 	};
 	
 	var updete_workorder = function (data) {
-		var table_to_replace = document.getElementById('to_replace');
-		table_to_replace.innerHTML = data;
+		var t_body = document.getElementById('workorder_body');
+		t_body.innerHTML = data;
 	    var print_label_list = document.getElementsByClassName('print_label');
 	    var i0;
 	    for (i0 = 0; i0 < print_label_list.length; i0++){

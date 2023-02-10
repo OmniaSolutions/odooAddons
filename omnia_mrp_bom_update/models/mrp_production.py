@@ -45,7 +45,6 @@ class MrpProduction(models.Model):
     def update_row_line_form_bom(self):
         for mrp_production_id in self.filtered(lambda x: x.state not in ['done', 'cancel']):
             if mrp_production_id.auto_bom_update:
-                
                 move_to_create = []
                 for bom_line_id in mrp_production_id.bom_id.bom_line_ids:
                     addLine=True
@@ -61,7 +60,7 @@ class MrpProduction(models.Model):
                                     move_line_id.product_uom_qty = bomLineQty
                                     move_line_id.should_consume_qty = bomLineQty
                                     if reserve:
-                                        move_line_id.action_assign()
+                                        move_line_id._action_assign()
                             else:
                                 mrp_production_id.message_post(body= """<b>Unable to update product: %r due to the move status in: %r</b></br>""" % (move_line_id.product_id.name, move_line_id.state))
                             addLine=False

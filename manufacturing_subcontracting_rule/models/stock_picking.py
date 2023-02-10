@@ -121,3 +121,8 @@ class StockPicking(models.Model):
                     if purchase_order_id.partner_id != partner_id:
                         purchase_order_id.button_cancel()
     
+
+        
+        
+        
+        

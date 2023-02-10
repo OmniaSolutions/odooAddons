@@ -49,6 +49,7 @@ Implements the sub contracting using the mrp order
              'security/ir.model.access.csv',
              'security/secure.xml',
              #  wizard
+             'wizard/external_partner.xml',
              'wizard/wizard_production.xml',
              'wizard/wizard_workorder.xml',
              #  view

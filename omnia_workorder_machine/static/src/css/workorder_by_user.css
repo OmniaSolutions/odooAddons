@@ -1,3 +1,22 @@
+form.main_title{
+    display: -webkit-inline-box;
+    margin-left: 35px;
+    width:100%
+}
+
+h1.main_title{
+    padding: 5px;
+    margin-left: 30px;
+    margin-top: 0;
+    margin-bottom: 0;
+    border: 0;
+}
+table.main_table{
+    border-collapse: collapse;
+}
+tr.content_line:hover{
+    background-color: lightgray;
+}
 th.header_table {
 	border: none;
 	padding: 10px;
@@ -55,12 +74,18 @@ input.pause_work {
 	border: none;
 	padding: 6px;
 }
+input.pause_work:hoover{
+    background-color: #f7ea8a;
+}
 input.start_work {
-	display: block;
+	
 	color: #FFFFFF;
 	background-color: #00A04A;
 	border: none;
 	padding: 6px;
+}
+input.start_work:hoover{
+    background-color: #007f39;
 }
 #customer_image{
 	text-align:center;
@@ -78,6 +103,9 @@ input.resume_work {
 	border: none;
 	padding: 6px;
 }
+input.resume_work:hoover{
+    background-color: #f9e6ca;
+}
 input.stop_work {
 	display: block;
 	color: #FFFFFF;
@@ -85,10 +113,32 @@ input.stop_work {
 	border: none;
 	padding: 6px;
 }
+input.stop_work:hoover{
+    background-color: #fcbfbf;
+}
 input.print_label {
 	display: block;
 	color: #FFFFFF;
 	background-color: #875A7B;
 	border: none;
 	padding: 6px;
+}
+input.print_label:hoover{
+    background-color: #e5a5d4;
+}
+input.user_id{
+    width: 50px;
+    background-color: lightyellow;
+}
+input.employee_id{
+    width: 50px;
+    background-color: lightyellow;
+}
+input.n_pieces{
+    width: 50px;
+    background-color: lightyellow;
+}
+input.n_scrap{
+    width: 50px;
+    background-color: lightyellow;
 }

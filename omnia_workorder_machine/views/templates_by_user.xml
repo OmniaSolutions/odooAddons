@@ -10,20 +10,12 @@
 
     <template id="by_user" name="Workorder by User">
         <head>
-            <t t-call-assets="web.assets_common" />
-            <t t-call-assets="web.assets_common" />
-            
-            <t t-call-assets="web.assets_frontend" />
-            <t t-call-assets="web.assets_frontend" />
-            
-            <t t-call-assets="web.assets_backend" />
-            <t t-call-assets="web.assets_backend" />
-
+             <t t-call-assets="web.assets_common" /> 
         </head>
-        <t t-call="web.layout">
+        <body>
 	        <div class="main_div">
-	            <h1 style="padding: 5px; margin-left:30px;">Register WorkOrder Activity</h1>
-	            <form style="display: -webkit-inline-box;margin-left: 35px;width:100%">
+	            <h1 class="main_title">Register WorkOrder Activity</h1>
+	            <form class="main_title">
 	            	<table style="width: 90%;">
 	            		<tr>
 	            		   <td t-if="hide_user != True" id="td_user_id" style="width:8%;">User Id: </td>
@@ -43,57 +35,40 @@
 	            		</tr>
 	            	</table>
 	            </form>
-	            <table class="main_table" id="to_replace"></table>
+	            <table class="main_table" id="to_replace">
+	               <thead>
+	                  <tr>
+		                <th class="header_table">ID</th>
+		                <th class="header_table">Date Planned</th>
+		                <th class="header_table">Internal Reference</th>
+		                <th class="header_table">Product Name</th>
+		                <th class="header_table">Work Order Name</th>
+		                <th class="header_table">Production Name</th>
+		                <th class="header_table">N To Do</th>
+		                <th class="header_table">N Produced</th>
+		                <th class="header_table">Scrap</th>
+		                <!--<th class="header_table">Start</th>
+		                <th class="header_table">Pause</th>
+		                <th class="header_table">Resume</th>
+		                <th class="header_table">Record</th>-->
+		                <th class="header_table">Operation</th>
+		                <th class="header_table">Description</th>
+		                <th class="header_table">Work Order State</th>
+		                <th class="header_table">User Working</th>
+		                <th class="header_table" id="label">Label</th>
+		                <th class="header_table">Worksheet</th>
+		            </tr>
+	               </thead>
+	               <tbody id="workorder_body">
+	               </tbody>
+	            </table>
 	        </div>
-        </t>        
+	    </body>
     </template>
 
 	<template id="template_workorder_machine_table" name="Workorder Table">
-
-		<head>
-			<t t-call-assets="web.assets_common" />
-			<t t-call-assets="web.assets_common" />
-			
-            <t t-call-assets="web.assets_frontend" />
-            <t t-call-assets="web.assets_frontend" />
-            
-            <t t-call-assets="web.assets_backend" />
-            <t t-call-assets="web.assets_backend" />
-<!-- 
-            <t t-call-assets="web_editor.assets_summernote" />
-            <t t-call-assets="web_editor.assets_summernote" />
-            
-            <t t-call-assets="website.assets_editor" />
-            <t t-call-assets="website.assets_editor" />
- -->
-		</head>
-	
-	    <table class="main_table">
-	        <tr>
-	            <th class="header_table">ID</th>
-	            <th class="header_table">Date Planned</th>
-	            <th class="header_table">Internal Reference</th>
-	            <th class="header_table">Product Name</th>
-	            <th class="header_table">Work Order Name</th>
-	            <th class="header_table">Production Name</th>
-	            <th class="header_table">N To Do</th>
-	            <th class="header_table">N Produced</th>
-	            <th class="header_table">Scrap</th>
-	            <!--<th class="header_table">Start</th>
-	            <th class="header_table">Pause</th>
-	            <th class="header_table">Resume</th>
-	            <th class="header_table">Record</th>-->
-	            <th class="header_table">Operation</th>
-	            <th class="header_table">Description</th>
-	            <th class="header_table">Work Order State</th>
-	            <th class="header_table">User Working</th>
-	            <th class="header_table" id="label">Label</th>
-	            <th class="header_table">Worksheet</th>
-	        </tr>
-	        
 	        <t t-foreach="wo_lines" t-as="line">
-	            
-	               <tr>
+	               <tr class="content_line">
 	                <td class="table_value wo_id"><t t-esc="line[0]"/></td>
 	                <td class="table_value"><t t-esc="line[8]"/></td>
 	                <td class="table_value internal_ref"><t t-esc="line[2]"/></td>
@@ -127,9 +102,7 @@
 	                <td class="table_value"><input class="print_label" type='button' value='Print'/></td>
 	                <td class="table_value"><a t-att-href="line[10]"  target="_blank">View</a></td>
 	            </tr>
-	        </t>
-	         
-	    </table>
+	       </t>
 	</template>
 
 </odoo>

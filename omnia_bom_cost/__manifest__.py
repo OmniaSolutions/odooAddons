@@ -40,6 +40,10 @@ The procedure work in recursive way
     'depends': ['mrp'],
     'data': [#view
             'views/mrp_bom.xml',
+            'views/res_config_settings.xml',
+            'views/product_product.xml',
+            'views/product_template.xml',
+            'views/product_category.xml',
     ],
     'installable': True,
     'application': False,

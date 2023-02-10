@@ -98,7 +98,6 @@ class MrpProduction(models.Model):
     move_raw_ids_external_prod = fields.One2many('stock.move',
                                                  'raw_material_production_id',
                                                  'Raw Materials External Production',
-                                                 oldname='move_lines',
                                                  copy=False,
                                                  states={'done': [('readonly', True)], 'cancel': [('readonly', True)]})
     move_finished_ids_external_prod = fields.One2many('stock.move',
@@ -231,7 +230,10 @@ class MrpProduction(models.Model):
                           isRawMove=False):
         outElems = []
         for elem in brwsList:
-            outElems.append(self.createTmpStockMove(elem, location_source_id, location_dest_id, isRawMove).id)
+            outElems.append(self.createTmpStockMove(elem,
+                                                    location_source_id,
+                                                    location_dest_id,
+                                                    isRawMove).id)
         return outElems
 
     def checkCreatePartnerWarehouse(self, partnerBrws):
@@ -263,13 +265,17 @@ class MrpProduction(models.Model):
             locBrws = locationObj.create(vals)
         return locBrws
 
-    def get_wizard_value(self):
+    def get_wizard_value(self, move_raw_ids=False, move_finished_ids=False):
         values = {}
-        values['move_raw_ids'] = [(6, 0, self.copyAndCleanLines(self.move_raw_ids,
+        if not move_raw_ids:
+            move_raw_ids = self.move_raw_ids
+        if not move_finished_ids:
+            move_finished_ids = self.move_finished_ids
+        values['move_raw_ids'] = [(6, 0, self.copyAndCleanLines(move_raw_ids,
                                                                 location_source_id=self.location_src_id.id,
                                                                 isRawMove=True
                                                                 ))]
-        values['move_finished_ids'] = [(6, 0, self.copyAndCleanLines(self.move_finished_ids,
+        values['move_finished_ids'] = [(6, 0, self.copyAndCleanLines(move_finished_ids,
                                                                      location_dest_id=self.location_src_id.id,
                                                                      isRawMove=False))]
         values['production_id'] = self.id
@@ -381,16 +387,31 @@ class MrpProduction(models.Model):
             default['move_raw_ids'] = False
             default['move_finished_ids'] = False
         ret = super(MrpProduction, self).copy(default=default)
-        ret.move_finished_ids = False
-        ret.move_raw_ids = False
-        ret.bom_id = False
-        #ret.onchange_product_id()
-        #ret._onchange_bom_id()
-        ret._create_update_move_finished()
-        #ret.createStockMoveBom()
+        if self.external_partner or self.purchase_external_id or self.external_pickings:
+            ret.move_raw_ids = False
+            ret.move_finished_ids = False
+            ret.onchange_product_id()
         return ret
+    
+    def update_mo_from_delivery(self):
+        for production_id in self:
+            qty_done = 0.0
+            confirm_prod = True
+            if production_id.state == 'external':
+                for pick_id in self.external_pickings.filtered(lambda x: x.state!='cancel'):
+                    if pick_id.state!='done':
+                        confirm_prod=False
+                    for move_id in pick_id.move_line_ids:
+                        if move_id.product_id.id==production_id.product_id.id:
+                            qty_done+=move_id.qty_done
+                if confirm_prod:
+                    production_id.qty_producing = qty_done
+                    production_id.action_assign()
+                    production_id.action_confirm()
 
-
+    def write(self, vals):
+        return super(MrpProduction, self).write(vals)
+        
 class StockBom(models.Model):
     _name = 'stock.bom'
     _description = 'Sub-Contracting Stock Bom'
