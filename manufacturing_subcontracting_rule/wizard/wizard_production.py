@@ -304,6 +304,7 @@ class MrpProductionWizard(models.TransientModel):
 
     def getPurchaseVals(self, external_partner):
         return {'partner_id': external_partner.partner_id.id,
+                'payment_term_id':external_partner.partner_id.property_supplier_payment_term_id.id,
                 'date_planned': self.request_date,
                 'production_external_id': self.production_id.id,
                 'workorder_external_id': False,
