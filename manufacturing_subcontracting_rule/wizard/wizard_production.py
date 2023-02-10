@@ -338,6 +338,7 @@ class MrpProductionWizard(models.TransientModel):
         if self.merge_purchese_order:
             obj_po = self.getExisistingPO(purchase_vals)
         if not obj_po:
+            
             obj_po = obj_po.create(purchase_vals)
         return obj_po
 
