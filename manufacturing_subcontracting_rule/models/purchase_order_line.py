@@ -49,9 +49,11 @@ class PurchaseOrderLine(models.Model):
             s_product = self.env['product.product']
             if line.production_external_id:
                 prod_to_produce = line.production_external_id.product_id
-                bom = line.production_external_id.bom_id
-                if bom:
-                    s_product = bom.external_product
+                s_product = line.workorder_external_id.external_product
+                if not s_product:
+                    bom = line.production_external_id.bom_id
+                    if bom:
+                        s_product = bom.external_product
                 external_picks = line.production_external_id.external_pickings
             if prod_to_produce and s_product and external_picks:
                 deliver_qty = 0
