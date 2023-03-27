@@ -52,7 +52,7 @@ class MrpProductionWizard(models.TransientModel):
                                              )
     service_prod_type = fields.Selection(related='service_product_to_buy.type', string=_('Service Product Type'))
     is_dropship = fields.Boolean(string=_('Is Dropship'))
-    parent_in_out = fields.Boolean(string=_('Partner In - Out'))
+    parent_in_out = fields.Boolean(string=_('Toggle Parent Child'))
 
     @api.model
     def _service_product(self):
@@ -306,6 +306,7 @@ class MrpProductionWizard(models.TransientModel):
 
     def getPurchaseVals(self, external_partner):
         return {'partner_id': external_partner.partner_id.id,
+                'payment_term_id':external_partner.partner_id.property_supplier_payment_term_id.id,
                 'date_planned': self.request_date,
                 'production_external_id': self.production_id.id,
                 'workorder_external_id': False,

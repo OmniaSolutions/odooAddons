@@ -103,8 +103,14 @@ class MrpWorkorderWizard(models.TransientModel):
                                 'state': 'external'})
         mrp_production_id = mrp_workorder_id.production_id
         for external_partner in self.external_partner:
-            pickOut = self.createStockPickingOut(self.move_raw_ids, external_partner.partner_id, mrp_production_id, False)
-            pickIn = self.createStockPickingIn(self.move_finished_ids, external_partner.partner_id, mrp_production_id, False)
+            pickOut = self.createStockPickingOut(self.move_raw_ids,
+                                                 external_partner.partner_id,
+                                                 mrp_production_id,
+                                                 False)
+            pickIn = self.createStockPickingIn(self.move_finished_ids,
+                                               external_partner.partner_id,
+                                               mrp_production_id,
+                                               False)
             pickingBrwsList.extend((pickIn.id, pickOut.id))
             date_planned_finished = pickIn.scheduled_date
             date_planned_start = pickOut.scheduled_date
