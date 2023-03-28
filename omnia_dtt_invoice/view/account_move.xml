@@ -14,7 +14,7 @@
                         	<field name="weight_validity_message" attrs="{'invisible': [('weight_validity_message', 'in', [False, ''])]}"/>
                             <field name="carrier_id"/>
                             <field name="delivery_address_id"/>
-                            <field name="delivery_address"/>
+                            <field name="delivery_address" force_save="1" readonly="0" />
                             <field name="data_ritiro"/>
                             <field name="data_consegna"/>
 						    <field name="carriage_condition_id"/>
