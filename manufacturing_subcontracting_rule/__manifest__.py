@@ -43,7 +43,6 @@ Implements the sub contracting using the mrp order
                 'purchase',
                 'mrp',
                 'mrp_subcontracting',
-                'l10n_it_fatturapa_in'
                 ],
     'data': [# security
              'security/ir.model.access.csv',
