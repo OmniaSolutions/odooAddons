@@ -31,7 +31,7 @@ import logging
 class OmniaDdtAccountIvoice(models.Model):
     _inherit = ['account.move']
     is_accompagnatoria = fields.Boolean("Is Accompagnatoria")
-    carrier_id = fields.Many2one("delivery.carrier", string="Carrier")
+    carrier_id = fields.Many2one("res.partner", string="Carrier")
     delivery_address_id = fields.Many2one('res.partner', string='Delivery address')
     data_ritiro = fields.Datetime('Data e ora ritiro')
     data_consegna = fields.Datetime('Data e ora consegna')

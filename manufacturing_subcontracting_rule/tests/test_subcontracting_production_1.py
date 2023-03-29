@@ -240,7 +240,7 @@ class TestSubcontracting(TransactionCase):
         return out_pick.union(), in_pick.union(), manuf_pick.union(), dropship_pick.union(), internal_pick.union()
 
     def validatePicking(self, pick, force_qty=False):
-        pick.action_confirm()
+        pick._action_confirm()
         pick.action_assign()
         if force_qty:
             for line in pick.move_line_ids_without_package:
