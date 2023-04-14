@@ -35,6 +35,7 @@ from odoo import models
 from odoo import api
 from odoo import fields
 from odoo import _
+import logging
 
 
 class StockPicking(models.Model):
@@ -56,10 +57,14 @@ class StockPicking(models.Model):
         return objPick.picking_type_code == 'outgoing'
 
     def isDropship(self):
-        dropship_type = self.env.ref('stock_dropshipping.picking_type_dropship')
-        if self.picking_type_id == dropship_type:
-            return True
-        return False
+        try:
+            dropship_type = self.env.ref('stock_dropshipping.picking_type_dropship')
+            if self.picking_type_id == dropship_type:
+                return True
+            return False
+        except Exception as ex:
+            logging.warning(ex)
+            return False
 
     def checkDropship(self):
         def recursion(pick):

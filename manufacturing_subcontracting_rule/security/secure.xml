@@ -1,6 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
     <data>
+        <record id="id_stock_tmp_move" model="ir.model.access">
+            <field name="name">Temporary stock move</field>
+            <field name="model_id" ref="model_stock_tmp_move"/>
+            <field name="perm_read" eval="1"/>
+            <field name="perm_write" eval="1"/>
+            <field name="perm_create" eval="1"/>
+            <field name="perm_unlink" eval="1"/>
+        </record>
+        <record id="id_mrp_production_externally_wizard" model="ir.model.access">
+            <field name="name">Mrp Production External Wizard</field>
+            <field name="model_id" ref="model_mrp_production_externally_wizard"/>
+            <field name="perm_read" eval="1"/>
+            <field name="perm_write" eval="1"/>
+            <field name="perm_create" eval="1"/>
+            <field name="perm_unlink" eval="1"/>
+        </record>
+        
+        
         <record id="id_omniasolutions" model="ir.model.access">
             <field name="name">sw_1</field>
             <field name="model_id" ref="model_mrp_workorder_externally_wizard"/>
