@@ -39,6 +39,7 @@
         'views/mrp_workorder.xml',
         'views/mrp_workcenter.xml',
         'views/ir_config_parameter.xml',
+        'views/template_workorder_machine_all.xml',
         ],
     'demo': [],
     'test': [],
