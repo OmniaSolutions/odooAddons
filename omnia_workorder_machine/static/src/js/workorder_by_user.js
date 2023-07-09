@@ -56,7 +56,17 @@ odoo.define('omnia_workorder_machine.workorder_machine_list', function (require)
         var user_id = document.getElementById('input_employee_id');
         if (user_id != null){
 			user_id_num = user_id.valueAsNumber;
-		}
+		} else{
+    		var user_id = document.getElementById('input_search_employee_id')
+    		if (user_id != null){
+                user_id_num = user_id.getAttribute("odooid");
+            }
+        }
+		if(user_id_num==0 || user_id_num==null){
+            alert("Error !!!\nin order to proceed set the employee !!");
+            throw new Error("Missing emploee !");
+        }
+		
 		return user_id_num
 	}
 
@@ -92,6 +102,7 @@ odoo.define('omnia_workorder_machine.workorder_machine_list', function (require)
     }
 
     var start_work11 = start_work1;
+    
     function pause_work1 (button) {
         console.log("Pause working");
         var button = button.currentTarget;
@@ -232,19 +243,42 @@ odoo.define('omnia_workorder_machine.workorder_machine_list', function (require)
 			updete_workorder(data);
 		});
     }
+    
+    function update_wo_all(){
+        var mo = document.getElementById('input_search_mo_id');
+        if(mo){
+            var mo_id = mo.getAttribute('odooid')
+            if (mo_id==null || mo.value  === undefined){
+                mo_id=0
+            }
+            var wc = document.getElementById('input_search_wc_id');
+            var wc_id = wc.getAttribute('odooid')
+            if (wc_id==0 || wc.value  === undefined){
+                wc_id=0
+            }
+            var route = '/mrp_omnia/render_workorder_all/' + mo_id + "/" + wc_id;
+            show_clock();
+            ajax.jsonRpc(route, 'call', {}).then(function (data) {
+                hide_clock();
+                updete_workorder(data);
+            });
+        }
+    }
   
     function show_workorders_by_employee(){
-    	var user_id = document.getElementById('input_employee_id').valueAsNumber;
-		var route = '/mrp_omnia/render_workorder_by_employee/' + user_id;
-		show_clock();
-		ajax.jsonRpc(route, 'call', {}).then(function (data) {
-			hide_clock();
-			updete_workorder(data);
-		});
+    	var user_id = document.getElementById('input_employee_id');
+    	if(user_id){
+    		var route = '/mrp_omnia/render_workorder_by_employee/' + user_id.valueAsNumber;
+    		show_clock();
+    		ajax.jsonRpc(route, 'call', {}).then(function (data) {
+    			hide_clock();
+    			updete_workorder(data);
+    		});
+		}
     }
   
   
-    function filter_res (button){
+    function filter_res(button) {
 		console.log("clicked button")
         wo_id = document.getElementById('input_search_workorder_id');
 		if(wo_id){
@@ -272,6 +306,7 @@ odoo.define('omnia_workorder_machine.workorder_machine_list', function (require)
 				show_workorders_by_user();
 			}
 		}
+		update_wo_all();
 	};
 	
 	var updete_workorder = function (data) {
@@ -336,6 +371,126 @@ odoo.define('omnia_workorder_machine.workorder_machine_list', function (require)
 			p_user_name.innerHTML = data
 		});
     }
+    
+    async function name_get_generic(object_name, name_like, depend_function_domain){
+        var route = '/mrp_omnia/name_get_generic/' + object_name + '/' + name_like;
+        if (depend_function_domain){
+            var extra_domain = depend_function_domain()
+            route += '/' + JSON.stringify(extra_domain);
+        }
+        return ajax.jsonRpc(route,
+                           'call');
+    }
+    
+    function autocomplete(inp,
+                          odoo_object,
+                          depend_function_domain,
+                          update_table_function) {
+      /*the autocomplete function takes two arguments,
+      the text field element and an array of possible autocompleted values:*/
+      var currentFocus;
+      /*execute a function when someone writes in the text field:*/
+      inp.addEventListener("input", function(e) {
+          var self = this;
+          var a, b, i, val = self.value;
+          /*close any already open lists of autocompleted values*/
+          closeAllLists();
+          if (!val) {
+                    inp.setAttribute("odooid",0);
+                    if (update_table_function){
+                        update_table_function(inp);
+                        }
+                    return false;
+                    }
+          currentFocus = -1;
+          /*create a DIV element that will contain the items (values):*/
+          name_get_generic(odoo_object, val, depend_function_domain).then(function(data){
+              var arr = data['data'];
+              a = document.createElement("DIV");
+              a.setAttribute("id", self.id + "autocomplete-list");
+              a.setAttribute("class", "autocomplete-items");
+              /*append the DIV element as a child of the autocomplete container:*/
+              self.parentNode.appendChild(a);
+              /*for each item in the array...*/
+              for (i = 0; i < arr.length; i++) {
+                  /*create a DIV element for each matching element:*/
+                  b = document.createElement("DIV");
+                  /*make the matching letters bold:*/
+                  b.innerHTML = "<strong>" + arr[i][1] + "</strong>";
+                  /*insert a input field that will hold the current array item's value:*/
+                  b.innerHTML += "<input type='hidden' value='" + arr[i][1] + "' odooid=" + arr[i][0] + ">";
+                  /*execute a function when someone clicks on the item value (DIV element):*/
+                  b.addEventListener("click", function(e) {
+                      /*insert the value for the autocomplete text field:*/
+                      inp.value = this.getElementsByTagName("input")[0].value;
+                      inp.setAttribute("odooid", this.getElementsByTagName("input")[0].getAttribute('odooid'))
+                      /*close the list of autocompleted values,
+                      (or any other open lists of autocompleted values:*/
+                      closeAllLists();        
+                      if (update_table_function){
+                        update_table_function(inp);
+                      }
+                  });
+                  a.appendChild(b);
+              }
+          });
+      });
+      /*execute a function presses a key on the keyboard:*/
+      inp.addEventListener("keydown", function(e) {
+          var x = document.getElementById(this.id + "autocomplete-list");
+          if (x) x = x.getElementsByTagName("div");
+          if (e.keyCode == 40) {
+            /*If the arrow DOWN key is pressed,
+            increase the currentFocus variable:*/
+            currentFocus++;
+            /*and and make the current item more visible:*/
+            addActive(x);
+          } else if (e.keyCode == 38) { //up
+            /*If the arrow UP key is pressed,
+            decrease the currentFocus variable:*/
+            currentFocus--;
+            /*and and make the current item more visible:*/
+            addActive(x);
+          } else if (e.keyCode == 13) {
+            /*If the ENTER key is pressed, prevent the form from being submitted,*/
+            e.preventDefault();
+            if (currentFocus > -1) {
+              /*and simulate a click on the "active" item:*/
+              if (x) x[currentFocus].click();
+            }
+          }
+      });
+      function addActive(x) {
+        /*a function to classify an item as "active":*/
+        if (!x) return false;
+        /*start by removing the "active" class on all items:*/
+        removeActive(x);
+        if (currentFocus >= x.length) currentFocus = 0;
+        if (currentFocus < 0) currentFocus = (x.length - 1);
+        /*add class "autocomplete-active":*/
+        x[currentFocus].classList.add("autocomplete-active");
+      }
+      function removeActive(x) {
+        /*a function to remove the "active" class from all autocomplete items:*/
+        for (var i = 0; i < x.length; i++) {
+          x[i].classList.remove("autocomplete-active");
+        }
+      }
+      function closeAllLists(elmnt) {
+        /*close all autocomplete lists in the document,
+        except the one passed as an argument:*/
+        var x = document.getElementsByClassName("autocomplete-items");
+        for (var i = 0; i < x.length; i++) {
+          if (elmnt != x[i] && elmnt != inp) {
+          x[i].parentNode.removeChild(x[i]);
+        }
+      }
+    }
+    /* execute a function when someone clicks in the document: */
+    document.addEventListener("click", function (e) {
+        closeAllLists(e.target);
+    });
+    }
 
     window.onload = function() {
 	    console.log("omnia_workorder_machine.workorder_machine_list loaded")
@@ -360,13 +515,36 @@ odoo.define('omnia_workorder_machine.workorder_machine_list', function (require)
 	    	update_user_name();
 	    };
 		}
-	    var employee_id = document.getElementById('input_employee_id');
-        if(employee_id){
-	    employee_id.onchange = function(){
-	    	show_workorders_by_employee();
-	    	update_employee_name();
-	    };
-		}
+
+
+        var wo_ma_search_submit = document.getElementById('wo_ma_search_submit');
+        if(wo_ma_search_submit){
+            wo_ma_search_submit.onchange = function(){
+                render_workorder_all();
+            };
+        }
+        
+	    var employee_id = document.getElementById('input_search_employee_id');
+         if(employee_id){
+            autocomplete(employee_id, 'hr.employee');
+            };
+
+        var mo_wc = document.getElementById('input_search_wc_id');
+         if(mo_wc){
+            autocomplete(mo_wc, 'mrp.workcenter', null, update_wo_all);
+            };
+
+        var mo_id = document.getElementById('input_search_mo_id');
+         if(mo_id){
+            var extra_domain_function = function(){
+                return ['state','in',['confirm','progress','planned']]
+            } 
+            autocomplete(mo_id, 'mrp.production', extra_domain_function, update_wo_all);
+            };
+        var search_bnt = document.getElementById('search_all');
+        if(search_bnt){
+            search_bnt.onclick=update_wo_all;
+	       }
     };
 
 	document.addEventListener('DOMContentLoaded', function() {

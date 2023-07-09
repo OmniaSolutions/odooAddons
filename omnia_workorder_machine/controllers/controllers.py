@@ -48,6 +48,23 @@ class WebsiteWorkorderControllerByUser(Controller):
         values['wo_lines'] = lines
         return self.forceRender('omnia_workorder_machine.template_workorder_machine_table', values)
 
+
+    @http.route(['/mrp_omnia/render_workorder_all/<int:manufactory_id>/<int:workcenter_id>'], type='json')
+    def render_workorder_all(self,
+                             manufactory_id=False,
+                             workcenter_id=False,
+                             **post):
+        domain = []
+        if manufactory_id:
+            domain.append(['production_id', '=', manufactory_id])
+        if workcenter_id:
+            domain.append(['workcenter_id', '=',workcenter_id])
+        values = post
+        lines = request.env['mrp.workorder'].getWorkordersByDomain(domain, listify=True)
+        logging.info("Lines %r" % lines)
+        values['wo_lines'] = lines
+        return self.forceRender('omnia_workorder_machine.template_workorder_machine_table', values)
+    
     @http.route(['/mrp_omnia/workorder_machine/<int:workcenter_id>'])
     def workoder_machine_wc(self, workcenter_id, **post):
         logging.info('WorkorderMachine with workcenter %r called' % (workcenter_id))
@@ -152,9 +169,24 @@ class WebsiteWorkorderControllerByUser(Controller):
         pdfhttpheaders = [('Content-Type', 'application/pdf'), ('Content-Length', len(pdf))]
         return request.make_response(pdf, headers=pdfhttpheaders)
 
+
+
+
+    @http.route(['/mrp_omnia/name_get_generic/<string:object_name>/<string:name_like>',
+                 '/mrp_omnia/name_get_generic/<string:object_name>/<string:name_like>/<string:extra_domain>'], type='json')
+    def name_get_generic(self, object_name, name_like, extra_domain=False, **post):
+        logging.info('name_get_generic/%s/%s' % (object_name, name_like))
+        out = []
+        domain = [('name', 'ilike', name_like)]
+        if (extra_domain):
+            domain.append(json.loads(extra_domain))
+        for obj_generic in request.env[object_name.strip()].sudo().search(domain,
+                                                                          limit=50):
+            out.append((obj_generic.id, obj_generic.name))
+        return {'data': out}
+
     @http.route('/mrp_omnia/workorder_machine_all', type='http')
-    def workoder_machine_wc_all(self, workcenter_id, **post):
-        logging.info('WorkorderMachine with workcenter %r called' % (workcenter_id))
+    def workoder_machine_wc_all(self, **post):
         values = post
         return self.renderTemplate('omnia_workorder_machine.workorder_machine_all', values)
 

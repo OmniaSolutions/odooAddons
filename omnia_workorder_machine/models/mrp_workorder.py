@@ -110,6 +110,17 @@ class MrpProductionWCLine(models.Model):
             out = self.listifyForInterface(out)
         return out
 
+    @api.model
+    def getWorkordersByDomain(self, domain=[], listify=False):
+        domain.append(('state', 'in', ['ready', 'progress']))
+        woBrwsList = self.search(domain,
+                                 order='date_planned_start ASC,id ASC')
+        user_id = self.getUserId()
+        out = self.getDictWorkorder(woBrwsList.with_user(user_id))
+        if listify:
+            out = self.listifyForInterface(out)
+        return out
+    
     def listifyForInterface(self, woList):
         lines = []
         for dictRes in woList:

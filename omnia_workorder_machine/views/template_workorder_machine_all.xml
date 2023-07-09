@@ -10,14 +10,26 @@
                 <form class="main_title">
                     <table style="width: 90%;">
                         <tr>
-                           <td style="width:8%;" id="td_employee_id">Employee Id: </td>
-                           <td style="width:15%;"><input id="input_employee_id" type="number" class="employee_id"/></td>
-                           
+                           <td style="width:8%;" id="td_employee_id"><button id="search_all" type="button">Search</button></td>
+                           <td style="width:8%;" id="td_employee_id">Employee:</td>
+                           <td style="width:20%;">
+                            <div class="autocomplete" style="width:300px;">
+                                <input id="input_search_employee_id" type="text" class="employee_id"/>
+                            </div>
+                           </td>
+                           <td style="width:8%;" id="td_wc_id">Workcenter: </td>
+                           <td style="width:20%;">
+                            <div class="autocomplete" style="width:300px;">
+                                <input id="input_search_wc_id" type="text" class="employee_id"/>
+                            </div>
+                           </td>
                            <td style="width:8%;" id="td_mo_id">Manufactory: </td>
-                           <td style="width:15%;"><input id="input_mo_id" type="text" class="employee_id"/></td>
+                           <td style="width:20%;">
+	                            <div class="autocomplete" style="width:300px;">
+	                                <input id="input_search_mo_id" type="text" class="employee_id"/>
+	                            </div>
+                            </td>
                                                       
-                           <td style="width:8%;" id="td_employee_id">Workorder: </td>
-                           <td style="width:15%;"><input id="input_wo_id" type="text" class="employee_id"/></td>
                                                       
                            <td  style="text-align: center;"><img id="waiting_clock" style="display:none;width: 280px;" src="/omnia_workorder_machine/static/src/images/clock.gif"/></td>
                            
@@ -27,9 +39,10 @@
                         </tr>
                     </table>
                 </form>
-                <table class="main_table" id="to_replace">
+                <br></br>
+                <table class="main_table" id="to_replace" style="position: relative;">
                    <thead>
-                      <tr>
+                      <tr style="position: sticky;top: 0;">
                         <th class="header_table">ID</th>
                         <th class="header_table">Date Planned</th>
                         <th class="header_table">Internal Reference</th>
