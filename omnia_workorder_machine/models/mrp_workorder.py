@@ -148,7 +148,10 @@ class MrpProductionWCLine(models.Model):
         return []
 
     @api.model
-    def preliminaryWork(self, workorder, user_id=0, employee_id=0):
+    def preliminaryWork(self,
+                        workorder,
+                        user_id=0,
+                        employee_id=0):
         if not workorder:
             return False
         woLine = self.browse(self.listify(workorder))
@@ -156,6 +159,8 @@ class MrpProductionWCLine(models.Model):
             user_id = self.getUserId()
         woLine = woLine.with_user(user_id)
         if employee_id:
+            if employee_id not in woLine.employee_ids.ids:
+                woLine.employee_ids =[(6,0,[employee_id])]
             woLine = woLine.with_context(employee_mrp_id=employee_id)
         return woLine
 

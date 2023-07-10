@@ -155,7 +155,7 @@ class WebsiteWorkorderControllerByUser(Controller):
         if wo_id:
             wo_id = int(wo_id)
             user_id = post.get('user_id', 0)
-            employee_id = post.get('employee_id', 0)
+            employee_id = int(post.get('employee_id', 0))
             res = request.env['mrp.workorder'].recordWork(wo_id, n_pieces, n_scrap, user_id, employee_id)
         return res
 

@@ -160,17 +160,22 @@ odoo.define('omnia_workorder_machine.workorder_machine_list', function (require)
         var n_scrap = n_scrap_ui[0].valueAsNumber;
         var route = '/mrp_omnia/workorder_record/';
         show_clock();
-		ajax.jsonRpc(route, 'call', {
-			'wo_id' : wo_id[0].textContent,
-			'n_pieces': pieces,
-			'n_scrap': n_scrap,
-			'user_id': get_user_id(),
-			'employee_id': get_employee_id(),
-		}).then(function (data) {
-			hide_clock();
-			filter_res(null);
-		   }
-	    );
+    		ajax.jsonRpc(route, 'call', {
+    			'wo_id' : wo_id[0].textContent,
+    			'n_pieces': pieces,
+    			'n_scrap': n_scrap,
+    			'user_id': get_user_id(),
+    			'employee_id': get_employee_id(),
+    		}).then(function (data) {
+    			hide_clock();
+    			filter_res(null);
+    		   }
+    	    ).catch (function (data) {
+                alert("Errore Server " + data.message.data.message);
+                hide_clock();
+                filter_res(null);
+            });
+    	    
         console.log("end")
     }
 
@@ -364,11 +369,17 @@ odoo.define('omnia_workorder_machine.workorder_machine_list', function (require)
 
     var update_employee_name = function(){
     	var user_id = document.getElementById('input_employee_id')
-    	var user_id_n = user_id.valueAsNumber
+    	if (user_id){
+            if(user_id.value==''){
+                return;
+            }
+        }
+    	var user_id_n = user_id.valueAsNumber;
     	var route = '/mrp_omnia/get_employee_name/' + user_id_n;
 		ajax.jsonRpc(route, 'call', {}).then(function (data) {
 			var p_user_name = document.getElementById('user_name');
-			p_user_name.innerHTML = data
+			p_user_name.innerHTML = data;
+			update_wo_all();
 		});
     }
     
@@ -545,9 +556,20 @@ odoo.define('omnia_workorder_machine.workorder_machine_list', function (require)
         if(search_bnt){
             search_bnt.onclick=update_wo_all;
 	       }
+	    
+	    var employee_id = document.getElementById('input_employee_id');
+        if(employee_id){
+        employee_id.onchange = function(){
+            show_workorders_by_employee();
+            update_employee_name();
+        };}
     };
 
 	document.addEventListener('DOMContentLoaded', function() {
+        var user_id = document.getElementById('input_employee_id')
+        if (user_id){
+            user_id.addEventListener("change",update_employee_name);
+        }
 		var input = document.getElementById("button_search");
 		if (input){
 			input.addEventListener("keyup", function(event) {
