@@ -48,11 +48,6 @@ class externalProductionPartner(models.TransientModel):
             out.append((ext_partner.id, to_see))
         return out
 
-    @api.onchange('subcontract_to')
-    def change_subcontract_to(self):
-        if self.subcontract_to.subcontract_to:
-            self.subcontract_to = False
-
 
 class externalWorkorderPartner(models.TransientModel):
     _name = 'external.workorder.partner'
