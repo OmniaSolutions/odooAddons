@@ -80,13 +80,15 @@ class MrpProduction(models.Model):
             for line in mrp_production_id.move_raw_ids:
                 qty_to_order = line.product_uom_qty - line.reserved_availability + line.quantity_done
                 if qty_to_order > 0 and not line.run_a_executed:
-                    replenish_wizard = product_replenish.with_context(mrp_context).create({'product_id': line.product_id.id,
-                                                                 'product_tmpl_id': line.product_id.product_tmpl_id.id,
-                                                                 'product_uom_id': line.product_id.uom_id.id,
-                                                                 'quantity': qty_to_order,
-                                                                 'warehouse_id': mrp_production_id.location_src_id.get_warehouse().id,
-                                                                })
-                    replenish_wizard.custom_launch_replenishment('Run.A', mrp_production_id.name)
-                    line.run_a_executed=True
-
+                    try:
+                        replenish_wizard = product_replenish.with_context(mrp_context).create({'product_id': line.product_id.id,
+                                                                     'product_tmpl_id': line.product_id.product_tmpl_id.id,
+                                                                     'product_uom_id': line.product_id.uom_id.id,
+                                                                     'quantity': qty_to_order,
+                                                                     'warehouse_id': mrp_production_id.location_src_id.get_warehouse().id,
+                                                                    })
+                        replenish_wizard.custom_launch_replenishment('Run.A', mrp_production_id.name)
+                        line.run_a_executed=True
+                    except Exception as ex:
+                        logging.error(ex)
         
