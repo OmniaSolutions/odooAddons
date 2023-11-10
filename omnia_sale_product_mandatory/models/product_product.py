@@ -2,7 +2,7 @@
 ##############################################################################
 #
 #    OmniaSolutions, ERP-PLM-CAD Open Source Solutions
-#    Copyright (C) 2011-2021 https://OmniaSolutions.website
+#    Copyright (C) 2011-2020 https://OmniaSolutions.website
 #
 #    This program is free software: you can redistribute it and/or modify
 #    it under the terms of the GNU Affero General Public License as
@@ -19,7 +19,7 @@
 #
 ##############################################################################
 '''
-Created on 26 Oct 2021
+Created on 15 Dec 2020
 
 @author: mboscolo
 '''
@@ -33,19 +33,11 @@ from odoo.exceptions import UserError
 from datetime import timedelta
 from odoo.tools import DEFAULT_SERVER_DATETIME_FORMAT
 
-class StockRule(models.Model):
-    _inherit = 'stock.rule'
+class ProductProduct(models.Model):
+    _inherit = ['product.product']
 
-    def _prepare_purchase_order_line(self, product_id, product_qty, product_uom, values, po, partner):
-        """
-        """
-        values = super(StockRule, self)._prepare_purchase_order_line(product_id,
-                                                                    product_qty,
-                                                                    product_uom,
-                                                                    values,
-                                                                    po, 
-                                                                    partner)
-        analytic_id = self.env.context.get('omnia_analytic_id')
-        if analytic_id:
-            values['account_analytic_id'] = analytic_id
-        return values
+    needed_children_product_ids = fields.Many2many(
+            'product.product', 'needed_prod_child', 'parent_id', 'child_id',
+            string='Prodotti figli obbligatori')
+  
+    

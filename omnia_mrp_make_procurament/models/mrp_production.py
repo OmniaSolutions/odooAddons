@@ -44,24 +44,49 @@ from datetime import timedelta
 from odoo.tools import DEFAULT_SERVER_DATETIME_FORMAT, float_compare, float_round
 
 
+class StockMove(models.Model):
+    _inherit = "stock.move"
+    run_a_executed = fields.Boolean("RunA Executed")    
+    
+    
 class MrpProduction(models.Model):
     _inherit = ['mrp.production']
 
+    # def create_procuraments(self):
+    #     production_to_call = []
+    #     stock_warehouse_orderpoint = self.env['stock.warehouse.orderpoint']
+    #     for mrp_production_id in self:
+    #         ids=[]
+    #         for line in mrp_production_id.move_raw_ids:
+    #             if line.state not in ['done', 'cancel'] and line.product_qty - line.quantity_done > 0:
+    #                 ids.append(line.product_id.id)
+    #         ctx=self.env.context.copy()
+    #         ctx['omnia_product_ids'] = ids
+    #         try:
+    #             if mrp_production_id.project_id:
+    #                 ctx['omnia_analytic_id'] = mrp_production_id.project_id.analytic_account_id.id
+    #         except Exception as ex:
+    #             logging.warning(ex)
+    #         date_now = datetime.datetime.now().strftime(DEFAULT_SERVER_DATETIME_FORMAT)
+    #         self.env['procurement.group'].with_context(ctx).run_scheduler(company_id=self.env.user.company_id.id)
+    #         self.search([('create_date', '>', date_now)]).create_procuraments()
+        
     def create_procuraments(self):
-        production_to_call = []
-        stock_warehouse_orderpoint = self.env['stock.warehouse.orderpoint']
+        product_replenish = self.env['product.replenish']
         for mrp_production_id in self:
-            ids=[]
+            mrp_production_id.action_assign()
+            mrp_context = self.env.context.copy()
+            mrp_context['omnia_analytic_id'] = mrp_production_id.project_id.analytic_account_id.id
             for line in mrp_production_id.move_raw_ids:
-                if line.state not in ['done', 'cancel'] and line.product_qty - line.quantity_done > 0:
-                    ids.append(line.product_id.id)
-            ctx=self.env.context.copy()
-            ctx['omnia_product_ids'] = ids
-            try:
-                if mrp_production_id.project_id:
-                    ctx['omnia_analitic_id'] = mrp_production_id.project_id.analytic_account_id.id
-            except Exception as ex:
-                logging.warning(ex)
-            date_now = datetime.datetime.now().strftime(DEFAULT_SERVER_DATETIME_FORMAT)
-            self.env['procurement.group'].with_context(ctx).run_scheduler(company_id=self.env.user.company_id.id)
-            self.search([('create_date', '>', date_now)]).create_procuraments()
+                qty_to_order = line.product_uom_qty - line.reserved_availability + line.quantity_done
+                if qty_to_order > 0 and not line.run_a_executed:
+                    replenish_wizard = product_replenish.with_context(mrp_context).create({'product_id': line.product_id.id,
+                                                                 'product_tmpl_id': line.product_id.product_tmpl_id.id,
+                                                                 'product_uom_id': line.product_id.uom_id.id,
+                                                                 'quantity': qty_to_order,
+                                                                 'warehouse_id': mrp_production_id.location_src_id.get_warehouse().id,
+                                                                })
+                    replenish_wizard.custom_launch_replenishment('Run.A', mrp_production_id.name)
+                    line.run_a_executed=True
+
+        

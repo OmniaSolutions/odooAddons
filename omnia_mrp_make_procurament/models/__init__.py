@@ -27,3 +27,5 @@ from . import mrp_production
 from . import procurement_group
 from . import stock_rule
 from . import purchase_order_line
+from . import product_replanish
+

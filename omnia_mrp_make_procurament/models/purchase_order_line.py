@@ -40,9 +40,20 @@ class PurchaseOrderLine(models.Model):
         """ This function purpose is to be override with the purpose to forbide _run_buy  method
         to merge a new po line in an existing one.
         """
-        analitic_id = self.env.context.get('omnia_analitic_id')
+        analitic_id = self.env.context.get('omnia_analytic_id')
         if analitic_id:
             if self.account_analytic_id.id == analitic_id:
                 return True
             return False
         return True
+    
+    @api.model
+    def create(self, vals):
+        analytic_id = self.env.context.get('omnia_analytic_id')
+        if analytic_id and 'account_analytic_id' in vals:
+            vals['account_analytic_id'] = analytic_id
+        orderLine = super(PurchaseOrderLine, self).create(vals)
+        
+        return orderLine
+    
+    

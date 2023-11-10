@@ -36,6 +36,7 @@ from odoo import SUPERUSER_ID
 
 class ProcurementOrderOmnia(models.Model):
     _name = 'procurement.order.omnia'
+    _description = 'OmniaSolutions procurement order'
 
     def auto_reordering_rules_calculation(self, forceMrpBrws=[]):
         """Compute the commitment date"""
