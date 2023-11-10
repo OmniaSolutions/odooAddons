@@ -46,6 +46,10 @@ class SaleOrder(models.Model):
 
     @api.multi
     def action_confirm(self):
+        return self.createWarehouseAnalyticAndProducts()
+
+    @api.multi
+    def createWarehouseAnalyticAndProducts(self):
         for order in self:
             machinePresent = self.checkMachineProductsPresents()
             machineNoProdPresent = False
@@ -68,8 +72,8 @@ class SaleOrder(models.Model):
                         order.warehouse_id = self.getRelatedWarehouse(newBaseName)
                 if machinePresent:
                     order.setupAnalyticLines(newBaseName)
-        res = super(SaleOrder, self).action_confirm()
-        return res
+        return super(SaleOrder, self).action_confirm()
+        
 
     @api.multi
     def _create_analytic_account(self, prefix=None):
@@ -138,6 +142,8 @@ class SaleOrder(models.Model):
     def setupAnalyticLines(self, newBaseName):
         count = 1
         for line in self.order_line:
+            if line.product_id.parent_product:
+                continue
             if self.getProductCategoryName(line) == 'MACHINE':
                 for _elem in range(int(line.product_uom_qty)):
                     oldProdBrws = line.product_id
