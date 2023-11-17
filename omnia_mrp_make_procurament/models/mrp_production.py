@@ -70,25 +70,84 @@ class MrpProduction(models.Model):
     #         date_now = datetime.datetime.now().strftime(DEFAULT_SERVER_DATETIME_FORMAT)
     #         self.env['procurement.group'].with_context(ctx).run_scheduler(company_id=self.env.user.company_id.id)
     #         self.search([('create_date', '>', date_now)]).create_procuraments()
-        
+    
+    def getProcuramentGroup(self):
+        for mrp_production_id in self:
+            procurement_group_id = None
+            for procurement_group_id in self.env['procurement.group'].search([('name','=',mrp_production_id.name)]):
+                break
+            if not procurement_group_id:
+                procurement_group_id = self.env['procurement.group'].create({'name':mrp_production_id.name })
+            return procurement_group_id
+                
+    @api.model
+    def create_procurement_row(self,
+                               product,
+                               product_qty,
+                               name,
+                               order_point_id):
+        date = datetime.datetime.now()
+             
+        vals = {
+            'date_planned': date.strftime(DEFAULT_SERVER_DATETIME_FORMAT),
+            'company_id': self.env.user.company_id,
+            'warehouse_id': self.location_src_id.get_warehouse(),
+            'orderpoint_id' : order_point_id,
+            'add_date_in_domain': True,
+            'group_id': self.getProcuramentGroup()
+        }
+        """
+        {
+        'date_planned': '2023-11-18 17:16:15',
+        'warehouse_id': stock.warehouse(1,),
+        'orderpoint_id': stock.warehouse.orderpoint(8833,),
+        'company_id': res.company(1,),
+        'group_id': procurement.group()
+        }
+        """
+        self.env['procurement.group'].run(product,
+                                          product_qty,
+                                          product.uom_id,
+                                          self.location_src_id,
+                                          product.name,
+                                          name,
+                                          vals)
+# product_context = dict(self._context, location=location_orderpoints[0].location_id.id)
+# product_quantity = location_data['products'].with_context(product_context)._product_available()
+# op_product_virtual = product_quantity[orderpoint.product_id.id]['virtual_available']
+    
     def create_procuraments(self):
-        product_replenish = self.env['product.replenish']
+        sub_production_to_compute = self.env['product.product']
         for mrp_production_id in self:
             mrp_production_id.action_assign()
             mrp_context = self.env.context.copy()
             mrp_context['omnia_analytic_id'] = mrp_production_id.project_id.analytic_account_id.id
-            for line in mrp_production_id.move_raw_ids:
-                qty_to_order = line.product_uom_qty - line.reserved_availability + line.quantity_done
-                if qty_to_order > 0 and not line.run_a_executed:
-                    try:
-                        replenish_wizard = product_replenish.with_context(mrp_context).create({'product_id': line.product_id.id,
-                                                                     'product_tmpl_id': line.product_id.product_tmpl_id.id,
-                                                                     'product_uom_id': line.product_id.uom_id.id,
-                                                                     'quantity': qty_to_order,
-                                                                     'warehouse_id': mrp_production_id.location_src_id.get_warehouse().id,
-                                                                    })
-                        replenish_wizard.custom_launch_replenishment('Run.A', mrp_production_id.name)
-                        line.run_a_executed=True
-                    except Exception as ex:
-                        logging.error(ex)
+            for line in mrp_production_id.move_raw_ids: # line.product_id.get_theoretical_quantity(line.product_id.id, self.location_src_id.id, False, False, False, False)
+                product_context = dict(self._context, location=self.location_src_id.id)
+                product_quantity = line.product_id.with_context(product_context)._product_available()
+                op_product_virtual = product_quantity[line.product_id.id]['virtual_available']
+                
+                for order_point_id in line.product_id.orderpoint_ids:
+                    if self.location_src_id==order_point_id.location_id:
+                        qty_in_progress = order_point_id._quantity_in_progress()
+                        qty_to_order = -1.0 * (op_product_virtual+qty_in_progress[line.product_id.orderpoint_ids.id])
+                        mrp_line_qty_to_order = line.product_uom_qty - line.reserved_availability + line.quantity_done
+                        if mrp_line_qty_to_order<=mrp_line_qty_to_order:
+                            qty_to_order=mrp_line_qty_to_order
+                        if qty_to_order>0:
+                            try:
+                                self.with_context(mrp_context).create_procurement_row(line.product_id,
+                                                                                      qty_to_order,
+                                                                                      mrp_production_id.name,
+                                                                                      order_point_id)
+                                if line.product_id.route_ids.mapped("name")=='Produci':
+                                    sub_production_to_compute+=line.product_id
+                                line.run_a_executed=True
+                                break
+                            except Exception as ex:
+                                logging.error(ex)
+        for product_id in sub_production_to_compute:
+            for mrp_production_id in self.search([('product_id','=', product_id.id)],
+                                                   [('id','>', max(self.ids))]):      
+                mrp_production_id.create_procuraments()
         
