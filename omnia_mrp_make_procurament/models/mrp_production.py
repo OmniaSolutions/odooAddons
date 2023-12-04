@@ -120,10 +120,10 @@ class MrpProduction(models.Model):
 # product_quantity = location_data['products'].with_context(product_context)._product_available()
 # op_product_virtual = product_quantity[orderpoint.product_id.id]['virtual_available']
 # qty_in_progress = order_point_id._quantity_in_progress()
-# qty_to_order = -1.0 * (op_product_virtual+qty_in_progress[line.product_id.orderpoint_ids.id])
+# qty_to_order = -1.0 * (op_product_virtual + qty_in_progress[line.product_id.orderpoint_ids.id])
 # mrp_line_qty_to_order = line.product_uom_qty - line.reserved_availability + line.quantity_done
 # if mrp_line_qty_to_order<=mrp_line_qty_to_order:
-#     qty_to_order=mrp_line_qty_to_order
+#  qty_to_order=mrp_line_qty_to_order
 # line.product_id.get_theoretical_quantity(line.product_id.id, self.location_src_id.id, False, False, False, False)
                 
     def create_procuraments(self):
@@ -133,10 +133,10 @@ class MrpProduction(models.Model):
             mrp_context = self.env.context.copy()
             analitic_id = mrp_production_id.project_id.analytic_account_id.id
             mrp_context['omnia_analytic_id'] = analitic_id
-            for line in mrp_production_id.move_raw_ids:               
+            for line in mrp_production_id.move_raw_ids:      
                 for order_point_id in line.product_id.orderpoint_ids:
                     if self.location_src_id.id==order_point_id.location_id.id:
-                        qty_to_order = line.product_uom_qty
+                        qty_to_order = line.product_uom_qty - line.reserved_availability
                         if 'Acquista' in order_point_id.product_id.route_ids.mapped("name"):
                             for purchase_line_id in self.env['purchase.order.line'].search([('omnia_mrp_orig_move','=',line.id),
                                                                                             ('account_analytic_id','=', analitic_id)]):
