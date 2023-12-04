@@ -52,6 +52,10 @@ class StockMove(models.Model):
 class MrpProduction(models.Model):
     _inherit = ['mrp.production']
 
+    omnia_mrp_orig_move = fields.Many2one("stock.move",
+                                          string=_("Original Move"))
+    omnia_analytic_id = fields.Many2one(related="project_id.analytic_account_id",
+                                        string="Conto Analitico")
     # def create_procuraments(self):
     #     production_to_call = []
     #     stock_warehouse_orderpoint = self.env['stock.warehouse.orderpoint']
@@ -115,39 +119,48 @@ class MrpProduction(models.Model):
 # product_context = dict(self._context, location=location_orderpoints[0].location_id.id)
 # product_quantity = location_data['products'].with_context(product_context)._product_available()
 # op_product_virtual = product_quantity[orderpoint.product_id.id]['virtual_available']
-    
+# qty_in_progress = order_point_id._quantity_in_progress()
+# qty_to_order = -1.0 * (op_product_virtual+qty_in_progress[line.product_id.orderpoint_ids.id])
+# mrp_line_qty_to_order = line.product_uom_qty - line.reserved_availability + line.quantity_done
+# if mrp_line_qty_to_order<=mrp_line_qty_to_order:
+#     qty_to_order=mrp_line_qty_to_order
+# line.product_id.get_theoretical_quantity(line.product_id.id, self.location_src_id.id, False, False, False, False)
+                
     def create_procuraments(self):
-        sub_production_to_compute = self.env['product.product']
+        sub_production_to_compute = self.env['mrp.production']
         for mrp_production_id in self:
             mrp_production_id.action_assign()
             mrp_context = self.env.context.copy()
-            mrp_context['omnia_analytic_id'] = mrp_production_id.project_id.analytic_account_id.id
-            for line in mrp_production_id.move_raw_ids: # line.product_id.get_theoretical_quantity(line.product_id.id, self.location_src_id.id, False, False, False, False)
-                product_context = dict(self._context, location=self.location_src_id.id)
-                product_quantity = line.product_id.with_context(product_context)._product_available()
-                op_product_virtual = product_quantity[line.product_id.id]['virtual_available']
-                
+            analitic_id = mrp_production_id.project_id.analytic_account_id.id
+            mrp_context['omnia_analytic_id'] = analitic_id
+            for line in mrp_production_id.move_raw_ids:               
                 for order_point_id in line.product_id.orderpoint_ids:
-                    if self.location_src_id==order_point_id.location_id:
-                        qty_in_progress = order_point_id._quantity_in_progress()
-                        qty_to_order = -1.0 * (op_product_virtual+qty_in_progress[line.product_id.orderpoint_ids.id])
-                        mrp_line_qty_to_order = line.product_uom_qty - line.reserved_availability + line.quantity_done
-                        if mrp_line_qty_to_order<=mrp_line_qty_to_order:
-                            qty_to_order=mrp_line_qty_to_order
-                        if qty_to_order>0:
+                    if self.location_src_id.id==order_point_id.location_id.id:
+                        qty_to_order = line.product_uom_qty
+                        if 'Acquista' in order_point_id.product_id.route_ids.mapped("name"):
+                            for purchase_line_id in self.env['purchase.order.line'].search([('omnia_mrp_orig_move','=',line.id),
+                                                                                            ('account_analytic_id','=', analitic_id)]):
+                                qty_to_order = line.product_uom_qty - purchase_line_id.product_uom_qty
+                                break
+                        elif 'Produci' in order_point_id.product_id.route_ids.mapped("name"):
+                            for sub_mrp_production_id in self.env['mrp.production'].search([('omnia_mrp_orig_move','=',line.id),
+                                                                                            ('omnia_analytic_id','=', analitic_id)]):
+                                qty_to_order = line.product_uom_qty - sub_mrp_production_id.product_uom_qty
+                                break
+                        if qty_to_order>0:    
                             try:
+                                mrp_context['omnia_orig_move_id'] = line.id
+                                max_id = max(self.search([]).ids)
                                 self.with_context(mrp_context).create_procurement_row(line.product_id,
                                                                                       qty_to_order,
                                                                                       mrp_production_id.name,
                                                                                       order_point_id)
-                                if line.product_id.route_ids.mapped("name")=='Produci':
-                                    sub_production_to_compute+=line.product_id
-                                line.run_a_executed=True
-                                break
+                                for mrp_production_id in self.search([('product_id','=', line.product_id.id),
+                                                                      ('state','not in',['cancel','done']),
+                                                                      ('id','>', max_id)]):
+                                    sub_production_to_compute+=mrp_production_id
                             except Exception as ex:
                                 logging.error(ex)
-        for product_id in sub_production_to_compute:
-            for mrp_production_id in self.search([('product_id','=', product_id.id)],
-                                                   [('id','>', max(self.ids))]):      
-                mrp_production_id.create_procuraments()
+        for mrp_production_id in sub_production_to_compute:
+            mrp_production_id.create_procuraments()
         

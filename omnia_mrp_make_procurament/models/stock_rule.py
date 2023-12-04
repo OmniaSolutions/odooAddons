@@ -96,4 +96,16 @@ class StockRule(models.Model):
         analytic_id = self.env.context.get('omnia_analytic_id')
         if analytic_id:
             values['account_analytic_id'] = analytic_id
+        orig_move_id = self.env.context.get('omnia_orig_move_id')
+        if orig_move_id:
+            values['omnia_mrp_orig_move'] = orig_move_id
         return values
+
+    def _prepare_mo_vals(self, product_id, product_qty, product_uom, location_id, name, origin, values, bom):
+        out = super(StockRule, self)._prepare_mo_vals(product_id, product_qty, product_uom, location_id, name, origin, values, bom)
+        orig_move_id = self.env.context.get('omnia_orig_move_id')
+        if orig_move_id:
+            out['omnia_mrp_orig_move'] = orig_move_id
+        return out
+    
+

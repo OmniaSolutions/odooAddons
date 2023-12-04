@@ -36,13 +36,17 @@ from odoo.tools import DEFAULT_SERVER_DATETIME_FORMAT
 class PurchaseOrderLine(models.Model):
     _inherit = 'purchase.order.line'
 
+    omnia_mrp_orig_move = fields.Many2one("stock.move",
+                                          string=_("Original Move"))
     def _merge_in_existing_line(self, product_id, product_qty, product_uom, location_id, name, origin, values):
         """ This function purpose is to be override with the purpose to forbide _run_buy  method
         to merge a new po line in an existing one.
         """
         analitic_id = self.env.context.get('omnia_analytic_id')
-        if analitic_id:
-            if self.account_analytic_id.id == analitic_id:
+        orig_move_id = self.env.context.get('omnia_orig_move_id')
+        if analitic_id and orig_move_id:
+            if self.account_analytic_id.id == analitic_id and \
+                self.omnia_mrp_orig_move.id==orig_move_id:
                 return True
             return False
         return True
