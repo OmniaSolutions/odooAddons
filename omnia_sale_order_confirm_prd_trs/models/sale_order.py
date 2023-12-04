@@ -167,6 +167,7 @@ class SaleOrder(models.Model):
     def createNewCodedProduct(self, newBaseName, count, oldProdBrws):
         newProductName = str(newBaseName) + '/' + str('{:03.0f}'.format(count))
         while 1:
+            newProductName = str(newBaseName) + '/' + str('{:03.0f}'.format(count))
             if self.env['product.template'].search_count([('default_code','=',newProductName)]):
                 count+=1
             else:
