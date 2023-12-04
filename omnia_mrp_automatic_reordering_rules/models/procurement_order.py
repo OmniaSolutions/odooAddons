@@ -40,20 +40,17 @@ class ProcurementOrderOmnia(models.Model):
 
     def auto_reordering_rules_calculation(self, forceMrpBrws=[]):
         """Compute the commitment date"""
-        mrpProdEnv = self.env['mrp.production']
         reorderRuleEnv = self.env['stock.warehouse.orderpoint']
-        mrpProdOrders = []
         for mrpOrderBrws in forceMrpBrws:
             for moveLineBrws in mrpOrderBrws.move_raw_ids:
                 prodBrws = moveLineBrws.product_id
-                if prodBrws.purchase_ok:
-                    reorderingRules = reorderRuleEnv.search([
-                        ('product_id', '=', prodBrws.id),
-                        ('location_id', '=', mrpOrderBrws.location_src_id.id)
-                        ])
-                    if not reorderingRules:
-                        warehouse_id = self.getWarehouse(mrpOrderBrws.location_src_id)
-                        self.createReorderingRules(prodBrws.id, mrpOrderBrws.location_src_id.id, warehouse_id)
+                reorderingRules = reorderRuleEnv.search([
+                    ('product_id', '=', prodBrws.id),
+                    ('location_id', '=', mrpOrderBrws.location_src_id.id)
+                    ])
+                if not reorderingRules:
+                    warehouse_id = self.getWarehouse(mrpOrderBrws.location_src_id)
+                    self.createReorderingRules(prodBrws.id, mrpOrderBrws.location_src_id.id, warehouse_id)
 
     def getWarehouse(self, locationBrowse):
         warehouseEnv = self.env['stock.warehouse']
