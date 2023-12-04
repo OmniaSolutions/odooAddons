@@ -1,0 +1,14 @@
+<odoo>
+    <record id="omnia_purchase_order_form_mk_procurament" model="ir.ui.view">
+        <field name="model">purchase.order</field>
+        <field name="inherit_id" ref="purchase.purchase_order_form"/>
+        <field name="arch" type="xml">
+          <field name="account_analytic_id" position="after">
+            <field name="omnia_mrp_orig_move"/>
+          </field>        
+        </field>
+    </record> 
+</odoo>
+
+ 
+ 

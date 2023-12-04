@@ -166,6 +166,11 @@ class SaleOrder(models.Model):
     @api.multi
     def createNewCodedProduct(self, newBaseName, count, oldProdBrws):
         newProductName = str(newBaseName) + '/' + str('{:03.0f}'.format(count))
+        while 1:
+            if self.env['product.template'].search_count([('default_code','=',newProductName)]):
+                count+=1
+            else:
+                break
         toCreate = {
             'name': oldProdBrws.name,
             'default_code': newProductName,

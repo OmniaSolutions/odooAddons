@@ -37,6 +37,7 @@ Allow the capability to recursively make procurement order from manufactoring or
     'data': [
         #  view
         'views/mrp_production.xml',
+        'views/purchase_order.xml'
     ],
     'installable': True,
     'application': False,
