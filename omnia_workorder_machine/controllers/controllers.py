@@ -152,6 +152,11 @@ class WebsiteWorkorderControllerByUser(Controller):
         pdfhttpheaders = [('Content-Type', 'application/pdf'), ('Content-Length', len(pdf))]
         return request.make_response(pdf, headers=pdfhttpheaders)
 
+    @http.route('/mrp_omnia/workorder_machine_all', type='http')
+    def workoder_machine_wc_all(self, workcenter_id, **post):
+        logging.info('WorkorderMachine with workcenter %r called' % (workcenter_id))
+        values = post
+        return self.renderTemplate('omnia_workorder_machine.workorder_machine_all', values)
 
 class WebsiteWorkorderControllerSimple(Controller):
 
