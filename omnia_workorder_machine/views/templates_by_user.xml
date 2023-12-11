@@ -38,25 +38,21 @@
 	            <table class="main_table" id="to_replace">
 	               <thead>
 	                  <tr>
-		                <th class="header_table">ID</th>
-		                <th class="header_table">Date Planned</th>
-		                <th class="header_table">Internal Reference</th>
-		                <th class="header_table">Product Name</th>
-		                <th class="header_table">Work Order Name</th>
-		                <th class="header_table">Production Name</th>
-		                <th class="header_table">N To Do</th>
-		                <th class="header_table">N Produced</th>
-		                <th class="header_table">Scrap</th>
-		                <!--<th class="header_table">Start</th>
-		                <th class="header_table">Pause</th>
-		                <th class="header_table">Resume</th>
-		                <th class="header_table">Record</th>-->
-		                <th class="header_table">Operation</th>
-		                <th class="header_table">Description</th>
-		                <th class="header_table">Work Order State</th>
-		                <th class="header_table">User Working</th>
-		                <th class="header_table" id="label">Label</th>
-		                <th class="header_table">Worksheet</th>
+		                <th id="by_user_h_1" class="header_table">ID</th>
+		                <th id="by_user_h_2" class="header_table">Date Planned</th>
+		                <th id="by_user_h_3" class="header_table">Internal Reference</th>
+		                <th id="by_user_h_4" class="header_table">Product Name</th>
+		                <th id="by_user_h_5" class="header_table">Work Order Name</th>
+		                <th id="by_user_h_6" class="header_table">Production Name</th>
+		                <th id="by_user_h_7" class="header_table">N To Do</th>
+		                <th id="by_user_h_8" class="header_table">N Produced</th>
+		                <th id="by_user_h_9" class="header_table">Scrap</th>
+		                <th id="by_user_h_10" class="header_table">Operation</th>
+		                <th id="by_user_h_11" class="header_table">Description</th>
+		                <th id="by_user_h_12" class="header_table">Work Order State</th>
+		                <th id="by_user_h_13" class="header_table">User Working</th>
+		                <th id="label" class="header_table" >Label</th>
+		                <th id="by_user_h_15" class="header_table">Worksheet</th>
 		            </tr>
 	               </thead>
 	               <tbody id="workorder_body">
@@ -99,7 +95,7 @@
                         </td>
                     </t>
                     <td class="table_value wo_isuserworking" style="display:none"><t t-raw="line[9]"/></td>
-	                <td class="table_value"><input class="print_label" type='button' value='Print'/></td>
+	                <td id="by_user_r_lable" class="table_value"><input class="print_label" type='button' value='Print'/></td>
 	                <td class="table_value"><a t-att-href="line[10]"  target="_blank">View</a></td>
 	            </tr>
 	       </t>

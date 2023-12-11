@@ -127,18 +127,68 @@ input.print_label:hoover{
     background-color: #e5a5d4;
 }
 input.user_id{
-    width: 50px;
+    width: 100px;
     background-color: lightyellow;
 }
 input.employee_id{
-    width: 50px;
+    width: 100px;
     background-color: lightyellow;
 }
 input.n_pieces{
-    width: 50px;
+    width: 80px;
     background-color: lightyellow;
 }
 input.n_scrap{
-    width: 50px;
+    width: 80px;
     background-color: lightyellow;
+}
+input[type=text] {
+  background-color: #f1f1f1;
+  width: 100%;
+}
+
+input[type=submit] {
+  background-color: DodgerBlue;
+  color: #fff;
+  cursor: pointer;
+}
+.autocomplete {
+  position: relative;
+  display: inline-block;
+}
+
+input {
+  border: 1px solid transparent;
+  background-color: #f1f1f1;
+  padding: 10px;
+  font-size: 16px;
+}
+.autocomplete-items {
+  position: absolute;
+  border: 1px solid #d4d4d4;
+  border-bottom: none;
+  border-top: none;
+  z-index: 99;
+  /*position the autocomplete items to be the same width as the container:*/
+  top: 100%;
+  left: 0;
+  right: 0;
+}
+
+.autocomplete-items div {
+  padding: 10px;
+  cursor: pointer;
+  background-color: #fff; 
+  border-bottom: 1px solid #d4d4d4; 
+}
+
+/*when hovering an item:*/
+.autocomplete-items div:hover {
+  background-color: #e9e9e9; 
+}
+
+/*when navigating through the items using the arrow keys:*/
+.autocomplete-active {
+  background-color: DodgerBlue !important; 
+  color: #ffffff; 
 }
