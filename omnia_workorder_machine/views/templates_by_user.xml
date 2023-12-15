@@ -18,14 +18,11 @@
 	            <form class="main_title">
 	            	<table style="width: 90%;">
 	            		<tr>
-	            		   <td t-if="hide_user != True" id="td_user_id" style="width:8%;">User Id: </td>
+	            		   <td id="td_user_id" t-if="hide_user != True"  style="width:8%;">User Id: </td>
 	            		   <td t-if="hide_user != True" style="width:15%;"><input id="input_user_id" type="number" class="user_id"/></td>
-	            		   
-	            		   <td t-if="hide_user == True" style="width:8%;" id="td_employee_id">Employee Id: </td>
+	            		   <td id="td_employee_id" t-if="hide_user == True" style="width:8%;" >Employee Id: </td>
 	            		   <td t-if="hide_user == True" style="width:15%;"><input id="input_employee_id" type="number" class="employee_id"/></td>
-	            		   
 	            		   <td  style="text-align: center;"><img id="waiting_clock" style="display:none;width: 280px;" src="/omnia_workorder_machine/static/src/images/clock.gif"/></td>
-	            		   
 				           <td align="right" rowspan="2" style="width: 25%;">
 				               <div id="customer_image"><img  src="/web/binary/company_logo"/></div>
 				           </td>
@@ -65,16 +62,16 @@
 	<template id="template_workorder_machine_table" name="Workorder Table">
 	        <t t-foreach="wo_lines" t-as="line">
 	               <tr class="content_line">
-	                <td class="table_value wo_id"><t t-esc="line[0]"/></td>
-	                <td class="table_value"><t t-esc="line[8]"/></td>
-	                <td class="table_value internal_ref"><t t-esc="line[2]"/></td>
-	                <td class="table_value"><t t-esc="line[1]"/></td>
-	                <td class="table_value"><t t-esc="line[3]"/></td>
-	                <td class="table_value"><t t-esc="line[4]"/></td>
-	                <td class="table_value n_pieces_to_produce"><t t-esc="line[7]"/></td>
-	                <td class="table_value"><input id="input_n_pieces" type="number" name="n_pieces" class="n_pieces" step="0.001" value="0" /></td>
-	                <td class="table_value"><input id="input_n_scrap" type="number" name="n_scrap" class="n_scrap" step="0.001" value="0" /></td>
-	                <td class="table_value">
+	                <td id="td_user_h_1" class="table_value wo_id"><t t-esc="line[0]"/></td>
+	                <td id="td_user_h_2" class="table_value"><t t-esc="line[8]"/></td>
+	                <td id="td_user_h_3" class="table_value internal_ref"><t t-esc="line[2]"/></td>
+	                <td id="td_user_h_4" class="table_value"><t t-esc="line[1]"/></td>
+	                <td id="td_user_h_5" class="table_value"><t t-esc="line[3]"/></td>
+	                <td id="td_user_h_6" class="table_value"><t t-esc="line[4]"/></td>
+	                <td id="td_user_h_7" class="table_value n_pieces_to_produce"><t t-esc="line[7]"/></td>
+	                <td id="td_user_h_8" class="table_value"><input id="input_n_pieces" type="number" name="n_pieces" class="n_pieces" step="0.001" value="0" /></td>
+	                <td id="td_user_h_9" class="table_value"><input id="input_n_scrap" type="number" name="n_scrap" class="n_scrap" step="0.001" value="0" /></td>
+	                <td id="td_user_h_10" class="table_value">
 	                	<div style="display: block ruby;">
 	                		<input class="start_work" type='button' value='Start'/>
 	                		<input class="pause_work" type='button' value='Pause'/>
@@ -82,21 +79,19 @@
 	                		<input class="stop_work" type='button' value='Record'/>
 	                	</div>
 	                </td>
-	                <td class="table_value"><t t-esc="line[5]"/></td>
-	                <td class="table_value wo_state" onchange="state_changed(this)"><t t-esc="line[6]"/></td>
-                    <t t-if="line[9]=='False'">
-                        <td class="table_value">
-                            <div style="color:red">Not Working</div>
-                        </td>
-                    </t>
-                    <t t-if="line[9]=='True'">
-                        <td class="table_value">
-                            <div style="color:green">Working</div>
-                        </td>
-                    </t>
-                    <td class="table_value wo_isuserworking" style="display:none"><t t-raw="line[9]"/></td>
+	                <td id="td_user_h_11" class="table_value"><t t-esc="line[5]"/></td>
+	                <td id="td_user_h_12" class="table_value wo_state" onchange="state_changed(this)"><t t-esc="line[6]"/></td>
+                     <td id="td_user_h_13" class="table_value">
+                         <t t-if="line[9]=='False'">    
+                             <div style="color:red">Not Working</div>
+                         </t>
+	                    <t t-if="line[9]=='True'">
+	                       <div style="color:green">Working</div>
+	                    </t>
+                     </td>
+                    <td id="td_user_h_14" class="table_value wo_isuserworking" style="display:none"><t t-raw="line[9]"/></td>
 	                <td id="by_user_r_lable" class="table_value"><input class="print_label" type='button' value='Print'/></td>
-	                <td class="table_value"><a t-att-href="line[10]"  target="_blank">View</a></td>
+	                <td id="td_user_h_15" class="table_value"><a t-att-href="line[10]"  target="_blank">View</a></td>
 	            </tr>
 	       </t>
 	</template>
