@@ -35,9 +35,7 @@ import datetime
 
 
 class MrpProductionExtension(models.Model):
-
-    _name = "mrp.production"
-    _inherit = ['mrp.production']
+    _inherit = 'mrp.production'
 
     @api.model
     @api.returns('self', lambda value:value.id)
@@ -58,7 +56,10 @@ class MrpProductionExtension(models.Model):
         for prodBrws in prodList:
             if prodBrws:
                 tmplBrws = prodBrws.product_tmpl_id
-                if tmplBrws.auto_reorder:
+                auto_reorder = True
+                if hasattr(self, 'auto_reorder'):
+                    auto_reorder = tmplBrws.auto_reorder
+                if auto_reorder:
                     if not self.checkExistingReorderRule(prodBrws, warehouse):
                         self.createReorderRule(prodBrws, warehouse)
 
