@@ -139,11 +139,13 @@ class MrpProduction(models.Model):
                         qty_to_order = line.product_uom_qty - line.reserved_availability
                         if 'Acquista' in order_point_id.product_id.route_ids.mapped("name"):
                             for purchase_line_id in self.env['purchase.order.line'].search([('omnia_mrp_orig_move','=',line.id),
+                                                                                            ('product_id','=',line.product_id.id),
                                                                                             ('account_analytic_id','=', analitic_id)]):
                                 qty_to_order = line.product_uom_qty - purchase_line_id.product_uom_qty
                                 break
                         elif 'Produci' in order_point_id.product_id.route_ids.mapped("name"):
                             for sub_mrp_production_id in self.env['mrp.production'].search([('omnia_mrp_orig_move','=',line.id),
+                                                                                            ('product_id','=',line.product_id.id),
                                                                                             ('omnia_analytic_id','=', analitic_id)]):
                                 qty_to_order = line.product_uom_qty - sub_mrp_production_id.product_uom_qty
                                 break

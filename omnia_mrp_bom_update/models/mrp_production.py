@@ -89,8 +89,8 @@ class MrpProduction(models.Model):
                             move_line_id.unlink()
                     else:
                         mrp_production_id.message_post(body= """<b>Unable to delete product: %r due to the move status in: %r</b></br>""" % (move_line_id.product_id.name, move_line_id.state))
-            if move_to_create:
-                self.env['stock.move'].generate_mrp_line(mrp_production_id, move_to_create)
+                if move_to_create:
+                    self.env['stock.move'].generate_mrp_line(mrp_production_id, move_to_create)
     
     @api.model
     def check_production_to_update(self):
