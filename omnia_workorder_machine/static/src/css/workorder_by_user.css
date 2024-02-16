@@ -131,7 +131,7 @@ input.user_id{
     background-color: lightyellow;
 }
 input.employee_id{
-    width: 50px;
+    width: 100%;
     background-color: lightyellow;
 }
 input.n_pieces{
