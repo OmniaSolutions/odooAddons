@@ -127,19 +127,19 @@ input.print_label:hoover{
     background-color: #e5a5d4;
 }
 input.user_id{
-    width: 50px;
+    width: 100px;
     background-color: lightyellow;
 }
 input.employee_id{
-    width: 100%;
+    width: 100px;
     background-color: lightyellow;
 }
 input.n_pieces{
-    width: 50px;
+    width: 80px;
     background-color: lightyellow;
 }
 input.n_scrap{
-    width: 50px;
+    width: 80px;
     background-color: lightyellow;
 }
 input[type=text] {
