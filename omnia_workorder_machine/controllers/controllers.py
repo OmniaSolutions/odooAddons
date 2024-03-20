@@ -63,7 +63,7 @@ class WebsiteWorkorderControllerByUser(Controller):
         lines = request.env['mrp.workorder'].getWorkordersByDomain(domain, listify=True)
         logging.info("Lines %r" % lines)
         values['wo_lines'] = lines
-        return self.forceRender('omnia_workorder_machine.template_workorder_machine_table', values)
+        return self.forceRender('omnia_workorder_machine.template_workorder_machine_table_all', values)
     
     @http.route(['/mrp_omnia/workorder_machine/<int:workcenter_id>'])
     def workoder_machine_wc(self, workcenter_id, **post):
@@ -168,13 +168,11 @@ class WebsiteWorkorderControllerByUser(Controller):
         pdf = "data:image/pdf;base64," + pdf
         pdfhttpheaders = [('Content-Type', 'application/pdf'), ('Content-Length', len(pdf))]
         return request.make_response(pdf, headers=pdfhttpheaders)
-
+    
     @http.route('/mrp_omnia/workorder_machine_all', type='http')
-    def workoder_machine_wc_all(self, workcenter_id, **post):
-        logging.info('WorkorderMachine with workcenter %r called' % (workcenter_id))
+    def workoder_machine_wc_all(self, **post):
         values = post
         return self.renderTemplate('omnia_workorder_machine.workorder_machine_all', values)
-
 
 
     @http.route(['/mrp_omnia/name_get_generic/<string:object_name>/<string:name_like>',
@@ -190,10 +188,7 @@ class WebsiteWorkorderControllerByUser(Controller):
             out.append((obj_generic.id, obj_generic.name))
         return {'data': out}
 
-    @http.route('/mrp_omnia/workorder_machine_all', type='http')
-    def workoder_machine_wc_all(self, **post):
-        values = post
-        return self.renderTemplate('omnia_workorder_machine.workorder_machine_all', values)
+
 
 class WebsiteWorkorderControllerSimple(Controller):
 

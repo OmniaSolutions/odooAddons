@@ -65,26 +65,21 @@
                 <table class="main_table" id="to_replace" style="position: relative;">
                    <thead>
                       <tr style="position: sticky;top: 0;">
-
-                        <th class="header_table">ID</th>
-                        <th class="header_table">Date Planned</th>
-                        <th class="header_table">Internal Reference</th>
-                        <th class="header_table">Product Name</th>
-                        <th class="header_table">Work Order Name</th>
-                        <th class="header_table">Production Name</th>
-                        <th class="header_table">N To Do</th>
-                        <th class="header_table">N Produced</th>
-                        <th class="header_table">Scrap</th>
-                        <!--<th class="header_table">Start</th>
-                        <th class="header_table">Pause</th>
-                        <th class="header_table">Resume</th>
-                        <th class="header_table">Record</th>-->
-                        <th class="header_table">Operation</th>
-                        <th class="header_table">Description</th>
-                        <th class="header_table">Work Order State</th>
-                        <th class="header_table">User Working</th>
-                        <th class="header_table" id="label">Label</th>
-                        <th class="header_table">Worksheet</th>
+                        <th id="h_id"                   class="header_table">ID</th>
+                        <th id="h_date_planned"         class="header_table">Date Planned</th>
+                        <th id="h_internal_reference"   class="header_table">Internal Reference</th>
+                        <th id="h_product_name"         class="header_table">Product Name</th>
+                        <th id="h_work_order_name"      class="header_table">Work Order Name</th>
+                        <th id="h_production_name"      class="header_table">Production Name</th>
+                        <th id="h_n_to_do"              class="header_table">N To Do</th>
+                        <th id="h_n_produced"           class="header_table">N Produced</th>
+                        <th id="h_scrap"                class="header_table">Scrap</th>
+                        <th id="h_operation"            class="header_table">Operation</th>
+                        <th id="h_description"          class="header_table">Description</th>
+                        <th id="h_work_order_state"     class="header_table">Work Order State</th>
+                        <th id="h_user_working"         class="header_table">User Working</th>
+                        <th id="label"                  class="header_table" >Label</th>
+                        <th id="h_worksheer"            class="header_table">Worksheet</th>
                     </tr>
                    </thead>
                    <tbody id="workorder_body">
@@ -94,41 +89,39 @@
         </body>
     </template>
 
-    <template id="template_workorder_machine_table" name="Workorder Table">
+    <template id="template_workorder_machine_table_all" name="Workorder Table">
             <t t-foreach="wo_lines" t-as="line">
                    <tr class="content_line">
-                    <td class="table_value wo_id"><t t-esc="line[0]"/></td>
-                    <td class="table_value"><t t-esc="line[8]"/></td>
-                    <td class="table_value internal_ref"><t t-esc="line[2]"/></td>
-                    <td class="table_value"><t t-esc="line[1]"/></td>
-                    <td class="table_value"><t t-esc="line[3]"/></td>
-                    <td class="table_value"><t t-esc="line[4]"/></td>
-                    <td class="table_value n_pieces_to_produce"><t t-esc="line[7]"/></td>
-                    <td class="table_value"><input id="input_n_pieces" type="number" name="n_pieces" class="n_pieces" step="0.001" value="0" /></td>
-                    <td class="table_value"><input id="input_n_scrap" type="number" name="n_scrap" class="n_scrap" step="0.001" value="0" /></td>
-                    <td class="table_value">
+                    <td id="tr_id"                class="table_value wo_id"><t t-esc="line[0]"/></td>
+                    <td id="tr_date_planned"      class="table_value"><t t-esc="line[8]"/></td>
+                    <td id="tr_internal_reference" class="table_value internal_ref"><t t-esc="line[2]"/></td>
+                    <td id="tr_product_name"      class="table_value"><t t-esc="line[1]"/></td>
+                    <td id="tr_work_order_name"   class="table_value"><t t-esc="line[3]"/></td>
+                    <td id="tr_production_name"   class="table_value"><t t-esc="line[4]"/></td>
+                    <td id="tr_n_to_do"           class="table_value n_pieces_to_produce"><t t-esc="line[7]"/></td>
+                    <td id="tr_n_produced"        class="table_value"><input id="input_n_pieces" type="number" name="n_pieces" class="n_pieces" step="0.001" value="0" /></td>
+                    <td id="tr_scrap"             class="table_value"><input id="input_n_scrap" type="number" name="n_scrap" class="n_scrap" step="0.001" value="0" /></td>
+                    <td id="tr_operation"         class="table_value">
                         <div style="display: block ruby;">
                             <input class="start_work" type='button' value='Start'/>
                             <input class="pause_work" type='button' value='Pause'/>
                             <input class="resume_work" type='button' value='Resume'/>
                             <input class="stop_work" type='button' value='Record'/>
                         </div>
-                    </td>
-                    <td class="table_value"><t t-esc="line[5]"/></td>
-                    <td class="table_value wo_state" onchange="state_changed(this)"><t t-esc="line[6]"/></td>
-                    <t t-if="line[9]=='False'">
-                        <td class="table_value">
+                    </td>        
+                    <td id="tr_description" class="table_value"><t t-esc="line[5]"/></td>
+                    <td id="tr_work_order_state" class="table_value wo_state" onchange="state_changed(this)"><t t-esc="line[6]"/></td>
+                    <td id="tr_user_working" class="table_value">
+                        <t t-if="line[9]=='False'">
                             <div style="color:red">Not Working</div>
-                        </td>
-                    </t>
-                    <t t-if="line[9]=='True'">
-                        <td class="table_value">
+                        </t>
+                        <t t-if="line[9]=='True'">
                             <div style="color:green">Working</div>
-                        </td>
-                    </t>
-                    <td class="table_value wo_isuserworking" style="display:none"><t t-raw="line[9]"/></td>
-                    <td class="table_value"><input class="print_label" type='button' value='Print'/></td>
-                    <td class="table_value"><a t-att-href="line[10]"  target="_blank">View</a></td>
+                        </t>
+                    </td>
+                    <td id="label" class="table_value wo_isuserworking" style="display:none"><t t-raw="line[9]"/></td>
+                    <td id="tr_worksheer" class="table_value"><input class="print_label" type='button' value='Print'/></td>
+                    <td id="tr_view" class="table_value"><a t-att-href="line[10]"  target="_blank">View</a></td>
                 </tr>
            </t>
     </template>

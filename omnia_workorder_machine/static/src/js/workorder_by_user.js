@@ -116,10 +116,14 @@ odoo.define('omnia_workorder_machine.workorder_machine_list', function (require)
         var wo_id = closestTr.getElementsByClassName('wo_id');
         var route = '/mrp_omnia/workorder_pause/';
         show_clock();
+        var emploeey_id=0
+        if(document.URL.search("workorder_by_user")<0){
+            emploeey_id=get_employee_id()
+        }
 		ajax.jsonRpc(route, 'call', {
 			'wo_id' : wo_id[0].textContent,
 			'user_id': get_user_id(),
-			'employee_id': get_employee_id(),
+			'employee_id': emploeey_id,
 		}).then(function (data) {
 			hide_clock();
 			filter_res(null);
@@ -137,10 +141,14 @@ odoo.define('omnia_workorder_machine.workorder_machine_list', function (require)
         var wo_id = closestTr.getElementsByClassName('wo_id');
         var route = '/mrp_omnia/workorder_resume/';
         show_clock();
+        var emploeey_id=0
+        if(document.URL.search("workorder_by_user")<0){
+            emploeey_id=get_employee_id()
+        }
 		ajax.jsonRpc(route, 'call', {
 			'wo_id' : wo_id[0].textContent,
 			'user_id': get_user_id(),
-			'employee_id': get_employee_id(),
+			'employee_id': emploeey_id,
 		}).then(function (data) {
 			hide_clock();
 			filter_res(null);
@@ -164,12 +172,16 @@ odoo.define('omnia_workorder_machine.workorder_machine_list', function (require)
         var n_scrap = n_scrap_ui[0].valueAsNumber;
         var route = '/mrp_omnia/workorder_record/';
         show_clock();
+        var emploeey_id=0
+        if(document.URL.search("workorder_by_user")<0){
+            emploeey_id=get_employee_id()
+        }
     		ajax.jsonRpc(route, 'call', {
     			'wo_id' : wo_id[0].textContent,
     			'n_pieces': pieces,
     			'n_scrap': n_scrap,
     			'user_id': get_user_id(),
-    			'employee_id': get_employee_id(),
+    			'employee_id': emploeey_id,
     		}).then(function (data) {
     			hide_clock();
     			filter_res(null);
