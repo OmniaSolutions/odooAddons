@@ -78,21 +78,22 @@ class StockPicking(models.Model):
         res = super(StockPicking, self).button_validate()
         if isinstance(res, dict) and res.get('type', '') == 'ir.actions.act_window':
             return res
-        if self.isIncoming() and not self.isDropship():
-            objProduction = self.env['mrp.production'].search([('id', '=', self.sub_production_id)])
-            if objProduction and objProduction.state == 'external':
-                wh_out_dropship = self.checkDropship()
-                if wh_out_dropship == self:
-                    for stock_move_picking in self.move_lines:
-                        if stock_move_picking.mrp_production_id == objProduction.id:
-                            subcontract_finished_move = stock_move_picking.subcontractFinishedProduct()
-                            stock_move_picking.subcontractRawProducts(subcontract_finished_move, objProduction)
-                else:
-                    self.button_validate_dropship(wh_out_dropship, objProduction)
-                if objProduction.isPicksInDone():
-                    objProduction.state = 'done'
-            self.recomputePurchaseQty(self)
-            self.cancel_other_partners_picks(self.partner_id, self.sub_production_id)
+        for stock_piking_id in self:
+            if stock_piking_id.isIncoming() and not stock_piking_id.isDropship():
+                objProduction = self.env['mrp.production'].search([('id', '=', stock_piking_id.sub_production_id)])
+                if objProduction and objProduction.state == 'external':
+                    wh_out_dropship = stock_piking_id.checkDropship()
+                    if wh_out_dropship == stock_piking_id:
+                        for stock_move_picking in stock_piking_id.move_lines:
+                            if stock_move_picking.mrp_production_id == objProduction.id:
+                                subcontract_finished_move = stock_move_picking.subcontractFinishedProduct()
+                                stock_move_picking.subcontractRawProducts(subcontract_finished_move, objProduction)
+                    else:
+                        stock_piking_id.button_validate_dropship(wh_out_dropship, objProduction)
+                    if objProduction.isPicksInDone():
+                        objProduction.state = 'done'
+                self.recomputePurchaseQty(self)
+                self.cancel_other_partners_picks(stock_piking_id.partner_id, stock_piking_id.sub_production_id)
         return res
 
     def button_validate_dropship(self, wh_out_dropship, objProduction):
