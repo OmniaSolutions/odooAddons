@@ -163,6 +163,8 @@ class MrpProduction(models.Model):
                                             qty_to_order=0
                                             break
                             elif manufactoty_id.id in mapped_routs:
+                                if not line.product_id.bom_ids:
+                                    continue
                                 for sub_mrp_production_id in self.env['mrp.production'].search([('omnia_mrp_orig_move','=',line.id),
                                                                                                 ('product_id','=',line.product_id.id),
                                                                                                 ('omnia_analytic_id','=', analitic_id),
@@ -210,5 +212,8 @@ class MrpProduction(models.Model):
                                 logging.error(ex)
                             
         for mrp_production_id in sub_production_to_compute:
-            mrp_production_id.create_procuraments()
+            try:
+                mrp_production_id.create_procuraments()
+            except Exception as ex:
+                logging.error(ex)
         
