@@ -25,6 +25,7 @@ Created on 26 Oct 2021
 '''
 import logging
 import datetime
+from dateutil.relativedelta import relativedelta
 from odoo import models
 from odoo import fields
 from odoo import api
@@ -75,7 +76,7 @@ class StockRule(models.Model):
         for line in po.order_line:
             if line.product_id == product_id and \
                         line.product_uom == product_id.uom_po_id and \
-                        self.env.context['omnia_analytic_id']==line.account_analytic_id.id:
+                        self.env.context.get('omnia_analytic_id')==line.account_analytic_id.id:
                 if line._merge_in_existing_line(product_id, product_qty, product_uom, location_id, name, origin, values):
                     vals = self._update_purchase_order_line(product_id, product_qty, product_uom, values, line, partner)
                     po_line = line.write(vals)
@@ -108,4 +109,18 @@ class StockRule(models.Model):
             out['omnia_mrp_orig_move'] = orig_move_id
         return out
     
-
+    def _get_purchase_order_date(self, product_id, product_qty, product_uom, values, partner, schedule_date):
+        """Return the datetime value to use as Order Date (``date_order``) for the
+           Purchase Order created to satisfy the given procurement. """
+        purchase_date = super(StockRule, self)._get_purchase_order_date(product_id, product_qty, product_uom, values, partner, schedule_date)
+        if purchase_date < fields.Datetime.now():
+            return fields.Datetime.now()
+        return purchase_date
+    
+    # def _get_purchase_schedule_date(self, values):
+    #     """Return the datetime value to use as Schedule Date (``date_planned``) for the
+    #        Purchase Order Lines created to satisfy the given procurement. """
+    #     schedule_date = super(StockRule, self)._get_purchase_schedule_date(values)
+    #     if schedule_date < fields.Datetime.now():
+    #         return fields.Datetime.now()
+    #     return schedule_date

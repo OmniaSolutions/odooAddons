@@ -167,7 +167,7 @@ class WebsiteWorkorderController(Controller):
         return ''
         
     @http.route('/mrp/workorder_simple', csrf=False)
-    def workcenter_main_form(*arg, **kargs):
+    def workcenter_main_form(self, *arg, **kargs):
         return request.render('omnia_workorder_machine.workorder_simple','')
     
     @http.route('/mrp/workorder_simple_post', methods=['POST'], csrf=False)

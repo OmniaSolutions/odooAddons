@@ -20,7 +20,7 @@
 ##############################################################################
 {
     'name': 'Omnia Mrp Make Procurement',
-    'version': '12.0.1',
+    'version': '12.0.2',
     'sequence': 1,
     'category': 'Custom',
     'description': """
@@ -30,10 +30,12 @@ Allow the capability to recursively make procurement order from manufactoring or
     'maintainer': 'OmniaSolutions',
     'website': 'https://www.omniasolutions.website',
     'images': ['static/img/mrp_make_procurement.png'],
-    'depends': ['mrp',
+    'depends': ['base',
+                'mrp',
                 'stock',
                 'purchase',
-                'purchase_stock'],
+                'purchase_stock',
+                'omnia_mrp_analytic'],
     'data': [
         #  view
         'views/mrp_production.xml',
