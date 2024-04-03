@@ -190,7 +190,7 @@ class MrpProduction(models.Model):
                                                                                     order_point_id.product_max_qty==0:
                                             break
                                 to_order_no_analityc = start_qty-qty_to_order
-                                if to_order_no_analityc:
+                                if to_order_no_analityc>0:
                                     self.create_procurement_row(line.product_id,
                                                                 to_order_no_analityc,
                                                                 mrp_production_id.name,
