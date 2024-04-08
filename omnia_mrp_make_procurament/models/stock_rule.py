@@ -100,6 +100,10 @@ class StockRule(models.Model):
         orig_move_id = self.env.context.get('omnia_orig_move_id')
         if orig_move_id:
             values['omnia_mrp_orig_move'] = orig_move_id
+        else:
+            for _,move_id in values.get('move_dest_ids',[]):
+                values['omnia_mrp_orig_move'] = move_id
+                break
         return values
 
     def _prepare_mo_vals(self, product_id, product_qty, product_uom, location_id, name, origin, values, bom):

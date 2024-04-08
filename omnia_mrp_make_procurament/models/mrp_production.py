@@ -133,6 +133,7 @@ class MrpProduction(models.Model):
         sub_production_to_compute = self.env['mrp.production']
         buy_id = self.env.ref("purchase_stock.route_warehouse0_buy")
         manufactoty_id = self.env.ref("mrp.route_warehouse0_manufacture")
+        make_to_order_id = self.env.ref("stock.route_warehouse0_mto")
         for mrp_production_id in self:
             mrp_production_id.action_assign()
             mrp_context = self.env.context.copy()
@@ -143,12 +144,16 @@ class MrpProduction(models.Model):
                     if self.location_src_id.id==order_point_id.location_id.id:
                         qty_to_order = line.product_uom_qty - line.reserved_availability  
                         mapped_routs = order_point_id.product_id.route_ids.mapped("id")
+                        if make_to_order_id.id in mapped_routs:
+                            continue
                         if qty_to_order > 0:
                             if buy_id.id in mapped_routs:
                                 for purchase_line_id in self.env['purchase.order.line'].search([('omnia_mrp_orig_move','=', line.id),
                                                                                                 ('product_id','=',line.product_id.id),
                                                                                                 ('account_analytic_id','=', analitic_id),
                                                                                                 ('state','not in', ['cancel'])]):
+                                    if self.name not in purchase_line_id.order_id.origin:
+                                        continue
                                     qty_to_order-= purchase_line_id.product_uom_qty - purchase_line_id.qty_received
                                     if qty_to_order<=0:
                                         qty_to_order=0
@@ -169,6 +174,8 @@ class MrpProduction(models.Model):
                                                                                                 ('product_id','=',line.product_id.id),
                                                                                                 ('omnia_analytic_id','=', analitic_id),
                                                                                                 ('state','!=', 'cancel')]):
+                                    if self.name not in sub_mrp_production_id.origin:
+                                        continue
                                     qty_to_order-= sub_mrp_production_id.product_uom_qty - sub_mrp_production_id.qty_produced
                                 if qty_to_order:
                                     for sub_mrp_production_id in self.env['mrp.production'].search([('omnia_mrp_orig_move','=',False),
@@ -179,8 +186,8 @@ class MrpProduction(models.Model):
                                         if qty>0:
                                             qty_to_order-=qty 
                         if qty_to_order>0:
+                            max_id = max(self.search([('state','not in',['cancel','done'])]).ids)
                             mrp_context['omnia_orig_move_id'] = line.id
-                            
                             if order_point_id.qty_multiple>0:
                                 start_qty = 0
                                 if start_qty <= order_point_id.product_min_qty:
@@ -203,7 +210,7 @@ class MrpProduction(models.Model):
                             # retrive the sub orders
                             #
                             try:
-                                max_id = max(self.search([('state','not in',['cancel','done'])]).ids)
+                                
                                 for mrp_production_id in self.search([('product_id','=', line.product_id.id),
                                                                       ('state','not in',['cancel','done']),
                                                                       ('id','>', max_id)]):
@@ -217,3 +224,15 @@ class MrpProduction(models.Model):
             except Exception as ex:
                 logging.error(ex)
         
+    @api.multi
+    def _generate_moves(self):
+        mrp_context = self.env.context.copy()
+        for mrp_production_id in self:
+            analitic_id = mrp_production_id.project_id.analytic_account_id.id
+            if analitic_id:
+                mrp_context['omnia_analytic_id'] = analitic_id
+                super(MrpProduction, mrp_production_id.with_context(mrp_context))._generate_moves()
+        return True
+
+
+    
