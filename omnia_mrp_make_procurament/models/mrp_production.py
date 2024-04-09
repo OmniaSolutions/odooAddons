@@ -232,6 +232,8 @@ class MrpProduction(models.Model):
             if analitic_id:
                 mrp_context['omnia_analytic_id'] = analitic_id
                 super(MrpProduction, mrp_production_id.with_context(mrp_context))._generate_moves()
+            else:
+                super(MrpProduction, mrp_production_id)._generate_moves()
         return True
 
 
