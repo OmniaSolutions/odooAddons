@@ -90,11 +90,18 @@ class TmpStockMove(models.TransientModel):
     date_expected = fields.Datetime('Scheduled date')
     workorder_id = fields.Many2one(comodel_name='mrp.workorder', string='Workorder Id', readonly=True)
 
-    qty_available = fields.Float(_('Qty available'), compute='_compute_qty_available')
+    qty_available = fields.Float(_('Sup. Qty av.'), compute='_compute_qty_available')
+    qty_available_in_stock = fields.Float(_('Stock Qty av.'), compute='_compute_qty_available_in_stock')
     location_available = fields.Many2one('stock.location', string=_('Qty Location'))
     mo_source_move = fields.Many2one('stock.move', string=_('Source MO stock move.'))
 
-
+    @api.depends('product_id', 'location_id')
+    def _compute_qty_available_in_stock(self):
+        for move in self:
+            move.qty_available_in_stock = 0
+            if move.product_id and move.location_id:
+                move.qty_available_in_stock = move.checkQuantQty(move.product_id, move.location_id)
+                
     @api.depends('location_dest_id', 'location_id')
     def _compute_qty_available(self):
         for move in self:
@@ -104,9 +111,10 @@ class TmpStockMove(models.TransientModel):
 
     def checkQuantQty(self, product, location):
         stock_quant_model = self.env['stock.quant']
+        location_ids = self.env['stock.location']._search([('id', 'child_of', location.id)])
         stock_quants = stock_quant_model.search([
             ('product_id', '=', product.id),
-            ('location_id', '=', location.id)
+            ('location_id', 'in', location_ids)
             ])
         for quant in stock_quants:
             return quant.quantity
