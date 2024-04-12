@@ -72,12 +72,15 @@ odoo.define('omnia_workorder_machine.workorder_machine_list', function (require)
 
 	function show_clock(){
         var clock = document.getElementById('waiting_clock');
-        clock.style.display = 'block';
+        clock.style.visibility = 'visible';
+	clock.style.display = 'block';
+	clock.style.width = '80px';
 	}
+
 
 	function hide_clock(){
         var clock = document.getElementById('waiting_clock');
-        clock.style.display = 'none';
+        clock.style.visibility = 'hidden';
 	}
 
     function start_work1 (button) {
