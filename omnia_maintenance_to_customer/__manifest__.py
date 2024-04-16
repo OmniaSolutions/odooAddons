@@ -21,7 +21,7 @@
 ##############################################################################
 {
     'name': 'Maintenance to customer',
-    'version': '14.0',
+    'version': '16.0.1',
     'author': 'OmniaSolutions',
     'website': 'http://www.omniasolutions.eu',
     'category': 'maintenance',
@@ -34,14 +34,12 @@ Extend maintenance to the customer
 ==================================
     """,
     'data': [
-            # security
-            # 'security/my.xml',
             # views
             'views/maintenance.xml',
             # Reports Template
-            # 'report_template/bom_structure_report_template.xml',
+
             # Report
-            # 'report/bom_structure.xml',
+
             ],
 #    'qweb': ['views/templates.xml'],
     'demo': [],

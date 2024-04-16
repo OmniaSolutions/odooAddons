@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+    
+    <!-- UOM Categories -->
+	    <record id="omnia_uom_categ_current" model="uom.category">
+	        <field name="name">Current</field>
+	    </record>
+	    
+        <record id="omnia_uom_categ_voltage" model="uom.category">
+            <field name="name">Voltage</field>
+        </record>
+        <record id="omnia_uom_categ_electrical_resistance" model="uom.category">
+            <field name="name">OHM</field>
+        </record>
+        <record id="omnia_uom_categ_electrical_frequency" model="uom.category">
+            <field name="name">HERTZ</field>
+        </record>
+        <record id="omnia_uom_categ_mFarad" model="uom.category">
+            <field name="name">µFarad</field>
+        </record>
+        <record id="omnia_uom_electric_power" model="uom.category">
+            <field name="name">Watt</field>
+        </record>        
+        
+    <!-- UOM.UOM -->
+    <!-- Ampere -->
+	    <record id="omnia_uom_ampere" model="uom.uom">
+	        <field name="category_id" ref="omnia_uom_categ_current"/>
+	        <field name="name">Ampere</field>
+	        <field name="factor" eval="1.0"/>
+	        <field name="uom_type">reference</field>
+	    </record>
+	    <record id="omnia_uom_milliamper" model="uom.uom">
+	        <field name="category_id" ref="omnia_uom_categ_current"/>
+	        <field name="name">Milliamper</field>
+	        <field name="factor" eval="1000"/>
+	        <field name="uom_type">smaller</field>
+	    </record>      
+        <record id="omnia_uom_microamper" model="uom.uom">
+            <field name="category_id" ref="omnia_uom_categ_current"/>
+            <field name="name">Microamper</field>
+            <field name="factor" eval="1000000"/>
+            <field name="uom_type">smaller</field>
+        </record> 
+    <!-- Vaultage -->
+        <record id="omnia_uom_volt" model="uom.uom">
+            <field name="category_id" ref="omnia_uom_categ_voltage"/>
+            <field name="name">Volt</field>
+            <field name="factor" eval="1.0"/>
+            <field name="uom_type">reference</field>
+        </record>
+        <record id="omnia_uom_kilovolt" model="uom.uom">
+            <field name="category_id" ref="omnia_uom_categ_voltage"/>
+            <field name="name">Kilovolt</field>
+            <field name="factor_inv" eval="1000"/>
+            <field name="uom_type">bigger</field>
+        </record> 
+        <record id="omnia_uom_milliamper" model="uom.uom">
+            <field name="category_id" ref="omnia_uom_categ_voltage"/>
+            <field name="name">Millivolt</field>
+            <field name="factor" eval="1000"/>
+            <field name="uom_type">smaller</field>
+        </record>      
+        <record id="omnia_uom_microamper" model="uom.uom">
+            <field name="category_id" ref="omnia_uom_categ_voltage"/>
+            <field name="name">Microvolt</field>
+            <field name="factor" eval="1000000"/>
+            <field name="uom_type">smaller</field>
+        </record> 
+      <!-- electrical_resistance -->
+        <record id="omnia_uom_ampere" model="uom.uom">
+            <field name="category_id" ref="omnia_uom_categ_electrical_resistance"/>
+            <field name="name">Ohm</field>
+            <field name="factor" eval="1.0"/>
+            <field name="uom_type">reference</field>
+        </record>
+        <record id="omnia_uom_megaohm" model="uom.uom">
+            <field name="category_id" ref="omnia_uom_categ_electrical_resistance"/>
+            <field name="name">Megaohm</field>
+            <field name="factor_inv" eval="1000000"/>
+            <field name="uom_type">bigger</field>
+        </record> 
+        <record id="omnia_uom_kiloohm" model="uom.uom">
+            <field name="category_id" ref="omnia_uom_categ_electrical_resistance"/>
+            <field name="name">Kiloohm</field>
+            <field name="factor_inv" eval="1000"/>
+            <field name="uom_type">bigger</field>
+        </record> 
+      <!-- electrical_frequency -->
+        <record id="omnia_uom_hertz" model="uom.uom">
+            <field name="category_id" ref="omnia_uom_categ_electrical_frequency"/>
+            <field name="name">Hertz</field>
+            <field name="factor" eval="1.0"/>
+            <field name="uom_type">reference</field>
+        </record>
+        <record id="omnia_uom_megahertz" model="uom.uom">
+            <field name="category_id" ref="omnia_uom_categ_electrical_frequency"/>
+            <field name="name">Megahertz</field>
+            <field name="factor_inv" eval="1000000"/>
+            <field name="uom_type">bigger</field>
+        </record> 
+        <record id="omnia_uom_kilohertz" model="uom.uom">
+            <field name="category_id" ref="omnia_uom_categ_electrical_frequency"/>
+            <field name="name">Kilohertz</field>
+            <field name="factor_inv" eval="1000"/>
+            <field name="uom_type">bigger</field>
+        </record> 
+    <!-- Ampere -->
+        <record id="omnia_uom_microfarad" model="uom.uom">
+            <field name="category_id" ref="omnia_uom_categ_mFarad"/>
+            <field name="name">microFarad</field>
+            <field name="factor" eval="1.0"/>
+            <field name="uom_type">reference</field>
+        </record>
+        <record id="omnia_uom_nanofarad" model="uom.uom">
+            <field name="category_id" ref="omnia_uom_categ_mFarad"/>
+            <field name="name">nanoFarad</field>
+            <field name="factor" eval="1000"/>
+            <field name="uom_type">smaller</field>
+        </record>      
+        <record id="omnia_uom_picofaradd" model="uom.uom">
+            <field name="category_id" ref="omnia_uom_categ_mFarad"/>
+            <field name="name">picoFarad</field>
+            <field name="factor" eval="1000000"/>
+            <field name="uom_type">smaller</field>
+        </record>
+      <!-- electrical_frequency -->
+        <record id="omnia_uom_Watt" model="uom.uom">
+            <field name="category_id" ref="omnia_uom_electric_power"/>
+            <field name="name">Watt</field>
+            <field name="factor" eval="1.0"/>
+            <field name="uom_type">reference</field>
+        </record>
+        <record id="omnia_uom_megawatt" model="uom.uom">
+            <field name="category_id" ref="omnia_uom_electric_power"/>
+            <field name="name">MegaWatt</field>
+            <field name="factor_inv" eval="1000000"/>
+            <field name="uom_type">bigger</field>
+        </record> 
+        <record id="omnia_uom_kilowatt" model="uom.uom">
+            <field name="category_id" ref="omnia_uom_electric_power"/>
+            <field name="name">KiloWatt</field>
+            <field name="factor_inv" eval="1000"/>
+            <field name="uom_type">bigger</field>
+        </record> 
+    </data>
+</odoo>

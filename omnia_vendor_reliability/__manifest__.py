@@ -21,7 +21,7 @@
 ##############################################################################
 {
     'name': 'Omnia Vendor Reliability',
-    'version': '14.0',
+    'version': '16.0.1',
     'author': 'OmniaSolutions',
     'website': 'http://www.omniasolutions.eu',
     'category': 'report',

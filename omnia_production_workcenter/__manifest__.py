@@ -1,7 +1,7 @@
 # -*- encoding: utf-8 -*-
 ##############################################################################
 #
-#    OmniaSolutions, Open Source Management Solution    
+#    OmniaSolutions, Open Source Management Solution
 #    Copyright (C) 2010-2011 OmniaSolutions (<http://www.omniasolutions.eu>). All Rights Reserved
 #    $Id$
 #
@@ -20,8 +20,27 @@
 #
 ##############################################################################
 
-'''
-Created on Feb 13, 2015
+{
+    'name': 'Omnia Production WorkCenter',
+    'version': '16.0.1',
+    'author': 'OmniaSolutions',
+    'website': 'http://www.omniasolutions.eu',
+    'category': 'Custom',
+    'sequence': 1,
+    'summary': '',
+    'images': [],
+    'depends': ['mrp'],
+    'description': """
+    """,
+    'data': ['views/production_workorder.xml',
+             'views/templates.xml'],
+    'qweb': [],
+    'js': [],
+    'css': [],
+    'test': [],
+    'installable': False,
+    'application': False,
+    'auto_install': False,
+}
 
-@author: daniel
-'''
+# vim:expandtab:smartindent:tabstop=4:softtabstop=4:shiftwidth=4:

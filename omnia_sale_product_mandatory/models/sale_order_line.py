@@ -96,8 +96,9 @@ class SaleOrderLine(models.Model):
             if line.self_sale_line_needed:
                 for child_line in self.env['sale.order.line'].search([('parent_sale_line_needed', '=', line.self_sale_line_needed),
                                                                       ('order_id', '=', line._origin.order_id.id)]):
-                    child_line.product_uom_qty = line.product_uom_qty
-                    child_line.temporary_change = True 
+                    child_line.update({'product_uom_qty': line.product_uom_qty,
+                                       'temporary_change': True})
+
         return {'type': 'ir.actions.client',
                 'tag': 'reload'}
     

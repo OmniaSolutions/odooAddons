@@ -2,7 +2,7 @@
 ##############################################################################
 #
 #    OmniaSolutions, Open Source Management Solution    
-#    Copyright (C) 2010-2011 OmniaSolutions (<http://www.omniasolutions.eu>). All Rights Reserved
+#    Copyright (C) 2010-2021 OmniaSolutions (<http://www.omniasolutions.eu>). All Rights Reserved
 #    $Id$
 #
 #    This program is free software: you can redistribute it and/or modify
@@ -21,17 +21,18 @@
 ##############################################################################
 {
     'name': 'Omnia Dev Tools',
-    'version': '1.1',
+    'version': '16.0.1',
     'author': 'OmniaSolutions',
     'website': 'https://www.omniasolutions.website',
-    'category': 'Omnia Dev Tools',
+    'category': 'Extra Tools',
     'sequence': 15,
+     "license": "LGPL-3",
     'summary': 'Omnia Dev Tools',
     'images': [],
     'depends': ['base'],
     'description': """
-    This module add special fields like
-    id,create_date,create_user,write_date,write_user when you are part of the group base.group_erp_manager
+        This module add special fields like
+        id,create_date,create_user,write_date,write_user when you are part of the group base.group_erp_manager
     """,
     'data': [
        ],

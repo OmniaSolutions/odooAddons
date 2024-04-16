@@ -20,7 +20,7 @@
 ##############################################################################
 {
     "name": "Manufacturing Subcontracting Cutted Parts Link",
-    "version": "14.0.1.0.0",
+    "version": "16.0.1",
     "author": "OmniaSolutions",
     "website": "https://github.com/OmniaGit/odooplm",
     "category": "Manufacturing Subcontracting Cutted Parts Link",

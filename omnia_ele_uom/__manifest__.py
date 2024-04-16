@@ -2,13 +2,12 @@
 ##############################################################################
 #
 #    OpenERP, Open Source Management Solution
-#    Copyright (C) 2004-2009 Tiny SPRL (<http://tiny.be>).
-#    Copyright (C) 2010-2012 OpenERP s.a. (<http://openerp.com>).
+#    Copyright (C) 2010-2017 OmniaSosutions S.N.C di Boscolo Matteo & C
 #
 #
-#    Author : Smerghetto Daniel  (Omniasolutions)
-#    mail:daniel.smerghetto@omniasolutions.eu
-#    Copyright (c) 2014 Omniasolutions (http://www.omniasolutions.eu)
+#    Author : Matteo Boscolo
+#    mail:matteo.boscolo@omniasolutions.eu
+#    Copyright (c) 2017 Omniasolutions (http://www.omniasolutions.eu) 
 #    All Right Reserved
 #
 #    This program is free software: you can redistribute it and/or modify
@@ -26,21 +25,32 @@
 #
 ##############################################################################
 
-'''
-Created on Dec 18, 2017
 
-@author: daniel
-'''
-
-from odoo import models
-from odoo import fields
-from odoo import api
-from odoo import _
-import logging
-import datetime
-
-
-class StockMove(models.Model):
-    _inherit = ['stock.move']
-
-    from_move_id = fields.Integer(_('From Stock Move'))
+{
+    'name': 'omnia_ele_uom',
+    'version': '16.0.1',
+    'sequence': 1,
+    'category': 'PRODUCT',
+    'description': """
+This module add all electrical unif of mesure to odoo
+=====================================================
+""",
+    'author': 'OmniaSolutions.eu',
+    'maintainer': 'OmniaSolutions.eu',
+    'website': 'http://www.OmniaSolutions.eu',
+    'depends': ['uom'],
+    'data': [
+        #  view
+        #  report
+        #  'report/myReport.xml',
+        #  menu
+        #  'view/myMenu.xml',
+        #  security
+        # 'security/mySecurity.xml',
+        # data
+        'data/data.xml'
+    ],
+    'installable': True,
+    'application': False,
+    'auto_install': False,
+}

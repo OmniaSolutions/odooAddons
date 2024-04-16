@@ -21,7 +21,7 @@
 ##############################################################################
 {
     'name': 'Sale Order Mandatory Product',
-    'version': '14.0',
+    'version': '16.0.1',
     'author': 'OmniaSolutions',
     'website': 'https://www.omniasolutions.website',
     'category': 'Sales/Sales',
@@ -29,6 +29,7 @@
     'summary': 'Allows mandatory Product to be added automatically on sale order line',
     'images': [],
     'depends': ['sale'],
+    "license": "LGPL-3",
     'description': """ 
     This module extend the capability of the product to allows adding some mandatory products.
     so if you select in the sale.order.line a product that contain a mandatory product, a ney sale order line with the mandatory product

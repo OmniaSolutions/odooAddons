@@ -25,11 +25,9 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 ##############################################################################
-
-
 {
-    'name': 'Omnia Manufacturing Sub contracting Rule',
-    'version': '14.0.1',
+    'name': 'Omnia Manufacturing Subcontracting Rule',
+    'version': '16.0.1',
     'sequence': 1,
     'category': 'mrp',
     'description': """

@@ -29,7 +29,7 @@
 
 {
     'name': 'Omnia Mrp Analytics',
-    'version': '14.0',
+    'version': '16.0.1',
     'sequence': 1,
     'category': 'Custom',
     'description': """

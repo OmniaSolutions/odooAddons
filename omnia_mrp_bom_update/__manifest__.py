@@ -20,7 +20,7 @@
 ##############################################################################
 {
     'name': '[OMNIASOLUTIONS] Production Bom Update',
- 'version': '14.0.1.0.0',
+ 'version': '16.0.1',
  'sequence': 1,
  'category': 'Manufacturing',
  'description': """
@@ -33,7 +33,8 @@ with this module you can fell the manufacture order with the new element present
  'author': 'mboscolo',
  'maintainer': 'https://www.OmniaSolutions.website',
  'website': 'https://www.OmniaSolutions.website',
- 'depends': ['mrp','stock'],
+ 'depends': ['mrp',
+             'stock'],
  'license': 'AGPL-3',
  'data': [#  view
           'views/mrp_production.xml'],

@@ -26,7 +26,7 @@
 
 {
     'name': 'omnia_proforma_invoice_number',
-    'version': '14.0',
+    'version': '16.0.1',
     'sequence': 1,
     'category': 'invoice',
     'description': """

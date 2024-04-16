@@ -2,10 +2,12 @@
 ##############################################################################
 #
 #    OpenERP, Open Source Management Solution
+#    Copyright (C) 2010-2017 OmniaSosutions S.N.C di Boscolo Matteo & C
 #
-#    Author : Matteo Boscolo  (Omniasolutions)
+#
+#    Author : Matteo Boscolo
 #    mail:matteo.boscolo@omniasolutions.eu
-#    Copyright (c) 2018 Omniasolutions (http://www.omniasolutions.eu)
+#    Copyright (c) 2017 Omniasolutions (http://www.omniasolutions.eu) 
 #    All Right Reserved
 #
 #    This program is free software: you can redistribute it and/or modify
@@ -25,29 +27,30 @@
 
 
 {
-    'name': 'omnia_pick_merge',
-    'version': '14.0',
+    'name': 'omnia_crm_sale_field_extended',
+    'version': '16.0.1',
     'sequence': 1,
-    'category': 'Custom',
+    'category': 'CRM',
     'description': """
-merge picking
-====================
+This module extend the integration between the crm and the sale module adding fields to the crm
+================================================================================================
 """,
     'author': 'OmniaSolutions.eu',
     'maintainer': 'OmniaSolutions.eu',
     'website': 'http://www.OmniaSolutions.eu',
-    'depends': ['sale',
-                'stock',
-                'sale_order_line_date_request'],
-    'data': ['views/stock_picking.xml',
-             'wizard/wizard.xml',
-             # report
-             #'report/report_ddt.xml',
-             # menu
-             #'view/menu_configuration.xml',
-             # security
-             #'security/ddt_groups.xml',
-             ],
+    'depends': ['sale', 'crm'],
+    'data': [
+        #  view
+        'view/crm_lead.xml',
+        #  report
+        #  'report/myReport.xml',
+        #  menu
+        #  'view/myMenu.xml',
+        #  security
+        # 'security/mySecurity.xml',
+        # data
+        'data/custom_filter.xml'
+    ],
     'installable': False,
     'application': True,
     'auto_install': False,
