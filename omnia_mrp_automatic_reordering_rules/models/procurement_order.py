@@ -43,6 +43,8 @@ class ProcurementOrderOmnia(models.Model):
         reorderRuleEnv = self.env['stock.warehouse.orderpoint']
         for mrpOrderBrws in forceMrpBrws:
             for moveLineBrws in mrpOrderBrws.move_raw_ids:
+                if moveLineBrws.bom_line_id.bom_id.type=='phantom':
+                    continue
                 prodBrws = moveLineBrws.product_id
                 reorderingRules = reorderRuleEnv.search([
                     ('product_id', '=', prodBrws.id),

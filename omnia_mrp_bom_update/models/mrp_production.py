@@ -45,8 +45,8 @@ class MrpProduction(models.Model):
     def update_row_line_form_bom(self):
         for mrp_production_id in self.filtered(lambda x: x.state not in ['done', 'cancel']):
             if mrp_production_id.auto_bom_update:
-                
                 move_to_create = []
+                #
                 for bom_line_id in mrp_production_id.bom_id.bom_line_ids:
                     addLine=True
                     for move_line_id in mrp_production_id.move_raw_ids:

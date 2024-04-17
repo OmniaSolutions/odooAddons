@@ -41,12 +41,11 @@ class StockMove(models.Model):
     
     @api.model
     def generate_mrp_line(self, mrp_production_id, mrp_bom_line_ids):
-        bom_line_ids = [line.id for line in mrp_bom_line_ids]
+        #bom_line_ids = [line.id for line in mrp_bom_line_ids]
         factor = mrp_production_id.product_uom_id._compute_quantity(mrp_production_id.product_qty, mrp_production_id.bom_id.product_uom_id) / mrp_production_id.bom_id.product_qty
         _boms, exploded_lines = mrp_production_id.bom_id.explode(mrp_production_id.product_id, factor, picking_type=mrp_production_id.bom_id.picking_type_id)
         for bom_line_id, line_data in exploded_lines:
-            if bom_line_id.id in bom_line_ids:
-                mrp_production_id._update_raw_move(bom_line_id, line_data)
+            mrp_production_id._update_raw_move(bom_line_id, line_data)
         # Check for all draft moves whether they are mto or not
         mrp_production_id._adjust_procure_method()
         mrp_production_id.move_raw_ids._action_confirm()
@@ -54,7 +53,6 @@ class StockMove(models.Model):
     def _confirm_and_reverse(self):
         for stock_move in self:
             qty_done = stock_move.quantity_done
-            raw_material_production_id = stock_move.raw_material_production_id
             stock_move.raw_material_production_id = False
             stock_move.production_id = False 
             if stock_move.state == 'draft':
