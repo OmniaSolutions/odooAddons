@@ -70,10 +70,15 @@ class MrpProduction(models.Model):
                     if addLine:
                         move_to_create.append(bom_line_id)
                 move_to_delete = []
+                product_computed = []
                 for move_line_id in mrp_production_id.move_raw_ids:
                     found = False
+                    move_line_product_id = move_line_id.product_id.id
                     for bom_line_id in mrp_production_id.bom_id.bom_line_ids:
-                        if bom_line_id.product_id.id == move_line_id.product_id.id:
+                        bom_line_product_id = bom_line_id.product_id.id
+                        if  bom_line_product_id == move_line_product_id and \
+                            move_line_product_id not in product_computed:
+                            product_computed.append(bom_line_id.product_id.id)
                             found=True
                             break
                     if not found:
