@@ -47,9 +47,13 @@ class MrpProduction(models.Model):
             if mrp_production_id.auto_bom_update:
                 move_to_create = []
                 #
+                # Update existing row
+                #
+                move_to_delete = list(mrp_production_id.move_raw_ids)
+                #
                 for bom_line_id in mrp_production_id.bom_id.bom_line_ids:
                     addLine=True
-                    for move_line_id in mrp_production_id.move_raw_ids:
+                    for move_line_id in move_to_delete:
                         if bom_line_id.product_id.id == move_line_id.product_id.id:
                             if move_line_id.state in ['draft', 'waiting', 'confirmed', 'assigned']:
                                 if bom_line_id.product_qty * mrp_production_id.product_qty != move_line_id.product_uom_qty:
@@ -66,23 +70,13 @@ class MrpProduction(models.Model):
                             else:
                                 mrp_production_id.message_post(body= """<b>Unable to update product: %r due to the move status in: %r</b></br>""" % (move_line_id.product_id.name, move_line_id.state))
                             addLine=False
+                            move_to_delete.remove(move_line_id)
                             break
                     if addLine:
                         move_to_create.append(bom_line_id)
-                move_to_delete = []
-                product_computed = []
-                for move_line_id in mrp_production_id.move_raw_ids:
-                    found = False
-                    move_line_product_id = move_line_id.product_id.id
-                    for bom_line_id in mrp_production_id.bom_id.bom_line_ids:
-                        bom_line_product_id = bom_line_id.product_id.id
-                        if  bom_line_product_id == move_line_product_id and \
-                            move_line_product_id not in product_computed:
-                            product_computed.append(bom_line_id.product_id.id)
-                            found=True
-                            break
-                    if not found:
-                        move_to_delete.append(move_line_id)
+                #
+                # Delete move not found
+                #
                 for move_line_id in move_to_delete:
                     if move_line_id.state in ['draft', 'confirmed', 'assigned', 'waiting']:
                         if move_line_id.state=='assigned':
@@ -95,14 +89,12 @@ class MrpProduction(models.Model):
                     else:
                         mrp_production_id.message_post(body= """<b>Unable to delete product: %r due to the move status in: %r</b></br>""" % (move_line_id.product_id.name, move_line_id.state))
                 if move_to_create:
-                    self.env['stock.move'].generate_mrp_line(mrp_production_id, move_to_create)
+                    self.env['stock.move'].generate_mrp_line(mrp_production_id,
+                                                             move_to_create)
     
     @api.model
     def check_production_to_update(self):
         for mrp_production_id in self.search([('state', 'in', ['confirmed', 'planned', 'progress'] )]):
             mrp_production_id.update_row_line_form_bom()
-            
-
-            
             
             

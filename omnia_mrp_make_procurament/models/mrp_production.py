@@ -139,7 +139,9 @@ class MrpProduction(models.Model):
             mrp_context = self.env.context.copy()
             analitic_id = mrp_production_id.project_id.analytic_account_id.id
             mrp_context['omnia_analytic_id'] = analitic_id
-            for line in mrp_production_id.move_raw_ids:    
+            for line in mrp_production_id.move_raw_ids:
+                if line.purchase_line_id:
+                    continue 
                 for order_point_id in line.product_id.orderpoint_ids:
                     if self.location_src_id.id==order_point_id.location_id.id:
                         qty_to_order = line.product_uom_qty - line.reserved_availability  
