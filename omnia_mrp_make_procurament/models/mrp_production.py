@@ -53,6 +53,7 @@ class MrpProduction(models.Model):
     _inherit = ['mrp.production']
 
     omnia_mrp_orig_move = fields.Many2one("stock.move",
+                                          copy=False,
                                           string=_("Original Move"))
     omnia_analytic_id = fields.Many2one(related="project_id.analytic_account_id",
                                         string="Conto Analitico")

@@ -57,7 +57,7 @@ class StockMove(models.Model):
         # Check for all draft moves whether they are mto or not
         mrp_production_id._adjust_procure_method()
         #
-        mrp_production_id.move_raw_ids._action_confirm()
+        mrp_production_id.move_raw_ids.filtered(lambda x :x.state=='draft')._action_confirm()
     
     def _confirm_and_reverse(self):
         for stock_move in self:
