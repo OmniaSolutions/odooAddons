@@ -103,7 +103,10 @@ class StockMove(models.Model):
         '''
         move_date = self.date
         subcontracting_location = self.env['stock.location'].getSubcontractingLocation()
-        subcontract_finished_move = self.subcontractingMove(subcontracting_location, self.location_id, self.product_id, self.product_uom_qty)
+        subcontract_finished_move = self.subcontractingMove(subcontracting_location,
+                                                            self.location_id,
+                                                            self.product_id,
+                                                            self.product_uom_qty)
         subcontract_finished_move.moveQty(self.quantity_done)  # Implicit call done action
         subcontract_finished_move.date = move_date
         if subcontract_finished_move.move_line_ids:
