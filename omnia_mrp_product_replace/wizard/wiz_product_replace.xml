@@ -1,0 +1,24 @@
+<odoo>
+    <record id="mrp_production_externally_view_wizard" model="ir.ui.view">
+        <field name="name">Replace Product</field>
+        <field name="model">wiz.product.replace</field>
+        <field name="arch" type="xml">
+        <form>
+            <group>
+                <label for="from_product_id"/>
+                 <div>
+                     <span> Boms: </span>
+                     <field class="oe_inline" name="from_product_id_count" readonly="1"/>
+                     <field class="oe_inline" name="from_product_id" options="{'no_create': True}"/>
+                 </div>
+                 <field name="to_product_id" options="{'no_create': True}"/>
+            </group>
+            <separator string=""/>
+            <footer>
+                <button string="Cancel" class="btn-default" special="cancel"/>
+                <button string="Replace" name="replace_product" type="object"/>
+            </footer>
+        </form>
+        </field>
+    </record>
+</odoo>
