@@ -31,7 +31,7 @@ This module allows you to replace a product with enother inside all the odoo bom
  'author': 'mboscolo',
  'maintainer': 'https://www.OmniaSolutions.website',
  'website': 'https://www.OmniaSolutions.website',
- 'depends': ['product'],
+ 'depends': ['mrp','product'],
  'license': 'AGPL-3',
  'data': [#  view
           'views/product_product.xml',
