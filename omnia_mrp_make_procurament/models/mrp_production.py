@@ -214,10 +214,10 @@ class MrpProduction(models.Model):
                             #
                             try:
                                 
-                                for mrp_production_id in self.search([('product_id','=', line.product_id.id),
+                                for sub_mrp_production_id in self.search([('product_id','=', line.product_id.id),
                                                                       ('state','not in',['cancel','done']),
                                                                       ('id','>', max_id)]):
-                                    sub_production_to_compute+=mrp_production_id
+                                    sub_production_to_compute+=sub_mrp_production_id
                             except Exception as ex:
                                 logging.error(ex)
                             
