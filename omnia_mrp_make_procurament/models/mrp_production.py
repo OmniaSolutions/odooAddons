@@ -142,12 +142,19 @@ class MrpProduction(models.Model):
             mrp_context['omnia_analytic_id'] = analitic_id
             for line in mrp_production_id.move_raw_ids:
                 if line.purchase_line_id:
+                    qty_purchase_available = line.purchase_line_id.product_uom_qty - line.purchase_line_id.qty_received
+                    line.ava_tmp_pur_order=f"""
+                            f"{line.purchase_line_id.order_id.name} ({qty_purchase_available} at {line.purchase_line_id.date_planned.date().strftime('%d-%m-%y')})"
+                            """
                     continue 
                 for order_point_id in line.product_id.orderpoint_ids:
                     if self.location_src_id.id==order_point_id.location_id.id:
                         qty_to_order = line.product_uom_qty - line.reserved_availability  
                         mapped_routs = order_point_id.product_id.route_ids.mapped("id")
                         if make_to_order_id.id in mapped_routs:
+                            line.ava_tmp_pur_order= f"""
+                            Make to order 
+                            """
                             continue
                         if qty_to_order > 0:
                             if buy_id.id in mapped_routs:
@@ -162,16 +169,23 @@ class MrpProduction(models.Model):
                                         qty_to_order=0
                                         break
                                 if qty_to_order:
+                                    purchase_order_tmp = []
                                     for purchase_line_id in self.env['purchase.order.line'].search([('omnia_mrp_orig_move','=', False),
                                                                                                     ('product_id','=',line.product_id.id),
                                                                                                     ('account_analytic_id','=', False),
                                                                                                     ('state','not in', ['cancel'])]):
-                                        qty_to_order-= purchase_line_id.product_uom_qty - purchase_line_id.qty_received
+                                        qty_purchase_available = purchase_line_id.product_uom_qty - purchase_line_id.qty_received
+                                        if qty_purchase_available:
+                                            purchase_order_tmp.append(f"{purchase_line_id.order_id.name} ({qty_purchase_available} at {purchase_line_id.date_planned.date().strftime('%d-%m-%y')})")
+                                        qty_to_order-= qty_purchase_available
                                         if qty_to_order<=0:
                                             qty_to_order=0
                                             break
+                                    if purchase_order_tmp:
+                                        line.ava_tmp_pur_order= ",".join(purchase_order_tmp)
                             elif manufactoty_id.id in mapped_routs:
                                 if not line.product_id.bom_ids:
+                                    line.ava_tmp_pur_order="No Bom Available !!"
                                     continue
                                 for sub_mrp_production_id in self.env['mrp.production'].search([('omnia_mrp_orig_move','=',line.id),
                                                                                                 ('product_id','=',line.product_id.id),

@@ -12,7 +12,11 @@
                         <span class="">Run.A</span>
                     </div>
                 </button>
-           </div>                             
+           </div>
+         <xpath expr="//field[@name='move_raw_ids']/tree/field[@name='quantity_done']" position="after">
+            <field name="ava_tmp_pur_order"/>
+        </xpath>
+                                     
         </field>
     </record> 
 </odoo>
