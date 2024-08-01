@@ -136,7 +136,7 @@ class MrpProductionWCLine(models.Model):
                     dictRes.get('qty', 0),
                     dictRes.get('date_planned', ''),
                     str(dictRes.get('is_user_working', False)),
-                    str(r"/mrp_omnia/get_worksheet/" + str(dictRes.get('wo_id', '')))
+                    str(r"/mrp_omnia/get_worksheet/" + str(dictRes.get('wo_id', ''))),
                 ])
         return lines
 

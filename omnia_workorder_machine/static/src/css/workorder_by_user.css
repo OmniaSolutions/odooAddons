@@ -15,7 +15,7 @@ table.main_table{
     border-collapse: collapse;
 }
 tr.content_line:hover{
-    background-color: lightgray;
+    background-color: lightgray !important;;
 }
 th.header_table {
 	border: none;
