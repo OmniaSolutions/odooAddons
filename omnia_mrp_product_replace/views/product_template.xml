@@ -1,0 +1,10 @@
+<odoo>
+    <record id="omnia_product_template_mrp_replace" model="ir.actions.server">
+         <field name="name">Replace Product</field>
+         <field name="model_id" ref="sale.model_product_template"/>
+         <field name="binding_model_id" ref="sale.model_product_template"/>
+         <field name="binding_view_types">form</field>
+         <field name="state">code</field>
+         <field name="code">action = record.show_replace_product_bom()</field>
+     </record>
+</odoo>

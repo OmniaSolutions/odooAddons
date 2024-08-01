@@ -37,6 +37,7 @@
 	                    <field name="date_expected" />
 	                    <field name="state" invisible="True"/>
 	                    <field name="qty_available"/>
+	                    <field name="qty_available_in_stock"/>
 	                </tree>
 	                
 	                <form>

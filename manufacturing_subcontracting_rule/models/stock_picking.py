@@ -84,7 +84,7 @@ class StockPicking(models.Model):
                 if objProduction and objProduction.state == 'external':
                     wh_out_dropship = stock_piking_id.checkDropship()
                     if wh_out_dropship == stock_piking_id:
-                        for stock_move_picking in stock_piking_id.move_lines:
+                        for stock_move_picking in stock_piking_id.move_lines.filtered(lambda x: x.is_done==False):
                             if stock_move_picking.mrp_production_id == objProduction.id:
                                 subcontract_finished_move = stock_move_picking.subcontractFinishedProduct()
                                 stock_move_picking.subcontractRawProducts(subcontract_finished_move, objProduction)

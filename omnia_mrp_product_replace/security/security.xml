@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="omnia_wiz_replace_product" model="ir.model.access">
+        <field name="name">wizard replace product permission</field>
+        <field name="model_id" ref="model_wiz_product_replace"/>
+        <field name="group_id" ref="mrp.group_mrp_manager"/>
+        <field name="perm_read"   eval="1"/>
+        <field name="perm_write"  eval="1"/>
+        <field name="perm_create" eval="1"/>
+        <field name="perm_unlink" eval="1"/>
+    </record>    
+    
+</odoo>
