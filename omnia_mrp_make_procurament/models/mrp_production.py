@@ -152,11 +152,13 @@ class MrpProduction(models.Model):
                         qty_to_order = line.product_uom_qty - line.reserved_availability  
                         mapped_routs = order_point_id.product_id.route_ids.mapped("id")
                         if make_to_order_id.id in mapped_routs:
-                            line.ava_tmp_pur_order= f"""
-                            Make to order 
-                            """
-                            continue
-                        if qty_to_order > 0:
+                            line.ava_tmp_pur_order= f"""Make to order"""
+                            for purchase_line in line.purchase_order_id.order_line.filtered(lambda x:x.omnia_mrp_orig_move.id==line.id):
+                                qty_to_order-=purchase_line.product_uom_qty
+                            if qty_to_order<=0:
+                                continue
+                            pass
+                        elif qty_to_order > 0:
                             if buy_id.id in mapped_routs:
                                 for purchase_line_id in self.env['purchase.order.line'].search([('omnia_mrp_orig_move','=', line.id),
                                                                                                 ('product_id','=',line.product_id.id),
