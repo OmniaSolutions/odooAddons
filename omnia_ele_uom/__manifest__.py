@@ -28,7 +28,7 @@
 
 {
     'name': 'omnia_ele_uom',
-    'version': '16.0.1',
+    'version': '17.0.0.1',
     'sequence': 1,
     'category': 'PRODUCT',
     'description': """

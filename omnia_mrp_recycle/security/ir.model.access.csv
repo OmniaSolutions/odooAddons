@@ -1,2 +1,0 @@
-id,perm_create,perm_unlink,group_id/id,name,model_id/id,perm_read,perm_write
-omnia_mrp_recycle_product1,True,True,mrp.group_mrp_user,omnia_mrp_recycle_product,omnia_mrp_recycle.model_stock_recycle_product,True,True
