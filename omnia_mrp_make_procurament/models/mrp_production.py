@@ -189,21 +189,15 @@ class MrpProduction(models.Model):
                                 if not line.product_id.bom_ids:
                                     line.ava_tmp_pur_order="No Bom Available !!"
                                     continue
-                                for sub_mrp_production_id in self.env['mrp.production'].search([('omnia_mrp_orig_move','=',line.id),
+                                for sub_mrp_production_id in self.env['mrp.production'].search([('omnia_mrp_orig_move','in', [line.id, False]),
                                                                                                 ('product_id','=',line.product_id.id),
-                                                                                                ('omnia_analytic_id','=', analitic_id),
+                                                                                                ('omnia_analytic_id','in', [analitic_id, False]),
                                                                                                 ('state','!=', 'cancel')]):
                                     if self.name not in sub_mrp_production_id.origin:
                                         continue
-                                    qty_to_order-= sub_mrp_production_id.product_uom_qty - sub_mrp_production_id.qty_produced
-                                if qty_to_order:
-                                    for sub_mrp_production_id in self.env['mrp.production'].search([('omnia_mrp_orig_move','=',False),
-                                                                                                    ('product_id','=',line.product_id.id),
-                                                                                                    ('omnia_analytic_id','=', False),
-                                                                                                    ('state','!=', 'cancel')]):
-                                        qty = sub_mrp_production_id.product_uom_qty - sub_mrp_production_id.qty_produced
-                                        if qty>0:
-                                            qty_to_order-=qty 
+                                    qty =  sub_mrp_production_id.product_uom_qty - sub_mrp_production_id.qty_produced
+                                    if qty>0:
+                                        qty_to_order-=qty 
                         if qty_to_order>0:
                             max_id = max(self.search([('state','not in',['cancel','done'])]).ids)
                             mrp_context['omnia_orig_move_id'] = line.id
@@ -242,6 +236,7 @@ class MrpProduction(models.Model):
                 mrp_production_id.create_procuraments()
             except Exception as ex:
                 logging.error(ex)
+                mrp_production_id.message_post(body=f"Errore nell'aprovvigionamento {ex}")
         
     @api.multi
     def _generate_moves(self):
