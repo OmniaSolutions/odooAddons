@@ -60,6 +60,7 @@ class InventoryValuation(models.TransientModel):
     location_id = fields.Many2one('stock.location', _('Location'))
     show_zero = fields.Boolean(_('View zero quantity'))
     datas_fname = fields.Char(_('Optional Filename'))
+    product_id = fields.Many2one('product.product',_('Product'))
     datas = fields.Binary(_('File content'))
 
     def filterLocationsByWarehouse(self, target_stock, locations):
@@ -96,31 +97,27 @@ class InventoryValuation(models.TransientModel):
             'ref_date': self.ref_date or '5000-01-01',
             'location_ids': tuple(location_ids.ids),
             }
-        zero_condition = 'price_unit_on_quant != 0 and '
-        if self.show_zero:
-            zero_condition = ''
         sql_query = """select avg(price_unit_on_quant),
                               sum(price),
                               ss.product_id,
-                              ss.product_categ_id,
-                              ss.location_id,
-                              sum(quantity) from (
+                              sum(quantity)
+                              from (
                                     select price_unit_on_quant, 
                                            quantity * price_unit_on_quant as price,
                                            product_id,
-                                           product_categ_id,
-                                           quantity,
-                                           location_id
+                                           quantity
                                            from stock_history where """
-        sql_query += zero_condition
-        sql_query += """
-                                               date < %(ref_date)s and 
-                                               location_id in %(location_ids)s 
-                                               order by product_id) as ss
-                                    group by ss.location_id, ss.product_categ_id, ss.product_id order by ss.location_id asc, ss.product_categ_id asc, ss.product_id asc"""
+        if self.product_id:
+            sql_query += """ product_id=%s and """ % self.product_id.id    
+        sql_query += """date < %(ref_date)s and 
+                        location_id in %(location_ids)s 
+                        order by product_id) as ss
+                        group by ss.product_id order by ss.product_id asc"""
+        logging.warning(sql_query, params)
         self.env.cr.execute(sql_query, params)
         results = self.env.cr.fetchall()
         if not results:
+            logging.warning("action_generate_inventory --- No Data Found")
             return
         template_file = os.path.join(os.path.dirname(__file__), 'inventory_valuation.xlsx')
         out_fname = self.datas_fname
@@ -142,29 +139,37 @@ class InventoryValuation(models.TransientModel):
         row_counter = 2
         prec = self.env['decimal.precision'].precision_get('Product Price')
         location_cache = {}
-        category_cache = {}
-        for price_unit, price_total, product_id, product_categ_id, location_id, quantity in results:
+        #category_cache = {}
+        for price_unit, price_total, product_id,  quantity in results:
+            if not self.show_zero and quantity==0:
+                continue
+            # out_location=[]
+            # for location_id in list(set(location_ids)):
+            #     location_name = location_cache.get(location_id)
+            #     if not location_name:
+            #         location_name = self.env['stock.location'].browse(location_id).complete_name
+            #         location_cache[location_id]=location_name
+            #     if location_name not in out_location:
+            #         out_location.append(location_name)
+            # location_name = ','.join(out_location)    
             if price_total == 0 and not self.show_zero:
                 continue
             product_product = self.env['product.product'].browse(product_id)
             if product_product.type != 'product':
                 continue
-            location_name =  location_cache.get(location_id)
-            if not location_name:
-                location_name = self.env['stock.location'].browse(location_id).complete_name
-                location_cache[location_id]=location_name
-            categ  = category_cache.get(product_categ_id)
-            if not categ:
-                categ = self.env['product.category'].browse(product_categ_id).display_name
-                category_cache[product_categ_id] = categ
+
+            #categ  = category_cache.get(product_categ_id)
+            #if not categ:
+            #    categ = self.env['product.category'].browse(product_categ_id).display_name
+            #    category_cache[product_categ_id] = categ
             prod_name = product_product.display_name
-            worksheet.cell(row=row_counter, column=1).value = location_name
-            worksheet.cell(row=row_counter, column=2).value = categ
+            worksheet.cell(row=row_counter, column=1).value = "" # location_name
+            #worksheet.cell(row=row_counter, column=2).value = categ
             worksheet.cell(row=row_counter, column=3).value = prod_name
             worksheet.cell(row=row_counter, column=4).value = round(price_unit, prec)
             worksheet.cell(row=row_counter, column=5).value = round(price_total, prec)
             worksheet.cell(row=row_counter, column=6).value = round(quantity, prec)
-            self.generate_inventory_line(worksheet, row_counter, product_product, location_name, categ)
+            self.generate_inventory_line(worksheet, row_counter, product_product, '', '')
             row_counter += 1
         workbook.save(full_path)
         os.chmod(full_path, stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO)
