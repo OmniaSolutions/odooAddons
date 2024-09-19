@@ -14,7 +14,7 @@
 
                 <record id="stock_lifo_wizard_admin" model="ir.model.access">
 		            <field name="name">Stock Lifo Wizard Admin</field>
-		            <field name="model_id" ref="model_stock_lifo_wizard"/>
+		            <field name="model_id" ref="stock_lifo.model_stock_lifo_wizard"/>
 		            <field name="group_id" ref="stock.group_stock_manager"/>
 		            <field name="perm_read" eval="True"/>
 		            <field name="perm_write" eval="True"/>
@@ -24,7 +24,7 @@
         		
         		<record id="stock_lifo_report_wizard_admin" model="ir.model.access">
 		            <field name="name">Stock Lifo Report Wizard Admin</field>
-		            <field name="model_id" ref="model_stock_lifo_report_wizard"/>
+		            <field name="model_id" ref="stock_lifo.model_stock_lifo_report_wizard"/>
 		            <field name="group_id" ref="stock.group_stock_manager"/>
 		            <field name="perm_read" eval="True"/>
 		            <field name="perm_write" eval="True"/>

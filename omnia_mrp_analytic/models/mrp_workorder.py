@@ -19,7 +19,8 @@ class MrpWorkorder(models.Model):
 
     user_id = fields.Many2one('res.users',
                               related='task_id.user_id',
-                              string=_('Assigned User'))
+                              string=_('Assigned User'),
+                              store=True)
 
     @api.multi
     def _getTotalTimeSpent(self):
