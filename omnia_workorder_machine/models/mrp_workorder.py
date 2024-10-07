@@ -73,7 +73,7 @@ class MrpProductionWCLine(models.Model):
         if workorder:
             searchFilter.append(('id', '=', workorder))
         logging.info('Getting Work Orders with search %r' % (searchFilter))
-        woBrwsList = self.search(searchFilter, order='date_planned_start ASC,id ASC')
+        woBrwsList = self.search(searchFilter, order='tag_ids ASC, date_planned_start ASC')
         out = self.getDictWorkorder(woBrwsList)
         if listify:
             out = self.listifyForInterface(out)
