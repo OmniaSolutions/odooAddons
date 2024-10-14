@@ -86,7 +86,7 @@ class MrpProductionWCLine(models.Model):
             return []
         searchFilter = [('state', 'in', ['ready', 'progress'])]
         logging.info('Getting Work Orders with search %r' % (searchFilter))
-        woBrwsList = self.search(searchFilter, order='date_planned_start ASC,id ASC')
+        woBrwsList = self.search(searchFilter, order='tag_ids ASC, date_planned_start ASC,id ASC')
         woBrwsList = woBrwsList.filtered(lambda x: user_id in x.user_ids.ids or x.user_id.id == user_id)
         if not user_id:
             user_id = self.getUserId()
@@ -102,7 +102,7 @@ class MrpProductionWCLine(models.Model):
             return []
         searchFilter = [('state', 'in', ['ready', 'progress'])]
         logging.info('Getting Work Orders with search %r' % (searchFilter))
-        woBrwsList = self.search(searchFilter, order='date_planned_start ASC,id ASC')
+        woBrwsList = self.search(searchFilter, order='tag_ids ASC, date_planned_start ASC,id ASC')
         woBrwsList = woBrwsList.filtered(lambda x: employee_id in x.employee_ids.ids)
         user_id = self.getUserId()
         out = self.getDictWorkorder(woBrwsList.with_user(user_id))
@@ -114,7 +114,7 @@ class MrpProductionWCLine(models.Model):
     def getWorkordersByDomain(self, domain=[], listify=False):
         domain.append(('state', 'in', ['ready', 'progress']))
         woBrwsList = self.search(domain,
-                                 order='date_planned_start ASC,id ASC')
+                                 order='tag_ids ASC, date_planned_start ASC,id ASC')
         user_id = self.getUserId()
         out = self.getDictWorkorder(woBrwsList.with_user(user_id))
         if listify:
