@@ -89,11 +89,11 @@ class StockRule(models.Model):
         """
         """
         values = super(StockRule, self)._prepare_purchase_order_line(product_id,
-                                                                    product_qty,
-                                                                    product_uom,
-                                                                    values,
-                                                                    po, 
-                                                                    partner)
+                                                                     product_qty,
+                                                                     product_uom,
+                                                                     values,
+                                                                     po, 
+                                                                     partner)
         analytic_id = self.env.context.get('omnia_analytic_id')
         if analytic_id:
             values['account_analytic_id'] = analytic_id
@@ -101,6 +101,12 @@ class StockRule(models.Model):
         if orig_move_id:
             values['omnia_mrp_orig_move'] = orig_move_id
         else:
+            if 'move_dest_ids' in values:
+                if isinstance(values['move_dest_ids'], list):
+                    for _i,move_id in values['move_dest_ids']:
+                        values['omnia_mrp_orig_move'] = move_id
+                else:  
+                    values['omnia_mrp_orig_move'] = values['move_dest_ids'].id
             for _,move_id in values.get('move_dest_ids',[]):
                 values['omnia_mrp_orig_move'] = move_id
                 break

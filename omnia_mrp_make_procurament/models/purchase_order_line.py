@@ -18,6 +18,7 @@
 #    along with this prograIf not, see <http://www.gnu.org/licenses/>.
 #
 ##############################################################################
+from _ast import If
 '''
 Created on 26 Oct 2021
 
@@ -57,8 +58,19 @@ class PurchaseOrderLine(models.Model):
         analytic_id = self.env.context.get('omnia_analytic_id')
         if analytic_id and 'account_analytic_id' in vals:
             vals['account_analytic_id'] = analytic_id
+        orig_move_id = self.env.context.get('omnia_orig_move_id')
+        if orig_move_id:
+            vals['omnia_mrp_orig_move'] = orig_move_id
+        if 'move_dest_ids' in vals:
+            for _action, move_id in vals['move_dest_ids']:
+                vals['omnia_mrp_orig_move'] = move_id
         orderLine = super(PurchaseOrderLine, self).create(vals)
-        
+        for move in self.env['stock.move'].search([('id','=', vals['omnia_mrp_orig_move'])]):
+            if not move.purchase_order_id:
+                move.purchase_order_id = orderLine.order_id.id
+                move.purchase_line_id= orderLine.id
+            if not move.created_purchase_line_id:
+                move.created_purchase_line_id = orderLine.id
         return orderLine
     
     

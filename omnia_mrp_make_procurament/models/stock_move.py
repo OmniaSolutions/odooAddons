@@ -38,3 +38,9 @@ class StockMove(models.Model):
     
     ava_tmp_pur_order = fields.Char("Pur.Ava")
     
+    def _action_confirm(self, merge=True, merge_into=False):
+        moves=self.env['stock.move']
+        for move_id in self:
+            moves += move_id.with_context(omnia_mrp_orig_move=move_id)
+        return super(StockMove, moves)._action_confirm(merge=merge, merge_into=merge_into)
+    

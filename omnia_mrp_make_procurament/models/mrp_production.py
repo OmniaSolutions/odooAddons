@@ -218,22 +218,22 @@ class MrpProduction(models.Model):
                             self.with_context(mrp_context).create_procurement_row(line.product_id,
                                                                                   qty_to_order,
                                                                                   mrp_production_id.name,
-                                                                                  order_point_id)                                
+                                                                                  order_point_id)
                             #
                             # retrive the sub orders
                             #
                             try:
                                 
                                 for sub_mrp_production_id in self.search([('product_id','=', line.product_id.id),
-                                                                      ('state','not in',['cancel','done']),
-                                                                      ('id','>', max_id)]):
+                                                                          ('state','not in',['cancel','done']),
+                                                                          ('id','>', max_id)]):
                                     sub_production_to_compute+=sub_mrp_production_id
                             except Exception as ex:
                                 logging.error(ex)
                             
-        for mrp_production_id in sub_production_to_compute:
+        for sub_mrp_production_id in sub_production_to_compute:
             try:
-                mrp_production_id.create_procuraments()
+                sub_mrp_production_id.create_procuraments()
             except Exception as ex:
                 logging.error(ex)
                 mrp_production_id.message_post(body=f"Errore nell'aprovvigionamento {ex}")
@@ -249,6 +249,5 @@ class MrpProduction(models.Model):
             else:
                 super(MrpProduction, mrp_production_id)._generate_moves()
         return True
-
 
     
