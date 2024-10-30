@@ -65,12 +65,13 @@ class PurchaseOrderLine(models.Model):
             for _action, move_id in vals['move_dest_ids']:
                 vals['omnia_mrp_orig_move'] = move_id
         orderLine = super(PurchaseOrderLine, self).create(vals)
-        for move in self.env['stock.move'].search([('id','=', vals['omnia_mrp_orig_move'])]):
-            if not move.purchase_order_id:
-                move.purchase_order_id = orderLine.order_id.id
-                move.purchase_line_id= orderLine.id
-            if not move.created_purchase_line_id:
-                move.created_purchase_line_id = orderLine.id
+        if 'omnia_mrp_orig_move' in vals:
+            for move in self.env['stock.move'].search([('id','=', vals['omnia_mrp_orig_move'])]):
+                if not move.purchase_order_id:
+                    move.purchase_order_id = orderLine.order_id.id
+                    move.purchase_line_id= orderLine.id
+                if not move.created_purchase_line_id:
+                    move.created_purchase_line_id = orderLine.id
         return orderLine
     
     
