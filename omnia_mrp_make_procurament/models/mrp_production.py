@@ -141,6 +141,8 @@ class MrpProduction(models.Model):
             analitic_id = mrp_production_id.project_id.analytic_account_id.id
             mrp_context['omnia_analytic_id'] = analitic_id
             for line in mrp_production_id.move_raw_ids:
+                if line.state in ['cancel']:
+                    continue
                 if line.purchase_line_id:
                     qty_purchase_available = line.purchase_line_id.product_uom_qty - line.purchase_line_id.qty_received
                     line.ava_tmp_pur_order=f"""
