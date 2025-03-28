@@ -73,7 +73,7 @@ class MrpProductionWCLine(models.Model):
         if workorder:
             searchFilter.append(('id', '=', workorder))
         logging.info('Getting Work Orders with search %r' % (searchFilter))
-        woBrwsList = self.search(searchFilter, order='date_planned_start ASC,id ASC')
+        woBrwsList = self.search(searchFilter, order='date_planned_start ASC')
         out = self.getDictWorkorder(woBrwsList)
         if listify:
             out = self.listifyForInterface(out)
@@ -105,7 +105,7 @@ class MrpProductionWCLine(models.Model):
         woBrwsList = self.search(searchFilter, order='date_planned_start ASC,id ASC')
         woBrwsList = woBrwsList.filtered(lambda x: employee_id in x.employee_ids.ids)
         user_id = self.getUserId()
-        out = self.getDictWorkorder(woBrwsList.with_user(user_id))
+        out = self.getDictWorkorder(woBrwsList.with_user(user_id).sorted('tag_ids', reverse=True))
         if listify:
             out = self.listifyForInterface(out)
         return out
@@ -114,7 +114,7 @@ class MrpProductionWCLine(models.Model):
     def getWorkordersByDomain(self, domain=[], listify=False):
         domain.append(('state', 'in', ['ready', 'progress']))
         woBrwsList = self.search(domain,
-                                 order='date_planned_start ASC,id ASC')
+                                 order='tag_ids ASC, date_planned_start ASC,id ASC')
         user_id = self.getUserId()
         out = self.getDictWorkorder(woBrwsList.with_user(user_id))
         if listify:
