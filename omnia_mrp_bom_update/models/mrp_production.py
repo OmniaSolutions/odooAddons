@@ -69,7 +69,7 @@ class MrpProduction(models.Model):
                                         move_line_id._action_assign()
                             else:
                                 mrp_production_id.message_post(body= """<b>Unable to update product: %r due to the move status in: %r</b></br>""" % (move_line_id.product_id.name, move_line_id.state))
-                            addLine=False
+                            addLine = False
                             move_to_delete.remove(move_line_id)
                             break
                     if addLine:
@@ -85,7 +85,12 @@ class MrpProduction(models.Model):
                             move_line_id.confirm_and_reverse()
                         else:
                             move_line_id._action_cancel()
-                            move_line_id.unlink()
+                            try:
+                                move_line_id.unlink()
+                            except Exception as ex:
+                                logging.warning("Try to cancel again" )
+                                move_line_id._action_cancel()
+                                move_line_id.unlink()
                     else:
                         mrp_production_id.message_post(body= """<b>Unable to delete product: %r due to the move status in: %r</b></br>""" % (move_line_id.product_id.name, move_line_id.state))
                 if move_to_create:
