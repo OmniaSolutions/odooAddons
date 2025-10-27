@@ -24,8 +24,6 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 ##############################################################################
-
-
 {
     'name': 'omnia_ele_uom',
     'version': '18.0.0.1',
@@ -38,6 +36,7 @@ This module add all electrical unif of mesure to odoo
     'author': 'OmniaSolutions.eu',
     'maintainer': 'OmniaSolutions.eu',
     'website': 'http://www.OmniaSolutions.eu',
+    "license": "LGPL-3",
     'depends': ['uom'],
     'data': [
         'data/data.xml'
