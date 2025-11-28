@@ -17,8 +17,8 @@ odoo.define('omnia_workorder_machine.workorder_machine_list', function (require)
             a.click();
             setTimeout(function() {
                 document.body.removeChild(a);
-                window.URL.revokeObjectURL(url);  
-            }, 0); 
+                window.URL.revokeObjectURL(url);
+            }, 0);
         }
     }
 
@@ -83,85 +83,302 @@ odoo.define('omnia_workorder_machine.workorder_machine_list', function (require)
         clock.style.visibility = 'hidden';
 	}
 
-    function start_work1 (button) {
+    function start_work1(button) {
         console.log("Start working");
-        var button = button.currentTarget;
-        var closestTr = button.closest('tr');
-        closestTr.style.cursor ='wait';
-        button.style.display = 'none';
-        var wo_id = closestTr.getElementsByClassName('wo_id');
-        var route = '/mrp_omnia/workorder_start/';
-        show_clock();
-        var emploeey_id=0
-        if(document.URL.search("workorder_by_user")<0){
-            emploeey_id=get_employee_id()
+        var selectedRows = document.querySelectorAll(".select_row:checked");
+        let employee_id = 0;
+        if (document.URL.search("workorder_by_user") < 0) {
+            employee_id = get_employee_id();
         }
-		ajax.jsonRpc(route, 'call', {
-			'wo_id' : wo_id[0].textContent,
-			'user_id': get_user_id(),
-			'employee_id': emploeey_id,
-		}).then(function (data) {
-			hide_clock();
-			filter_res(null);
-		   }
-	    );
-        console.log("end")
+        if (selectedRows.length > 1) {
+            let workIds = [];
+            selectedRows.forEach((chk) => {
+                const row = chk.closest("tr");
+                const woInput = row.querySelector(".wo_id");
+
+                if (woInput) {
+                    workIds.push(woInput.textContent.trim());
+                }
+            });
+            const route = '/mrp_omnia/workorder_start/';
+            show_clock();
+            ajax.jsonRpc(route, "call", {
+                wo_ids: workIds,
+                user_id: get_user_id(),
+                employee_id: employee_id,
+            }).then(function (data) {
+                hide_clock();
+                filter_res(null);
+            });
+            return;
+        }
+        var buttonElem = button.currentTarget;
+        var closestTr = buttonElem.closest("tr");
+        closestTr.style.cursor = "wait";
+        buttonElem.style.display = "none";
+        var wo_id = closestTr.querySelector(".wo_id").textContent.trim();
+        show_clock();
+        const route = '/mrp_omnia/workorder_start/';
+        ajax.jsonRpc(route, "call", {
+            wo_id: wo_id,
+            user_id: get_user_id(),
+            employee_id: employee_id,
+        }).then(function (data) {
+            hide_clock();
+            filter_res(null);
+        });
     }
 
     var start_work11 = start_work1;
     
-    function pause_work1 (button) {
+    function pause_work1(button) {
         console.log("Pause working");
-        var button = button.currentTarget;
-        button.style.display = 'none';
-        var closestTr = button.closest('tr');
-        closestTr.style.cursor ='wait';
-        var wo_id = closestTr.getElementsByClassName('wo_id');
-        var route = '/mrp_omnia/workorder_pause/';
-        show_clock();
-        var emploeey_id=0
-        if(document.URL.search("workorder_by_user")<0){
-            emploeey_id=get_employee_id()
+        const route = '/mrp_omnia/workorder_pause/';
+        var selectedRows = document.querySelectorAll(".select_row:checked");
+        let employee_id = 0;
+        if (document.URL.search("workorder_by_user") < 0) {
+            employee_id = get_employee_id();
         }
-		ajax.jsonRpc(route, 'call', {
-			'wo_id' : wo_id[0].textContent,
-			'user_id': get_user_id(),
-			'employee_id': emploeey_id,
-		}).then(function (data) {
-			hide_clock();
-			filter_res(null);
-		   }
-	    );
-        console.log("end")
+        if (selectedRows.length > 1) {
+            let workIds = [];
+            selectedRows.forEach((chk) => {
+                const row = chk.closest("tr");
+                const woInput = row.querySelector(".wo_id");
+                if (woInput) {
+                    workIds.push(woInput.textContent.trim());
+                }
+            });
+            show_clock();
+            ajax.jsonRpc(route, "call", {
+                wo_ids: workIds,
+                user_id: get_user_id(),
+                employee_id: employee_id,
+            }).then(function () {
+                hide_clock();
+                filter_res(null);
+            });
+
+            return;
+        }
+        var buttonElem = button.currentTarget;
+        buttonElem.style.display = "none";
+        var closestTr = buttonElem.closest('tr');
+        closestTr.style.cursor = 'wait';
+        var wo_id = closestTr.querySelector(".wo_id").textContent.trim();
+        show_clock();
+        ajax.jsonRpc(route, "call", {
+            wo_id: wo_id,
+            user_id: get_user_id(),
+            employee_id: employee_id,
+        }).then(function () {
+            hide_clock();
+            filter_res(null);
+        });
+        console.log("End");
     }
 
-    function resume_work1 (button) {
-        console.log("Pause working");
-        var button = button.currentTarget;
-        button.style.display = 'none';
-        var closestTr = button.closest('tr');
-        closestTr.style.cursor ='wait';
-        var wo_id = closestTr.getElementsByClassName('wo_id');
-        var route = '/mrp_omnia/workorder_resume/';
-        show_clock();
-        var emploeey_id=0
-        if(document.URL.search("workorder_by_user")<0){
-            emploeey_id=get_employee_id()
+
+    function resume_work1(button) {
+        console.log("Resume working");
+        const route = '/mrp_omnia/workorder_resume/';
+        const selectedRows = document.querySelectorAll(".select_row:checked");
+        let employee_id = 0;
+        if (document.URL.search("workorder_by_user") < 0) {
+            employee_id = get_employee_id();
         }
-		ajax.jsonRpc(route, 'call', {
-			'wo_id' : wo_id[0].textContent,
-			'user_id': get_user_id(),
-			'employee_id': emploeey_id,
-		}).then(function (data) {
-			hide_clock();
-			filter_res(null);
-		   }
-	    );
-        console.log("end")
+        if (selectedRows.length > 1) {
+            let workIds = [];
+            selectedRows.forEach((chk) => {
+                const row = chk.closest("tr");
+                const woInput = row.querySelector(".wo_id");
+                if (woInput) {
+                    workIds.push(woInput.textContent.trim());
+                }
+            });
+            show_clock();
+            ajax.jsonRpc(route, "call", {
+                wo_ids: workIds,
+                user_id: get_user_id(),
+                employee_id: employee_id,
+            }).then(function () {
+                hide_clock();
+                filter_res(null);
+            });
+            return;
+        }
+        var btn = button.currentTarget;
+        btn.style.display = "none";
+
+        var closestTr = btn.closest("tr");
+        closestTr.style.cursor = "wait";
+
+        var wo_id = closestTr.querySelector(".wo_id").textContent.trim();
+
+        show_clock();
+        ajax.jsonRpc(route, "call", {
+            wo_id: wo_id,
+            user_id: get_user_id(),
+            employee_id: employee_id,
+        }).then(function () {
+            hide_clock();
+            filter_res(null);
+        });
+        console.log("End");
     }
 
-    function stop_work1 (button) {
-        console.log("Pause working");
+    function openWOPopup() {
+        document.getElementById("woPopup").style.display = "flex";
+    }
+
+     function closeWOPopup() {
+            document.getElementById("woPopup").style.display = "none";
+     }
+
+    function calculateTotalTime() {
+        var selectedRows = document.querySelectorAll(".select_row:checked");
+        let totalMinutes = 0;
+
+        selectedRows.forEach((chk) => {
+            const tr = chk.closest("tr");
+            const timeCell = tr.querySelector("#td_user_h_16 span");
+            if (timeCell) {
+                let timeText = timeCell.textContent.trim();
+                if (timeText) {
+                    let [hours, minutes] = timeText.split(':').map(x => parseInt(x, 10) || 0);
+                    totalMinutes += hours * 60 + minutes;
+                }
+            }
+        });
+        var totalHours = Math.floor(totalMinutes / 60);
+        var remainingMinutes = totalMinutes % 60;
+        var formattedTotal = `${String(totalHours).padStart(2,'0')}:${String(remainingMinutes).padStart(2,'0')}`;
+
+        var totalTimeInput = document.getElementById("total_time");
+        if (totalTimeInput) {
+            totalTimeInput.value = formattedTotal;
+            totalTimeInput.readOnly = true;
+        }
+    }
+
+    function buildPopupRows(selectedRows = null) {
+        const tbody = document.getElementById("wo_dynamic_rows");
+        tbody.innerHTML = "";
+        if (!selectedRows) {
+            selectedRows = document.querySelectorAll(".select_row:checked");
+        }
+        selectedRows.forEach((chk) => {
+            var tr = chk.closest("tr");
+            var woName = tr.querySelector(".wo_id").innerText;
+            var product = tr.querySelector("#td_user_h_4").innerText;
+            var cellContent = tr.querySelector('#td_user_h_7').textContent.trim();
+            var parts = cellContent.split('/');
+            var done = parseFloat(parts[0].trim()) || 0;
+            var total = parts.length > 1 ? parseFloat(parts[1].trim().split(' ')[0]) || 0 : done;
+            var remaining = total - done;
+            var duration = tr.querySelector("#td_user_h_16 span").textContent.trim();
+
+            var nProducedCell = tr.querySelector('#td_user_h_8');
+            let nProducedValue = 0;
+            if (nProducedCell) {
+                const inp = nProducedCell.querySelector("input");
+                if (inp) {
+                    nProducedValue = parseFloat(inp.value) || 0;
+                } else {
+                    nProducedValue = parseFloat(nProducedCell.textContent.trim()) || 0;
+                }
+            }
+
+            var scrapInputCell = tr.querySelector("#td_user_h_9 input");
+            let scrapValue = scrapInputCell ? parseFloat(scrapInputCell.value) || 0 : 0;
+
+            let row = document.createElement("tr");
+
+            // WO column
+            let td1 = document.createElement("td");
+            let input1 = document.createElement("input");
+            input1.type = "text";
+            input1.className = "wo-input wo-id";
+            input1.value = woName;
+            input1.readOnly = true;
+            td1.appendChild(input1);
+            row.appendChild(td1);
+
+            // Product column
+            let td2 = document.createElement("td");
+            let input2 = document.createElement("input");
+            input2.type = "text";
+            input2.className = "wo-input product";
+            input2.value = product;
+            row.appendChild(td2);
+            input2.readOnly = true;
+            td2.appendChild(input2);
+            row.appendChild(td2);
+
+            // N. Items column
+            let td3 = document.createElement("td");
+            td3.className = "n-items-col";
+            let input3 = document.createElement("input");
+            input3.type = "number";
+            input3.className = "wo-input n-items";
+            input3.value = nProducedValue;
+            td3.appendChild(input3);
+            row.appendChild(td3);
+
+            // Done column
+            let tdDone = document.createElement("td");
+            tdDone.className = "done";
+            tdDone.textContent = done;
+            row.appendChild(tdDone);
+
+            // Remaining column
+            let tdRemaining = document.createElement("td");
+            tdRemaining.className = "remaining";
+            tdRemaining.textContent = remaining;
+            row.appendChild(tdRemaining);
+
+            // Total column
+            let tdTotal = document.createElement("td");
+            tdTotal.className = "total";
+            tdTotal.textContent = total;  // directly set the value
+            row.appendChild(tdTotal);
+
+
+            // Duration column
+            let tdDuration = document.createElement("td");
+            let inputDuration = document.createElement("input");
+            inputDuration.type = "text";
+            inputDuration.className = "wo-input duration";
+            inputDuration.value = duration;
+            inputDuration.readOnly = true;
+            tdDuration.appendChild(inputDuration);
+            row.appendChild(tdDuration);
+
+            // Scrap column
+            let tdScrap = document.createElement("td");
+            let inputScrap = document.createElement("input");
+            inputScrap.type = "number";
+            inputScrap.className = "wo-input scrap";
+            inputScrap.value = scrapValue;
+            tdScrap.appendChild(inputScrap);
+            row.appendChild(tdScrap);
+            tbody.appendChild(row);
+        });
+    }
+    function stop_work1(button) {
+        console.log("record processed.");
+        var selectedRows = document.querySelectorAll(".select_row:checked");
+        if (selectedRows.length > 1) {
+            let allValid = true;
+            selectedRows.forEach((chk) => {
+                const row = chk.closest("tr");
+                const qtyInput = row.querySelector(".n_pieces");
+                const qty = qtyInput ? parseFloat(qtyInput.value) : 0;
+            });
+            buildPopupRows();
+            openWOPopup();
+            calculateTotalTime();
+            return;
+        }
         var button = button.currentTarget;
         button.style.display = 'none';
         var closestTr = button.closest('tr');
@@ -173,6 +390,10 @@ odoo.define('omnia_workorder_machine.workorder_machine_list', function (require)
         var pieces_to_produce = parseFloat(n_pieces_to_produce[0].textContent);
         var n_scrap_ui = closestTr.getElementsByClassName('n_scrap');
         var n_scrap = n_scrap_ui[0].valueAsNumber;
+        if (pieces <= 0) {
+            alert("Produced Quantity cannot be 0 or less!");
+            return;
+        }
         var route = '/mrp_omnia/workorder_record/';
         show_clock();
         var emploeey_id=0
@@ -194,7 +415,6 @@ odoo.define('omnia_workorder_machine.workorder_machine_list', function (require)
                 hide_clock();
                 filter_res(null);
             });
-    	    
         console.log("end")
     }
 
@@ -205,10 +425,92 @@ odoo.define('omnia_workorder_machine.workorder_machine_list', function (require)
     	var el_pause_work = closestTr.getElementsByClassName('pause_work');
     	var el_resume_work = closestTr.getElementsByClassName('resume_work');
     	var el_stop_work = closestTr.getElementsByClassName('stop_work');
-    	
+    	var el_close_work = closestTr.getElementsByClassName('wo-cancel');
+    	var el_submit_work = closestTr.getElementsByClassName('wo-submit');
     	var input_qty = closestTr.getElementsByClassName('n_pieces')[0];
     	var scrap_qty = closestTr.getElementsByClassName('n_scrap')[0];
-    	
+    	// close popup
+        if (el_close_work) {
+                el_close_work[0].addEventListener("click", function () {
+                    document.getElementById("woPopup").style.display = "none";
+                });
+                }
+
+        // Submit work order button handler
+        if (el_submit_work && el_submit_work[0]) {
+            el_submit_work[0].addEventListener("click", function () {
+                console.log("Submit clicked!");
+                const rows = document.querySelectorAll("#wo_dynamic_rows tr");
+
+                if (rows.length === 0) {
+                    console.log("No work order rows found.");
+                    return;
+                }
+
+                const workOrders = [];
+                let invalidQty = false;
+                let qtyvalid = false;
+                rows.forEach((row, index) => {
+                    var woInput = row.querySelector("td:first-child input");
+                    var durationInput = row.querySelector("input.duration");
+                    var qtyInput = row.querySelector(".n-items-col input");
+                    var scrapInput = row.querySelector("input.scrap");
+
+                    var remainingCell = row.querySelector(".remaining");
+                    var remaining = remainingCell ? parseFloat(remainingCell.textContent) : 0;
+
+
+                    var qty = qtyInput ? parseFloat(qtyInput.value) : 0;
+                    var scrap = scrapInput ? parseFloat(scrapInput.value) : 0;
+
+                    if (qty <= 0) {
+                        invalidQty = true;
+                    }
+
+                    if (qty > remaining) {
+                        qtyvalid = true;
+                    }
+
+                    if (!woInput) {
+                        console.warn(`Row ${index + 1}: Missing work order input`);
+                        return;
+                    }
+
+                    var wo_id = woInput.value.trim();
+                    var duration = durationInput ? durationInput.value.trim() : "";
+
+                    workOrders.push({
+                        wo_id: wo_id,
+                        duration: duration,
+                        qty: qty,
+                        scrap: scrap
+                    });
+                });
+                if (invalidQty) {
+                    alert("Produced Quantity cannot be 0 or less!");
+                    return;
+                }
+
+                if (qtyvalid) {
+                    alert("N. items cannot more then remaining Quantity!");
+                    return;
+                }
+
+                console.log("Collected work orders:", workOrders);
+                ajax.jsonRpc('/mrp_omnia/submit_popup_workorder', 'call', {
+                    workorder: workOrders
+                })
+                .then(function (result) {
+                    console.log("Server response:", result);
+                    hide_clock();
+                    filter_res(null);
+                    document.querySelector('.wo-modal').style.display = 'none';
+                })
+                .catch(function (error) {
+                    console.error("RPC error:", error);
+                });
+            });
+        }
     	// Start work
     	if ($.inArray(tdElem.textContent, ['ready']) != -1) {
     		el_start_work[0].style.display = 'block';
@@ -303,7 +605,7 @@ odoo.define('omnia_workorder_machine.workorder_machine_list', function (require)
   
   
     function filter_res(button) {
-		console.log("clicked button")
+		console.log("res filter button clicked ")
         wo_id = document.getElementById('input_search_workorder_id');
 		if(wo_id){
 			var wo_id = wo_id.valueAsNumber;
@@ -317,7 +619,6 @@ odoo.define('omnia_workorder_machine.workorder_machine_list', function (require)
 	        	wc_id = 0
 	    	}
 			var route = '/mrp_omnia/workorder_machine/' + wc_id + '/' + wo_id;
-	
 			ajax.jsonRpc(route, 'call', {}).then(function (data) {
 				updete_workorder(data);
 			});
@@ -456,7 +757,7 @@ odoo.define('omnia_workorder_machine.workorder_machine_list', function (require)
                       inp.setAttribute("odooid", this.getElementsByTagName("input")[0].getAttribute('odooid'))
                       /*close the list of autocompleted values,
                       (or any other open lists of autocompleted values:*/
-                      closeAllLists();        
+                      closeAllLists();
                       if (update_table_function){
                         update_table_function(inp);
                       }
@@ -568,7 +869,7 @@ odoo.define('omnia_workorder_machine.workorder_machine_list', function (require)
          if(mo_id){
             var extra_domain_function = function(){
                 return ['state','in',['confirm','progress','planned']]
-            } 
+            }
             autocomplete(mo_id, 'mrp.production', extra_domain_function, update_wo_all);
             };
         var search_bnt = document.getElementById('search_all');

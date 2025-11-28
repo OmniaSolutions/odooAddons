@@ -116,37 +116,63 @@ class WebsiteWorkorderControllerByUser(Controller):
         return None
 
     @http.route(['/mrp_omnia/workorder_start'], auth='public', type='json')
-    def workoder_start(self, wo_id, **post):
-        logging.info('Workorder Start called wo_id %r' % (wo_id))
-        res = False
+    def workorder_start(self, wo_id=None, wo_ids=None, **post):
+        logging.info(f"Workorder Start called. wo_id={wo_id}, wo_ids={wo_ids}")
+        user_id = int(post.get('user_id', 0))
+        employee_id = int(post.get('employee_id', 0))
+        Workorder = request.env['mrp.workorder']
+        if wo_ids:
+            for wid in wo_ids:
+                Workorder.startWork(int(wid), user_id, employee_id)
+            return {
+                "status": "success",
+                "message": "Multiple WO started",
+            }
         if wo_id:
-            wo_id = int(wo_id)
-            user_id = post.get('user_id', 0)
-            employee_id = post.get('employee_id', 0)
-            res = request.env['mrp.workorder'].startWork(wo_id, user_id, employee_id)
-        return res
+            Workorder.startWork(int(wo_id), user_id, employee_id)
+            return {"status": "success", "message": "Single WO started"}
+        return {"status": "error", "message": "No workorder ID provided"}
 
     @http.route(['/mrp_omnia/workorder_pause'], auth='public', type='json')
-    def workorder_pause(self, wo_id, **post):
-        logging.info('Workorder Pause called wo_id %r' % (wo_id))
-        res = False
+    def workorder_pause(self, wo_id=None, wo_ids=None, **post):
+        user_id = int(post.get('user_id', 0))
+        employee_id = int(post.get('employee_id', 0))
+        Workorder = request.env['mrp.workorder']
+        if wo_ids:
+            for wid in wo_ids:
+                Workorder.pauseWork(int(wid), user_id, employee_id)
+            return {
+                "status": "success",
+                "message": "Multiple workorders paused",
+            }
         if wo_id:
-            wo_id = int(wo_id)
-            user_id = post.get('user_id', 0)
-            employee_id = post.get('employee_id', 0)
-            res = request.env['mrp.workorder'].pauseWork(wo_id, user_id, employee_id)
-        return res
+            Workorder.pauseWork(int(wo_id), user_id, employee_id)
+            return {
+                "status": "success",
+                "message": "Single workorder paused"
+            }
+        return {"status": "error", "message": "No workorder ID provided"}
 
     @http.route(['/mrp_omnia/workorder_resume'], auth='public', type='json')
-    def workorder_resume(self, wo_id, **post):
-        logging.info('Workorder Resume called wo_id %r' % (wo_id))
-        res = False
+    def workorder_resume(self, wo_id=None, wo_ids=None, **post):
+        user_id = int(post.get('user_id', 0))
+        employee_id = int(post.get('employee_id', 0))
+        Workorder = request.env['mrp.workorder']
+        if wo_ids:
+            for wid in wo_ids:
+                Workorder.resumeWork(int(wid), user_id, employee_id)
+            return {
+                "status": "success",
+                "message": "Multiple workorders resumed",
+            }
         if wo_id:
-            wo_id = int(wo_id)
-            user_id = post.get('user_id', 0)
-            employee_id = post.get('employee_id', 0)
-            res = request.env['mrp.workorder'].resumeWork(wo_id, user_id, employee_id)
-        return res
+            Workorder.resumeWork(int(wo_id), user_id, employee_id)
+            return {
+                "status": "success",
+                "message": "Single workorder resumed"
+            }
+        return {"status": "error",
+                "message": "No workorder ID provided"}
 
     @http.route(['/mrp_omnia/workorder_record'], auth='public', type='json')
     def workorder_record(self, wo_id, n_pieces, n_scrap, **post):

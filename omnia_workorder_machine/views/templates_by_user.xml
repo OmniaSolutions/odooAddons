@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<odoo>	
+<odoo>
 
 	<template id="assets_common" name="Import workorder machine js" inherit_id="web.assets_common">
         <xpath expr="script[last()]" position="after">
@@ -10,7 +10,7 @@
 
     <template id="by_user" name="Workorder by User">
         <head>
-             <t t-call-assets="web.assets_common" /> 
+             <t t-call-assets="web.assets_common" />
         </head>
         <body>
 	        <div class="main_div">
@@ -35,6 +35,7 @@
 	            <table class="main_table" id="to_replace">
 	               <thead>
 	                  <tr>
+                          <th class="header_table">Select</th>
 		                <th id="by_user_h_1" class="header_table">ID</th>
 		                <th id="by_user_h_2" class="header_table">Date Planned</th>
 		                <th id="by_user_h_3" class="header_table">Internal Reference</th>
@@ -62,13 +63,28 @@
 	<template id="template_workorder_machine_table" name="Workorder Table">
 	        <t t-foreach="wo_lines" t-as="line">
 	               <tr class="content_line">
+                   <td>
+                        <input type="checkbox" class="select_row"/>
+                    </td>
 	                <td id="td_user_h_1" class="table_value wo_id"><t t-esc="line[0]"/></td>
 	                <td id="td_user_h_2" class="table_value"><t t-esc="line[8]"/></td>
 	                <td id="td_user_h_3" class="table_value internal_ref"><t t-esc="line[2]"/></td>
 	                <td id="td_user_h_4" class="table_value"><t t-esc="line[1]"/></td>
 	                <td id="td_user_h_5" class="table_value"><t t-esc="line[3]"/></td>
 	                <td id="td_user_h_6" class="table_value"><t t-esc="line[4]"/></td>
-	                <td id="td_user_h_7" class="table_value n_pieces_to_produce"><t t-esc="line[7]"/></td>
+	                <td id="td_user_h_7" class="table_value n_pieces_to_produce">
+                        <t t-set="qty_str" t-value="line[7]"/>
+                        <t t-set="parts" t-value="qty_str.split(' / ')"/>
+                        <t t-set="done" t-value="parts[0]"/>
+                        <t t-set="right" t-value="parts[1] if len(parts) > 1 else ''"/>
+                        <t t-set="right_parts" t-value="right.split(' ')"/>
+                        <t t-set="total" t-value="right_parts[0]"/>
+                        <t t-set="unit" t-value="' '.join(right_parts[1:]) if len(right_parts) > 1 else ''"/>
+                        <t t-set="remaining" t-value="float(total) - float(done)"/>
+                        <span style="color:#34B333;font-weight:bold;"><t t-esc="done"/></span>
+                        /
+                        <span><t t-esc="total"/> <t t-esc="unit"/></span>
+                    </td>
 	                <td id="td_user_h_8" class="table_value"><input id="input_n_pieces" type="number" name="n_pieces" class="n_pieces" step="0.001" value="0" /></td>
 	                <td id="td_user_h_9" class="table_value"><input id="input_n_scrap" type="number" name="n_scrap" class="n_scrap" step="0.001" value="0" /></td>
 	                <td id="td_user_h_10" class="table_value">
@@ -77,12 +93,37 @@
 	                		<input class="pause_work" type='button' value='Pause'/>
 	                		<input class="resume_work" type='button' value='Resume'/>
 	                		<input class="stop_work" type='button' value='Record'/>
+                            <div id="woPopup" class="wo-modal">
+                                <div class="wo-modal-content">
+                                    <h2>Entry for selected workorder</h2>
+                                    <hr/>
+                                    <table class="wo-table">
+                                        <thead>
+                                            <tr>
+                                                <th>Workorders</th>
+                                                <th>Product Name</th>
+                                                <th class="n_items_col">N. Items</th>
+                                                <th>Done</th>
+                                                <th>Remaining</th>
+                                                <th>Total</th>
+                                                <th>Duration</th>
+                                                <th>Scrap</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="wo_dynamic_rows"/>
+                                    </table>
+                                    <label class="section-title">Total Time</label>
+                                    <input type="text" class="wo-input" id="total_time" placeholder="Enter total time"/>
+                                    <button class="wo-submit">Submit</button>
+                                    <button class="wo-cancel" id="closeBtn">Cancel</button>
+                                </div>
+                            </div>
 	                	</div>
 	                </td>
 	                <td id="td_user_h_11" class="table_value"><t t-esc="line[5]"/></td>
 	                <td id="td_user_h_12" class="table_value wo_state" onchange="state_changed(this)"><t t-esc="line[6]"/></td>
                      <td id="td_user_h_13" class="table_value">
-                         <t t-if="line[9]=='False'">    
+                         <t t-if="line[9]=='False'">
                              <div style="color:red">Not Working</div>
                          </t>
 	                    <t t-if="line[9]=='True'">

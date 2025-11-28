@@ -22,6 +22,7 @@
             <field name="workcenter_id" position="before">
             	<field name="product_id"/>
                 <field name="raw_material_name"/>
+                <field name="so_li_commitment_date"/>
             </field>
         </field>
     </record>
