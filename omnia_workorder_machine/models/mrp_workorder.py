@@ -13,7 +13,7 @@ import logging
 import pytz
 import odoo
 from datetime import datetime
-
+from datetime import timedelta
 
 class MrpProductionWCLine(models.Model):
     _inherit = 'mrp.workorder'
@@ -215,6 +215,26 @@ class MrpProductionWCLine(models.Model):
             if n_scrap > 0:
                 work_order_id.o_do_scrap(n_scrap)
         return False
+    
+    def getLastCloseProductivity(self):
+        timeline_obj = self.env['mrp.workcenter.productivity']
+        domain = [('workorder_id', 'in', self.ids),
+                  ('user_id', '=', self.getUserId()),
+                  ('date_end','!=', False)]
+        
+        for timeline in timeline_obj.search(domain, order='id desc', limit=1):
+            return timeline
+        return []
+
+    def getLastComputationTime(self):
+        for timeline in self.getLastCloseProductivity():
+            delta = timeline.date_end-timeline.date_start
+            return delta.total_seconds()
+        return 0,0
+    
+    def adjust_last_recorded(self, added_seconds):
+        for timeline in self.getLastCloseProductivity():
+            timeline.date_end = timeline.date_start + timedelta(seconds=added_seconds)
 
     @api.model
     def o_do_scrap(self, scrap_qty):
