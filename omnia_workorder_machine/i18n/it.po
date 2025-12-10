@@ -1,0 +1,203 @@
+# Translation of Odoo Server.
+# This file contains the translation of the following modules:
+# 	* omnia_workorder_machine
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 10.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2019-01-30 21:41+0000\n"
+"PO-Revision-Date: 2019-01-30 22:48+0100\n"
+"Last-Translator: <>\n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: \n"
+"Language: en\n"
+"X-Generator: Poedit 1.8.7.1\n"
+
+#. module: omnia_workorder_machine
+#: model:ir.ui.view,arch_db:omnia_workorder_machine.by_user
+msgid "<span> User Name :</span><span id=\"user_name\"/>"
+msgstr "<span> Utente :</span><span id=\"user_name\"/>"
+
+#. module: omnia_workorder_machine
+#: model:ir.ui.view,arch_db:omnia_workorder_machine.by_user
+msgid "<span>User Id: </span>"
+msgstr "<span>Id Utente: </span>"
+
+#. module: omnia_workorder_machine
+#: model:ir.ui.view,arch_db:omnia_workorder_machine.template_workorder_machine
+msgid "Database:"
+msgstr "Database:"
+
+#. module: omnia_workorder_machine
+#: model:ir.ui.view,arch_db:omnia_workorder_machine.template_workorder_machine_table
+msgid "Date Planned"
+msgstr "Data Pianificata"
+
+#. module: omnia_workorder_machine
+#: model:ir.ui.view,arch_db:omnia_workorder_machine.template_workorder_machine_table
+msgid "Description"
+msgstr "Descrizione"
+
+#. module: omnia_workorder_machine
+#: model:ir.ui.view,arch_db:omnia_workorder_machine.template_workorder_machine_table
+msgid "ID"
+msgstr "ID"
+
+#. module: omnia_workorder_machine
+#: model:ir.ui.view,arch_db:omnia_workorder_machine.template_workorder_machine_table
+msgid "Internal Reference"
+msgstr "Riferimento Interno"
+
+#. module: omnia_workorder_machine
+#: model:ir.ui.view,arch_db:omnia_workorder_machine.template_workorder_machine_table
+msgid "Label"
+msgstr "Descrizione"
+
+#. module: omnia_workorder_machine
+#: model:ir.ui.view,arch_db:omnia_workorder_machine.template_workorder_machine
+msgid "Login"
+msgstr "Login"
+
+#. module: omnia_workorder_machine
+#: model:ir.ui.view,arch_db:omnia_workorder_machine.template_workorder_machine_table
+msgid "N Produced"
+msgstr "Prodotti"
+
+#. module: omnia_workorder_machine
+#: model:ir.ui.view,arch_db:omnia_workorder_machine.template_workorder_machine_table
+msgid "N To Do"
+msgstr "Produzione"
+
+#. module: omnia_workorder_machine
+#: model:ir.ui.view,arch_db:omnia_workorder_machine.template_workorder_machine
+msgid "New Login"
+msgstr "New Login"
+
+#. module: omnia_workorder_machine
+#: model:ir.ui.view,arch_db:omnia_workorder_machine.template_workorder_machine
+msgid "Password:"
+msgstr "Password:"
+
+#. module: omnia_workorder_machine
+#: model:ir.ui.view,arch_db:omnia_workorder_machine.template_workorder_machine_table
+msgid "Pause"
+msgstr "Metti in pausa"
+
+#. module: omnia_workorder_machine
+#: model:ir.ui.view,arch_db:omnia_workorder_machine.template_workorder_machine_table
+msgid "Product Name"
+msgstr "Nome prodotto"
+
+#. module: omnia_workorder_machine
+#: model:ir.ui.view,arch_db:omnia_workorder_machine.template_workorder_machine_table
+msgid "Production Name"
+msgstr "Oridine Di Produzione"
+
+#. module: omnia_workorder_machine
+#: model:ir.ui.view,arch_db:omnia_workorder_machine.template_workorder_machine_table
+msgid "Record"
+msgstr "Registra"
+
+#. module: omnia_workorder_machine
+#: model:ir.ui.view,arch_db:omnia_workorder_machine.template_workorder_machine
+msgid "Register Activity"
+msgstr "Registra Attivita'"
+
+#. module: omnia_workorder_machine
+#: model:ir.ui.view,arch_db:omnia_workorder_machine.by_user
+msgid "Register WorkOrder Activity"
+msgstr "Registra Attivita Ordine di lavoro"
+
+#. module: omnia_workorder_machine
+#: model:ir.ui.view,arch_db:omnia_workorder_machine.template_workorder_machine_table
+msgid "Resume"
+msgstr "Ripristina"
+
+#. module: omnia_workorder_machine
+#: model:ir.ui.view,arch_db:omnia_workorder_machine.template_workorder_machine
+msgid "Scheme:"
+msgstr "Scheme:"
+
+#. module: omnia_workorder_machine
+#: model:ir.ui.view,arch_db:omnia_workorder_machine.template_workorder_machine_table
+msgid "Scrap"
+msgstr "Scarto"
+
+#. module: omnia_workorder_machine
+#: model:ir.ui.view,arch_db:omnia_workorder_machine.template_workorder_machine
+msgid "Server IP:"
+msgstr "Server IP:"
+
+#. module: omnia_workorder_machine
+#: model:ir.ui.view,arch_db:omnia_workorder_machine.template_workorder_machine
+msgid "Server Port:"
+msgstr "Server Port:"
+
+#. module: omnia_workorder_machine
+#: model:ir.ui.view,arch_db:omnia_workorder_machine.template_workorder_machine_table
+msgid "Start"
+msgstr "Inizia"
+
+#. module: omnia_workorder_machine
+#: model:ir.ui.view,arch_db:omnia_workorder_machine.template_workorder_machine
+msgid "User Logged"
+msgstr "Utente Registrato\t"
+
+#. module: omnia_workorder_machine
+#: model:ir.ui.view,arch_db:omnia_workorder_machine.template_workorder_machine
+msgid "User Not Logged"
+msgstr "Utente Non Registrato\t"
+
+#. module: omnia_workorder_machine
+#: model:ir.ui.view,arch_db:omnia_workorder_machine.template_workorder_machine_table
+msgid "User Working"
+msgstr "User Working"
+
+#. module: omnia_workorder_machine
+#: model:ir.ui.view,arch_db:omnia_workorder_machine.template_workorder_machine
+msgid "User:"
+msgstr "User:"
+
+#. module: omnia_workorder_machine
+#: model:ir.model.fields,field_description:omnia_workorder_machine.field_mrp_workorder_user_ids
+msgid "Users"
+msgstr "Utenti"
+
+#. module: omnia_workorder_machine
+#: model:ir.ui.view,arch_db:omnia_workorder_machine.template_workorder_machine_table
+msgid "View"
+msgstr "Vista"
+
+#. module: omnia_workorder_machine
+#: model:ir.model,name:omnia_workorder_machine.model_mrp_workorder
+msgid "Work Order"
+msgstr "Ordine di Lavoro"
+
+#. module: omnia_workorder_machine
+#: model:ir.ui.view,arch_db:omnia_workorder_machine.template_workorder_machine_table
+msgid "Work Order Name"
+msgstr "Ordine di Lavoro"
+
+#. module: omnia_workorder_machine
+#: model:ir.ui.view,arch_db:omnia_workorder_machine.template_workorder_machine_table
+msgid "Work Order State"
+msgstr "Stato Ordine Di Lavoro"
+
+#. module: omnia_workorder_machine
+#: model:ir.ui.view,arch_db:omnia_workorder_machine.template_workorder_machine
+msgid "Workcenter ID"
+msgstr "ID Centro di Lavoro"
+
+#. module: omnia_workorder_machine
+#: model:ir.ui.view,arch_db:omnia_workorder_machine.template_workorder_machine
+msgid "Workorder ID"
+msgstr "ID Ordine di Lavoro"
+
+#. module: omnia_workorder_machine
+#: model:ir.ui.view,arch_db:omnia_workorder_machine.template_workorder_machine_table
+msgid "Worksheet"
+msgstr "Scheda Di Lavoro"

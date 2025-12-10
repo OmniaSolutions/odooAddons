@@ -1,0 +1,64 @@
+# -*- encoding: utf-8 -*-
+##############################################################################
+#
+#    OmniaSolutions, Open Source Management Solution    
+#    Copyright (C) 2010-2011 OmniaSolutions (<http://www.omniasolutions.eu>). All Rights Reserved
+#    $Id$
+#
+#    This program is free software: you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+##############################################################################
+from odoo import models
+
+
+class ProcurementOrderOmnia(models.Model):
+    _name = 'procurement.order.omnia'
+    _description = 'OmniaSolutions procurement order'
+
+    def auto_reordering_rules_calculation(self, forceMrpBrws=[]):
+        """Compute the commitment date"""
+        reorderRuleEnv = self.env['stock.warehouse.orderpoint']
+        for mrpOrderBrws in forceMrpBrws:
+            for moveLineBrws in mrpOrderBrws.move_raw_ids:
+                if moveLineBrws.bom_line_id.bom_id.type == 'phantom':
+                    continue
+                prodBrws = moveLineBrws.product_id
+                reorderingRules = reorderRuleEnv.search([
+                    ('product_id', '=', prodBrws.id),
+                    ('location_id', '=', mrpOrderBrws.location_src_id.id)
+                ])
+                if not reorderingRules:
+                    warehouse_id = self.getWarehouse(mrpOrderBrws.location_src_id)
+                    self.createReorderingRules(prodBrws.id, mrpOrderBrws.location_src_id.id, warehouse_id)
+
+    def getWarehouse(self, locationBrowse):
+        warehouseEnv = self.env['stock.warehouse']
+        warehouseBrws = warehouseEnv.search([
+            ('lot_stock_id', '=', locationBrowse.id)])
+        if warehouseBrws:
+            return warehouseBrws.id
+        return False
+
+    def createReorderingRules(self, product_id, location_id, warehouse_id):
+        reorderRuleEnv = self.env['stock.warehouse.orderpoint']
+        toCreate = {
+            'product_id': product_id,
+            'location_id': location_id,
+            'product_min_qty': 0,
+            'product_max_qty': 0,
+            'qty_multiple': 1,
+        }
+        if warehouse_id:
+            toCreate['warehouse_id'] = warehouse_id
+        reorderRuleEnv.create(toCreate)
