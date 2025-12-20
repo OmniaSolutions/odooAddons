@@ -74,9 +74,17 @@ class SaleOrder(models.Model):
         return str(date.today().year) + '/' + str(newSequenceNumber)
 
     def createRelatedAnalyticAccount(self, newBaseName, partner_id):
+        plan = self.env['account.analytic.plan'].search([], limit=1)
+        if not plan:
+            plan = self.env['account.analytic.plan'].create({
+                'name': 'Default Analytic Plan',
+            })
+             
         toCreate = {
             'name': newBaseName,
-            'partner_id': partner_id.id,
+            'partner_id': partner_id.id if partner_id else False,
+            'plan_id': plan.id,
+            'active': True,
         }
         return self.env['account.analytic.account'].create(toCreate)
 
