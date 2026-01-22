@@ -74,19 +74,26 @@ class SaleOrder(models.Model):
         return str(date.today().year) + '/' + str(newSequenceNumber)
 
     def createRelatedAnalyticAccount(self, newBaseName, partner_id):
-        plan = self.env['account.analytic.plan'].search([], limit=1)
+        plan_name = 'zoppellaro sale plan'
+
+        plan = self.env['account.analytic.plan'].sudo().search([
+            ('name', '=', plan_name)
+        ], limit=1)
+
         if not plan:
             plan = self.env['account.analytic.plan'].create({
-                'name': 'Default Analytic Plan',
+                'name': plan_name,
             })
-             
-        toCreate = {
+
+        # Create analytic account
+        analytic_account = self.env['account.analytic.account'].create({
             'name': newBaseName,
             'partner_id': partner_id.id if partner_id else False,
             'plan_id': plan.id,
-            'active': True,
-        }
-        return self.env['account.analytic.account'].create(toCreate)
+            'company_id': self.company_id.id,
+        })
+
+        return analytic_account
 
     def createRelatedWarehouse(self, newBaseName):
         toCreate = {
