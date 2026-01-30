@@ -1,0 +1,30 @@
+<odoo>
+    <record id="email_template_timesheet_document" model="mail.template">
+        <field name="name">Timesheet Document - Send by Email (Portal)</field>
+        <field name="model_id" ref="timesheet_document.model_timesheet_document"/>
+        <field name="email_from">{{ (user.email or '') }}</field>
+        <field name="subject">{{ object.timesheet_customer_id.name or ''}}</field>
+        <field name="partner_to">{{ object.timesheet_reference_id.id }}</field>
+        <field name="auto_delete" eval="True"/>
+        <field name="report_template" ref="timesheet_document.report_timesheet_document_id"/>
+        <field name="report_name">
+            RapportoIntervento{{ object.timesheet_date and object.timesheet_date.strftime('%Y_%m_%d') or '' }}
+        </field>
+        <field name="lang">{{ object.timesheet_customer_id.lang }}</field>
+        <field name="body_html" type="html">
+            <div style="font-family: Ubuntu, Arial, sans-serif; font-size: 12px;">
+                <p>Dear Customer <t t-out="object.timesheet_reference_id.name"/></p>
+                <p>We attach the intervention report for the technical assistance provided.</p>
+                <p>Please read it and return it countersigned for acceptance.</p>
+                <p>
+                    If not returned within 5 working days from its date of entry,
+                    it will be considered accepted.
+                </p>
+                <br/>
+                <p>For any clarification, please contact us.</p>
+                <br/>
+                <p>Best regards</p>
+            </div>
+        </field>
+    </record>
+</odoo>

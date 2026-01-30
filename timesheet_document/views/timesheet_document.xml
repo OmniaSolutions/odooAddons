@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="timesheet_document_form" model="ir.ui.view">
+        <field name="name">timesheet.document.form</field>
+        <field name="model">timesheet.document</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <button name="action_confirm"
+                            string="Confirm"
+                            type="object"
+                            states="draft"
+                            groups="base.group_user"/>
+                    <button name="action_draft"
+                            string="Reset To Draft"
+                            type="object"
+                            states="confirmed"
+                            groups="base.group_user"/>
+                    <button name="action_quotation_send"
+                            string="Send by Email"
+                            type="object"
+                            class="oe_highlight"
+                            states="confirmed"
+                            groups="base.group_user"/>
+                    <field name="state"
+                           widget="statusbar"
+                           statusbar_visible="draft,confirmed"/>
+                </header>
+
+                <sheet>
+                    <h1>
+                        <label for="name"
+                               string="Codice Documento"
+                               attrs="{'invisible':[('state','=','draft')]}"/>
+
+                        <field name="name"
+                               string="Codice Timesheet"
+                               class="oe_inline"
+                               attrs="{'invisible':[('state','=','draft')]}"/>
+                    </h1>
+
+                    <group>
+                        <field name="timesheet_customer_id"
+                               domain="[('is_company','=',True)]"
+                                attrs="{'readonly': [('state', '!=', 'draft')]}"/>
+
+                        <field name="timesheet_reference_id"
+                               domain="[('parent_id','=',timesheet_customer_id)]"
+                               attrs="{'readonly': [('state', '!=', 'draft')]}"/>
+
+                        <field name="timesheet_date"
+                               attrs="{'readonly': [('state', '!=', 'draft')]}"/>
+                    </group>
+
+                    <field name="timesheet_timesheet_line"
+                           domain="[('account_id.partner_id','=',timesheet_customer_id),
+                                    ('timesheet_document_ref','=',False)]"
+                           attrs="{'readonly': [('state', '!=', 'draft')]}">
+                        <tree editable="top" string="Timesheet Activities">
+                            <field name="date"/>
+                            <field name="user_id" required="1" options="{'no_open': True}"/>
+                            <field name="name"/>
+                            <field name="project_id" required="1"/>
+                            <field name="task_id"
+                                   context="{'default_project_id': project_id}"
+                                   domain="[('project_id','=',project_id)]"/>
+                            <field name="unit_amount"
+                                   string="Duration"
+                                   sum="Total time"
+                                   widget="float_time"/>
+                            <field name="omnia_activity_type"/>
+                        </tree>
+                    </field>
+
+                    <group>
+                        <field name="timesheet_total"
+                               attrs="{'readonly': [('state', '!=', 'draft')]}"/>
+                    </group>
+
+                    <field name="timesheet_note"
+                           attrs="{'readonly': [('state', '!=', 'draft')]}"/>
+                </sheet>
+
+                <div class="oe_chatter">
+                    <field name="message_follower_ids" widget="mail_followers"/>
+                    <field name="message_ids" widget="mail_thread"/>
+                </div>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_timesheet_document_tree" model="ir.ui.view">
+        <field name="name">timesheet.document.tree</field>
+        <field name="model">timesheet.document</field>
+        <field name="arch" type="xml">
+            <tree string="Timesheet Document"
+                  decoration-danger="state == 'draft'"
+                  decoration-success="state == 'confirmed'">
+                <field name="name"/>
+                <field name="timesheet_customer_id"/>
+                <field name="timesheet_reference_id"/>
+                <field name="timesheet_date"/>
+                <field name="timesheet_total"/>
+                <field name="state"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="ir_actions_omnia_timesheet_sheet" model="ir.actions.act_window">
+        <field name="name">Timesheet Document</field>
+        <field name="res_model">timesheet.document</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+
+    <menuitem id="menu_act_omnia_hr_timesheet_sheet_form_my_current"
+              name="Timesheet Document"
+              parent="hr_timesheet.menu_hr_time_tracking"
+              action="ir_actions_omnia_timesheet_sheet"
+              sequence="1"/>
+
+</odoo>

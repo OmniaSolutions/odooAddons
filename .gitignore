@@ -2,6 +2,7 @@
 *.pyc
 =======
 *.pyc
+.idea/
 .project
 .pydevproject
 .settings

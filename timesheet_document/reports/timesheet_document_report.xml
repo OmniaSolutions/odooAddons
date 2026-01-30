@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="report_timesheet_document_id" model="ir.actions.report">
+        <field name="name">Timesheet Document</field>
+        <field name="model">timesheet.document</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">timesheet_document.report_timesheet_documents</field>
+        <field name="report_file">timesheet_document.report_timesheet_documents</field>
+        <field name="attachment_use">True</field>
+    </record>
+</odoo>

@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <template id="report_timesheet_documents">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="doc">
+                <t t-call="timesheet_document.report_timesheet_document"
+                   t-lang="doc.timesheet_customer_id.lang"/>
+            </t>
+        </t>
+    </template>
+
+    <template id="report_timesheet_document" name="Timesheet Document">
+        <t t-set="doc"
+           t-value="doc.with_context({'lang': doc.timesheet_customer_id.lang})"/>
+        <t t-call="web.external_layout">
+            <div class="page">
+                <div>
+                    <h2 style="text-align:center;padding: 5px">
+                        TIMESHEET REPORT DOCUMENT
+                    </h2>
+                    <div>
+                        <!-- Customer -->
+                        <div style="float:left;border-left:1px solid #e6e6ff;
+                                    padding-left:8px;padding-right:5px;line-height:1.2;">
+                            <b>Customer:</b>
+                            <br/>
+                            <span t-field="doc.timesheet_customer_id.name"/>
+                            <br/>
+                            <span t-field="doc.timesheet_customer_id.street"/>
+                            <br/>
+                            <span t-field="doc.timesheet_customer_id.zip"/>,
+                            <span t-field="doc.timesheet_customer_id.city"/>
+                        </div>
+
+                        <!-- Reference -->
+                        <div style="float:right;border-left:1px solid #e6e6ff;
+                                    padding-left:8px;padding-right:5px;
+                                    line-height:1.2;
+                                    margin-bottom:12px;">
+                            <b>Reference:</b>
+                            <br/>
+                            <span t-field="doc.timesheet_reference_id.name"/>
+                            <br/>
+
+                            <b>Date:</b>
+                            <br/>
+                            <span t-field="doc.timesheet_date"/>
+                            <br/>
+
+                            <b>Number:</b>
+                            <br/>
+                            <span t-field="doc.name"/>
+                        </div>
+                    </div>
+
+                    <table style="width:100%;padding:5px">
+                        <thead>
+                            <tr>
+                                <th style="background:#e6e6ff;padding:5px;">Date</th>
+                                <th style="background:#e6e6ff;padding:5px;">Order</th>
+                                <th style="background:#e6e6ff;padding:5px;">Description</th>
+                                <th style="background:#e6e6ff;padding:5px;">Out</th>
+                                <th style="background:#e6e6ff;padding:5px;">Time spent</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            <tr t-foreach="doc.timesheet_timesheet_line" t-as="l">
+                                <td style="padding:5px;">
+                                    <p t-field="l.date"/>
+                                </td>
+                                <td>
+                                    <p t-field="l.account_id.name"/>
+                                </td>
+                                <td style="padding:5px;">
+                                    <p t-field="l.name"/>
+                                </td>
+                                <td style="padding:5px;">
+                                    <p t-field="l.omnia_activity_type"/>
+                                </td>
+                                <td style="padding:5px;">
+                                    <p t-field="l.unit_amount"
+                                       style="text-align:right;"/>
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <td colspan="4" style="padding:5px;text-align:right;font-weight:bold;">
+                                    Total
+                                </td>
+                                <td style="padding:5px;text-align:right;font-weight:bold;">
+                                    <span t-field="doc.timesheet_total"/>
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <td colspan="5" style="background:#e6e6ff;padding:5px;font-weight:bold;">
+                                    Note:
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <td colspan="5" style="background:#e6e6ff;padding:5px;line-height:1.3;">
+                                    <span t-field="doc.timesheet_note"/>
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <td colspan="5" style="background:#e6e6ff;padding:10px;text-align:right;">
+                                    Signature ______________
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <td colspan="5" style="background:#e6e6ff;padding:5px;">
+                                    If this document is not returned countersigned
+                                    within 5 working days from its date of entry,
+                                    it will be considered accepted.
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <br/>
+                </div>
+            </div>
+        </t>
+    </template>
+</odoo>
