@@ -156,6 +156,7 @@ class SaleOrder(models.Model):
                 count += 1
             else:
                 break
+
         toCreate = {
             'name': oldProdBrws.name,
             'default_code': newProductName,
@@ -164,17 +165,15 @@ class SaleOrder(models.Model):
             'description': '[%s] %s' % (oldProdBrws.default_code, oldProdBrws.description_sale or '-'),
             'description_sale': '[%s] %s' % (oldProdBrws.default_code, oldProdBrws.description_sale or '-')
         }
-        try:
-            return oldProdBrws.copy(oldProdBrws.id, toCreate)
-        except:
-            return oldProdBrws.copy(toCreate)
+
+        return oldProdBrws.copy(default=toCreate)
 
     def getRoutesToSet(self):
         out_ids = []
-        route_env = self.env['stock.route'].with_context(lang='en_US')
 
-        for elem in ['Make To Order', 'Manufacture']:
-            route = route_env.search([('name', '=', elem)], limit=1)
-            out_ids.append(route.id or False)
+        for xmlid in ['stock.route_warehouse0_mto', 'mrp.route_warehouse0_manufacture']:
+            route = self.env.ref(xmlid, raise_if_not_found=False)
+            if route:
+                out_ids.append(route.id)
 
         return out_ids
