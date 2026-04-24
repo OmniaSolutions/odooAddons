@@ -159,7 +159,7 @@ class SaleOrder(models.Model):
         toCreate = {
             'name': oldProdBrws.name,
             'default_code': newProductName,
-            'route_ids': [(6, False, self.getRoutesToSet())],
+            'route_ids': [(6, 0, self.getRoutesToSet())],
             'parent_product': oldProdBrws.product_tmpl_id.id,
             'description': '[%s] %s' % (oldProdBrws.default_code, oldProdBrws.description_sale or '-'),
             'description_sale': '[%s] %s' % (oldProdBrws.default_code, oldProdBrws.description_sale or '-')
