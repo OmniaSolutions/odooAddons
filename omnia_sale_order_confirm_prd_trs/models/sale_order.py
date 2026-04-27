@@ -165,15 +165,17 @@ class SaleOrder(models.Model):
             'description': '[%s] %s' % (oldProdBrws.default_code, oldProdBrws.description_sale or '-'),
             'description_sale': '[%s] %s' % (oldProdBrws.default_code, oldProdBrws.description_sale or '-')
         }
-
-        return oldProdBrws.copy(default=toCreate)
+        try:
+            return oldProdBrws.copy(oldProdBrws.id, toCreate)
+        except:
+            return oldProdBrws.copy(toCreate)
 
     def getRoutesToSet(self):
         out_ids = []
+        route_env = self.env['stock.route'].with_context(lang='en_US')
 
-        for xmlid in ['stock.route_warehouse0_mto', 'mrp.route_warehouse0_manufacture']:
-            route = self.env.ref(xmlid, raise_if_not_found=False)
-            if route:
-                out_ids.append(route.id)
+        for elem in ['Make To Order', 'Manufacture']:
+            route = route_env.search([('name', '=', elem)], limit=1)
+            out_ids.append(route.id or False)
 
         return out_ids
