@@ -149,9 +149,8 @@ class SaleOrder(models.Model):
             newBomBrws.product_id = newProdBrws.id
 
     def createNewCodedProduct(self, newBaseName, count, oldProdBrws):
-        newProductName = str(newBaseName) + '/' + str('{:03.0f}'.format(count))
-        while 1:
-            newProductName = str(newBaseName) + '/' + str('{:03.0f}'.format(count))
+        while True:
+            newProductName = '%s/%03d' % (newBaseName, count)
             if self.env['product.template'].search_count([('default_code', '=', newProductName)]):
                 count += 1
             else:
@@ -162,13 +161,11 @@ class SaleOrder(models.Model):
             'default_code': newProductName,
             'route_ids': [(6, 0, self.getRoutesToSet())],
             'parent_product': oldProdBrws.product_tmpl_id.id,
-            'description': '[%s] %s' % (oldProdBrws.default_code, oldProdBrws.description_sale or '-'),
-            'description_sale': '[%s] %s' % (oldProdBrws.default_code, oldProdBrws.description_sale or '-')
+            'description': '[%s] %s' % (oldProdBrws.default_code or '-', oldProdBrws.description_sale or '-'),
+            'description_sale': '[%s] %s' % (oldProdBrws.default_code or '-', oldProdBrws.description_sale or '-'),
         }
-        try:
-            return oldProdBrws.copy(oldProdBrws.id, toCreate)
-        except:
-            return oldProdBrws.copy(toCreate)
+
+        return oldProdBrws.copy(default=toCreate)
 
     def getRoutesToSet(self):
         out_ids = []
@@ -176,6 +173,7 @@ class SaleOrder(models.Model):
 
         for elem in ['Make To Order', 'Manufacture']:
             route = route_env.search([('name', '=', elem)], limit=1)
-            out_ids.append(route.id or False)
+            if route:
+                out_ids.append(route.id)
 
         return out_ids
