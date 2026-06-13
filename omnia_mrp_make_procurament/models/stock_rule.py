@@ -81,6 +81,15 @@ class StockRule(models.Model):
                     values
                 )
 
+                picking_type = self.env['stock.picking.type'].search([
+                    ('code', '=', 'incoming'),
+                    ('company_id', '=', company_id.id),
+                ], limit=1)
+
+                if not picking_type:
+                    raise UserError(_("No incoming picking type found for company %s") % company_id.name)
+
+                vals['picking_type_id'] = picking_type.id
                 po = self.env['purchase.order'].with_context(force_company=company_id.id).sudo().create(vals)
                 cache[domain] = po
 

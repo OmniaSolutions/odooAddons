@@ -74,19 +74,26 @@ class SaleOrder(models.Model):
         return str(date.today().year) + '/' + str(newSequenceNumber)
 
     def createRelatedAnalyticAccount(self, newBaseName, partner_id):
-        plan = self.env['account.analytic.plan'].search([], limit=1)
+        plan_name = 'zoppellaro sale plan'
+
+        plan = self.env['account.analytic.plan'].sudo().search([
+            ('name', '=', plan_name)
+        ], limit=1)
+
         if not plan:
             plan = self.env['account.analytic.plan'].create({
-                'name': 'Default Analytic Plan',
+                'name': plan_name,
             })
-             
-        toCreate = {
+
+        # Create analytic account
+        analytic_account = self.env['account.analytic.account'].create({
             'name': newBaseName,
             'partner_id': partner_id.id if partner_id else False,
             'plan_id': plan.id,
-            'active': True,
-        }
-        return self.env['account.analytic.account'].create(toCreate)
+            'company_id': self.company_id.id,
+        })
+
+        return analytic_account
 
     def createRelatedWarehouse(self, newBaseName):
         toCreate = {
@@ -142,31 +149,31 @@ class SaleOrder(models.Model):
             newBomBrws.product_id = newProdBrws.id
 
     def createNewCodedProduct(self, newBaseName, count, oldProdBrws):
-        newProductName = str(newBaseName) + '/' + str('{:03.0f}'.format(count))
-        while 1:
-            newProductName = str(newBaseName) + '/' + str('{:03.0f}'.format(count))
+        while True:
+            newProductName = '%s/%03d' % (newBaseName, count)
             if self.env['product.template'].search_count([('default_code', '=', newProductName)]):
                 count += 1
             else:
                 break
+
         toCreate = {
             'name': oldProdBrws.name,
             'default_code': newProductName,
-            'route_ids': [(6, False, self.getRoutesToSet())],
+            'route_ids': [(6, 0, self.getRoutesToSet())],
             'parent_product': oldProdBrws.product_tmpl_id.id,
-            'description': '[%s] %s' % (oldProdBrws.default_code, oldProdBrws.description_sale or '-'),
-            'description_sale': '[%s] %s' % (oldProdBrws.default_code, oldProdBrws.description_sale or '-')
+            'description': '[%s] %s' % (oldProdBrws.default_code or '-', oldProdBrws.description_sale or '-'),
+            'description_sale': '[%s] %s' % (oldProdBrws.default_code or '-', oldProdBrws.description_sale or '-'),
         }
-        try:
-            return oldProdBrws.copy(oldProdBrws.id, toCreate)
-        except:
-            return oldProdBrws.copy(toCreate)
+
+        return oldProdBrws.copy(default=toCreate)
 
     def getRoutesToSet(self):
-        outIds = []
-        routeEnv = self.env['stock.location.route']
+        out_ids = []
+        route_env = self.env['stock.route'].with_context(lang='en_US')
+
         for elem in ['Make To Order', 'Manufacture']:
-            routeBrws = routeEnv.with_context({'lang': 'en_US'}).search([
-                ('name', '=', elem)])
-            outIds.append(routeBrws.id)
-        return outIds
+            route = route_env.search([('name', '=', elem)], limit=1)
+            if route:
+                out_ids.append(route.id)
+
+        return out_ids
