@@ -37,7 +37,7 @@ class MrpProduction(models.Model):
 
     omnia_mrp_orig_move = fields.Many2one("stock.move",
                                           copy=False,
-                                          string=_("Original Move"))
+                                          string="Original Move")
     project_id = fields.Many2one('project.project', string="Project")
     omnia_analytic_id = fields.Many2one(related="project_id.auto_account_id", string="Conto Analitico")
 

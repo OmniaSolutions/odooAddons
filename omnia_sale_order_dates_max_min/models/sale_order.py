@@ -28,7 +28,7 @@ class SaleOrder(models.Model):
 
     commitment_date_last = fields.Datetime(
         compute='_get_oldest_commitment_date', store=True,
-        string=_('Oldest Commitment Date'),
+        string='Oldest Commitment Date',
         help="""
         Date by which the last product is sure to be delivered. This is 
         date that you can promise to the customer, based on the Product Lead Times.

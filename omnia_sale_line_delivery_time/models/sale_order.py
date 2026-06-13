@@ -27,7 +27,7 @@ class SaleOrderLine(models.Model):
     _inherit = 'sale.order.line'
 
     product_delivery_date = fields.Datetime(
-        string=_('Delivery Date'),
+        string='Delivery Date',
         compute='_compute_product_delivery_date',
     )
 

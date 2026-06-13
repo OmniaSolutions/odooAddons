@@ -23,6 +23,7 @@
     'name': 'Omnia Automatic Reordering Rules',
     'version': '18.0.1.0.0',
     'author': 'OmniaSolutions',
+    'license': 'LGPL-3',
     'website': 'http://www.omniasolutions.eu',
     'category': 'Omnia Reordering Rules Customization',
     'sequence': 15,

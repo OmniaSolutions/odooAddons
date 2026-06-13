@@ -26,4 +26,4 @@ class ProductTemplate(models.Model):
     _name = "product.template"
     _inherit = "product.template"
 
-    parent_product = fields.Many2one('product.template', string=_('Parent product'))
+    parent_product = fields.Many2one('product.template', string='Parent product')
