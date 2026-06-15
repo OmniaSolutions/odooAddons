@@ -142,7 +142,7 @@ class MrpProductionWCLine(models.Model):
         for work_order_id in self:
             if n_pieces > 0:
                 work_order_id.qty_producing = n_pieces
-                work_order_id.record_production()
+                work_order_id.button_finish()
             if n_scrap > 0:
                 work_order_id.o_do_scrap(n_scrap)
         return False
