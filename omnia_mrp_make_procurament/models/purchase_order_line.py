@@ -43,27 +43,29 @@ class PurchaseOrderLine(models.Model):
     @api.model_create_multi
     def create(self, vals_list):
         order_lines = super().create(vals_list)
-        for vals in vals_list:
+        for line, vals in zip(order_lines, vals_list):
             analytic_id = self.env.context.get('omnia_analytic_id')
             if analytic_id:
-                vals['distribution_analytic_account_ids'] = [(6, 0, [analytic_id])]
+                line.distribution_analytic_account_ids = [(6, 0, [analytic_id])]
 
-            # Assign original move
             orig_move_id = self.env.context.get('omnia_orig_move_id')
-            if orig_move_id:
-                vals['omnia_mrp_orig_move'] = orig_move_id
+            if not orig_move_id:
+                for command in vals.get('move_dest_ids') or []:
+                    if command[0] == 4:
+                        orig_move_id = command[1]
+                        break
+                    elif command[0] == 6 and command[2]:
+                        orig_move_id = command[2][0]
+                        break
 
-            # Assign from move_dest_ids if present
-            if 'move_dest_ids' in vals:
-                for _action, move_id in vals['move_dest_ids']:
-                    vals['omnia_mrp_orig_move'] = move_id
+            if not orig_move_id:
+                continue
 
-            # Link stock moves to this line
-            if 'omnia_mrp_orig_move' in vals:
-                for move in self.env['stock.move'].browse(vals['omnia_mrp_orig_move']):
-                    if not move.purchase_order_id:
-                        move.purchase_order_id = vals['order_id']
-                        move.purchase_line_id = vals.get('id')
-                    if not move.created_purchase_line_ids:
-                        move.created_purchase_line_ids = vals.get('id')
+            line.omnia_mrp_orig_move = orig_move_id
+            move = self.env['stock.move'].browse(orig_move_id)
+            if not move.purchase_order_id:
+                move.purchase_order_id = line.order_id.id
+                move.purchase_line_id = line.id
+            if not move.created_purchase_line_ids:
+                move.created_purchase_line_ids = [(4, line.id)]
         return order_lines
