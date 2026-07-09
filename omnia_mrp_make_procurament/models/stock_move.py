@@ -25,10 +25,3 @@ class StockMove(models.Model):
     _inherit = 'stock.move'
 
     ava_tmp_pur_order = fields.Char("Pur.Ava")
-    run_a_executed = fields.Boolean("RunA Executed")
-
-    def _action_confirm(self, merge=True, merge_into=False):
-        moves = self.env['stock.move']
-        for move_id in self:
-            moves += move_id.with_context(omnia_mrp_orig_move=move_id)
-        return super()._action_confirm(merge=merge, merge_into=merge_into)

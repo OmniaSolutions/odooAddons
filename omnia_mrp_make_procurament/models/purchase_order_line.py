@@ -31,23 +31,17 @@ class PurchaseOrderLine(models.Model):
         """ This function purpose is to be override with the purpose to forbide _run_buy  method
         to merge a new po line in an existing one.
         """
-        analitic_id = self.env.context.get('omnia_analytic_id')
-        orig_move_id = self.env.context.get('omnia_orig_move_id')
-        if analitic_id and orig_move_id:
-            if self.account_analytic_id.id == analitic_id and \
-                self.omnia_mrp_orig_move.id==orig_move_id:
-                return True
-            return False
         return True
 
     @api.model_create_multi
     def create(self, vals_list):
+        analytic_id = self.env.context.get('omnia_analytic_id')
+        if analytic_id:
+            for vals in vals_list:
+                vals.setdefault('analytic_distribution', {str(analytic_id): 100})
+
         order_lines = super().create(vals_list)
         for vals in vals_list:
-            analytic_id = self.env.context.get('omnia_analytic_id')
-            if analytic_id:
-                vals['distribution_analytic_account_ids'] = [(6, 0, [analytic_id])]
-
             # Assign original move
             orig_move_id = self.env.context.get('omnia_orig_move_id')
             if orig_move_id:
@@ -55,9 +49,9 @@ class PurchaseOrderLine(models.Model):
 
             # Assign from move_dest_ids if present
             if 'move_dest_ids' in vals:
-                for _action, move_id in vals['move_dest_ids']:
-                    vals['omnia_mrp_orig_move'] = move_id
-
+                for _action, move_id, move_vals in vals['move_dest_ids']:
+                    if move_id:
+                        vals['omnia_mrp_orig_move'] = move_id
             # Link stock moves to this line
             if 'omnia_mrp_orig_move' in vals:
                 for move in self.env['stock.move'].browse(vals['omnia_mrp_orig_move']):

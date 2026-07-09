@@ -72,7 +72,8 @@ class StockRule(models.Model):
                     'product_uom': product_id.uom_id.id,
                     'supplier': supplierinfo,
                     'partner_id': supplierinfo.partner_id.id if supplierinfo else False,
-
+                    'analytic_distribution': procurement.values.get('analytic_distribution'),
+                    'move_dest_ids': procurement.values.get('move_dest_ids'),
                 }]
 
                 vals = self._prepare_purchase_order(
@@ -90,7 +91,7 @@ class StockRule(models.Model):
                     raise UserError(_("No incoming picking type found for company %s") % company_id.name)
 
                 vals['picking_type_id'] = picking_type.id
-                po = self.env['purchase.order'].with_context(force_company=company_id.id).sudo().create(vals)
+                po = self.env['purchase.order'].with_company(company_id).sudo().create(vals)
                 cache[domain] = po
 
             elif not po.origin or origin not in (po.origin or '').split(', '):
@@ -103,7 +104,7 @@ class StockRule(models.Model):
             for line in po.order_line:
                 if (line.product_id == product_id and
                         line.product_uom == product_id.uom_po_id and
-                        analytic_id in line.distribution_analytic_account_ids.ids):  # M2M check
+                        analytic_id and str(analytic_id) in (line.analytic_distribution or {})):  # analytic match
                     if line._merge_in_existing_line(
                             product_id, product_qty, product_uom, location_id, name, origin, values):
                         vals_line = self._update_purchase_order_line(
@@ -120,7 +121,7 @@ class StockRule(models.Model):
 
     def _prepare_purchase_order_line(self, product_id, product_qty, product_uom, values, po, partner):
         """
-        Prepare a purchase order line with support for distribution_analytic_account_ids (M2M)
+        Prepare a purchase order line, carrying the analytic_distribution from the procurement context
         """
 
         supplier = values[0]['supplier'] if isinstance(values, list) else values.get('supplier')
@@ -135,37 +136,25 @@ class StockRule(models.Model):
             po
         )
 
-        analytic_id = self.env.context.get('omnia_analytic_id')
-        if analytic_id:
-            base_vals['distribution_analytic_account_ids'] = [(6, 0, [analytic_id])]
+        analytic_distribution = (values[0].get('analytic_distribution') if isinstance(values, list)
+                                 else values.get('analytic_distribution'))
+        if not analytic_distribution:
+            analytic_id = self.env.context.get('omnia_analytic_id')
+            if analytic_id:
+                analytic_distribution = {str(analytic_id): 100}
+        if analytic_distribution:
+            base_vals['analytic_distribution'] = analytic_distribution
 
-        orig_move_id = self.env.context.get('omnia_orig_move_id')
-        if orig_move_id:
-            base_vals['omnia_mrp_orig_move'] = orig_move_id
-        else:
-            move_dest = values[0].get('move_dest_ids') if isinstance(values, list) else values.get('move_dest_ids')
-            if move_dest:
-                if isinstance(move_dest, list):
-                    for _, move_id in move_dest:
-                        base_vals['omnia_mrp_orig_move'] = move_id
-                        break
-                else:
-                    base_vals['omnia_mrp_orig_move'] = move_dest.id
+        move_dest = values[0].get('move_dest_ids') if isinstance(values, list) else values.get('move_dest_ids')
+        if move_dest:
+            if isinstance(move_dest, list):
+                for _, move_id in move_dest:
+                    base_vals['omnia_mrp_orig_move'] = move_id
+                    break
+            else:
+                base_vals['omnia_mrp_orig_move'] = move_dest.id
 
         return base_vals
-
-    def _prepare_mo_vals(
-            self, product_id, product_qty, product_uom,
-            location_dest_id, name, origin, company_id, values, bom
-    ):
-        res = super()._prepare_mo_vals(
-            product_id, product_qty, product_uom,
-            location_dest_id, name, origin, company_id, values, bom
-        )
-        orig_move_id = self.env.context.get('omnia_orig_move_id')
-        if orig_move_id:
-            res['omnia_mrp_orig_move'] = orig_move_id
-        return res
 
     def _get_purchase_order_date(self, product_id, product_qty, product_uom, values, partner, schedule_date):
         """Return the datetime value to use as Order Date (``date_order``) for the

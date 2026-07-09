@@ -168,12 +168,5 @@ class SaleOrder(models.Model):
         return oldProdBrws.copy(default=toCreate)
 
     def getRoutesToSet(self):
-        out_ids = []
-        route_env = self.env['stock.route'].with_context(lang='en_US')
-
-        for elem in ['Make To Order', 'Manufacture']:
-            route = route_env.search([('name', '=', elem)], limit=1)
-            if route:
-                out_ids.append(route.id)
-
-        return out_ids
+        return [self.env.ref('mrp.route_warehouse0_manufacture').id,
+                self.env.ref('stock.route_warehouse0_mto').id]
