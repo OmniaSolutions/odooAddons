@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="res_config_settings_view_form" model="ir.ui.view">
+        <field name="name">res.config.settings.view.form.inherit.omnia.report.ai.agent</field>
+        <field name="model">res.config.settings</field>
+        <field name="inherit_id" ref="base.res_config_settings_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//form" position="inside">
+                <app data-string="AI Agent" string="AI Agent" name="omnia_report_ai_agent"
+                     groups="base.group_system">
+                    <field name="ai_agent_account_id" invisible="1"/>
+                    <block title="AI Agent Configuration" name="ai_agent_configuration">
+                        <div class="text-muted mb-3">
+                            <i class="fa fa-info-circle me-1" title="Help"/>
+                            Set the AI tool and its API token to access the AI agent, then
+                            fetch the models to choose which one to use.
+                        </div>
+                        <setting id="ai_agent_provider_setting" string="AI Tool"
+                                 help="Which AI provider to use.">
+                            <field name="ai_agent_provider"/>
+                        </setting>
+                        <setting id="ai_agent_default_model_setting" string="AI model"
+                                 help="Only enabled models of the selected provider.">
+                            <field name="ai_agent_default_model_id"
+                                   domain="[('account_id', '=', ai_agent_account_id), ('provider', '=', ai_agent_provider)]"/>
+                            <button name="action_fetch_models" type="object"
+                                    string="Fetch Models" class="btn-link" icon="fa-refresh"/>
+                            <div class="text-muted">
+                                Last refreshed:
+                                <field name="ai_agent_last_fetch_date" readonly="1" nolabel="1"/>
+                            </div>
+                        </setting>
+                        <setting id="ai_agent_api_token_setting" string="API Token"
+                                 help="The secret key used to authenticate with the provider's API.">
+                            <field name="ai_agent_api_token" password="True"/>
+                            <button name="action_test_connection" type="object"
+                                    string="Test Connection" class="btn-link" icon="fa-plug"/>
+                        </setting>
+                    </block>
+                </app>
+            </xpath>
+        </field>
+    </record>
+</odoo>

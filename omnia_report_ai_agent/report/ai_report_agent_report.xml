@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="report_ai_agent_document">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="doc">
+                <t t-call="web.external_layout">
+                    <div class="page">
+                        <style>
+                            .ai_agent_report_body table { border-collapse: collapse; width: 100%; margin-bottom: 16px; }
+                            .ai_agent_report_body th, .ai_agent_report_body td { border: 1px solid #ccc; padding: 4px
+                            8px; text-align: left; }
+                        </style>
+
+                        <t t-foreach="doc.result_ids" t-as="result">
+                            <h3 t-esc="result.record_display_name"/>
+                            <div class="ai_agent_report_body" t-raw="result.generated_text"/>
+                            <div t-if="not result_last" style="page-break-after: always;"/>
+                        </t>
+                    </div>
+                </t>
+            </t>
+        </t>
+    </template>
+
+    <record id="action_report_ai_agent" model="ir.actions.report">
+        <field name="name">AI Agent Report</field>
+        <field name="model">ai.report.agent.wizard</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">omnia_report_ai_agent.report_ai_agent_document</field>
+        <field name="report_file">omnia_report_ai_agent.report_ai_agent_document</field>
+        <field name="print_report_name">object._get_report_filename()</field>
+    </record>
+</odoo>

@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_ai_report_agent_wizard_form" model="ir.ui.view">
+        <field name="name">ai.report.agent.wizard.form</field>
+        <field name="model">ai.report.agent.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Generate Report with AI Agent">
+                <field name="res_model" invisible="1"/>
+                <field name="res_ids" invisible="1"/>
+                <field name="state" invisible="1"/>
+                <group invisible="state != 'draft'">
+                    <field name="command" placeholder="e.g. Generate a purchase order analysis report"/>
+                    <field name="instructions"
+                           placeholder="e.g. Summarize the purchase order and attached source documents. Include key findings and a professional layout."/>
+                    <field name="attachment_ids" widget="many2many_binary" string="Attachments"/>
+                </group>
+                <field name="preview_html" invisible="state != 'preview'" readonly="1" nolabel="1"/>
+                <footer>
+                    <button name="action_generate" type="object" string="Generate Report"
+                            class="btn-primary" icon="fa-magic" invisible="state != 'draft'"/>
+                    <button name="action_print" type="object" string="Print"
+                            class="btn-primary" icon="fa-print" invisible="state != 'preview'"/>
+                    <button string="Cancel" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+</odoo>
