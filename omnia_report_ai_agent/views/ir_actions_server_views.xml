@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_server_action_form_inherit_ai_agent" model="ir.ui.view">
+        <field name="name">ir.actions.server.form.inherit.omnia.report.ai.agent</field>
+        <field name="model">ir.actions.server</field>
+        <field name="inherit_id" ref="base.view_server_action_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//group[@name='action_wrapper']" position="after">
+                <group invisible="state != 'ai_agent_report'">
+                    <field name="ai_agent_command" placeholder="e.g. Generate a purchase order analysis report"/>
+                    <field name="ai_agent_instructions"
+                           placeholder="e.g. Summarize the order and highlight any risk."/>
+                    <field name="ai_agent_attachment_ids" widget="many2many_binary" string="Attachments"/>
+                </group>
+            </xpath>
+        </field>
+    </record>
+</odoo>

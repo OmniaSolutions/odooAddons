@@ -20,7 +20,7 @@
 ##############################################################################
 {
     'name': 'Omnia Report AI Agent',
-    'version': '18.0.1.0.0',
+    'version': '18.0.1.0.1',
     'author': 'OmniaSolutions',
     'license': 'LGPL-3',
     'website': 'http://www.omniasolutions.eu',
@@ -37,6 +37,7 @@
         'security/ir.model.access.csv',
         'data/ai_agent_provider_account_data.xml',
         'views/res_config_settings_views.xml',
+        'views/ir_actions_server_views.xml',
         'wizard/ai_report_agent_wizard_views.xml',
         'report/ai_report_agent_report.xml',
     ],

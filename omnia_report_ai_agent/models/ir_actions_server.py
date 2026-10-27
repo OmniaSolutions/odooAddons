@@ -18,7 +18,7 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 ##############################################################################
-from odoo import fields, models
+from odoo import _, fields, models
 
 
 class IrActionsServer(models.Model):
@@ -28,26 +28,47 @@ class IrActionsServer(models.Model):
         selection_add=[('ai_agent_report', 'AI Agent Report')],
         ondelete={'ai_agent_report': 'cascade'},
     )
+    ai_agent_command = fields.Char(
+        string="Command",
+        help="Predefined command the AI agent runs with every time, with no "
+             "prompt shown to the user. Leave empty to ask for one in the "
+             "wizard each time instead.",
+    )
+    ai_agent_instructions = fields.Text(
+        string="Instructions",
+        help="Predefined, detailed instructions sent to the AI agent every time.",
+    )
+    ai_agent_attachment_ids = fields.Many2many(
+        'ir.attachment',
+        string="Attachments",
+        help="Source files the AI agent should always read for this action.",
+    )
 
     def _run_action_ai_agent_report_multi(self, eval_context=None):
-        """Open the AI Report Agent wizard on whichever record(s) this
-        action is running on -- one or several selected at once. The wizard
-        (not this action) collects the command, instructions and
-        attachments, applying them to every record; the AI model itself
-        isn't asked here either, it's fixed once in Settings > AI Agent."""
+        """
+        Run the AI Report Agent on whichever record(s) this action is
+        running on -- one or several selected at once -- using the Command/
+        Instructions/Attachments predefined here (admin-only, same as any
+        other Server Action field), and open straight on the Preview.
+        """
         self.ensure_one()
         active_model = self._context.get('active_model') or self.model_name
         active_ids = self._context.get('active_ids')
         if not active_ids and self._context.get('active_id'):
             active_ids = [self._context['active_id']]
+        wizard = self.env['ai.report.agent.wizard'].create({
+            'res_model': active_model,
+            'res_ids': ",".join(str(i) for i in (active_ids or [])),
+            'command': self.ai_agent_command,
+            'instructions': self.ai_agent_instructions,
+            'attachment_ids': [(6, 0, self.ai_agent_attachment_ids.ids)],
+        })
+        wizard.action_generate()
         return {
-            'name': "Generate Report with AI Agent",
+            'name': _("Report Preview"),
             'type': 'ir.actions.act_window',
             'res_model': 'ai.report.agent.wizard',
+            'res_id': wizard.id,
             'view_mode': 'form',
             'target': 'new',
-            'context': {
-                'default_res_model': active_model,
-                'default_res_ids': ",".join(str(i) for i in (active_ids or [])),
-            },
         }

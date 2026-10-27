@@ -58,9 +58,6 @@ class AiReportAgentWizard(models.TransientModel):
         help="Source files the AI agent should read.",
     )
     result_ids = fields.One2many('ai.report.agent.wizard.line', 'wizard_id', string="Results")
-    state = fields.Selection(
-        [('draft', 'Draft'), ('preview', 'Preview')], default='draft', required=True,
-    )
     preview_html = fields.Html(string="Preview", compute='_compute_preview_html', sanitize=False)
 
     @api.depends('result_ids')
@@ -229,6 +226,12 @@ class AiReportAgentWizard(models.TransientModel):
         ))
 
     def action_generate(self):
+        """Call the AI once per record and store the results -- run
+        automatically by the Server Action right after this wizard is
+        created (see ir_actions_server.py), before the user ever sees it:
+        there's no manual "Generate" step or prompt screen any more, since
+        Command/Instructions/Attachments are now configured once on the
+        Server Action itself, not re-entered per run."""
         self.ensure_one()
         account = self.env['ai.agent.provider.account'].sudo()._get_default_account()
         if not account or not account.api_token:
@@ -255,19 +258,33 @@ class AiReportAgentWizard(models.TransientModel):
                 'generated_text': text,
             })
 
-        self.state = 'preview'
-        return {
-            'name': _("Report Preview"),
-            'type': 'ir.actions.act_window',
-            'res_model': 'ai.report.agent.wizard',
-            'res_id': self.id,
-            'view_mode': 'form',
-            'target': 'new',
-        }
-
     def action_print(self):
+        """Print the report, and also save a copy as a normal attachment on
+        every record it was generated for -- same as any other Odoo report,
+        instead of only existing inside this transient wizard until it's
+        purged. Each record gets the same (possibly multi-record) PDF; the
+        download itself still goes through the standard report_action()
+        flow, rendered a second time -- an acceptable cost next to the AI
+        call already paid for in action_generate(), for the sake of reusing
+        Odoo's own, already-correct multi-format print/download handling."""
         self.ensure_one()
-        return self.env.ref('omnia_report_ai_agent.action_report_ai_agent').report_action(self)
+        report = self.env.ref('omnia_report_ai_agent.action_report_ai_agent')
+        pdf_content, _report_type = self.env['ir.actions.report']._render_qweb_pdf(
+            'omnia_report_ai_agent.report_ai_agent_document', self.ids
+        )
+        filename = "%s.pdf" % self._get_report_filename()
+        for result in self.result_ids:
+            record = self.env[result.res_model].browse(result.res_id)
+            if not record.exists():
+                continue
+            self.env['ir.attachment'].create({
+                'name': filename,
+                'raw': pdf_content,
+                'res_model': result.res_model,
+                'res_id': result.res_id,
+                'mimetype': 'application/pdf',
+            })
+        return report.report_action(self)
 
 
 class AiReportAgentWizardLine(models.TransientModel):
