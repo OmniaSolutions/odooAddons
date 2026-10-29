@@ -4,5 +4,14 @@
         <record id="ai_agent_provider_account_default" model="ai.agent.provider.account">
             <field name="provider">anthropic</field>
         </record>
+        <record id="ai_agent_provider_account_openai" model="ai.agent.provider.account">
+            <field name="provider">openai</field>
+        </record>
+        <record id="ai_agent_provider_account_google" model="ai.agent.provider.account">
+            <field name="provider">google</field>
+        </record>
+        <record id="ai_agent_provider_account_groq" model="ai.agent.provider.account">
+            <field name="provider">groq</field>
+        </record>
     </data>
 </odoo>

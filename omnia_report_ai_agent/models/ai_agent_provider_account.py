@@ -50,12 +50,8 @@ class AiAgentProviderAccount(models.Model):
 
     @api.model
     def _get_default_account(self):
-        """The one account record to use everywhere (Settings page, the
-        wizard, ...). Always resolved the same way so every caller lands on
-        the exact same record -- never a plain search() by itself, which
-        could silently return a different, stray record if more than one
-        ever ends up existing (e.g. one created by this same fallback before
-        the seeded one existed)."""
+        """The one account record to use everywhere, resolved the same
+        way every time so every caller lands on the same record."""
         account = self.env.ref(
             'omnia_report_ai_agent.ai_agent_provider_account_default', raise_if_not_found=False
         )
@@ -66,15 +62,9 @@ class AiAgentProviderAccount(models.Model):
         return account
 
     def action_test_connection(self):
-        """Lightweight check that the token still authenticates -- does not
-        touch ai.agent.model, unlike Fetch Models.
-
-        Note: this is a plain notification, never a blocking validation. A
-        hard constraint here used to deadlock the form: clicking any button
-        (Save, Fetch Models, Test Connection) makes Odoo save pending field
-        changes first, and "token set but no model fetched yet" is a normal,
-        necessary in-between state -- not something that should block saving
-        or fetching."""
+        """Lightweight check that the token still authenticates, without
+        touching ai.agent.model. Always a plain notification, never a
+        blocking validation."""
         self.ensure_one()
         try:
             list_models(self.provider, self.api_token)
@@ -103,11 +93,8 @@ class AiAgentProviderAccount(models.Model):
         }
 
     def action_fetch_models(self):
-        """Call the provider's list-models endpoint and sync ai.agent.model:
-        new models are created, known active ones get their name refreshed,
-        and models the provider no longer lists get archived (never
-        deleted, since Default Model or a Server Action might already
-        point at one)."""
+        """Sync ai.agent.model with the provider's model list: create new
+        ones, refresh names, archive (never delete) ones no longer listed."""
         self.ensure_one()
         try:
             fetched = list_models(self.provider, self.api_token)

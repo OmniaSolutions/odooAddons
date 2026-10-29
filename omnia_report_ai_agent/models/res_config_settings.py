@@ -44,11 +44,6 @@ class ResConfigSettings(models.TransientModel):
 
     @api.onchange('ai_agent_provider')
     def _onchange_ai_agent_provider(self):
-        """The domain on ai_agent_default_model_id only restricts what can be
-        picked -- it doesn't clear an already-selected value on its own, so
-        switching AI Tool would otherwise leave the old provider's model
-        showing. Jump to a model already fetched for the new provider if
-        there is one, else leave it blank (never a stale, mismatched model)."""
         if not self.ai_agent_account_id:
             return
         if self.ai_agent_default_model_id.provider == self.ai_agent_provider:

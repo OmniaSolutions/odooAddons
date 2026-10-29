@@ -6,9 +6,13 @@
                 <t t-call="web.external_layout">
                     <div class="page">
                         <style>
-                            .ai_agent_report_body table { border-collapse: collapse; width: 100%; margin-bottom: 16px; }
+                            .ai_agent_report_body table { border-collapse: collapse; width: 100%; table-layout: fixed; margin-bottom: 16px; font-size: 10px; }
                             .ai_agent_report_body th, .ai_agent_report_body td { border: 1px solid #ccc; padding: 4px
-                            8px; text-align: left; }
+                            8px; text-align: left; word-wrap: break-word; overflow-wrap: break-word; }
+                            .ai_agent_report_body thead { display: table-header-group; }
+                            .ai_agent_report_body tr { page-break-inside: avoid; }
+                            .ai_agent_report_body h1, .ai_agent_report_body h2, .ai_agent_report_body h3,
+                            .ai_agent_report_body h4, .ai_agent_report_body h5, .ai_agent_report_body h6 { page-break-after: avoid; }
                         </style>
 
                         <t t-foreach="doc.result_ids" t-as="result">

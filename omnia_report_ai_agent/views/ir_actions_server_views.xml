@@ -11,6 +11,13 @@
                     <field name="ai_agent_instructions"
                            placeholder="e.g. Summarize the order and highlight any risk."/>
                     <field name="ai_agent_attachment_ids" widget="many2many_binary" string="Attachments"/>
+                    <button name="action_generate_ai_template" type="object"
+                            string="Generate Template with AI" class="btn-primary" icon="fa-magic"
+                            help="Designs a normal, always-fast Print-menu report from the Command/Instructions above -- a one-time AI call, not one per print."/>
+                    <field name="ai_agent_report_action_id" readonly="1"
+                           invisible="not ai_agent_report_action_id"
+                           string="Generated Print Report"
+                           help="Click to open the report -- its own 'Qweb Views' button there opens the AI-designed template: model, full code, access rights, etc."/>
                 </group>
             </xpath>
         </field>

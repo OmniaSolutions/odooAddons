@@ -25,8 +25,8 @@ import requests
 DEFAULT_TIMEOUT = 15
 GENERATE_TIMEOUT = 60
 MAX_TOKENS = 4096
-MAX_RETRIES = 2  # total attempts = MAX_RETRIES + 1
-RETRY_DELAY = 2  # seconds between retries
+MAX_RETRIES = 2
+RETRY_DELAY = 2
 
 
 class AiProviderAuthError(Exception):
@@ -38,22 +38,14 @@ class AiProviderApiError(Exception):
 
 
 class AiProviderModelUnavailableError(AiProviderApiError):
-    """The specific model is gone/retired for this account. Providers don't
-    reliably flag this in their model list (e.g. Gemini can list a model
-    that still 404s at generation time for a given key -- deprecation isn't
-    always visible ahead of time), so this is raised when a generation call
-    itself comes back 404, not when fetching the list."""
+    """The specific model is gone/retired for this account -- raised when a
+    generation call itself 404s, not when fetching the model list."""
 
 
 def _request(provider_label, method, url, **kwargs):
-    """requests.get/post wrapper shared by every provider call below.
-
-    Retries on a timeout or dropped connection (the provider being briefly
-    slow or unreachable) up to MAX_RETRIES times before giving up -- not
-    retried for an actual HTTP error response (4xx/5xx), since that's a
-    real answer from the server, not a connection problem. Raises
-    AiProviderApiError with a message that says which case it was, instead
-    of surfacing the raw exception text to the end user."""
+    """requests.get/post wrapper shared by every provider call, retrying
+    only a timeout/dropped connection (never an actual 4xx/5xx response)
+    up to MAX_RETRIES times before raising AiProviderApiError."""
     last_exc = None
     for attempt in range(MAX_RETRIES + 1):
         try:
@@ -175,9 +167,15 @@ def list_models(provider, api_key):
     return func(api_key)
 
 
-def _generate_text_anthropic(api_key, model, prompt):
+def _generate_text_anthropic(api_key, model, prompt, images=None):
     if not api_key:
         raise AiProviderAuthError("No API token configured.")
+    content = prompt
+    if images:
+        content = [
+            {'type': 'image', 'source': {'type': 'base64', 'media_type': img['mimetype'], 'data': img['data_base64']}}
+            for img in images
+        ] + [{'type': 'text', 'text': prompt}]
     response = _request(
         "Claude", requests.post,
         "https://api.anthropic.com/v1/messages",
@@ -189,7 +187,7 @@ def _generate_text_anthropic(api_key, model, prompt):
         json={
             'model': model,
             'max_tokens': MAX_TOKENS,
-            'messages': [{'role': 'user', 'content': prompt}],
+            'messages': [{'role': 'user', 'content': content}],
         },
         timeout=GENERATE_TIMEOUT,
     )
@@ -205,7 +203,10 @@ def _generate_text_anthropic(api_key, model, prompt):
     return "".join(part.get('text', '') for part in data.get('content', []))
 
 
-def _generate_text_openai(api_key, model, prompt):
+def _generate_text_openai(api_key, model, prompt, images=None):
+    # images is accepted for a uniform call signature across providers but
+    # unused here -- not every fetched model is vision-capable and we have
+    # no way to tell which is, so this provider stays text-only for now.
     if not api_key:
         raise AiProviderAuthError("No API token configured.")
     response = _request(
@@ -231,14 +232,16 @@ def _generate_text_openai(api_key, model, prompt):
     return data['choices'][0]['message']['content']
 
 
-def _generate_text_google(api_key, model, prompt):
+def _generate_text_google(api_key, model, prompt, images=None):
     if not api_key:
         raise AiProviderAuthError("No API token configured.")
+    parts = [{'inline_data': {'mime_type': img['mimetype'], 'data': img['data_base64']}} for img in (images or [])]
+    parts.append({'text': prompt})
     response = _request(
         "Gemini", requests.post,
         "https://generativelanguage.googleapis.com/v1beta/models/%s:generateContent" % model,
         params={'key': api_key},
-        json={'contents': [{'parts': [{'text': prompt}]}]},
+        json={'contents': [{'parts': parts}]},
         timeout=GENERATE_TIMEOUT,
     )
     if response.status_code in (401, 403):
@@ -254,7 +257,9 @@ def _generate_text_google(api_key, model, prompt):
     return "".join(part.get('text', '') for part in parts)
 
 
-def _generate_text_groq(api_key, model, prompt):
+def _generate_text_groq(api_key, model, prompt, images=None):
+    # images accepted for a uniform signature, unused -- most Groq-hosted
+    # models have no reliable image support.
     if not api_key:
         raise AiProviderAuthError("No API token configured.")
     response = _request(
@@ -288,11 +293,12 @@ _GENERATE_TEXT = {
 }
 
 
-def generate_text(provider, api_key, model, prompt):
-    """Send prompt to the given provider/model and return its plain-text
-    answer, or raise AiProviderAuthError / AiProviderApiError."""
+def generate_text(provider, api_key, model, prompt, images=None):
+    """Send prompt (and images, if this provider supports them -- Claude
+    and Gemini today) to the given provider/model, returning its plain-text
+    answer or raising AiProviderAuthError / AiProviderApiError."""
     try:
         func = _GENERATE_TEXT[provider]
     except KeyError:
         raise ValueError("Unknown AI provider: %s" % provider) from None
-    return func(api_key, model, prompt)
+    return func(api_key, model, prompt, images=images)

@@ -23,6 +23,8 @@ import re
 from odoo import _, api, fields, models
 from odoo.exceptions import UserError
 
+from ..models.ai_agent_attachment_utils import describe_attachments
+from ..models.ai_agent_field_utils import get_record_context
 from ..models.ai_agent_provider_client import (
     AiProviderApiError,
     AiProviderAuthError,
@@ -30,9 +32,7 @@ from ..models.ai_agent_provider_client import (
     generate_text,
 )
 
-
-_SKIP_FIELD_NAMES = {'id', 'display_name', '__last_update', 'create_date', 'write_date', 'create_uid', 'write_uid'}
-_SKIP_FIELD_PREFIXES = ('message_', 'activity_', 'access_', 'website_')
+IMAGE_CAPABLE_PROVIDERS = ('anthropic', 'google')
 
 
 class AiReportAgentWizard(models.TransientModel):
@@ -44,18 +44,12 @@ class AiReportAgentWizard(models.TransientModel):
         string="Related Document Ids",
         help="Comma-separated ids of the record(s) this wizard runs on.",
     )
-    command = fields.Char(
-        string="Command",
-        help="A short, one-line description of what this report should do.",
-    )
-    instructions = fields.Text(
-        string="Instructions",
-        help="Detailed instructions for the AI agent.",
-    )
-    attachment_ids = fields.Many2many(
-        'ir.attachment',
-        string="Attachments",
-        help="Source files the AI agent should read.",
+    server_action_id = fields.Many2one(
+        'ir.actions.server',
+        string="Server Action",
+        readonly=True,
+        help="The Server Action this wizard was run from -- its Command/"
+             "Instructions are read from there, not duplicated here.",
     )
     result_ids = fields.One2many('ai.report.agent.wizard.line', 'wizard_id', string="Results")
     preview_html = fields.Html(string="Preview", compute='_compute_preview_html', sanitize=False)
@@ -78,86 +72,13 @@ class AiReportAgentWizard(models.TransientModel):
         ids = [int(i) for i in self.res_ids.split(',') if i.strip()]
         return self.env[self.res_model].browse(ids).exists()
 
-    def _describe_fields(self, record, inline=False):
-        """One line per plain (non-binary, non-x2many) field with a value."""
-        parts = []
-        for fname, field in record._fields.items():
-            if fname in _SKIP_FIELD_NAMES or fname.startswith(_SKIP_FIELD_PREFIXES):
-                continue
-            if field.type in ('binary', 'one2many', 'many2many', 'html'):
-                continue
-            if field.compute and not field.store:
-                continue
-            try:
-                value = record[fname]
-            except Exception:
-                continue
-            if value is False or value is None or value == '':
-                continue
-            if field.type == 'many2one':
-                value = value.display_name
-            parts.append(f"{field.string}={value}" if inline else f"- {field.string}: {value}")
-        return parts
-
-    def _get_record_context(self, record):
-        """Plain-text dump of one record.
-
-        Sent to the AI alongside the command/instructions/attachments so it
-        already has the record's own field values instead of having to
-        re-derive them from the attachments -- fewer tokens, faster, more
-        accurate than letting it guess what Odoo already knows."""
-        if not record or not record.exists():
-            return ""
-
-        lines = [f"Record: {record.display_name} ({record._name}, id {record.id})"]
-        lines += self._describe_fields(record)
-
-        for fname, field in record._fields.items():
-            if field.type != 'one2many':
-                continue
-            try:
-                sub_records = record[fname]
-            except Exception:
-                continue
-            if not sub_records:
-                continue
-            lines.append(f"\n{field.string}:")
-            for sub in sub_records:
-                parts = self._describe_fields(sub, inline=True)
-                if parts:
-                    lines.append("  - " + ", ".join(parts))
-
-        lines += self._get_extra_context(record)
-        return "\n".join(lines)
-
-    def _get_extra_context(self, record):
-        """A few relations that matter for reporting but aren't plain
-        one2many fields on the record itself, so the generic reflection
-        above can't see them -- a product's Bills of Materials, notably,
-        are separate mrp.bom records looked up by product, not a field on
-        the product. Add more special cases here as they come up."""
-        lines = []
-        if record._name in ('product.template', 'product.product') and 'mrp.bom' in self.env:
-            try:
-                template = record if record._name == 'product.template' else record.product_tmpl_id
-                boms = self.env['mrp.bom'].search([('product_tmpl_id', '=', template.id)])
-                for bom in boms:
-                    lines.append(f"\nBill of Materials {bom.display_name}:")
-                    for line in bom.bom_line_ids:
-                        lines.append(
-                            "  - Component=%s, Quantity=%s, UoM=%s"
-                            % (line.product_id.display_name, line.product_qty, line.product_uom_id.name)
-                        )
-            except Exception:
-                pass
-        return lines
-
     def _slugify_command(self):
         """A short, filesystem-safe filename derived from the Command text,
         used when there's more than one record and so no single record name
         to build the filename from."""
         self.ensure_one()
-        text = re.sub(r'[^A-Za-z0-9]+', '_', self.command or '').strip('_')
+        command = self.server_action_id.sudo().ai_agent_command
+        text = re.sub(r'[^A-Za-z0-9]+', '_', command or '').strip('_')
         words = [w for w in text.split('_') if w][:6]
         return "_".join(words) or "AI_Report"
 
@@ -173,42 +94,43 @@ class AiReportAgentWizard(models.TransientModel):
             return "%s_AI_Report" % name
         return self._slugify_command()
 
-    def _build_prompt(self, record):
-        """Command + instructions + the record's own data, in that order.
-        Attachments are not included yet -- see ai_agent_provider_client.py
-        for why (text-only for now, per provider multimodal support)."""
+    def _build_prompt(self, record, attachment_text=''):
+        """Command + instructions (read from server_action_id) + the
+        record's own data + any readable attachment text, in that order."""
         self.ensure_one()
+        server_action = self.server_action_id.sudo()
         parts = [
             "Format your entire answer as plain HTML fragments only (no Markdown, no code "
             "fences, no <html>/<head>/<body> wrapper) -- it gets embedded directly into a PDF "
             "report as-is. Use <h2>/<h3> for section headings, a real <table> with <tr>/<th>/"
-            "<td> for any tabular data, <strong> for emphasis, and <p>/<ul>/<li> for text."
+            "<td> for any tabular data, <strong> for emphasis, and <p>/<ul>/<li> for text.",
+            "Every number, name, code, date, and quantity you write MUST come verbatim from "
+            "the \"Record data\" below -- copy it exactly, do not round, re-sum, re-calculate, "
+            "or estimate it yourself, even if the arithmetic looks simple. If a total or "
+            "breakdown isn't explicitly given there, do not compute or state one -- omit it "
+            "instead. Never state a fact, figure, or value that isn't explicitly present in "
+            "the data below.",
         ]
-        if self.command:
-            parts.append("Task: %s" % self.command)
-        if self.instructions:
-            parts.append("Instructions: %s" % self.instructions)
-        record_context = self._get_record_context(record)
+        if server_action.ai_agent_command:
+            parts.append("Task: %s" % server_action.ai_agent_command)
+        if server_action.ai_agent_instructions:
+            parts.append("Instructions: %s" % server_action.ai_agent_instructions)
+        record_context = get_record_context(record)
         if record_context:
             parts.append("Record data:\n%s" % record_context)
+        if attachment_text:
+            parts.append("Attachments:\n%s" % attachment_text)
         return "\n\n".join(parts)
 
-    def _generate_with_fallback(self, account, prompt):
-        """Try the account's default model; if it turns out to be dead (not
-        every provider flags that ahead of time -- Gemini notably doesn't),
-        archive it and move to the next active model instead of failing
-        outright. The archived state carries over between records in the
-        same batch, so a dead model is only ever hit once per run.
-
-        account is a sudo() recordset (see action_generate): the AI Agent
-        account/token/models are admin-only data (Settings > AI Agent,
-        restricted to base.group_system), but any user allowed to run this
-        wizard must still be able to use them to generate a report."""
+    def _generate_with_fallback(self, account, prompt, images=None):
+        """Try the default model; on AiProviderModelUnavailableError, archive
+        it and retry the next active one instead of failing outright.
+        account is sudo() -- admin-only AI config any wizard user may use."""
         model = account.default_model_id
         tried_ids = []
         while model:
             try:
-                return generate_text(account.provider, account.api_token, model.model_code, prompt)
+                return generate_text(account.provider, account.api_token, model.model_code, prompt, images=images)
             except AiProviderModelUnavailableError:
                 tried_ids.append(model.id)
                 model.write({'active': False, 'confirmed_unavailable': True})
@@ -227,11 +149,8 @@ class AiReportAgentWizard(models.TransientModel):
 
     def action_generate(self):
         """Call the AI once per record and store the results -- run
-        automatically by the Server Action right after this wizard is
-        created (see ir_actions_server.py), before the user ever sees it:
-        there's no manual "Generate" step or prompt screen any more, since
-        Command/Instructions/Attachments are now configured once on the
-        Server Action itself, not re-entered per run."""
+        automatically right after this wizard is created, with no manual
+        "Generate" step or prompt screen."""
         self.ensure_one()
         account = self.env['ai.agent.provider.account'].sudo()._get_default_account()
         if not account or not account.api_token:
@@ -246,10 +165,19 @@ class AiReportAgentWizard(models.TransientModel):
         if not records:
             raise UserError(_("No record found to generate a report for."))
 
+        attachments = self.server_action_id.sudo().ai_agent_attachment_ids
+        attachment_text, attachment_images = describe_attachments(attachments) if attachments else ('', [])
+        if attachment_images and account.provider not in IMAGE_CAPABLE_PROVIDERS:
+            attachment_text += (
+                "\n\n%d image attachment(s) were provided but this AI Tool doesn't support "
+                "reading images, so they were not included." % len(attachment_images)
+            )
+            attachment_images = []
+
         self.result_ids.unlink()
         for record in records:
-            prompt = self._build_prompt(record)
-            text = self._generate_with_fallback(account, prompt)
+            prompt = self._build_prompt(record, attachment_text)
+            text = self._generate_with_fallback(account, prompt, images=attachment_images)
             self.env['ai.report.agent.wizard.line'].create({
                 'wizard_id': self.id,
                 'res_model': record._name,
@@ -259,14 +187,9 @@ class AiReportAgentWizard(models.TransientModel):
             })
 
     def action_print(self):
-        """Print the report, and also save a copy as a normal attachment on
-        every record it was generated for -- same as any other Odoo report,
-        instead of only existing inside this transient wizard until it's
-        purged. Each record gets the same (possibly multi-record) PDF; the
-        download itself still goes through the standard report_action()
-        flow, rendered a second time -- an acceptable cost next to the AI
-        call already paid for in action_generate(), for the sake of reusing
-        Odoo's own, already-correct multi-format print/download handling."""
+        """Print the report and save a copy as a normal attachment on each
+        record it covers, instead of only existing inside this transient
+        wizard until it's purged."""
         self.ensure_one()
         report = self.env.ref('omnia_report_ai_agent.action_report_ai_agent')
         pdf_content, _report_type = self.env['ir.actions.report']._render_qweb_pdf(
@@ -285,14 +208,3 @@ class AiReportAgentWizard(models.TransientModel):
                 'mimetype': 'application/pdf',
             })
         return report.report_action(self)
-
-
-class AiReportAgentWizardLine(models.TransientModel):
-    _name = 'ai.report.agent.wizard.line'
-    _description = 'AI Report Agent Wizard Result'
-
-    wizard_id = fields.Many2one('ai.report.agent.wizard', required=True, ondelete='cascade')
-    res_model = fields.Char()
-    res_id = fields.Integer()
-    record_display_name = fields.Char()
-    generated_text = fields.Text()
