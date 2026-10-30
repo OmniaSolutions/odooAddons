@@ -7,6 +7,10 @@
             <form string="Report Preview">
                 <field name="res_model" invisible="1"/>
                 <field name="res_ids" invisible="1"/>
+                <div class="alert alert-warning" role="alert" invisible="not verification_summary">
+                    <strong>AI accuracy check found possible issues -- review before printing:</strong>
+                    <field name="verification_summary" nolabel="1" readonly="1"/>
+                </div>
                 <field name="preview_html" readonly="1" nolabel="1"/>
                 <footer>
                     <button name="action_print" type="object" string="Print"

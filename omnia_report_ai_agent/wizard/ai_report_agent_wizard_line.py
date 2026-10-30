@@ -30,3 +30,8 @@ class AiReportAgentWizardLine(models.TransientModel):
     res_id = fields.Integer()
     record_display_name = fields.Char()
     generated_text = fields.Text()
+    verification_notes = fields.Text(
+        help="Result of the second AI pass that checks every number/name/date the report "
+             "states against the real record data. \"No discrepancies found.\" when clean, "
+             "otherwise one line per mismatch found.",
+    )

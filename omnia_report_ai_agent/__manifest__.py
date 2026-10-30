@@ -20,7 +20,7 @@
 ##############################################################################
 {
     'name': 'Omnia Report AI Agent',
-    'version': '18.0.1.0.2',
+    'version': '18.0.1.0.3',
     'author': 'OmniaSolutions',
     'license': 'LGPL-3',
     'website': 'http://www.omniasolutions.eu',
@@ -32,7 +32,7 @@
         using AI commands, instructions, and attachments directly from
         Server Actions.
     """,
-    'depends': ['base', 'web'],
+    'depends': ['base', 'web', 'bus'],
     'data': [
         'security/ir.model.access.csv',
         'data/ai_agent_provider_account_data.xml',

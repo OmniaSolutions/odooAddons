@@ -33,6 +33,8 @@ from ..models.ai_agent_provider_client import (
 )
 
 IMAGE_CAPABLE_PROVIDERS = ('anthropic', 'google')
+VERIFICATION_OK_TEXT = "No discrepancies found."
+MAX_VERIFICATION_RETRIES = 1
 
 
 class AiReportAgentWizard(models.TransientModel):
@@ -53,9 +55,31 @@ class AiReportAgentWizard(models.TransientModel):
     )
     result_ids = fields.One2many('ai.report.agent.wizard.line', 'wizard_id', string="Results")
     preview_html = fields.Html(string="Preview", compute='_compute_preview_html', sanitize=False)
+    verification_summary = fields.Text(
+        string="Accuracy Check",
+        compute='_compute_verification_summary',
+        help="Record(s) where the second AI pass found a number/name/date that doesn't "
+             "match the real data, or couldn't be checked at all. Empty when every record "
+             "checked out clean.",
+    )
+
+    @api.depends('result_ids.verification_notes', 'result_ids.record_display_name')
+    def _compute_verification_summary(self):
+        """Collect only the flagged result lines (skipping the clean ones)
+        into one readable block for the warning box in the view."""
+        for wizard in self:
+            flagged = []
+            for line in wizard.result_ids:
+                notes = (line.verification_notes or '').strip()
+                if not notes or notes == VERIFICATION_OK_TEXT:
+                    continue
+                flagged.append("%s:\n%s" % (line.record_display_name, notes))
+            wizard.verification_summary = "\n\n".join(flagged) or False
 
     @api.depends('result_ids')
     def _compute_preview_html(self):
+        """Wrap the report's own HTML preview route in an iframe, once
+        there's at least one generated result to show."""
         for wizard in self:
             if not wizard.result_ids or not isinstance(wizard.id, int):
                 wizard.preview_html = False
@@ -66,6 +90,8 @@ class AiReportAgentWizard(models.TransientModel):
             )
 
     def _get_records(self):
+        """The real recordset behind res_model/res_ids (comma-separated
+        ids stored as text), or an empty recordset if either is missing."""
         self.ensure_one()
         if not self.res_model or not self.res_ids:
             return self.env[self.res_model or 'base'].browse()
@@ -122,6 +148,88 @@ class AiReportAgentWizard(models.TransientModel):
             parts.append("Attachments:\n%s" % attachment_text)
         return "\n\n".join(parts)
 
+    def _build_verification_prompt(self, record, generated_text, attachment_text=''):
+        """A second, independent prompt asking the AI to fact-check the
+        REPORT already produced for `record` against the same source data
+        the generation prompt used -- catches invented/mismatched values the
+        generation prompt's own instructions didn't stop."""
+        self.ensure_one()
+        parts = [
+            "You are fact-checking an AI-generated REPORT against the SOURCE DATA it was "
+            "supposed to be based on.",
+            "Check ONLY whether every number, name, date, code, and quantity stated in the "
+            "REPORT is actually present and correct somewhere in the SOURCE DATA below -- "
+            "exact match, no rounding or approximation allowed, and no computed total "
+            "unless that exact total is itself present in the SOURCE DATA. Do not comment "
+            "on wording, tone, formatting, or completeness -- only factual accuracy of "
+            "stated values.",
+            "If every stated value checks out, respond with exactly \"%s\" and nothing "
+            "else. Otherwise, respond with ONLY the discrepancies, one per line, each "
+            "starting with \"- \", naming the exact value from the REPORT and what the "
+            "SOURCE DATA actually shows instead." % VERIFICATION_OK_TEXT,
+        ]
+        source_parts = []
+        record_context = get_record_context(record)
+        if record_context:
+            source_parts.append(record_context)
+        if attachment_text:
+            source_parts.append(attachment_text)
+        parts.append(
+            "SOURCE DATA:\n%s" % "\n\n".join(source_parts) if source_parts
+            else "SOURCE DATA: (none provided)"
+        )
+        parts.append("REPORT:\n%s" % generated_text)
+        return "\n\n".join(parts)
+
+    def _verify_report(self, account, record, generated_text, attachment_text=''):
+        """Best-effort second AI pass fact-checking `generated_text`. Must
+        never block the report itself -- it already generated fine -- so a
+        failure here just leaves a note saying verification couldn't run."""
+        prompt = self._build_verification_prompt(record, generated_text, attachment_text)
+        try:
+            return self._generate_with_fallback(account, prompt)
+        except UserError as exc:
+            return _("Verification could not run: %s") % str(exc)
+
+    @staticmethod
+    def _is_fixable_mismatch(verification_notes):
+        """True only for an actual discrepancy list (each line starts with
+        "- ", per the instruction in _build_verification_prompt) -- not for
+        a clean result, and not for a "Verification could not run: ..."
+        note, which retrying generation can't fix anyway."""
+        return bool(verification_notes) and verification_notes.strip().startswith('-')
+
+    def _build_correction_prompt(self, original_prompt, generated_text, verification_notes):
+        """original_prompt + the flawed report + what the fact-check found
+        wrong with it, asking for a corrected rewrite -- fixing only what
+        was flagged, not a free rewrite."""
+        return "\n\n".join([
+            original_prompt,
+            "You already wrote the REPORT below once, but a fact-check found value(s) in "
+            "it that don't match the data above:\n%s" % verification_notes,
+            "PREVIOUS REPORT (for reference only -- don't just repeat it as-is):\n%s"
+            % generated_text,
+            "Write the report again from scratch, following every instruction above "
+            "exactly, fixing ONLY the problem(s) listed. Don't change anything that "
+            "wasn't flagged as wrong, and don't introduce any new claim.",
+        ])
+
+    def _generate_and_verify(self, account, record, prompt, attachment_text, images=None):
+        """One generate + fact-check pass, with up to MAX_VERIFICATION_RETRIES
+        automatic self-corrections when the fact-check finds an actual
+        mismatch -- returns (final_text, final_verification_notes). Only
+        notes still showing a mismatch after every retry is exhausted ever
+        reaches the user."""
+        text = self._generate_with_fallback(account, prompt, images=images)
+        notes = self._verify_report(account, record, text, attachment_text)
+        attempts = 0
+        while self._is_fixable_mismatch(notes) and attempts < MAX_VERIFICATION_RETRIES:
+            attempts += 1
+            correction_prompt = self._build_correction_prompt(prompt, text, notes)
+            text = self._generate_with_fallback(account, correction_prompt, images=images)
+            notes = self._verify_report(account, record, text, attachment_text)
+        return text, notes
+
     def _generate_with_fallback(self, account, prompt, images=None):
         """Try the default model; on AiProviderModelUnavailableError, archive
         it and retry the next active one instead of failing outright.
@@ -177,13 +285,21 @@ class AiReportAgentWizard(models.TransientModel):
         self.result_ids.unlink()
         for record in records:
             prompt = self._build_prompt(record, attachment_text)
-            text = self._generate_with_fallback(account, prompt, images=attachment_images)
+            text, verification_notes = self._generate_and_verify(
+                account, record, prompt, attachment_text, images=attachment_images
+            )
             self.env['ai.report.agent.wizard.line'].create({
                 'wizard_id': self.id,
                 'res_model': record._name,
                 'res_id': record.id,
                 'record_display_name': record.display_name,
                 'generated_text': text,
+                'verification_notes': verification_notes,
+            })
+            self.env.user._bus_send('simple_notification', {
+                'type': 'success',
+                'title': _("Generating AI Report"),
+                'message': _("Report generated successfully - %s") % record.display_name,
             })
 
     def action_print(self):

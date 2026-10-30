@@ -30,6 +30,8 @@ from .ai_agent_field_utils import (
 )
 from .ai_agent_provider_client import AiProviderApiError, AiProviderAuthError, generate_text
 
+MAX_TEMPLATE_RETRIES = 1
+
 
 class IrActionsServer(models.Model):
     _inherit = 'ir.actions.server'
@@ -130,6 +132,8 @@ class IrActionsServer(models.Model):
         return "\n".join(lines)
 
     def _build_template_design_prompt(self, model_name):
+        """Instructions + allowed tags/field-path rules + this model's own
+        schema + one sample record, asking the AI for a reusable layout."""
         self.ensure_one()
         parts = [
             "You are writing the actual QWeb report template body for every "
@@ -391,12 +395,86 @@ class IrActionsServer(models.Model):
 
     @staticmethod
     def _strip_code_fence(text):
+        """Drop a leading/trailing ``` fence if the AI wrapped its markup
+        in one despite being told not to."""
         text = (text or '').strip()
         if text.startswith('```'):
             text = text.split('\n', 1)[-1]
             if text.endswith('```'):
                 text = text.rsplit('```', 1)[0]
         return text.strip()
+
+    _TEMPLATE_ARCH = (
+        '<t t-name="%s">\n'
+        '<t t-call="web.html_container">\n'
+        '<t t-foreach="docs" t-as="doc">\n'
+        '<t t-call="web.external_layout">\n'
+        '<div class="page">\n'
+        '<style>\n'
+        '  .ai_agent_report_body table { border-collapse: collapse; width: 100%%; table-layout: fixed; margin-bottom: 16px; font-size: 10px; }\n'
+        '  .ai_agent_report_body th, .ai_agent_report_body td { border: 1px solid #ccc; padding: 4px 8px; text-align: left; word-wrap: break-word; overflow-wrap: break-word; }\n'
+        '  .ai_agent_report_body th { background-color: #f5f5f5; font-weight: bold; }\n'
+        '  .ai_agent_report_body h1, .ai_agent_report_body h2, .ai_agent_report_body h3 { border-bottom: 1px solid #dee2e6; padding-bottom: 4px; margin-top: 16px; }\n'
+        '  .ai_agent_report_body thead { display: table-header-group; }\n'
+        '  .ai_agent_report_body tr { page-break-inside: avoid; }\n'
+        '  .ai_agent_report_body h1, .ai_agent_report_body h2, .ai_agent_report_body h3,\n'
+        '  .ai_agent_report_body h4, .ai_agent_report_body h5, .ai_agent_report_body h6 { page-break-after: avoid; }\n'
+        '</style>\n'
+        '<div class="ai_agent_report_body">%s</div>\n'
+        '</div>\n'
+        '</t></t></t></t>'
+    )
+
+    def _build_template_arch(self, key, body):
+        """Wrap the AI's validated body in the fixed report boilerplate
+        (layout, foreach, shared table/heading styles) under `key`."""
+        return self._TEMPLATE_ARCH % (key, body)
+
+    def _test_render_template(self, model_name, body, sample_records):
+        """Actually render `body` (already statically validated) against
+        real sample_records through the real report pipeline, inside a
+        savepoint that's always rolled back -- a pure dry run, touching
+        nothing the caller keeps. Returns None if it rendered fine,
+        otherwise a short description of what broke."""
+        self.ensure_one()
+        test_key = 'omnia_report_ai_agent.ai_template_test_%d' % self.id
+        arch = self._build_template_arch(test_key, body)
+        error = None
+        with self.env.cr.savepoint() as sp:
+            self.env['ir.ui.view'].sudo().create({
+                'name': 'AI Report Template Test',
+                'type': 'qweb',
+                'arch': arch,
+                'key': test_key,
+            })
+            self.env['ir.actions.report'].sudo().create({
+                'name': 'AI Report Template Test',
+                'model': model_name,
+                'report_type': 'qweb-pdf',
+                'report_name': test_key,
+                'report_file': test_key,
+            })
+            try:
+                self.env['ir.actions.report']._render_qweb_html(test_key, sample_records.ids)
+            except Exception as exc:  # noqa: BLE001 -- any render failure is a valid "it's broken"
+                error = str(exc)[:500]
+            finally:
+                sp.rollback()
+        return error
+
+    def _build_template_correction_prompt(self, original_prompt, raw_body, error_message):
+        """original_prompt + the previous (broken) attempt + what went wrong
+        -- used both for a structural-validation failure and an actual
+        render failure, since both are "fix this" cases with the same
+        shape."""
+        return "\n\n".join([
+            original_prompt,
+            "You already wrote the template body below once, but it failed:\n%s" % error_message,
+            "PREVIOUS TEMPLATE (for reference only -- don't just repeat it as-is):\n%s" % raw_body,
+            "Write the whole template body again from scratch, following every instruction "
+            "above exactly, fixing whatever caused that failure. Return ONLY the corrected "
+            "inner QWeb/HTML fragment, same as before -- no markdown, no commentary.",
+        ])
 
     def action_generate_ai_template(self):
         """One-time AI-assisted design of a normal Print-menu report for
@@ -418,35 +496,51 @@ class IrActionsServer(models.Model):
 
         model_name = self.model_id.model
         prompt = self._build_template_design_prompt(model_name)
-        try:
-            raw = generate_text(account.provider, account.api_token, account.default_model_id.model_code, prompt)
-        except (AiProviderAuthError, AiProviderApiError) as exc:
-            raise UserError(str(exc)) from exc
+        sample_records = self.env[model_name].search([], limit=3)
 
-        body = self._validate_ai_template_body(raw, model_name)
+        current_prompt = prompt
+        raw = body = error = None
+        for attempt in range(MAX_TEMPLATE_RETRIES + 1):
+            self.env.user._bus_send('simple_notification', {
+                'type': 'info',
+                'title': _("Generate Template with AI"),
+                'message': (
+                    _("Designing the template…") if attempt == 0
+                    else _("Found an issue, asking the AI to fix it…")
+                ),
+            })
+            try:
+                raw = generate_text(
+                    account.provider, account.api_token, account.default_model_id.model_code, current_prompt
+                )
+            except (AiProviderAuthError, AiProviderApiError) as exc:
+                raise UserError(str(exc)) from exc
+            try:
+                body = self._validate_ai_template_body(raw, model_name)
+                if sample_records:
+                    self.env.user._bus_send('simple_notification', {
+                        'type': 'info',
+                        'title': _("Generate Template with AI"),
+                        'message': _("Checking it renders correctly on real data…"),
+                    })
+                error = self._test_render_template(model_name, body, sample_records) if sample_records else None
+            except UserError as exc:
+                body, error = None, str(exc)
+            if not error:
+                break
+            if attempt < MAX_TEMPLATE_RETRIES:
+                current_prompt = self._build_template_correction_prompt(prompt, raw, error)
+
+        if error:
+            raise UserError(_(
+                "The AI's template still didn't work after a retry (%s). Try generating "
+                "the template again, or simplify the Command/Instructions."
+            ) % error)
+
         self.ai_agent_report_structure = body
 
         key = 'omnia_report_ai_agent.ai_template_%d' % self.id
-        arch = (
-            '<t t-name="%s">\n'
-            '<t t-call="web.html_container">\n'
-            '<t t-foreach="docs" t-as="doc">\n'
-            '<t t-call="web.external_layout">\n'
-            '<div class="page">\n'
-            '<style>\n'
-            '  .ai_agent_report_body table { border-collapse: collapse; width: 100%%; table-layout: fixed; margin-bottom: 16px; font-size: 10px; }\n'
-            '  .ai_agent_report_body th, .ai_agent_report_body td { border: 1px solid #ccc; padding: 4px 8px; text-align: left; word-wrap: break-word; overflow-wrap: break-word; }\n'
-            '  .ai_agent_report_body th { background-color: #f5f5f5; font-weight: bold; }\n'
-            '  .ai_agent_report_body h1, .ai_agent_report_body h2, .ai_agent_report_body h3 { border-bottom: 1px solid #dee2e6; padding-bottom: 4px; margin-top: 16px; }\n'
-            '  .ai_agent_report_body thead { display: table-header-group; }\n'
-            '  .ai_agent_report_body tr { page-break-inside: avoid; }\n'
-            '  .ai_agent_report_body h1, .ai_agent_report_body h2, .ai_agent_report_body h3,\n'
-            '  .ai_agent_report_body h4, .ai_agent_report_body h5, .ai_agent_report_body h6 { page-break-after: avoid; }\n'
-            '</style>\n'
-            '<div class="ai_agent_report_body">%s</div>\n'
-            '</div>\n'
-            '</t></t></t></t>'
-        ) % (key, body)
+        arch = self._build_template_arch(key, body)
 
         view = self._get_ai_agent_template_view()
         view_vals = {
