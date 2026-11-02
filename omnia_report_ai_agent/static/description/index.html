@@ -1,0 +1,143 @@
+<section class="oe_container">
+    <div class="oe_row oe_spaced">
+        <div class="oe_span12">
+            <h2 class="oe_slogan" style="color:#875A7B">Omnia Report AI Agent</h2>
+        </div>
+    </div>
+</section>
+
+<section class="oe_container">
+    <div class="oe_row oe_spaced" style="margin-top:32px">
+        <div class="oe_span12">
+            <p style="font-size:18px; text-align:center; width:90%; margin-left:auto; margin-right:auto">
+                This module integrates AI-powered report generation into Odoo using Ai tools.
+                It allows administrators to configure AI Server Actions with predefined instructions for generating
+                customized reports.
+                It supports AI Virtual XML Template Generation to create and reuse report structures.
+                Users can generate PDF reports directly from Odoo records and store them as standard attachments.
+            </p>
+        </div>
+    </div>
+</section>
+
+<section class="oe_container oe_dark">
+    <div class="oe_row oe_spaced">
+        <div class="oe_span12">
+            <h2 class="oe_slogan" style="color:#875A7B">Step 1 — Configure the AI Agent</h2>
+            <p style="font-size:16px; text-align:left; width:90%; margin-left:auto; margin-right:auto">
+                In <b>Settings → AI Agent</b> choose your AI provider, paste in
+                its API token, test the connection, then fetch and pick a default model.
+            </p>
+            <ol style="font-size:16px; width:90%; margin-left:auto; margin-right:auto">
+                <li>Choose your <b>AI Tool</b> (Claude, ChatGPT, Gemini, or Groq).</li>
+                <li>Paste in your <b>API Token</b> for that provider.</li>
+                <li>Click <b>Test Connection</b> to confirm the token works.</li>
+                <li>Click <b>Fetch Models</b> to download the list of available models, then pick a
+                    <b>Default Model</b>
+                </li>
+            </ol>
+            <img src="ai_agent_settings.png"
+                 style="width:90%; display:block; margin-left:auto; margin-right:auto; border:2px solid lightgrey; border-radius:10px">
+        </div>
+    </div>
+</section>
+
+<section class="oe_container">
+    <div class="oe_row oe_spaced" style="margin-top:32px">
+        <div class="oe_span12">
+            <h2 class="oe_slogan" style="color:#875A7B">Step 2 — Create a Ai Report Action</h2>
+            <p style="font-size:16px; text-align:left; width:90%; margin-left:auto; margin-right:auto">
+                Go to <b>Settings → Technical → Actions → Server Actions</b>, create a new one, set its
+                <b>Model</b>, and set <b>Action Type</b> to <b>AI Agent Report</b>. Then fill in:
+            </p>
+            <ol style="font-size:16px; width:90%; margin-left:auto; margin-right:auto">
+                <li><b>Command</b> — a short one-line task, e.g. "Generate a detailed report for the
+                    product with its Bill of Material."
+                </li>
+                <li><b>Instructions</b> — detailed guidance on layout, tone, and what to show or leave out.</li>
+                <li><b>Attachments</b> (optional) — reference files you want the AI to read alongside the
+                    record's own data.
+                </li>
+            </ol>
+            <img src="server_action_setup.png"
+                 style="width:90%; display:block; margin-left:auto; margin-right:auto; border:2px solid lightgrey; border-radius:10px">
+        </div>
+    </div>
+</section>
+
+<section class="oe_container">
+    <div class="oe_row oe_spaced" style="margin-top:32px">
+        <div class="oe_span12">
+            <h2 class="oe_slogan" style="color:#875A7B">Step 3 — Generate a Report Template</h2>
+            <ol style="font-size:16px; width:90%; margin-left:auto; margin-right:auto">
+                <li>Click <b>Generate Template with AI</b> on the Server Action.</li>
+                <li>AI automatically analyzes the predefined instructions and Odoo report structures to generate a
+                    reusable XML report template.
+                </li>
+                <li>Once successfully generated, the template is saved as a permanent report and becomes available in
+                    the corresponding model's <b>Print</b> menu.
+                </li>
+            </ol>
+        </div>
+    </div>
+</section>
+
+<section class="oe_container">
+    <div class="oe_row oe_spaced" style="margin-top:32px">
+        <div class="oe_span12">
+            <h2 class="oe_slogan" style="color:#875A7B">Two Ways to Generate a Report</h2>
+            <ul style="font-size:16px; width:90%; margin-left:auto; margin-right:auto">
+                <li><b>Generate a Report Using AI Server Action</b> — calls the AI every time it runs.
+                    Best for a quick, one-off report.
+                </li>
+                <li><b>Generate a Report Using a Predefined Template</b> — uses the template already built
+                    in Step 3, with no AI call involved. Best for a report you print often.
+                </li>
+            </ul>
+        </div>
+    </div>
+</section>
+
+<section class="oe_container oe_dark">
+    <div class="oe_row oe_spaced">
+        <div class="oe_span12">
+            <h2 class="oe_slogan" style="color:#875A7B">Generate a Report Using AI Server Action</h2>
+
+            <ol style="font-size:16px; width:90%; margin-left:auto; margin-right:auto; margin-top:20px">
+                <li>Click the configured <b>AI Report Server Action</b> from the record's Action menu.</li>
+                <li>Once processing is complete, a preview window automatically opens, displaying the AI-generated
+                    report for the selected record(s).
+                </li>
+                <li>Click <b>Print</b> to generate the PDF report and save it as an attachment on each record, or click
+                    <b>Cancel</b> to discard the report.
+                </li>
+            </ol>
+            <img src="run_action_menu.png"
+                 style="width:90%; display:block; margin-left:auto; margin-right:auto; border:2px solid lightgrey; border-radius:10px">
+        </div>
+    </div>
+</section>
+
+<section class="oe_container">
+    <div class="oe_row oe_spaced" style="margin-top:32px">
+        <div class="oe_span12">
+            <h2 class="oe_slogan" style="color:#875A7B">Generate a Report Using a Predefined Template</h2>
+
+            <ol style="font-size:16px; width:90%; margin-left:auto; margin-right:auto">
+                <li>Open the corresponding record and access Odoo's standard <b>Print</b> menu.</li>
+                <li>Select the generated AI report template from the available reports.</li>
+                <li>The report is generated using the predefined XML template without making another AI call, reducing
+                    AI token consumption and making report generation faster.
+                </li>
+            </ol>
+
+            <img src="print_menu_result.png"
+                 style="width:90%; display:block; margin-left:auto; margin-right:auto; border:2px solid lightgrey; border-radius:10px">
+
+            <p style="font-size:14px; text-align:center; color:#875A7B; margin-top:10px">
+                <b>Note:</b> To modify the existing report design, use <b>Generate Template with AI</b> again from the
+                Server Action.
+            </p>
+        </div>
+    </div>
+</section>
