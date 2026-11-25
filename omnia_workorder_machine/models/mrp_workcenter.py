@@ -18,20 +18,7 @@
 #    along with this prograIf not, see <http://www.gnu.org/licenses/>.
 #
 ##############################################################################
-'''
-Created on Nov 25, 2019
-
-@author: mboscolo
-'''
-import logging
-import datetime
-from odoo import models
-from odoo import fields
-from odoo import api
-from odoo import _
-from odoo.exceptions import UserError
-from datetime import timedelta
-from odoo.tools import DEFAULT_SERVER_DATETIME_FORMAT
+from odoo import fields, models
 
 
 class MrpWorkcenter(models.Model):
@@ -39,5 +26,3 @@ class MrpWorkcenter(models.Model):
     
     web_ip_address = fields.Text(string='Web IP',
                                  help = 'Web Ip for Web interface for managin workenter')
-    
-    

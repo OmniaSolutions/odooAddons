@@ -1,60 +1,116 @@
-odoo.define('omnia_workorder_machine.workorder_machine_list', function (require) {
-    "use strict";
-    var ajax = require('web.ajax');
-    var core = require('web.core');
-    var config = require('web.config');
+"use strict";
 
-    function download(data, filename, type) {
-        var file = new Blob([data], {type: type});
-        if (window.navigator.msSaveOrOpenBlob) // IE10+
-            window.navigator.msSaveOrOpenBlob(file, filename);
-        else { // Others
-            var a = document.createElement("a"),
-                    url = URL.createObjectURL(file);
-            a.href = url;
-            a.download = filename;
-            document.body.appendChild(a);
-            a.click();
-            setTimeout(function() {
-                document.body.removeChild(a);
-                window.URL.revokeObjectURL(url);  
-            }, 0); 
+function jsonRpc(route, params) {
+    return fetch(route, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({jsonrpc: '2.0', method: 'call', params: params || {}}),
+    }).then(function (response) {
+        return response.json();
+    }).then(function (data) {
+        if (data.error) {
+            return Promise.reject(data.error);
         }
+        return data.result;
+    });
+}
+
+function get_bulk_wo_ids(closestTr, actionClass) {
+    // If the clicked row itself isn't checked, behave exactly as before:
+    // act on that single row only. If it IS checked, also include every
+    // other checked row that currently shows the same action button
+    // (same state) - rows checked but in a different state are left alone.
+    var ownWoId = closestTr.getElementsByClassName('wo_id')[0].textContent;
+    var ownCheckbox = closestTr.getElementsByClassName('select_row')[0];
+    if (!ownCheckbox || !ownCheckbox.checked) {
+        return [ownWoId];
     }
-
-    function print_label(button) {
-    	console.log("Start printing label");
-        var button = button.currentTarget;
-        var closestTr = button.closest('tr');
-        var internal_ref = closestTr.getElementsByClassName('internal_ref');
-        var route = '/mrp_omnia/print_label/' + internal_ref[0].textContent;
-
-        var xhr = new XMLHttpRequest();
-        xhr.open('GET', route, true);
-        xhr.responseType = 'blob';
-
-        xhr.onload = function(e) {
-          if (this.status == 200) {
-        	  download(this.response, 'label.pdf', 'application/pdf')  
-          }
-        };
-
-        xhr.send();
+    var ids = [];
+    var checkedBoxes = document.querySelectorAll('.select_row:checked');
+    checkedBoxes.forEach(function (cb) {
+        var tr = cb.closest('tr');
+        var btn = tr.getElementsByClassName(actionClass)[0];
+        if (btn && btn.style.display !== 'none') {
+            ids.push(tr.getElementsByClassName('wo_id')[0].textContent);
+            btn.style.display = 'none';
+            tr.style.cursor = 'wait';
+        }
+    });
+    if (ids.indexOf(ownWoId) === -1) {
+        ids.push(ownWoId);
     }
+    return ids;
+}
 
-	function get_user_id(){
-		var user_id_num = 0;
-        var user_id = document.getElementById('input_user_id');
-        if (user_id != null){
-			user_id_num = user_id.valueAsNumber;
-		}
-		return user_id_num
+function download(data, filename, type) {
+    var file = new Blob([data], {type: type});
+    if (window.navigator.msSaveOrOpenBlob) // IE10+
+        window.navigator.msSaveOrOpenBlob(file, filename);
+    else { // Others
+        var a = document.createElement("a"),
+                url = URL.createObjectURL(file);
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(function() {
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+        }, 0);
+    }
+}
+
+function print_label(button) {
+	console.log("Start printing label");
+    var button = button.currentTarget;
+    var closestTr = button.closest('tr');
+    var internal_ref = closestTr.getElementsByClassName('internal_ref');
+    var route = '/mrp_omnia/print_label/' + internal_ref[0].textContent;
+
+    show_clock();
+
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', route, true);
+    xhr.responseType = 'blob';
+
+    xhr.onload = function(e) {
+      hide_clock();
+      if (this.status == 200) {
+    	  console.log("Label received, size:", this.response.size);
+    	  download(this.response, 'label.pdf', 'application/pdf')
+      } else {
+          console.error("print_label failed, HTTP status:", this.status);
+          var reader = new FileReader();
+          reader.onload = function() {
+              console.error("print_label error body:", reader.result);
+              alert("Could not print label (HTTP " + xhr.status + "). See console for details.");
+          };
+          reader.readAsText(this.response);
+      }
+    };
+
+    xhr.onerror = function() {
+        hide_clock();
+        console.error("print_label request failed (network error)");
+        alert("Could not print label: network error.");
+    };
+
+    xhr.send();
+}
+
+function get_user_id(){
+	var user_id_num = 0;
+    var user_id = document.getElementById('input_user_id');
+    if (user_id != null){
+		user_id_num = user_id.valueAsNumber;
 	}
+	return user_id_num
+}
 
-	function get_employee_id(){
-		var user_id_num = 0;
-        var user_id = document.getElementById('input_employee_id');
-        if (user_id != null){
+function get_employee_id(){
+	var user_id_num = 0;
+    var user_id = document.getElementById('input_employee_id');
+    if (user_id != null){
 			user_id_num = user_id.valueAsNumber;
 		} else{
     		var user_id = document.getElementById('input_search_employee_id')
@@ -89,49 +145,57 @@ odoo.define('omnia_workorder_machine.workorder_machine_list', function (require)
         var closestTr = button.closest('tr');
         closestTr.style.cursor ='wait';
         button.style.display = 'none';
-        var wo_id = closestTr.getElementsByClassName('wo_id');
         var route = '/mrp_omnia/workorder_start/';
         show_clock();
         var emploeey_id=0
         if(document.URL.search("workorder_by_user")<0){
             emploeey_id=get_employee_id()
         }
-		ajax.jsonRpc(route, 'call', {
-			'wo_id' : wo_id[0].textContent,
+        var wo_ids = get_bulk_wo_ids(closestTr, 'start_work');
+		jsonRpc(route, {
+			'wo_ids' : wo_ids,
 			'user_id': get_user_id(),
 			'employee_id': emploeey_id,
 		}).then(function (data) {
 			hide_clock();
 			filter_res(null);
 		   }
-	    );
+	    ).catch (function (data) {
+            alert("Errore Server " + ((data && data.data && data.data.message) || (data && data.message) || 'Unknown error'));
+            hide_clock();
+            filter_res(null);
+        });
         console.log("end")
     }
 
     var start_work11 = start_work1;
-    
+
     function pause_work1 (button) {
         console.log("Pause working");
         var button = button.currentTarget;
         button.style.display = 'none';
         var closestTr = button.closest('tr');
         closestTr.style.cursor ='wait';
-        var wo_id = closestTr.getElementsByClassName('wo_id');
         var route = '/mrp_omnia/workorder_pause/';
         show_clock();
         var emploeey_id=0
         if(document.URL.search("workorder_by_user")<0){
             emploeey_id=get_employee_id()
         }
-		ajax.jsonRpc(route, 'call', {
-			'wo_id' : wo_id[0].textContent,
+        var wo_ids = get_bulk_wo_ids(closestTr, 'pause_work');
+		jsonRpc(route, {
+			'wo_ids' : wo_ids,
 			'user_id': get_user_id(),
 			'employee_id': emploeey_id,
 		}).then(function (data) {
 			hide_clock();
 			filter_res(null);
 		   }
-	    );
+	    ).catch (function (data) {
+            alert("Errore Server " + ((data && data.data && data.data.message) || (data && data.message) || 'Unknown error'));
+            hide_clock();
+            filter_res(null);
+        });
         console.log("end")
     }
 
@@ -141,22 +205,26 @@ odoo.define('omnia_workorder_machine.workorder_machine_list', function (require)
         button.style.display = 'none';
         var closestTr = button.closest('tr');
         closestTr.style.cursor ='wait';
-        var wo_id = closestTr.getElementsByClassName('wo_id');
         var route = '/mrp_omnia/workorder_resume/';
         show_clock();
         var emploeey_id=0
         if(document.URL.search("workorder_by_user")<0){
             emploeey_id=get_employee_id()
         }
-		ajax.jsonRpc(route, 'call', {
-			'wo_id' : wo_id[0].textContent,
+        var wo_ids = get_bulk_wo_ids(closestTr, 'resume_work');
+		jsonRpc(route, {
+			'wo_ids' : wo_ids,
 			'user_id': get_user_id(),
 			'employee_id': emploeey_id,
 		}).then(function (data) {
 			hide_clock();
 			filter_res(null);
 		   }
-	    );
+	    ).catch (function (data) {
+                alert("Errore Server " + ((data && data.data && data.data.message) || (data && data.message) || 'Unknown error'));
+                hide_clock();
+                filter_res(null);
+            });
         console.log("end")
     }
 
@@ -173,28 +241,31 @@ odoo.define('omnia_workorder_machine.workorder_machine_list', function (require)
         var pieces_to_produce = parseFloat(n_pieces_to_produce[0].textContent);
         var n_scrap_ui = closestTr.getElementsByClassName('n_scrap');
         var n_scrap = n_scrap_ui[0].valueAsNumber;
+        var description_ui = closestTr.getElementsByClassName('description_input');
+        var operation_note = description_ui.length ? description_ui[0].value : '';
         var route = '/mrp_omnia/workorder_record/';
         show_clock();
         var emploeey_id=0
         if(document.URL.search("workorder_by_user")<0){
             emploeey_id=get_employee_id()
         }
-    		ajax.jsonRpc(route, 'call', {
+    		jsonRpc(route, {
     			'wo_id' : wo_id[0].textContent,
     			'n_pieces': pieces,
     			'n_scrap': n_scrap,
     			'user_id': get_user_id(),
     			'employee_id': emploeey_id,
+    			'operation_note': operation_note,
     		}).then(function (data) {
     			hide_clock();
     			filter_res(null);
     		   }
     	    ).catch (function (data) {
-                alert("Errore Server " + data.message.data.message);
+                alert("Errore Server " + ((data && data.data && data.data.message) || (data && data.message) || 'Unknown error'));
                 hide_clock();
                 filter_res(null);
             });
-    	    
+
         console.log("end")
     }
 
@@ -210,7 +281,7 @@ odoo.define('omnia_workorder_machine.workorder_machine_list', function (require)
     	var scrap_qty = closestTr.getElementsByClassName('n_scrap')[0];
 
     	// Start work
-    	if ($.inArray(tdElem.textContent, ['ready']) != -1) {
+    	if (['ready'].includes(tdElem.textContent)) {
     		el_start_work[0].style.display = 'block';
     		el_pause_work[0].style.display = 'none';
     		el_resume_work[0].style.display = 'none';
@@ -220,7 +291,7 @@ odoo.define('omnia_workorder_machine.workorder_machine_list', function (require)
     	}
 
     	// Pause work
-    	else if ($.inArray(tdElem.textContent, ['progress']) != -1 & el_user_working[0].textContent == 'True'){
+    	else if (['progress'].includes(tdElem.textContent) && el_user_working[0].textContent == 'True'){
     		el_start_work[0].style.display = 'none';
     		el_pause_work[0].style.display = 'block';
     		el_resume_work[0].style.display = 'none';
@@ -230,7 +301,7 @@ odoo.define('omnia_workorder_machine.workorder_machine_list', function (require)
     	}
 
     	// Resume Work
-    	else if ($.inArray(tdElem.textContent, ['pause', 'progress']) != -1 & el_user_working[0].textContent == 'False'){
+    	else if (['pause', 'progress'].includes(tdElem.textContent) && el_user_working[0].textContent == 'False'){
     		el_start_work[0].style.display = 'none';
     		el_pause_work[0].style.display = 'none';
     		el_resume_work[0].style.display = 'block';
@@ -239,7 +310,7 @@ odoo.define('omnia_workorder_machine.workorder_machine_list', function (require)
     		scrap_qty.style.display = 'none';
     	}
 
-    	else if ($.inArray(tdElem.textContent, ["startworking"]) != -1){
+    	else if (['startworking'].includes(tdElem.textContent)){
     		el_start_work[0].style.display = 'none';
     		el_pause_work[0].style.display = 'block';
     		el_resume_work[0].style.display = 'none';
@@ -257,17 +328,17 @@ odoo.define('omnia_workorder_machine.workorder_machine_list', function (require)
     	}
 
     }
-    
+
     function show_workorders_by_user(){
     	var user_id = document.getElementById('input_user_id').valueAsNumber;
 		var route = '/mrp_omnia/render_workorder_by_user/' + user_id;
 		show_clock();
-		ajax.jsonRpc(route, 'call', {}).then(function (data) {
+		jsonRpc(route, {}).then(function (data) {
 			hide_clock();
 			updete_workorder(data);
 		});
     }
-    
+
     function update_wo_all(){
         var mo = document.getElementById('input_search_mo_id');
         if(mo){
@@ -282,26 +353,26 @@ odoo.define('omnia_workorder_machine.workorder_machine_list', function (require)
             }
             var route = '/mrp_omnia/render_workorder_all/' + mo_id + "/" + wc_id;
             show_clock();
-            ajax.jsonRpc(route, 'call', {}).then(function (data) {
+            jsonRpc(route, {}).then(function (data) {
                 hide_clock();
                 updete_workorder(data);
             });
         }
     }
-  
+
     function show_workorders_by_employee(){
     	var user_id = document.getElementById('input_employee_id');
     	if(user_id){
     		var route = '/mrp_omnia/render_workorder_by_employee/' + user_id.valueAsNumber;
     		show_clock();
-    		ajax.jsonRpc(route, 'call', {}).then(function (data) {
+    		jsonRpc(route, {}).then(function (data) {
     			hide_clock();
     			updete_workorder(data);
     		});
 		}
     }
-  
-  
+
+
     function filter_res(button) {
 		console.log("clicked button")
         wo_id = document.getElementById('input_search_workorder_id');
@@ -317,8 +388,8 @@ odoo.define('omnia_workorder_machine.workorder_machine_list', function (require)
 	        	wc_id = 0
 	    	}
 			var route = '/mrp_omnia/workorder_machine/' + wc_id + '/' + wo_id;
-	
-			ajax.jsonRpc(route, 'call', {}).then(function (data) {
+
+			jsonRpc(route, {}).then(function (data) {
 				updete_workorder(data);
 			});
 		}else{
@@ -332,7 +403,7 @@ odoo.define('omnia_workorder_machine.workorder_machine_list', function (require)
 		}
 		update_wo_all();
 	};
-	
+
 	var updete_workorder = function (data) {
 		var t_body = document.getElementById('workorder_body');
 		t_body.innerHTML = data;
@@ -380,7 +451,7 @@ odoo.define('omnia_workorder_machine.workorder_machine_list', function (require)
     	var user_id = document.getElementById('input_user_id')
     	var user_id_n = user_id.valueAsNumber
     	var route = '/mrp_omnia/get_user_name/' + user_id_n;
-		ajax.jsonRpc(route, 'call', {}).then(function (data) {
+		jsonRpc(route, {}).then(function (data) {
 			var p_user_name = document.getElementById('user_name');
 			p_user_name.innerHTML = data
 		});
@@ -395,23 +466,22 @@ odoo.define('omnia_workorder_machine.workorder_machine_list', function (require)
         }
     	var user_id_n = user_id.valueAsNumber;
     	var route = '/mrp_omnia/get_employee_name/' + user_id_n;
-		ajax.jsonRpc(route, 'call', {}).then(function (data) {
+		jsonRpc(route, {}).then(function (data) {
 			var p_user_name = document.getElementById('user_name');
 			p_user_name.innerHTML = data;
 			update_wo_all();
 		});
     }
-    
+
     async function name_get_generic(object_name, name_like, depend_function_domain){
         var route = '/mrp_omnia/name_get_generic/' + object_name + '/' + name_like;
         if (depend_function_domain){
             var extra_domain = depend_function_domain()
             route += '/' + JSON.stringify(extra_domain);
         }
-        return ajax.jsonRpc(route,
-                           'call');
+        return jsonRpc(route, {});
     }
-    
+
     function autocomplete(inp,
                           odoo_object,
                           depend_function_domain,
@@ -456,7 +526,7 @@ odoo.define('omnia_workorder_machine.workorder_machine_list', function (require)
                       inp.setAttribute("odooid", this.getElementsByTagName("input")[0].getAttribute('odooid'))
                       /*close the list of autocompleted values,
                       (or any other open lists of autocompleted values:*/
-                      closeAllLists();        
+                      closeAllLists();
                       if (update_table_function){
                         update_table_function(inp);
                       }
@@ -524,7 +594,6 @@ odoo.define('omnia_workorder_machine.workorder_machine_list', function (require)
 
     window.onload = function() {
 	    console.log("omnia_workorder_machine.workorder_machine_list loaded")
-	    var _t = core._t;
 	    console.log("Start getting button")
 	    var button_search = document.getElementById('button_search');
 	    if(button_search){
@@ -553,7 +622,7 @@ odoo.define('omnia_workorder_machine.workorder_machine_list', function (require)
                 render_workorder_all();
             };
         }
-        
+
 	    var employee_id = document.getElementById('input_search_employee_id');
          if(employee_id){
             autocomplete(employee_id, 'hr.employee');
@@ -568,14 +637,14 @@ odoo.define('omnia_workorder_machine.workorder_machine_list', function (require)
          if(mo_id){
             var extra_domain_function = function(){
                 return ['state','in',['confirm','progress','planned']]
-            } 
+            }
             autocomplete(mo_id, 'mrp.production', extra_domain_function, update_wo_all);
             };
         var search_bnt = document.getElementById('search_all');
         if(search_bnt){
             search_bnt.onclick=update_wo_all;
 	       }
-	    
+
 	    var employee_id = document.getElementById('input_employee_id');
         if(employee_id){
         employee_id.onchange = function(){
@@ -599,5 +668,3 @@ odoo.define('omnia_workorder_machine.workorder_machine_list', function (require)
 			});
 		}
 	}, false);
-});
-

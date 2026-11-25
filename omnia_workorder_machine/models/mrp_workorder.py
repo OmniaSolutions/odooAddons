@@ -1,25 +1,36 @@
-'''
-Created on Sep 17, 2018
-
-@author: daniel
-'''
-from odoo.exceptions import UserError
-from odoo.tools import DEFAULT_SERVER_DATETIME_FORMAT
-from odoo import models
-from odoo import api
-from odoo import fields
-from odoo import _
+# -*- coding: utf-8 -*-
+##############################################################################
+#
+#    OmniaSolutions, ERP-PLM-CAD Open Source Solutions
+#    Copyright (C) 2011-2019 https://OmniaSolutions.website
+#
+#    This program is free software: you can redistribute it and/or modify
+#    it under the terms of the GNU Affero General Public License as
+#    published by the Free Software Foundation, either version 3 of the
+#    License, or (at your option) any later version.
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU Affero General Public License for more details.
+#
+#    You should have received a copy of the GNU Affero General Public License
+#    along with this prograIf not, see <http://www.gnu.org/licenses/>.
+#
+##############################################################################
+from odoo import api, fields, models
 import logging
 import pytz
 import odoo
-from datetime import datetime
 from datetime import timedelta
+
 
 class MrpProductionWCLine(models.Model):
     _inherit = 'mrp.workorder'
     
-    user_ids = fields.Many2many('res.users', string='Users')
-    employee_ids = fields.Many2many('hr.employee', string='Employees')
+    user_ids = fields.Many2many(comodel_name='res.users', string='Users')
+    employee_ids = fields.Many2many(comodel_name='hr.employee', string='Employees')
+    operation_note = fields.Html(string='Operation Note')
     
     def _getWorkOrderDict(self):
         return {
@@ -30,8 +41,8 @@ class MrpProductionWCLine(models.Model):
                'product_name': self.product_id.name,
                'product_default_code': self.product_id.default_code or '',
                'wo_state': self.state,
-               'qty': "%s %s" %(self.component_remaining_qty or self.qty_remaining, self.product_uom_id.name),
-               'date_planned': self.formatDatetimeTimezone(self.cleanDT(self.date_planned_start)),
+               'qty': "%s / %s %s" %(self.qty_produced, self.qty_production, self.uom_id.name),
+               'date_planned': self.formatDatetimeTimezone(self.cleanDT(self.date_start)),
                'is_user_working': self.is_user_working,
                }
 
@@ -73,7 +84,7 @@ class MrpProductionWCLine(models.Model):
         if workorder:
             searchFilter.append(('id', '=', workorder))
         logging.info('Getting Work Orders with search %r' % (searchFilter))
-        woBrwsList = self.search(searchFilter, order='date_planned_start ASC')
+        woBrwsList = self.search(searchFilter, order='date_start ASC')
         out = self.getDictWorkorder(woBrwsList)
         if listify:
             out = self.listifyForInterface(out)
@@ -86,7 +97,7 @@ class MrpProductionWCLine(models.Model):
             return []
         searchFilter = [('state', 'in', ['ready', 'progress'])]
         logging.info('Getting Work Orders with search %r' % (searchFilter))
-        woBrwsList = self.search(searchFilter, order='date_planned_start ASC,id ASC')
+        woBrwsList = self.search(searchFilter, order='date_start ASC,id ASC')
         woBrwsList = woBrwsList.filtered(lambda x: user_id in x.user_ids.ids or x.user_id.id == user_id)
         if not user_id:
             user_id = self.getUserId()
@@ -102,10 +113,10 @@ class MrpProductionWCLine(models.Model):
             return []
         searchFilter = [('state', 'in', ['ready', 'progress'])]
         logging.info('Getting Work Orders with search %r' % (searchFilter))
-        woBrwsList = self.search(searchFilter, order='date_planned_start ASC,id ASC')
+        woBrwsList = self.search(searchFilter, order='date_start ASC,id ASC')
         woBrwsList = woBrwsList.filtered(lambda x: employee_id in x.employee_ids.ids)
         user_id = self.getUserId()
-        out = self.getDictWorkorder(woBrwsList.with_user(user_id).sorted('tag_ids', reverse=True))
+        out = self.getDictWorkorder(woBrwsList.with_user(user_id))
         if listify:
             out = self.listifyForInterface(out)
         return out
@@ -114,7 +125,7 @@ class MrpProductionWCLine(models.Model):
     def getWorkordersByDomain(self, domain=[], listify=False):
         domain.append(('state', 'in', ['ready', 'progress']))
         woBrwsList = self.search(domain,
-                                 order='tag_ids ASC, date_planned_start ASC,id ASC')
+                                 order='date_start ASC,id ASC')
         user_id = self.getUserId()
         out = self.getDictWorkorder(woBrwsList.with_user(user_id))
         if listify:
@@ -164,52 +175,127 @@ class MrpProductionWCLine(models.Model):
             woLine = woLine.with_context(employee_mrp_id=employee_id)
         return woLine
 
+    def _start_user_timer(self):
+        """Open a productivity-timeline entry keyed on the current
+        (possibly impersonated) res.users, for flows that have no
+        hr.employee at all (e.g. the plain "by user" page), since
+        button_start(bypass=True) skips Odoo's own start_employee()
+        and is_user_working is computed from an open time_ids entry
+        whose user_id matches self.env.user.
+        """
+        self.ensure_one()
+        if self.time_ids.filtered(lambda t: not t.date_end and t.user_id.id == self.env.user.id):
+            return
+        if not self.duration_expected or self.duration <= self.duration_expected:
+            loss = self.env['mrp.workcenter.productivity.loss'].search([('loss_type', '=', 'productive')], limit=1)
+        else:
+            loss = self.env['mrp.workcenter.productivity.loss'].search([('loss_type', '=', 'performance')], limit=1)
+        if not loss:
+            return
+        self.env['mrp.workcenter.productivity'].create({
+            'workorder_id': self.id,
+            'workcenter_id': self.workcenter_id.id,
+            'description': "Time Tracking: %s" % self.env.user.name,
+            'loss_id': loss.id,
+            'date_start': fields.Datetime.now(),
+            'user_id': self.env.user.id,
+            'company_id': self.company_id.id,
+        })
+
+    def _stop_user_timer(self):
+        """Counterpart of _start_user_timer(): closes this user's own
+        open timer entry, since button_pending()'s native stop_employee()
+        only closes entries matching self.env.user.employee_id.
+        """
+        self.ensure_one()
+        open_timers = self.time_ids.filtered(lambda t: not t.date_end and t.user_id.id == self.env.user.id)
+        open_timers._close()
+
+    def _restart_after_partial(self):
+        """button_start() equivalent used when _recordWork() continues a
+        workorder after a partial quantity. Same bypass=True reasoning as
+        startWork()/resumeWork(): skip Odoo's hr.employee-link requirement
+        and drive the timer ourselves, via the real hr.employee when this
+        call came in with one (context key set by preliminaryWork()), or
+        via the impersonated res.users otherwise.
+        """
+        self.ensure_one()
+        self.button_start(bypass=True)
+        employee_id = self.env.context.get('employee_mrp_id')
+        if employee_id:
+            self.start_employee(employee_id)
+        else:
+            self._start_user_timer()
+
     @api.model
     def startWork(self, workorder, user_id=0, employee_id=0):
         woLine = self.preliminaryWork(workorder, user_id, employee_id)
         for woBrws in woLine:
-            return woBrws.button_start()
+            res = woBrws.button_start(bypass=True)
+            if employee_id:
+                woBrws.start_employee(employee_id)
+            else:
+                woBrws._start_user_timer()
+            return res
         return False
 
     @api.model
     def pauseWork(self, workorder, user_id=0, employee_id=0):
         woLine = self.preliminaryWork(workorder, user_id, employee_id)
         for woBrws in woLine:
-            return woBrws.button_pending()
+            res = woBrws.button_pending()
+            if not employee_id:
+                woBrws._stop_user_timer()
+            return res
         return False
-    
+
     @api.model
     def resumeWork(self, workorder, user_id=0, employee_id=0):
         woLine = self.preliminaryWork(workorder, user_id, employee_id)
         for woBrws in woLine:
-            return woBrws.button_start()
+            res = woBrws.button_start(bypass=True)
+            if employee_id:
+                woBrws.start_employee(employee_id)
+            else:
+                woBrws._start_user_timer()
+            return res
         return False
     
     @api.model
-    def recordWork(self, workorder, n_pieces=0, n_scrap=0.0, user_id=0, employee_id=0):
+    def recordWork(self, workorder, n_pieces=0, n_scrap=0.0, user_id=0, employee_id=0, operation_note=None):
         woLine = self.preliminaryWork(workorder, user_id, employee_id)
         ret = False
         for woBrws in woLine:
             ret = woBrws._recordWork(n_pieces,
-                                     n_scrap)
+                                     n_scrap,
+                                     operation_note)
         return ret
 
     def _recordWork(self,
                     n_pieces=0,
-                    n_scrap=0.0):
+                    n_scrap=0.0,
+                    operation_note=None):
+        if operation_note is not None:
+            self.operation_note = operation_note
         for work_order_id in self:
             if n_pieces > 0:
                 if work_order_id.is_first_started_wo:
-                    work_order_id.qty_producing = n_pieces
-                    if n_pieces <= work_order_id.qty_remaining:
+                    if n_pieces >= work_order_id.qty_remaining:
+                        work_order_id.qty_produced += n_pieces
+                        work_order_id.qty_producing = work_order_id.qty_produced
                         work_order_id.with_context(no_start_next=True).record_production()
+                    elif n_pieces > 0:
+                        work_order_id.qty_produced += n_pieces
+                        work_order_id.end_previous()
+                        work_order_id._restart_after_partial()
                 else:
                     work_order_id.qty_produced += n_pieces
                     if work_order_id.qty_produced >= work_order_id.qty_production:
+                        work_order_id.qty_producing = work_order_id.qty_produced
                         work_order_id.with_context(no_start_next=True).record_production()
                     else:
                         work_order_id.end_previous()
-                        work_order_id.button_start()
+                        work_order_id._restart_after_partial()
             elif n_pieces == 0 and not work_order_id.qty_remaining:
                 work_order_id.do_finish()
             if n_scrap > 0:
@@ -250,9 +336,6 @@ class MrpProductionWCLine(models.Model):
                    }
             stock_scrap_id = stock_scrap.create(val)
             stock_scrap_id.do_scrap()
-#
-# workorder simple
-#
     
     @api.model
     def getWorkorder(self,
@@ -297,168 +380,7 @@ class MrpProductionWCLine(models.Model):
     def getUserId(self):
         out = self.env.ref('base.user_admin').id
         try:
-            out = int(self.env['ir.config_parameter'].sudo().get_param('WORKORDER_MACHINE_UID'))
+            out = int(self.env['ir.config_parameter'].sudo().get_str('WORKORDER_MACHINE_UID'))
         except Exception as ex:
             logging.error(ex)
         return out
-
-    def getRecordProductionAction(self, work_order_id):
-        '''
-<button name="action_menu" type="object" class="btn-secondary o_workorder_icon_btn" string="" icon="fa-bars" aria-label="Dropdown menu" title="Dropdown menu"/>
-<button name="button_pending" type="object" class="btn-secondary mr8" attrs="{'invisible': ['|', ('is_user_working', '=', False), ('working_state', '=', 'blocked')]}" barcode_trigger="pause" string="Pause"/>
-<button name="button_start" type="object" class="btn-warning" attrs="{'invisible': ['|', '|', ('is_user_working', '=', True), ('working_state', '=', 'blocked'), ('state', '=', 'done')]}" barcode_trigger="pause" string="Continue"/>
-<button name="button_unblock" type="object" context="{'default_workcenter_id': workcenter_id}" attrs="{'invisible': [('working_state', '!=', 'blocked')]}" string="Unblock" class="btn-danger"/>
-<button name="action_previous" type="object" class="btn-secondary" string="Previous" icon="fa-chevron-left o_workorder_btn_icon_small" attrs="{'invisible': [('is_first_step', '=', True)]}" barcode_trigger="prev"/>
-<button disabled="1" class="btn-secondary" string="Previous" icon="fa-chevron-left o_workorder_btn_icon_small" attrs="{'invisible': [('is_first_step', '=', False)]}"/>
-<button name="action_skip" type="object" class="btn-secondary" string="Skip" icon="fa-chevron-right float-right o_workorder_btn_icon_small" attrs="{'invisible': [('is_last_step', '=', True)]}" barcode_trigger="skip"/>
-<button disabled="1" class="btn-secondary" string="Skip" icon="fa-chevron-right float-right o_workorder_btn_icon_small" attrs="{'invisible': [('is_last_step', '=', False)]}"/>
-
-
-
-<button name="action_next" type="object" class="btn-primary" attrs="{'invisible': ['|', ('is_user_working', '=', False),'|', ('is_last_step', '=', True), '&amp;', '|', ('quality_state', '=', 'none'), ('test_type', '!=', 'passfail'), ('test_type', '!=', 'instructions')]}" barcode_trigger="next" string="Next"/>
-<button name="action_next" type="object" class="btn-secondary" attrs="{'invisible': ['|', '|', '|', '|', ('is_user_working', '=', False), ('is_last_step', '=', True), ('test_type', 'not in', ['register_consumed_materials', 'register_byproducts', 'picture']), ('consumption', '=', 'strict'), '&amp;', ('consumption', 'in', ['flexible', 'warning']), ('component_qty_to_do', '&gt;=', 0)]}" barcode_trigger="next" string="VALIDATE"/>
-<button name="action_next" type="object" class="btn-primary" attrs="{'invisible': ['|', '|', '|', ('is_user_working', '=', False), ('is_last_step', '=', True), ('test_type', 'not in', ['register_consumed_materials', 'register_byproducts', 'picture']), ('component_qty_to_do', '&lt;', 0)]}" barcode_trigger="next" string="VALIDATE"/>
-
-<button name="action_continue" type="object" class="btn-primary" attrs="{'invisible': ['|', '|', '|', ('is_user_working', '=', False), ('is_last_step', '=', True), ('test_type', '!=', 'register_byproducts'), ('component_qty_to_do', '&gt;=', 0)]}" barcode_trigger="continue" string="CONTINUE PRODUCTION"/>
-<button name="action_continue" type="object" class="btn-secondary" attrs="{'invisible': ['|', '|', '|', '|', ('is_user_working', '=', False), ('is_last_step', '=', True), ('test_type', '!=', 'register_byproducts'), ('consumption', '=', 'strict'), '&amp;', ('consumption', 'in', ['flexible', 'warning']), ('component_qty_to_do', '&lt;', 0)]}" barcode_trigger="continue" string="CONTINUE PRODUCTION"/>
-<button name="action_continue" type="object" class="btn-primary" attrs="{'invisible': ['|', '|', '|', ('is_user_working', '=', False), ('is_last_step', '=', True), ('test_type', '!=', 'register_consumed_materials'), ('component_qty_to_do', '&gt;=', 0)]}" barcode_trigger="continue" string="CONTINUE CONSUMPTION"/>
-<button name="action_continue" type="object" class="btn-secondary" attrs="{'invisible': ['|', '|', '|', '|', ('is_user_working', '=', False), ('is_last_step', '=', True), ('test_type', '!=', 'register_consumed_materials'), ('consumption', '=', 'strict'), '&amp;', ('consumption', 'in', ['flexible', 'warning']), ('component_qty_to_do', '&lt;', 0)]}" barcode_trigger="continue" string="CONTINUE CONSUMPTION"/>
-
-<button name="action_print" type="object" class="btn-primary" attrs="{'invisible': [('test_type', '!=', 'print_label')]}" barcode_trigger="print" string="Print Labels"/>
-
-<button name="record_production" type="object" string="Record production" attrs="{'invisible': ['|', '|', '|', '|', ('is_user_working', '=', False), ('is_last_step', '!=', True), ('skipped_check_ids', '!=', []), ('is_last_unfinished_wo', '=', True), ('is_last_lot', '=', True)]}" barcode_trigger="record" class="btn-primary"/>
-
-<button name="do_finish" type="object" string="Mark as Done" icon="fa-check" attrs="{'invisible': ['|', '|', '|', ('is_user_working', '=', False), ('is_last_step', '!=', True), ('skipped_check_ids', '!=', []), '&amp;', ('is_last_unfinished_wo', '=', False), ('is_last_lot', '=', False)]}" class="btn-primary" barcode_trigger="cloWO"/>
-
-<button name="action_open_manufacturing_order" type="object" string="Mark as Done and Close MO" icon="fa-check" attrs="{'invisible': ['|', '|', '|', ('is_user_working', '=', False), ('is_last_step', '!=', True), ('skipped_check_ids', '!=', []), ('is_last_unfinished_wo', '=', False)]}" class="btn-primary" barcode_trigger="cloMO"/>
-<button name="action_first_skipped_step" type="object" string="Finish steps" attrs="{'invisible': ['|', '|', '|', ('is_user_working', '=', False), ('is_last_step', '!=', True), ('state', '!=', 'progress'), ('skipped_check_ids', '=', [])]}" class="btn-primary" barcode_trigger="finish"/>
-        '''
-
-        if not (
-            not work_order_id.is_user_working or (
-                work_order_id.is_last_step or (
-                    (work_order_id.quality_state == 'none' or work_order_id.test_type != 'passfail') and work_order_id.test_type != 'instructions')
-                )):
-            return self.action_next
-        elif not (
-                (
-                    (   
-                        (not work_order_id.is_user_working or work_order_id.is_last_step) 
-                    or
-                        work_order_id.test_type not in ['register_consumed_materials', 'register_byproducts', 'picture']
-                    )
-                or
-                    work_order_id.consumption == 'strict'
-                )
-            or
-                (
-                    (work_order_id.consumption in ['flexible', 'warning'])
-                and
-                    (work_order_id.component_qty_to_do >= 0)
-                )
-            ):
-            return self.action_next
-        elif not (
-                (
-                    (not work_order_id.is_user_working or work_order_id.is_last_step)
-                or 
-                    (work_order_id.test_type not in ['register_consumed_materials', 'register_byproducts', 'picture'])
-                )
-            or
-                work_order_id.component_qty_to_do < 0
-            ):
-            return self.action_next
-        elif not (
-                (
-                    (not work_order_id.is_user_working or work_order_id.is_last_step)
-                or
-                    (work_order_id.test_type != 'register_byproducts')    
-                )
-            or
-                work_order_id.component_qty_to_do > 0
-            ):
-            return self.action_continue
-        elif not (
-                (
-                    (
-                        (not work_order_id.is_user_working or work_order_id.is_last_step)
-                    or
-                        (work_order_id.test_type != 'register_byproducts')    
-                    )
-                or
-                    work_order_id.consumption == 'strict'
-                )
-            or
-                (
-                    (work_order_id.consumption in ['flexible', 'warning'])
-                and
-                    (work_order_id.component_qty_to_do < 0)
-                )
-            ):
-            return self.action_continue
-        elif not (
-                (
-                    (not work_order_id.is_user_working or work_order_id.is_last_step)
-                or
-                    (work_order_id.test_type != 'register_consumed_materials')
-                )
-            or
-                (work_order_id.component_qty_to_do >= 0)
-            ):
-            return self.action_continue
-        elif not (
-                (
-                    (
-                        (not work_order_id.is_user_working or work_order_id.is_last_step)
-                    or
-                        (work_order_id.test_type != 'register_consumed_materials')
-                    )
-                or
-                    (work_order_id.consumption == 'strict')
-                )
-            or
-                (
-                    (work_order_id.consumption in ['flexible', 'warning'])
-                and
-                    (work_order_id.component_qty_to_do < 0)
-                )
-            ):
-            return self.action_continue
-        elif not (
-                (
-                    (
-                        (not work_order_id.is_user_working or work_order_id.is_last_step != True)
-                    or
-                        work_order_id.skipped_check_ids != []
-                    )
-                or
-                    work_order_id.is_last_unfinished_wo == True
-                )
-            or
-                work_order_id.is_last_lot == True
-            ):
-            return self.record_production
-        elif not (
-            # '''
-            # ['|', 
-            #     '|', 
-            #         '|',
-            #             ('is_user_working', '=', False), 
-            #             ('is_last_step', '!=', True), 
-            #         ('skipped_check_ids', '!=', []), 
-            #     '&', ('is_last_unfinished_wo', '=', False), ('is_last_lot', '=', False)]
-            # '''
-                (
-                    (not work_order_id.is_user_working or work_order_id.is_last_step != True)
-                or
-                    work_order_id.skipped_check_ids != []
-                )
-            or
-                (
-                    work_order_id.is_last_unfinished_wo == False
-                and
-                    work_order_id.is_last_lot == False
-                )
-            ):
-            return self.do_finish
-        

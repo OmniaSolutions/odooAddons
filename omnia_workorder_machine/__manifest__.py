@@ -21,17 +21,17 @@
 ##############################################################################
 {
     'name': 'Omnia Workorder Machine',
-    'version': '14.1',
+    'version': '20.0.1.0.0',
     'author': 'OmniaSolutions',
     'website': 'http://www.omniasolutions.eu',
     'category': 'report',
     'sequence': 15,
     'summary': 'Omnia Workorder Machine',
-    'images': [],
     'depends': [
-                'web',
-                'web_editor',
-                'mrp'],
+        'web',
+        'html_editor',
+        'mrp'
+    ],
     'description': """ This module allows to update workorder using a simple web interface.""",
     'data': [
         'views/templates_wo_simple.xml',
@@ -41,11 +41,7 @@
         'views/ir_config_parameter.xml',
         'views/template_workorder_machine_all.xml',
         ],
-    'demo': [],
-    'test': [],
     'installable': True,
     'application': False,
     'auto_install': False,
 }
-
-# vim:expandtab:smartindent:tabstop=4:softtabstop=4:shiftwidth=4:

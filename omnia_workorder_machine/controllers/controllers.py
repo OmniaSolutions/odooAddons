@@ -1,18 +1,29 @@
-'''
-Created on Oct 14, 2018
-
-@author: daniel
-'''
+# -*- encoding: utf-8 -*-
+##############################################################################
+#
+#    OmniaSolutions, Open Source Management Solution
+#    Copyright (C) 2010-2018 OmniaSolutions (<http://www.omniasolutions.eu>). All Rights Reserved
+#    $Id$
+#
+#    This program is free software: you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+##############################################################################
 import logging
 import json
-import os
-import base64
-from odoo import _
-from odoo import http
-from odoo.http import request
-from odoo.http import Response
-from odoo.http import Controller
-import tempfile
+import mimetypes
+from odoo import _, http
+from odoo.http import request, Response, Controller
 
 
 class WebsiteWorkorderControllerByUser(Controller):
@@ -106,13 +117,14 @@ class WebsiteWorkorderControllerByUser(Controller):
         if internal_ref:
             prodList = request.env['product.product'].search([('default_code', '=', internal_ref)])
             if prodList:
-                rep = request.env["ir.actions.report"]._get_report_from_name('product.report_productlabel')
-                pdfContent, _fileType = rep._render_qweb_pdf(prodList.ids)
-                tmpDir = tempfile.gettempdir()
-                filePath = os.path.join(tmpDir, 'testtttt.pdf')
-                with open(filePath, 'wb') as writeFile:
-                    writeFile.write(pdfContent)
-                return pdfContent
+                wizard = request.env['product.label.layout'].create({
+                    'product_ids': [(6, 0, prodList.ids)],
+                })
+                xml_id, data = wizard._prepare_report_data()
+                rep = request.env.ref(xml_id)
+                pdfContent, _fileType = rep._render_qweb_pdf(rep, prodList.product_tmpl_id.ids, data=data)
+                headers = [('Content-Type', 'application/pdf'), ('Content-Length', len(pdfContent))]
+                return request.make_response(pdfContent, headers=headers)
         return None
 
     @http.route(['/mrp_omnia/workorder_start'], auth='public', type='json')
@@ -182,18 +194,31 @@ class WebsiteWorkorderControllerByUser(Controller):
             wo_id = int(wo_id)
             user_id = post.get('user_id', 0)
             employee_id = int(post.get('employee_id', 0))
-            res = request.env['mrp.workorder'].recordWork(wo_id, n_pieces, n_scrap, user_id, employee_id)
+            operation_note = post.get('operation_note')
+            res = request.env['mrp.workorder'].recordWork(wo_id, n_pieces, n_scrap, user_id, employee_id, operation_note)
         return res
 
     @http.route('/mrp_omnia/get_worksheet/<int:mrp_workorder_id>', type='http')
     def get_worksheet(self, mrp_workorder_id):
-        mrp_workorder_id = request.env['mrp.workorder'].sudo().browse(mrp_workorder_id)
-        pdf = ""
-        if mrp_workorder_id.worksheet:
-            pdf =  pdf + base64.decodestring(mrp_workorder_id.worksheet)
-        pdf = "data:image/pdf;base64," + pdf
-        pdfhttpheaders = [('Content-Type', 'application/pdf'), ('Content-Length', len(pdf))]
-        return request.make_response(pdf, headers=pdfhttpheaders)
+        workorder = request.env['mrp.workorder'].sudo().browse(mrp_workorder_id)
+        operation = workorder.operation_id
+        if not operation:
+            return request.not_found()
+        point = operation.quality_point_ids.filtered(lambda p: p.worksheet_document)[:1]
+        if not point:
+            return request.not_found()
+        doc = point.worksheet_document
+        mimetype = doc.mimetype or 'application/octet-stream'
+        filename = doc.filename or workorder.display_name
+        ext = mimetypes.guess_extension(mimetype) or ''
+        if ext and not filename.lower().endswith(ext.lower()):
+            filename += ext
+        headers = [
+            ('Content-Type', mimetype),
+            ('Content-Length', len(doc.content)),
+            ('Content-Disposition', 'inline; filename="%s"' % filename),
+        ]
+        return request.make_response(doc.content, headers=headers)
     
     @http.route('/mrp_omnia/workorder_machine_all', type='http')
     def workoder_machine_wc_all(self, **post):
