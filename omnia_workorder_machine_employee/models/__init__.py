@@ -19,10 +19,4 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 ##############################################################################
-'''
-Created on Sep 17, 2018
-
-@author: daniel
-'''
-
 from . import mrp_workorder

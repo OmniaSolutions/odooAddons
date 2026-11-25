@@ -21,24 +21,18 @@
 ##############################################################################
 {
     'name': 'Omnia Workorder Machine Employee',
-    'version': '14.0',
+    'version': '20.0.1.0.0',
     'author': 'OmniaSolutions',
     'website': 'http://www.omniasolutions.eu',
     'category': 'report',
     'sequence': 15,
     'summary': 'Omnia Workorder Machine Employee',
-    'images': [],
-    'depends': [
-                'omnia_workorder_machine'],
+    'depends': ['omnia_workorder_machine'],
     'description': """ This module allows to update workorder using a simple web interface.""",
     'data': [
         'views/mrp_workorder.xml'
-        ],
-    'demo': [],
-    'test': [],
+    ],
     'installable': True,
     'application': False,
     'auto_install': False,
 }
-
-# vim:expandtab:smartindent:tabstop=4:softtabstop=4:shiftwidth=4:
