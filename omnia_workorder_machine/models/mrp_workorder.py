@@ -324,18 +324,20 @@ class MrpProductionWCLine(models.Model):
 
     @api.model
     def o_do_scrap(self, scrap_qty):
-        stock_scrap = self.env['stock.scrap']
         product_product = self.env['product.product']
         for product_id in (self.production_id.move_raw_ids.filtered(lambda x: x.state not in ('done', 'cancel')) | self.production_id.move_finished_ids.filtered(lambda x: x.state == 'done')).mapped('product_id').ids:
             product_id = product_product.browse(product_id)
             val = {'workorder_id': self.id,
                    'production_id': self.production_id.id,
                    'product_id':  product_id.id,
-                   'product_uom_id': product_id.uom_id.id,
-                   'scrap_qty': scrap_qty
+                   'uom_id': product_id.uom_id.id,
+                   'product_uom_qty': scrap_qty,
+                   'quantity': scrap_qty,
+                   'company_id': self.company_id.id,
+                   'is_scrap': True,
                    }
-            stock_scrap_id = stock_scrap.create(val)
-            stock_scrap_id.do_scrap()
+            move = self.env['stock.move'].create(val)
+            move.action_scrap()
     
     @api.model
     def getWorkorder(self,
